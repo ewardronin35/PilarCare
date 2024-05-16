@@ -1,0 +1,104 @@
+/* General container and layout styles */
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 800px;
+  height: 500px;
+  padding: 0px;
+  background-color: #003FFF;
+  margin: 100px auto;
+  border-radius: 10px;
+  box-shadow: 0px 0px 0px 0px rgba(0, 0, 0, 0.1);
+}
+
+/* Form container */
+.login-form {
+  width: 400px;
+  height: 500px;
+  background: white;
+  padding: 20px;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+  box-shadow: 0px 0px 0px 0px rgba(0, 0, 0, 0.1);
+}
+
+img {
+  width: 400px;
+  padding: 20px;
+}
+
+/* Form header */
+.header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.header .title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #141B34;
+}
+
+.login
+
+/* Input container */
+.input_container {
+  display: flex;
+  align-items: center;
+  border: 2px solid #003FFF;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 20px;
+  transition: 0.3s ease;
+}
+
+.input_container:focus-within {
+  border-color: #141B34;
+}
+
+.input_container .icon {
+  margin-right: 10px;
+  fill: #003FFF;
+  transition: 0.3s ease;
+}
+
+.input_field {
+  border: none;
+  outline: none;
+  flex: 1;
+  font-size: 16px;
+  padding: 10px 0;
+}
+
+/* Button styles */
+.x-primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  background-color: #003FFF;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.x-primary-button:hover {
+  background-color: #141B34;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .container {
+    width: 100%;
+    margin: 20px;
+  }
+
+  .login-form {
+    padding: 20px;
+  }
+}
