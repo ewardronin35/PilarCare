@@ -13,8 +13,9 @@ class Complaint extends Model
         'age',
         'birthdate',
         'health_history',
-        'year_section',
+        'year_and_section',
         'contact_number',
+        'role',
     ];
 
     public function details()

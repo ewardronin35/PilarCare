@@ -5,27 +5,25 @@
         }
 
         .sidebar {
-            width: 80px; /* Collapsed width */
+            width: 80px;
             background-color: #00d2ff;
             color: white;
             height: 100vh;
             position: fixed;
             top: 0;
             left: 0;
-            padding-top: 20px;
             transition: width 0.3s ease-in-out;
-            overflow: hidden;
         }
 
         .sidebar:hover {
-            width: 250px; /* Expanded width */
+            width: 250px;
         }
 
         .logo {
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 20px;
+            margin: 20px 0;
             transition: opacity 0.3s ease-in-out;
         }
 
@@ -39,6 +37,7 @@
             font-size: 1.25rem;
             font-weight: bold;
             opacity: 0;
+            transition: opacity 0.3s ease-in-out;
         }
 
         .sidebar:hover .logo-text {
@@ -86,126 +85,24 @@
             opacity: 1;
         }
 
-        .sidebar-footer ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .sidebar-footer li {
-            display: flex;
-            align-items: center;
-            margin: 10px 0;
-            padding: 10px 20px;
-            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
-        }
-
-        .sidebar-footer li:hover {
-            background-color: #009ec3;
-            transform: translateX(10px);
-        }
-
-        .sidebar-footer li a {
-            color: white;
-            text-decoration: none;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-        }
-
-        .sidebar-footer li a .icon {
-            min-width: 20px;
-            margin-right: 10px;
-            text-align: center;
-        }
-
         .main-content {
-            margin-left: 80px; /* Collapsed sidebar width */
-            width: 100%;
+            flex-grow: 1;
             padding: 20px;
+            margin-left: 80px;
             transition: margin-left 0.3s ease-in-out;
         }
 
         .sidebar:hover ~ .main-content {
-            margin-left: 250px; /* Expanded sidebar width */
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            background-color: white;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            position: relative;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-        }
-
-        .user-info .username {
-            margin-right: 10px;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-        }
-
-        .notification-icon {
-            margin-right: 20px;
-            position: relative;
-        }
-
-        .notification-dropdown {
-            display: none;
-            position: absolute;
-            top: 50px;
-            right: 10px;
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 5px;
-            width: 300px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            z-index: 10;
-        }
-
-        .notification-dropdown.active {
-            display: block;
-        }
-
-        .notification-item {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #e0e0e0;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.3s;
-        }
-
-        .notification-item:last-child {
-            border-bottom: none;
-        }
-
-        .notification-item:hover {
-            background-color: #f9f9f9;
-            transform: translateX(10px);
-        }
-
-        .notification-item .icon {
-            margin-right: 10px;
-        }
-
-        .notification-header {
-            padding: 10px;
-            border-bottom: 1px solid #e0e0e0;
-            font-weight: bold;
+            margin-left: 250px;
         }
 
         .form-container {
             margin-top: 20px;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            animation: fadeInUp 0.5s ease-in-out;
         }
 
         .form-group {
@@ -242,11 +139,11 @@
         .appointment-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-bottom: 20px;
+            animation: fadeInUp 0.5s ease-in-out;
         }
 
-        .appointment-table th,
-        .appointment-table td {
+        .appointment-table th, .appointment-table td {
             border: 1px solid #ddd;
             padding: 10px;
             text-align: left;
@@ -257,73 +154,44 @@
             color: white;
         }
 
+        .appointment-table td input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
         .action-buttons {
             display: flex;
             gap: 10px;
         }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 
-    <!-- Include Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
     <div class="container">
-        <aside class="sidebar">
-            <div class="logo">
-                <img src="{{ asset('images/pilarLogo.png') }}" alt="PilarCare Logo" class="logo-img">
-                <span class="logo-text hidden md:inline-block">PilarCare</span>
-            </div>
-            <nav class="menu">
-                <ul>
-                <li><a href="{{ route('dashboard') }}"><span class="icon"><i class="fas fa-tachometer-alt"></i></span><span class="menu-text">Dashboard</span></a></li>
-                <li><a href="{{ route('complaint') }}"><span class="icon"><i class="fas fa-comments"></i></span><span class="menu-text">Complaint</span></a></li>
-                    <li><a href="{{ route('medical-record') }}"><span class="icon"><i class="fas fa-notes-medical"></i></span><span class="menu-text">Records</span></a></li>
-                    <li><a href="{{ route('appointment') }}"><span class="icon"><i class="fas fa-calendar-check"></i></span><span class="menu-text">Appointment</span></a></li>
-                    <li><a href="{{ route('inventory') }}"><span class="icon"><i class="fas fa-boxes"></i></span><span class="menu-text">Inventory</span></a></li>
-                    <li><a href="{{ route('monitoring-report-log') }}"><span class="icon"><i class="fas fa-chart-line"></i></span><span class="menu-text">Monitoring and Report</span></a></li>
-                </ul>
-            </nav>
-            <div class="sidebar-footer">
-                <ul>
-                    <li><a href="#"><span class="icon"><i class="fas fa-cogs"></i></span><span class="menu-text">Settings</span></a></li>
-                    <li><a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><span class="icon"><i class="fas fa-sign-out-alt"></i></span><span class="menu-text">Logout</span></a></li>
-                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                        @csrf
-                    </form>
-                </ul>
-            </div>
-        </aside>
+        <x-adminsidebar /> <!-- Using the sidebar component -->
 
         <main class="main-content">
-            <header class="header relative">
-                <div></div>
-                <div class="user-info">
-                    <span class="username">{{ Auth::user()->name }}</span>
-                    <span class="role">Admin</span>
-                    <div class="notification-icon">
-                        <i class="fas fa-bell cursor-pointer" id="notification-icon"></i>
-                        <div id="notification-dropdown" class="notification-dropdown">
-                            <div class="notification-header">Notifications</div>
-                            <div class="notification-item">
-                                <span class="icon"><i class="fas fa-calendar-alt"></i></span>
-                                <span>You have a new appointment.</span>
-                            </div>
-                            <div class="notification-item">
-                                <span class="icon"><i class="fas fa-box-open"></i></span>
-                                <span>Inventory needs restocking.</span>
-                            </div>
-                            <div class="notification-item">
-                                <span class="icon"><i class="fas fa-comment-dots"></i></span>
-                                <span>New complaint received.</span>
-                            </div>
-                        </div>
-                    </div>
-                    <img src="{{ asset('images/pilarLogo.png') }}" alt="User Avatar" class="user-avatar">
+            @if(session('success'))
+                <div class="alert alert-success">
+                    {{ session('success') }}
                 </div>
-            </header>
+            @endif
 
             <div class="form-container">
                 <h2>Schedule Appointment</h2>
-                <form method="POST" action="{{ route('appointment.add') }}">
+                <form method="POST" action="{{ route('admin.appointment.add') }}">
                     @csrf
                     <div class="form-group">
                         <label for="patient-id">Patient ID</label>
@@ -347,7 +215,6 @@
                 </form>
             </div>
 
-            <!-- Appointment Table Content -->
             <h1>Appointments</h1>
             <table class="appointment-table">
                 <thead>
@@ -369,7 +236,7 @@
                             <td>
                                 <div class="action-buttons">
                                     <button onclick="document.getElementById('update-form-{{ $appointment->id }}').style.display='block'">Edit</button>
-                                    <form method="POST" action="{{ route('appointment.delete', $appointment->id) }}">
+                                    <form method="POST" action="{{ route('admin.appointment.delete', $appointment->id) }}">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" onclick="return confirm('Are you sure you want to delete this appointment?')">Delete</button>
@@ -377,7 +244,7 @@
                                 </div>
                                 <div id="update-form-{{ $appointment->id }}" style="display:none" class="form-container">
                                     <h2>Update Appointment</h2>
-                                    <form method="POST" action="{{ route('appointment.update', $appointment->id) }}">
+                                    <form method="POST" action="{{ route('admin.appointment.update', $appointment->id) }}">
                                         @csrf
                                         @method('PUT')
                                         <div class="form-group">
@@ -416,7 +283,6 @@
             dropdown.classList.toggle('active');
         });
 
-        // Close the dropdown if clicked outside
         document.addEventListener('click', function(event) {
             var dropdown = document.getElementById('notification-dropdown');
             var icon = document.getElementById('notification-icon');

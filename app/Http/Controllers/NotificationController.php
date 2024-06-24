@@ -1,28 +1,20 @@
 <?php
-// app/Http/Controllers/NotificationController.php
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Auth;
 
+use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
-class NotificationController extends Controller
+class EmailVerificationNotificationController extends Controller
 {
-    public function create()
+    public function store(Request $request): RedirectResponse
     {
-        return view('notifications.create');
-    }
+        if ($request->user()->hasVerifiedEmail()) {
+            return redirect()->intended(route('dashboard'));
+        }
 
-    public function store(Request $request)
-    {
-        // Validate the form data
-        $request->validate([
-            'school_id' => 'required|string|max:255',
-            'name' => 'required|string|max:255',
-            'notification_info' => 'required|email|max:255',
-            'notification_for' => 'required|string|in:student,parent,staff'
-        ]);
+        $request->user()->sendEmailVerificationNotification();
 
-        // Handle the notification logic (e.g., save to database, send email, etc.)
-
-        return redirect()->route('notifications.create')->with('success', 'Notification sent successfully!');
+        return back()->with('status', 'verification-link-sent');
     }
 }

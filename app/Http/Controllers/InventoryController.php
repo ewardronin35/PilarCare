@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -10,7 +9,7 @@ class InventoryController extends Controller
     public function index()
     {
         $inventoryItems = Inventory::all();
-        return view('inventory', compact('inventoryItems'));
+        return view('admin.inventory', compact('inventoryItems'));
     }
 
     public function add(Request $request)
@@ -25,7 +24,7 @@ class InventoryController extends Controller
 
         Inventory::create($request->all());
 
-        return redirect()->route('inventory')->with('success', 'Item added successfully!');
+        return redirect()->route('admin.inventory')->with('success', 'Item added successfully!');
     }
 
     public function update(Request $request, $id)
@@ -41,7 +40,7 @@ class InventoryController extends Controller
         $inventoryItem = Inventory::findOrFail($id);
         $inventoryItem->update($request->all());
 
-        return redirect()->route('inventory')->with('success', 'Item updated successfully!');
+        return redirect()->route('admin.inventory')->with('success', 'Item updated successfully!');
     }
 
     public function delete($id)
@@ -49,12 +48,6 @@ class InventoryController extends Controller
         $inventoryItem = Inventory::findOrFail($id);
         $inventoryItem->delete();
 
-        return redirect()->route('inventory')->with('success', 'Item deleted successfully!');
+        return redirect()->route('admin.inventory')->with('success', 'Item deleted successfully!');
     }
 }
-
-
-
-
-
-

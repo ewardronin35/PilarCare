@@ -2,15 +2,31 @@
 namespace App\Http\Controllers;
 
 use App\Models\Complaint;
-use App\Models\ComplaintDetail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ComplaintController extends Controller
 {
     public function index()
     {
         $complaints = Complaint::with('details')->get();
-        return view('complaint', compact('complaints'));
+        $role = strtolower(Auth::user()->role); // Get the authenticated user's role and convert to lowercase
+
+        // Filter complaints based on role
+        $studentComplaints = $complaints->where('role', 'student');
+        $staffComplaints = $complaints->where('role', 'staff');
+        $parentComplaints = $complaints->where('role', 'parent');
+        $teacherComplaints = $complaints->where('role', 'teacher');
+
+        // Define the view path based on the user's role
+        $viewPath = "{$role}/complaint";
+
+        // Check if the view exists
+        if (!view()->exists($viewPath)) {
+            abort(404, "View for role {$role} not found");
+        }
+
+        return view($viewPath, compact('studentComplaints', 'staffComplaints', 'parentComplaints', 'teacherComplaints', 'role'));
     }
 
     public function add(Request $request)
@@ -26,7 +42,7 @@ class ComplaintController extends Controller
 
         $complaint = Complaint::create($request->all());
 
-        return redirect()->route('complaint')->with('success', 'Complaint added successfully!');
+        return redirect()->route('complaint.index')->with('success', 'Complaint added successfully!');
     }
 
     public function update(Request $request, $id)
@@ -43,7 +59,7 @@ class ComplaintController extends Controller
         $complaint = Complaint::findOrFail($id);
         $complaint->update($request->all());
 
-        return redirect()->route('complaint')->with('success', 'Complaint updated successfully!');
+        return redirect()->route('complaint.index')->with('success', 'Complaint updated successfully!');
     }
 
     public function delete($id)
@@ -51,6 +67,6 @@ class ComplaintController extends Controller
         $complaint = Complaint::findOrFail($id);
         $complaint->delete();
 
-        return redirect()->route('complaint')->with('success', 'Complaint deleted successfully!');
+        return redirect()->route('complaint.index')->with('success', 'Complaint deleted successfully!');
     }
 }

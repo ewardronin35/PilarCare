@@ -10,11 +10,14 @@ class CreateNotificationsTable extends Migration
     {
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('user_id');  // Assume 'user_id' should store 'id_number' from 'users' table
             $table->string('title');
             $table->text('message');
-            $table->timestamp('scheduled_time');
+            $table->timestamp('scheduled_time')->useCurrent();  // Default to current time if not provided
             $table->timestamps();
+
+            // Ensure 'users' table migration is run first or 'users' table already has 'id_number'
+            $table->foreign('user_id')->references('id_number')->on('users')->onDelete('cascade');
         });
     }
 

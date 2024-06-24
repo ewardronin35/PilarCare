@@ -1,15 +1,27 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Appointment;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AppointmentController extends Controller
 {
     public function index()
     {
         $appointments = Appointment::all();
-        return view('appointment', compact('appointments'));
+        $role = Auth::user()->role; // Get the authenticated user's role
+
+        // Define the view path based on the user's role
+        $viewPath = "{$role}/appointment";
+
+        // Check if the view exists
+        if (!view()->exists($viewPath)) {
+            abort(404, "View for role {$role} not found");
+        }
+
+        return view($viewPath, compact('appointments'));
     }
 
     public function add(Request $request)
@@ -23,7 +35,7 @@ class AppointmentController extends Controller
 
         Appointment::create($request->all());
 
-        return redirect()->route('appointment')->with('success', 'Appointment scheduled successfully!');
+        return redirect()->route(Auth::user()->role . '.appointment')->with('success', 'Appointment scheduled successfully!');
     }
 
     public function update(Request $request, $id)
@@ -38,7 +50,7 @@ class AppointmentController extends Controller
         $appointment = Appointment::findOrFail($id);
         $appointment->update($request->all());
 
-        return redirect()->route('appointment')->with('success', 'Appointment updated successfully!');
+        return redirect()->route(Auth::user()->role . '.appointment')->with('success', 'Appointment updated successfully!');
     }
 
     public function delete($id)
@@ -46,6 +58,6 @@ class AppointmentController extends Controller
         $appointment = Appointment::findOrFail($id);
         $appointment->delete();
 
-        return redirect()->route('appointment')->with('success', 'Appointment deleted successfully!');
+        return redirect()->route(Auth::user()->role . '.appointment')->with('success', 'Appointment deleted successfully!');
     }
 }

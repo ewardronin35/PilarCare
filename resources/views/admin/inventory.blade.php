@@ -3,15 +3,18 @@
         .container {
             display: flex;
         }
+
         .main-content {
             flex-grow: 1;
             padding: 20px;
             margin-left: 80px; /* Adjust margin to accommodate the sidebar */
             transition: margin-left 0.3s ease-in-out;
         }
+
         .sidebar:hover + .main-content {
             margin-left: 250px; /* Adjust margin when sidebar is expanded */
         }
+
         .header {
             display: flex;
             justify-content: space-between;
@@ -20,43 +23,59 @@
             background-color: #ffffff;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
+
         .user-info {
             display: flex;
             align-items: center;
         }
+
         .user-info .username {
             margin-right: 10px;
         }
+
         .user-avatar {
             width: 40px;
             height: 40px;
             border-radius: 50%;
         }
+
         .inventory-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            animation: fadeInUp 0.5s ease-in-out;
         }
+
         .inventory-table th,
         .inventory-table td {
             border: 1px solid #ddd;
             padding: 10px;
             text-align: left;
         }
+
         .inventory-table th {
             background-color: #00d1ff;
             color: white;
         }
+
         .form-container {
             margin-top: 20px;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            animation: fadeInUp 0.5s ease-in-out;
         }
+
         .form-group {
             margin-bottom: 15px;
         }
+
         .form-group label {
             display: block;
             margin-bottom: 5px;
         }
+
         .form-group input,
         .form-group textarea,
         .form-group select {
@@ -65,6 +84,7 @@
             border: 1px solid #ddd;
             border-radius: 5px;
         }
+
         .form-group button {
             background-color: #00d1ff;
             color: white;
@@ -72,14 +92,23 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
         }
+
         .form-group button:hover {
             background-color: #00b8e6;
+            transform: scale(1.05);
         }
+
+        .form-group button:active {
+            transform: scale(0.95);
+        }
+
         .action-buttons {
             display: flex;
             gap: 10px;
         }
+
         .notification {
             position: fixed;
             top: 20px;
@@ -95,29 +124,44 @@
             max-height: 400px;
             overflow-y: auto;
         }
+
         .notification h2 {
             margin-top: 0;
         }
+
         .notification ul {
             list-style: none;
             padding: 0;
         }
+
         .notification ul li {
             margin-bottom: 10px;
             padding: 10px;
             background: #f1f1f1;
             border-radius: 5px;
         }
+
         .notification .close {
             position: absolute;
             top: 10px;
             right: 10px;
             cursor: pointer;
         }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 
     <div class="container">
-        <x-sidebar />
+        <x-adminsidebar />
 
         <main class="main-content">
             @if(session('success'))
@@ -134,7 +178,7 @@
                         <th>Item ID</th>
                         <th>Item Name</th>
                         <th>Quantity</th>
-                        <th>Supplier</th>
+                        <th>Brand</th>
                         <th>Date Acquired</th>
                         <th>Actions</th>
                     </tr>
@@ -150,14 +194,14 @@
                             <td>
                                 <div class="action-buttons">
                                     <button onclick="document.getElementById('update-form-{{ $item->id }}').style.display='block'">Edit</button>
-                                    <form method="POST" action="{{ route('inventory.delete', $item->id) }}">
+                                    <form method="POST" action="{{ route('admin.inventory.delete', $item->id) }}">
                                         @csrf
                                         <button type="submit" onclick="return confirm('Are you sure you want to delete this item?')">Delete</button>
                                     </form>
                                 </div>
                                 <div id="update-form-{{ $item->id }}" style="display:none" class="form-container">
                                     <h2>Update Inventory Item</h2>
-                                    <form method="POST" action="{{ route('inventory.update', $item->id) }}">
+                                    <form method="POST" action="{{ route('admin.inventory.update', $item->id) }}">
                                         @csrf
                                         <div class="form-group">
                                             <label for="item-id-{{ $item->id }}">Item ID</label>
@@ -172,7 +216,7 @@
                                             <input type="number" id="quantity-{{ $item->id }}" name="quantity" value="{{ $item->quantity }}" required>
                                         </div>
                                         <div class="form-group">
-                                            <label for="supplier-{{ $item->id }}">Supplier</label>
+                                            <label for="supplier-{{ $item->id }}">Brand</label>
                                             <input type="text" id="supplier-{{ $item->id }}" name="supplier" value="{{ $item->supplier }}" required>
                                         </div>
                                         <div class="form-group">
@@ -194,7 +238,7 @@
             <!-- Add Inventory Item Form -->
             <div class="form-container">
                 <h2>Add Inventory Item</h2>
-                <form method="POST" action="{{ route('inventory.add') }}">
+                <form method="POST" action="{{ route('admin.inventory.add') }}"> <!-- Ensure route name matches -->
                     @csrf
                     <div class="form-group">
                         <label for="item-id">Item ID</label>
@@ -209,7 +253,7 @@
                         <input type="number" id="quantity" name="quantity" required>
                     </div>
                     <div class="form-group">
-                        <label for="supplier">Supplier</label>
+                        <label for="supplier">Brand</label>
                         <input type="text" id="supplier" name="supplier" required>
                     </div>
                     <div class="form-group">

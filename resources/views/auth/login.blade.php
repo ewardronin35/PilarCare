@@ -1,6 +1,7 @@
 <x-guest-layout>
     <!-- Custom container to wrap the form and testimonial section -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <style>
         body {
@@ -19,6 +20,7 @@
         .container {
             background-color: rgba(255, 255, 255, 0.9);
             width: 800px;
+            height: 550px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             display: flex;
@@ -84,6 +86,7 @@
 
         .login-form .log-in-button {
             margin-top: 20px;
+            margin-right: 20px;
             background-color: #1CE5FF;
             border: none;
             padding: 12px 20px;
@@ -155,6 +158,7 @@
                 background-color: #1CE5FF;
             }
         }
+        
 
         @keyframes fadeInContainer {
             from {
