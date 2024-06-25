@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -33,5 +32,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function healthExaminations()
     {
         return $this->hasMany(HealthExamination::class);
+    }
+
+    // Add this method to establish the relationship
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class, 'user_id', 'id_number');
     }
 }

@@ -59,7 +59,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 20px;
+            padding: 10px 20px;
             background-color: #ffffff;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             width: 100%;
@@ -90,7 +90,6 @@
 
         .notification-icon {
             position: relative;
-            cursor: pointer;
         }
 
         .notification-icon i {
@@ -212,11 +211,22 @@
                     <span class="role">{{ Auth::user()->role }}</span>
                     <img src="{{ asset('images/pilarLogo.png') }}" alt="User Avatar" class="user-avatar">
                 </div>
-                <div class="notification-icon" id="notification-icon">
-                    <i class="fas fa-bell"></i>
+                <div class="notification-icon relative" id="notification-icon">
+                    <i class="fas fa-bell cursor-pointer"></i>
                     <div id="notification-dropdown" class="notification-dropdown">
                         <div class="notification-header">Notifications</div>
-                        <div id="notification-content"></div>
+                        <div class="notification-item">
+                            <span class="icon"><i class="fas fa-calendar-alt"></i></span>
+                            <span>You have a new appointment.</span>
+                        </div>
+                        <div class="notification-item">
+                            <span class="icon"><i class="fas fa-box-open"></i></span>
+                            <span>Inventory needs restocking.</span>
+                        </div>
+                        <div class="notification-item">
+                            <span class="icon"><i class="fas fa-comment-dots"></i></span>
+                            <span>New complaint received.</span>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -228,40 +238,12 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.getElementById('notification-icon').addEventListener('click', function() {
             var dropdown = document.getElementById('notification-dropdown');
             dropdown.classList.toggle('active');
-            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-            if (dropdown.classList.contains('active')) {
-                fetchNotifications();
-            }
+            this.classList.toggle('active');
         });
-
-        function fetchNotifications() {
-            fetch('{{ route("admin.notifications.index") }}')
-                .then(response => response.json())
-                .then(data => {
-                    const notificationContent = document.getElementById('notification-content');
-                    notificationContent.innerHTML = '';
-
-                    if (data.notifications.length > 0) {
-                        data.notifications.forEach(notification => {
-                            const notificationItem = document.createElement('div');
-                            notificationItem.className = 'notification-item';
-                            notificationItem.innerHTML = `
-                                <span class="icon"><i class="fas fa-info-circle"></i></span>
-                                <span>${notification.message}</span>
-                            `;
-                            notificationContent.appendChild(notificationItem);
-                        });
-                    } else {
-                        notificationContent.innerHTML = '<div class="notification-item">No notifications</div>';
-                    }
-                })
-                .catch(error => console.error('Error fetching notifications:', error));
-        }
 
         // Close the dropdown if clicked outside
         document.addEventListener('click', function(event) {
@@ -269,7 +251,7 @@
             var icon = document.getElementById('notification-icon');
             if (!dropdown.contains(event.target) && !icon.contains(event.target)) {
                 dropdown.classList.remove('active');
-                dropdown.style.display = 'none';
+                icon.classList.remove('active');
             }
         });
     </script>

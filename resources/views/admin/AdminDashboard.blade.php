@@ -69,9 +69,73 @@
         .stat-box a:hover {
             text-decoration: none; /* Ensure underline doesn't appear on hover */
         }
+
+        .notification-icon {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+        }
+
+        .notification-icon i {
+            font-size: 24px;
+        }
+
+        .notification-dropdown {
+            display: none;
+            position: absolute;
+            top: 40px;
+            right: 0;
+            width: 300px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .notification-dropdown.active {
+            display: block;
+        }
+
+        .notification-header {
+            font-weight: bold;
+            padding: 10px;
+            background: #f9f9f9;
+            border-bottom: 1px solid #eee;
+        }
+
+        .notification-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-item:hover {
+            background: #f1f1f1;
+        }
+
+        .notification-item .icon {
+            margin-right: 10px;
+        }
     </style>
 
     <div class="main-content">
+        <!-- Notification Icon and Dropdown -->
+        <div class="notification-icon" id="notification-icon">
+            <i class="fas fa-bell"></i>
+            <div id="notification-dropdown" class="notification-dropdown">
+                <div class="notification-header">Notifications</div>
+                <div id="notification-content"></div>
+            </div>
+        </div>
+
         <!-- Statistics -->
         <div class="statistics">
             <div class="stat-box">
@@ -104,4 +168,51 @@
             <img src="{{ asset('images/pilarLogo.png') }}" alt="Login Image">
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.getElementById('notification-icon').addEventListener('click', function() {
+        var dropdown = document.getElementById('notification-dropdown');
+        dropdown.classList.toggle('active');
+        if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+            dropdown.style.display = 'block';
+            fetchNotifications();
+        } else {
+            dropdown.style.display = 'none';
+        }
+    });
+
+    function fetchNotifications() {
+        fetch('{{ route("admin.notifications.index") }}')
+            .then(response => response.json())
+            .then(data => {
+                const notificationContent = document.getElementById('notification-content');
+                notificationContent.innerHTML = '';
+
+                if (data.notifications.length > 0) {
+                    data.notifications.forEach(notification => {
+                        const notificationItem = document.createElement('div');
+                        notificationItem.className = 'notification-item';
+                        notificationItem.innerHTML = `
+                            <span class="icon"><i class="fas fa-info-circle"></i></span>
+                            <span>${notification.message}</span>
+                        `;
+                        notificationContent.appendChild(notificationItem);
+                    });
+                } else {
+                    notificationContent.innerHTML = '<div class="notification-item">No notifications</div>';
+                }
+            })
+            .catch(error => console.error('Error fetching notifications:', error));
+    }
+
+    // Close the dropdown if clicked outside
+    document.addEventListener('click', function(event) {
+        var dropdown = document.getElementById('notification-dropdown');
+        var icon = document.getElementById('notification-icon');
+        if (!dropdown.contains(event.target) && !icon.contains(event.target)) {
+            dropdown.classList.remove('active');
+            dropdown.style.display = 'none';
+        }
+    });
+</script>
 </x-app-layout>

@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -26,6 +27,7 @@ class CreateUsersTable extends Migration
             $table->string('bed_type')->nullable();
             $table->string('section')->nullable();
             $table->string('grade')->nullable();
+            $table->string('strand')->nullable(); // Added strand field
             $table->string('teacher_type')->nullable();
             $table->string('staff_role')->nullable();
             $table->timestamps();

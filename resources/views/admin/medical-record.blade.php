@@ -173,7 +173,7 @@
         }
     </style>
 
-<div class="container">
+    <div class="container">
         <main class="main-content">
             <div class="tab-buttons">
                 <button id="pending-approvals-tab" class="active" onclick="showTab('pending-approvals')">Pending Approvals</button>
@@ -185,34 +185,37 @@
             <div id="pending-approvals" class="tab-content active">
                 <h1>Pending Approvals</h1>
                 <div class="table-container">
-                    @dd($pendingExaminations) <!-- Debugging statement to dump the contents of $pendingExaminations -->
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Picture</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($pendingExaminations as $examination)
+                    @if(isset($pendingExaminations) && $pendingExaminations->isNotEmpty())
+                        <table>
+                            <thead>
                                 <tr>
-                                    <td>{{ $examination->user->first_name }} {{ $examination->user->last_name }}</td>
-                                    <td><img src="{{ asset('storage/' . $examination->health_examination_picture) }}" alt="Health Examination Picture" width="100"></td>
-                                    <td>
-                                        <form action="{{ route('admin.health-examinations.approve', $examination->id) }}" method="POST" style="display:inline-block;">
-                                            @csrf
-                                            <button type="submit" class="btn btn-success">Approve</button>
-                                        </form>
-                                        <form action="{{ route('admin.health-examinations.reject', $examination->id) }}" method="POST" style="display:inline-block;">
-                                            @csrf
-                                            <button type="submit" class="btn btn-danger">Reject</button>
-                                        </form>
-                                    </td>
+                                    <th>Name</th>
+                                    <th>Picture</th>
+                                    <th>Actions</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach($pendingExaminations as $examination)
+                                    <tr>
+                                        <td>{{ $examination->user->first_name }} {{ $examination->user->last_name }}</td>
+                                        <td><img src="{{ asset('storage/' . $examination->health_examination_picture) }}" alt="Health Examination Picture" width="100"></td>
+                                        <td>
+                                            <form action="{{ route('admin.health-examinations.approve', $examination->id) }}" method="POST" style="display:inline-block;">
+                                                @csrf
+                                                <button type="submit" class="btn btn-success">Approve</button>
+                                            </form>
+                                            <form action="{{ route('admin.health-examinations.reject', $examination->id) }}" method="POST" style="display:inline-block;">
+                                                @csrf
+                                                <button type="submit" class="btn btn-danger">Reject</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @else
+                        <p>No pending examinations available.</p>
+                    @endif
                 </div>
             </div>
 

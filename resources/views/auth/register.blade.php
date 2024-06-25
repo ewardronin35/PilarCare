@@ -138,6 +138,9 @@
             color: red;
             display: none;
             margin-top: 10px;
+            font-size: 14px;
+            max-width: 100%;
+            position: absolute;
         }
 
         @keyframes fadeIn {
@@ -207,6 +210,10 @@
             text-decoration: underline;
             cursor: pointer;
         }
+
+        .hide-icons .fas, .hide-icons .fa {
+            display: none !important;
+        }
     </style>
 
     <div class="container">
@@ -218,48 +225,48 @@
             <form method="POST" action="{{ route('register') }}" id="registration-form" onsubmit="return validateForm()">
                 @csrf
                 <div class="input-wrapper">
-     <i class="fas fa-user-tag"></i>
-    <select id="role" name="role" class="input-field" required onchange="toggleRoleField()">
-        <option value="">Select Role</option>
-        <option value="Parent">Parent</option>
-        <option value="Teacher">Teacher</option>
-        <option value="Student">Student</option>
-        <option value="Staff">Staff</option>
-    </select>
-    <x-input-error :messages="$errors->get('role')" class="mt-2" />
-    </div>
-     <!-- ID Field -->
-     <div class="input-wrapper" id="idField" style="display:none;">
+                    <i class="fas fa-user-tag"></i>
+                    <select id="role" name="role" class="input-field" required onchange="toggleRoleField()">
+                        <option value="">Select Role</option>
+                        <option value="Parent">Parent</option>
+                        <option value="Teacher">Teacher</option>
+                        <option value="Student">Student</option>
+                        <option value="Staff">Staff</option>
+                    </select>
+                    <x-input-error :messages="$errors->get('role')" class="input-error" />
+                </div>
+                <!-- ID Field -->
+                <div class="input-wrapper" id="idField" style="display:none;">
                     <i class="fas fa-id-card"></i>
-                    <x-text-input id="id_number" class="input-field" type="text" name="id_number" :value="old('id_number')" required placeholder="ID Number"/>
-                    <x-input-error :messages="$errors->get('id_number')" class="mt-2" />
+                    <x-text-input id="id_number" class="input-field" type="text" name="id_number" :value="old('id_number')" maxlength="10" required placeholder="ID Number"/>
+                    <x-input-error :messages="$errors->get('id_number')" class="input-error" />
                 </div>
                 <!-- First Name -->
                 <div class="input-wrapper">
                     <i class="fas fa-user"></i>
                     <x-text-input id="first_name" class="input-field" type="text" name="first_name" :value="old('first_name')" required autocomplete="given-name" placeholder="First Name"/>
-                    <x-input-error :messages="$errors->get('first_name')" class="mt-2" />
+                    <x-input-error :messages="$errors->get('first_name')" class="input-error" />
                 </div>
 
                 <!-- Last Name -->
                 <div class="input-wrapper">
                     <i class="fas fa-user"></i>
                     <x-text-input id="last_name" class="input-field" type="text" name="last_name" :value="old('last_name')" required autocomplete="family-name" placeholder="Last Name"/>
-                    <x-input-error :messages="$errors->get('last_name')" class="mt-2" />
+                    <x-input-error :messages="$errors->get('last_name')" class="input-error" />
                 </div>
 
                 <!-- Email -->
                 <div class="input-wrapper">
                     <i class="fas fa-envelope"></i>
                     <x-text-input id="email" class="input-field" type="email" name="email" :value="old('email')" required autocomplete="username" placeholder="example.email@gmail.com"/>
-                    <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                    <x-input-error :messages="$errors->get('email')" class="input-error" />
                 </div>
 
                 <!-- Contact Number -->
                 <div class="input-wrapper">
                     <i class="fas fa-phone"></i>
-                    <x-text-input id="contact_number" class="input-field" type="text" name="contact_number" :value="old('contact_number')" required autocomplete="tel" placeholder="Contact Number"/>
-                    <x-input-error :messages="$errors->get('contact_number')" class="mt-2" />
+                    <x-text-input id="contact_number" class="input-field" type="text" name="contact_number" :value="old('contact_number')" maxlength="11" required autocomplete="tel" placeholder="Contact Number"/>
+                    <x-input-error :messages="$errors->get('contact_number')" class="input-error" />
                 </div>
 
                 <!-- Gender -->
@@ -269,10 +276,8 @@
                         <option value="male">Male</option>
                         <option value="female">Female</option>
                     </select>
-                    <x-input-error :messages="$errors->get('gender')" class="mt-2" />
+                    <x-input-error :messages="$errors->get('gender')" class="input-error" />
                 </div>
-
-               
 
                 <!-- Student Fields -->
                 <div id="student-fields" style="display:none;">
@@ -303,17 +308,32 @@
                         </div>
                         <div class="input-wrapper">
                             <i class="fas fa-calendar"></i>
-                            <x-text-input id="year_level" class="input-field" type="text" name="year_level" :value="old('year_level')" placeholder="Year Level"/>
+                            <select id="year_level" class="input-field" name="year_level">
+                                <option value="">Year Level</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                            </select>
                         </div>
                         <div class="input-wrapper">
                             <i class="fas fa-users"></i>
-                            <x-text-input id="year_section" class="input-field" type="text" name="year_section" :value="old('year_section')" placeholder="Year Section"/>
+                            <select id="year_section" class="input-field" name="year_section">
+                                <option value="">Year Section</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E">E</option>
+                                <option value="F">F</option>
+                            </select>
                         </div>
                     </div>
 
                     <!-- BED Fields -->
                     <div id="bed-fields" style="display:none;">
                         <div class="input-wrapper">
+                            <i class="fas fa-graduation-cap icon-select-student-type"></i>
                             <label for="bed_type">BED Type</label>
                             <select id="bed_type" name="bed_type" class="input-field" onchange="toggleBedFields()">
                                 <option value="">Select Type</option>
@@ -323,12 +343,24 @@
                             </select>
                         </div>
                         <div class="input-wrapper">
-                            <i class="fas fa-building"></i>
-                            <x-text-input id="section" class="input-field" type="text" name="section" :value="old('section')" placeholder="Section"/>
+                            <i class="fas fa-level-up-alt"></i>
+                            <select id="grade" class="input-field" name="grade">
+                                <option value="">Grade</option>
+                                <!-- Options will be dynamically populated based on BED type -->
+                            </select>
+                        </div>
+                        <div class="input-wrapper" id="strand-container" style="display:none;">
+                            <i class="fas fa-people-arrows"></i>
+                            <select id="strand" name="strand" class="input-field">
+                                <option value="">Select Strand</option>
+                                <option value="STEM">STEM</option>
+                                <option value="HUMSS">HUMSS</option>
+                                <option value="ABM">ABM</option>
+                            </select>
                         </div>
                         <div class="input-wrapper">
-                            <i class="fas fa-level-up-alt"></i>
-                            <x-text-input id="grade" class="input-field" type="text" name="grade" :value="old('grade')" placeholder="Grade"/>
+                            <i class="fas fa-building"></i>
+                            <x-text-input id="section" class="input-field" type="text" name="section" :value="old('section')" placeholder="Section"/>
                         </div>
                     </div>
                 </div>
@@ -357,27 +389,28 @@
                 <div class="input-wrapper">
                     <i class="fas fa-lock"></i>
                     <x-text-input id="password" class="input-field" type="password" name="password" required autocomplete="new-password" placeholder="Enter at least 8+ characters"/>
-                    <x-input-error :messages="$errors->get('password')" class="mt-2" />
+                    <x-input-error :messages="$errors->get('password')" class="input-error" />
                 </div>
 
                 <!-- Confirm Password -->
                 <div class="input-wrapper">
                     <i class="fas fa-lock"></i>
                     <x-text-input id="password_confirmation" class="input-field" type="password" name="password_confirmation" required autocomplete="new-password" placeholder="Re-enter Password"/>
-                    <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+                    <x-input-error :messages="$errors->get('password_confirmation')" class="input-error" />
                 </div>
 
                 <!-- reCAPTCHA -->
                 <div class="input-wrapper">
                     <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
-                    <x-input-error :messages="$errors->get('g-recaptcha-response')" class="mt-2" />
+                    <x-input-error :messages="$errors->get('g-recaptcha-response')" class="input-error" />
                 </div>
 
                 <div class="flex items-center mt-4">
                     <input type="checkbox" id="termsCheckbox" name="termsCheckbox">
                     <label for="termsCheckbox" class="ml-2">I agree with the <a onclick="showModal()" class="underline">Terms of Use & Privacy Policy</a></label>
                 </div>
-                <div class="error-message" id="error-message">You must agree to the terms and conditions before registering.</div>
+                <div class="error-message" id="error-message-terms">You must agree to the terms and conditions before registering.</div>
+                <div class="error-message" id="error-message-password">Passwords must match and contain at least 8 characters, including letters and numbers.</div>
 
                 <div class="button-container mt-4">
                     <button type="submit" class="submit-button">
@@ -470,6 +503,9 @@
             clearFields(teacherFields);
             clearFields(staffFields);
 
+            // Hide strand field initially
+            document.getElementById('strand-container').style.display = 'none';
+
             idField.style.display = 'block'; // Show ID field for all roles
 
             switch (role) {
@@ -494,12 +530,14 @@
             const studentType = document.getElementById('student_type').value;
             const tedFields = document.getElementById('ted-fields');
             const bedFields = document.getElementById('bed-fields');
+            const strandContainer = document.getElementById('strand-container');
 
             tedFields.style.display = 'none';
             bedFields.style.display = 'none';
             clearFields(tedFields);
             clearFields(bedFields);
 
+            strandContainer.style.display = 'none';
             if (studentType === 'TED') {
                 tedFields.style.display = 'block';
             } else if (studentType === 'BED') {
@@ -507,12 +545,51 @@
             }
         }
 
+        function toggleBedFields() {
+            const bedType = document.getElementById('bed_type').value;
+            const gradeSelect = document.getElementById('grade');
+            const strandContainer = document.getElementById('strand-container');
+
+            strandContainer.style.display = 'none';
+            gradeSelect.innerHTML = '<option value="">Grade</option>'; // Clear previous options
+
+            if (bedType === 'SHS') {
+                gradeSelect.innerHTML += `
+                    <option value="11">Grade 11</option>
+                    <option value="12">Grade 12</option>
+                `;
+                strandContainer.style.display = 'block';
+            } else if (bedType === 'HS') {
+                gradeSelect.innerHTML += `
+                    <option value="7">Grade 7</option>
+                    <option value="8">Grade 8</option>
+                    <option value="9">Grade 9</option>
+                    <option value="10">Grade 10</option>
+                `;
+                strandContainer.style.display = 'none';
+            } else if (bedType === 'Elementary') {
+                gradeSelect.innerHTML += `
+                    <option value="Kinder 1">Kinder 1</option>
+                    <option value="Kinder 2">Kinder 2</option>
+                    <option value="1">Grade 1</option>
+                    <option value="2">Grade 2</option>
+                    <option value="3">Grade 3</option>
+                    <option value="4">Grade 4</option>
+                    <option value="5">Grade 5</option>
+                    <option value="6">Grade 6</option>
+                `;
+                strandContainer.style.display = 'none';
+            }
+        }
+
         function showModal() {
             document.getElementById('termsModal').style.display = "block";
+            document.body.classList.add('hide-icons'); // Add class to body to hide icons
         }
 
         function hideModal() {
             document.getElementById('termsModal').style.display = "none";
+            document.body.classList.remove('hide-icons'); // Remove class from body to show icons
         }
 
         window.onclick = function(event) {
@@ -524,12 +601,30 @@
 
         function validateForm() {
             const checkbox = document.getElementById('termsCheckbox');
-            const errorMessage = document.getElementById('error-message');
+            const errorMessageTerms = document.getElementById('error-message-terms');
+            const errorMessagePassword = document.getElementById('error-message-password');
+            const password = document.getElementById('password').value;
+            const passwordConfirmation = document.getElementById('password_confirmation').value;
+
+            let isValid = true;
+
             if (!checkbox.checked) {
-                errorMessage.style.display = 'block';
-                return false;
+                errorMessageTerms.style.display = 'block';
+                isValid = false;
+            } else {
+                errorMessageTerms.style.display = 'none';
             }
-            return true;
+
+            const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+
+            if (password !== passwordConfirmation || !passwordRegex.test(password)) {
+                errorMessagePassword.style.display = 'block';
+                isValid = false;
+            } else {
+                errorMessagePassword.style.display = 'none';
+            }
+
+            return isValid;
         }
 
         grecaptcha.ready(function() {

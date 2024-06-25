@@ -1,4 +1,6 @@
 <x-app-layout>
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
     <style>
         .container {
             display: flex;
@@ -7,7 +9,7 @@
         }
 
         .sidebar {
-            width: 80px; /* Collapsed width */
+            width: 80px;
             background-color: #00d2ff;
             color: white;
             height: 100vh;
@@ -21,18 +23,18 @@
         }
 
         .sidebar:hover {
-            width: 250px; /* Expanded width */
+            width: 250px;
         }
 
         .main-content {
-            margin-left: 80px; /* Collapsed sidebar width */
+            margin-left: 80px;
             width: calc(100% - 80px);
             padding: 20px;
             transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
         }
 
         .sidebar:hover ~ .main-content {
-            margin-left: 250px; /* Expanded sidebar width */
+            margin-left: 250px;
             width: calc(100% - 250px);
         }
 
@@ -156,7 +158,9 @@
             transform: scale(0.95);
         }
 
-        .exam-container, .xray-container, .lab-exam-container {
+        .exam-container,
+        .xray-container,
+        .lab-exam-container {
             display: none;
             margin-top: 20px;
             background-color: #f9f9f9;
@@ -176,7 +180,8 @@
             margin-bottom: 20px;
         }
 
-        .table-container th, .table-container td {
+        .table-container th,
+        .table-container td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
@@ -236,6 +241,7 @@
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -279,6 +285,29 @@
         .profile-picture label:active {
             transform: scale(0.95);
         }
+
+        .status-message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .status-message.waiting {
+            background-color: #ffeeba;
+            color: #856404;
+        }
+
+        .status-message.approved {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-message.rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
     </style>
 
     <div class="container">
@@ -290,7 +319,10 @@
 
             <div id="medical-record" class="tab-content active">
                 <h1>Student Medical Record</h1>
-                @if(Auth::user()->healthExaminations && Auth::user()->healthExaminations->isNotEmpty() && Auth::user()->healthExaminations->last()->is_approved)
+                @php
+                    $latestExamination = Auth::user()->healthExaminations->last();
+                @endphp
+                @if($latestExamination && $latestExamination->is_approved)
                     <div class="form-container">
                         <form method="POST" action="{{ route('student.medical-record.store') }}" enctype="multipart/form-data" onsubmit="return validateForm()">
                             @csrf
@@ -415,7 +447,7 @@
                     <button class="toggle-exam" onclick="toggleExam()">Toggle Health Examination and Local History</button>
                     <div class="exam-container" id="exam-container">
                         <h2>Health Examination and Local History</h2>
-                        <form method="POST" action="{{ route('health_examinations.store') }}" enctype="multipart/form-data">
+                        <form method="POST" action="{{ route('student.health-examination.store') }}" enctype="multipart/form-data">
                             @csrf
                             <div class="form-group-inline">
                                 <div class="form-group">
@@ -462,12 +494,11 @@
                                     <label for="weight">Weight <i class="fa-regular fa-weight"></i></label>
                                     <input type="text" id="weight" name="weight" required>
                                 </div>
-                                <div class="form-group">
+                              
+<div class="form-group">
                                     <label for="respiratory-system">Respiratory System <i class="fa-regular fa-lungs"></i></label>
                                     <input type="text" id="respiratory-system" name="respiratory_system" required>
                                 </div>
-                            </div>
-                            <div class="form-group-inline">
                                 <div class="form-group">
                                     <label for="circulatory-system">Circulatory System <i class="fa-regular fa-heartbeat"></i></label>
                                     <input type="text" id="circulatory-system" name="circulatory_system" required>
@@ -476,8 +507,6 @@
                                     <label for="blood-pressure">Blood Pressure <i class="fa-regular fa-heartbeat"></i></label>
                                     <input type="text" id="blood-pressure" name="blood_pressure" required>
                                 </div>
-                            </div>
-                            <div class="form-group-inline">
                                 <div class="form-group">
                                     <label for="pulse">Pulse <i class="fa-regular fa-heartbeat"></i></label>
                                     <input type="text" id="pulse" name="pulse" required>
@@ -486,8 +515,6 @@
                                     <label for="agility-test">Agility Test <i class="fa-regular fa-running"></i></label>
                                     <input type="text" id="agility-test" name="agility_test" required>
                                 </div>
-                            </div>
-                            <div class="form-group-inline">
                                 <div class="form-group">
                                     <label for="digestive-system">Digestive System <i class="fa-regular fa-stomach"></i></label>
                                     <input type="text" id="digestive-system" name="digestive_system" required>
@@ -496,8 +523,6 @@
                                     <label for="genito-urinary">Genito Urinary <i class="fa-regular fa-procedures"></i></label>
                                     <input type="text" id="genito-urinary" name="genito_urinary" required>
                                 </div>
-                            </div>
-                            <div class="form-group-inline">
                                 <div class="form-group">
                                     <label for="urinalysis">Urinalysis <i class="fa-regular fa-flask"></i></label>
                                     <input type="text" id="urinalysis" name="urinalysis" required>
@@ -506,8 +531,6 @@
                                     <label for="skin">Skin <i class="fa-regular fa-skin"></i></label>
                                     <input type="text" id="skin" name="skin" required>
                                 </div>
-                            </div>
-                            <div class="form-group-inline">
                                 <div class="form-group">
                                     <label for="locomotor">Locomotor <i class="fa-regular fa-walking"></i></label>
                                     <input type="text" id="locomotor" name="locomotor" required>
@@ -516,8 +539,6 @@
                                     <label for="nervous-system">Nervous System <i class="fa-regular fa-brain"></i></label>
                                     <input type="text" id="nervous-system" name="nervous_system" required>
                                 </div>
-                            </div>
-                            <div class="form-group-inline">
                                 <div class="form-group">
                                     <label for="eyes">Eyes <i class="fa-regular fa-eye"></i></label>
                                     <input type="text" id="eyes" name="eyes" required>
@@ -526,8 +547,6 @@
                                     <label for="color-perception">Color Perception <i class="fa-regular fa-palette"></i></label>
                                     <input type="text" id="color-perception" name="color_perception" required>
                                 </div>
-                            </div>
-                            <div class="form-group-inline">
                                 <div class="form-group">
                                     <label for="vision">Vision <i class="fa-regular fa-glasses"></i></label>
                                     <input type="text" id="vision" name="vision" required>
@@ -536,8 +555,6 @@
                                     <label for="hearing">Hearing <i class="fa-regular fa-deaf"></i></label>
                                     <input type="text" id="hearing" name="hearing" required>
                                 </div>
-                            </div>
-                            <div class="form-group-inline">
                                 <div class="form-group">
                                     <label for="nose">Nose <i class="fa-regular fa-nose"></i></label>
                                     <input type="text" id="nose" name="nose" required>
@@ -546,8 +563,6 @@
                                     <label for="throat">Throat <i class="fa-regular fa-throat"></i></label>
                                     <input type="text" id="throat" name="throat" required>
                                 </div>
-                            </div>
-                            <div class="form-group-inline">
                                 <div class="form-group">
                                     <label for="tooth-and-gum">Tooth and Gum <i class="fa-regular fa-teeth"></i></label>
                                     <input type="text" id="tooth-and-gum" name="tooth_and_gum" required>
@@ -556,8 +571,6 @@
                                     <label for="immunization">Immunization <i class="fa-regular fa-syringe"></i></label>
                                     <input type="text" id="immunization" name="immunization" required>
                                 </div>
-                            </div>
-                            <div class="form-group-inline">
                                 <div class="form-group">
                                     <label for="remarks">Remarks <i class="fa-regular fa-clipboard"></i></label>
                                     <input type="text" id="remarks" name="remarks" required>
@@ -566,8 +579,6 @@
                                     <label for="x-ray">X-ray / Flouroscopy <i class="fa-regular fa-x-ray"></i></label>
                                     <input type="text" id="x-ray" name="x_ray" required>
                                 </div>
-                            </div>
-                            <div class="form-group-inline">
                                 <div class="form-group">
                                     <label for="temperature">Temperature <i class="fa-regular fa-temperature-high"></i></label>
                                     <input type="text" id="temperature" name="temperature" required>
@@ -576,273 +587,142 @@
                                     <label for="recommendation">Recommendation <i class="fa-regular fa-comment-medical"></i></label>
                                     <input type="text" id="recommendation" name="recommendation" required>
                                 </div>
-                            </div>
-                            <div class="form-group-inline">
-                                <div class="form-group">
-                                    <label for="employee-signature">Employee's Signature <i class="fa-regular fa-signature"></i></label>
-                                    <input type="text" id="employee-signature" name="employee_signature" required>
+                                <div class="form-group-inline">
+                                    <div class="form-group">
+                                        <label for="employee-signature">Employee's Signature <i class="fa-regular fa-signature"></i></label>
+                                        <input type="text" id="employee-signature" name="employee_signature" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="physician-signature">Physician's Signature <i class="fa-regular fa-signature"></i></label>
+                                        <input type="text" id="physician-signature" name="physician_signature" required>
+                                    </div>
                                 </div>
-                                <div class="form-group">
-                                    <label for="physician-signature">Physician's Signature <i class="fa-regular fa-signature"></i></label>
-                                    <input type="text" id="physician-signature" name="physician_signature" required>
-                                </div>
-                            </div>
 
-                            <div class="form-group">
-                                <button type="submit">Save Examination</button>
-                            </div>
-                        </form>
-                    </div>
-                @else
-                    <p>Please upload a health examination picture to proceed with the medical record form.</p>
-                    <form method="POST" action="{{ route('student.medical-record.store') }}" enctype="multipart/form-data">
-                    @csrf
-                        <div class="form-group profile-picture">
-                            <label for="health_examination_picture" class="button"><i class="fa-regular fa-image"></i> Upload Health Examination Picture</label>
-                            <input type="file" id="health_examination_picture" name="health_examination_picture" accept="image/*" required>
-                            <img id="health-exam-picture-preview" alt="Health Examination Picture Preview">
+                                <div class="form-group">
+                                    <button type="submit">Save Examination</button>
+                                </div>
+                            </form>
                         </div>
-                        <button type="submit">Upload Picture</button>
-                    </form>
-                @endif
+                    @else
+                        <p>Please upload a health examination picture to proceed with the dental record form.</p>
+                    @endif
+                </div>
+            </main>
+        </div>
 
-                @if(Auth::user()->healthExaminations && Auth::user()->healthExaminations->isNotEmpty() && Auth::user()->healthExaminations->last()->is_approved)
-                    <button class="toggle-exam" onclick="toggleXray()">Show/Hide X-ray Picture</button>
-                    <div class="xray-container" id="xray-container">
-                        <h2>X-ray Picture</h2>
-                        <img src="{{ Auth::user()->healthExaminations->last()->x_ray }}" alt="X-ray Picture">
-                    </div>
-                    <button class="toggle-exam" onclick="toggleLabExam()">Show/Hide Lab Exam Result</button>
-                    <div class="lab-exam-container" id="lab-exam-container">
-                        <h2>Lab Exam Result</h2>
-                        <img src="{{ Auth::user()->healthExaminations->last()->lab_exam }}" alt="Lab Exam Result">
-                    </div>
-                @endif
-            </div>
-
-            <!-- Dental Record Content -->
-            <div id="dental-record" class="tab-content">
-                <h1>Dental Record Page</h1>
-                @if(Auth::user()->healthExaminations && Auth::user()->healthExaminations->isNotEmpty() && Auth::user()->healthExaminations->last()->is_approved)
-                    <div class="form-container">
-                        <form method="POST" action="{{ route('student.dental-record.store') }}" enctype="multipart/form-data" onsubmit="return validateForm()">
-                            @csrf
-                            <div class="form-group-inline">
-                                <div class="form-group">
-                                    <label for="patient-name">Patient Name <i class="fa-regular fa-user"></i></label>
-                                    <input type="text" id="patient-name" name="patient_name" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="date-of-birth">Date of Birth <i class="fa-regular fa-calendar-alt"></i></label>
-                                    <input type="date" id="date-of-birth" name="date_of_birth" required>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="treatment">Treatment <i class="fa-regular fa-tooth"></i></label>
-                                <textarea id="treatment" name="treatment" rows="4" required></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label for="dentist">Dentist <i class="fa-regular fa-user-md"></i></label>
-                                <select id="dentist" name="dentist" required>
-                                    <option value="">Select Dentist</option>
-                                    <option value="Dr. Smith">Dr. Smith</option>
-                                    <option value="Dr. Jones">Dr. Jones</option>
-                                    <option value="Dr. Brown">Dr. Brown</option>
-                                    <option value="Dr. Brown">Dr. Brown</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <h2>Teeth Examination</h2>
-                                <div class="teeth-icons">
-                                    <!-- Add icons for each tooth here -->
-                                    <div class="teeth-icon"><i class="fa-regular fa-tooth"></i></div>
-                                    <!-- Repeat for other teeth -->
-                                </div>
-                            </div>
-
-                            <!-- Button to toggle the detailed dental examination form -->
-                            <button class="toggle-exam" onclick="toggleDentalExam()">Show/Hide Dental Examination</button>
-
-                            <!-- Detailed Dental Examination Form -->
-                            <div class="exam-container" id="dental-exam-container">
-                                <h2>Student Dental Examination</h2>
-                                <div class="form-group-inline">
-                                    <div class="form-group">
-                                        <label for="grade-section">Grade and Section <i class="fa-regular fa-school"></i></label>
-                                        <input type="text" id="grade-section" name="grade_section" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="birthdate">Birthdate <i class="fa-regular fa-calendar"></i></label>
-                                        <input type="date" id="birthdate" name="birthdate" required>
-                                    </div>
-                                </div>
-                                <div class="form-group-inline">
-                                    <div class="form-group">
-                                        <label for="age">Age <i class="fa-regular fa-hourglass-half"></i></label>
-                                        <input type="text" id="age" name="age" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Oral Examination Revealed the Following Conditions:</label>
-                                        <div>
-                                            <input type="checkbox" id="caries-free" name="conditions[]" value="Caries-Free">
-                                            <label for="caries-free">Caries-Free</label>
-                                        </div>
-                                        <div>
-                                            <input type="checkbox" id="poor-oral-hygiene" name="conditions[]" value="Poor Oral Hygiene">
-                                            <label for="poor-oral-hygiene">Poor Oral Hygiene</label>
-                                        </div>
-                                        <div>
-                                            <input type="checkbox" id="gum-infection" name="conditions[]" value="Gum Infection">
-                                            <label for="gum-infection">Gum Infection</label>
-                                        </div>
-                                        <div>
-                                            <input type="checkbox" id="restorable-caries" name="conditions[]" value="Restorable Caries">
-                                            <label for="restorable-caries">Restorable Caries</label>
-                                        </div>
-                                        <div>
-                                            <input type="text" id="other-conditions" name="other_conditions" placeholder="Others: Specify">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label>Remarks and Recommendations:</label>
-                                    <div>
-                                        <input type="checkbox" id="tooth-brushing" name="recommendations[]" value="Need personal attention in tooth brushing">
-                                        <label for="tooth-brushing">Need personal attention in tooth brushing</label>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" id="oral-prophylaxis" name="recommendations[]" value="For oral prophylaxis">
-                                        <label for="oral-prophylaxis">For oral prophylaxis</label>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" id="fluoride-application" name="recommendations[]" value="For Fluoride application">
-                                        <label for="fluoride-application">For Fluoride application</label>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" id="gum-treatment" name="recommendations[]" value="For Gum/Periodontal treatment">
-                                        <label for="gum-treatment">For Gum/Periodontal treatment</label>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" id="orthodontic-consultation" name="recommendations[]" value="For Orthodontic Consultation">
-                                        <label for="orthodontic-consultation">For Orthodontic Consultation</label>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" id="pits-fissure-sealant" name="recommendations[]" value="For Pits and Fissure Sealant">
-                                        <label for="pits-fissure-sealant">For Pits and Fissure Sealant: Tooth #</label>
-                                        <input type="text" id="pits-fissure-sealant-tooth" name="pits_fissure_sealant_tooth">
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" id="filling" name="recommendations[]" value="For Filling">
-                                        <label for="filling">For Filling: Tooth #</label>
-                                        <input type="text" id="filling-tooth" name="filling_tooth">
-                                    </div>
-                                    <div>
-                                        <input type="text" id="other-recommendations" name="other_recommendations" placeholder="Others: Specify">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <button type="submit">Submit</button>
-                            </div>
-                        </form>
-                    </div>
-                @else
-                    <p>Please upload a health examination picture to proceed with the dental record form.</p>
-                @endif
-            </div>
-        </main>
-    </div>
-
-    <script>
-        function toggleExam() {
-            const examContainer = document.getElementById('exam-container');
-            if (examContainer.style.display === 'none' || examContainer.style.display === '') {
-                examContainer.style.display = 'block';
-            } else {
-                examContainer.style.display = 'none';
+        <script>
+            function toggleExam() {
+                const examContainer = document.getElementById('exam-container');
+                if (examContainer.style.display === 'none' || examContainer.style.display === '') {
+                    examContainer.style.display = 'block';
+                } else {
+                    examContainer.style.display = 'none';
+                }
             }
-        }
 
-        function toggleDentalExam() {
-            const dentalExamContainer = document.getElementById('dental-exam-container');
-            if (dentalExamContainer.style.display === 'none' || dentalExamContainer.style.display === '') {
-                dentalExamContainer.style.display = 'block';
-            } else {
-                dentalExamContainer.style.display = 'none';
+            function toggleDentalExam() {
+                const dentalExamContainer = document.getElementById('dental-exam-container');
+                if (dentalExamContainer.style.display === 'none' || dentalExamContainer.style.display === '') {
+                    dentalExamContainer.style.display = 'block';
+                } else {
+                    dentalExamContainer.style.display = 'none';
+                }
             }
-        }
 
-        function toggleXray() {
-            const xrayContainer = document.getElementById('xray-container');
-            if (xrayContainer.style.display === 'none' || xrayContainer.style.display === '') {
-                xrayContainer.style.display = 'block';
-            } else {
-                xrayContainer.style.display = 'none';
+            function toggleXray() {
+                const xrayContainer = document.getElementById('xray-container');
+                if (xrayContainer.style.display === 'none' || xrayContainer.style.display === '') {
+                    xrayContainer.style.display = 'block';
+                } else {
+                    xrayContainer.style.display = 'none';
+                }
             }
-        }
 
-        function toggleLabExam() {
-            const labExamContainer = document.getElementById('lab-exam-container');
-            if (labExamContainer.style.display === 'none' || labExamContainer.style.display === '') {
-                labExamContainer.style.display = 'block';
-            } else {
-                labExamContainer.style.display = 'none';
+            function toggleLabExam() {
+                const labExamContainer = document.getElementById('lab-exam-container');
+                if (labExamContainer.style.display === 'none' || labExamContainer.style.display === '') {
+                    labExamContainer.style.display = 'block';
+                } else {
+                    labExamContainer.style.display = 'none';
+                }
             }
-        }
 
-        function showTab(tabId) {
-            // Hide all tab content
-            const tabContents = document.querySelectorAll('.tab-content');
-            tabContents.forEach(tabContent => {
-                tabContent.classList.remove('active');
+            function showTab(tabId) {
+                // Hide all tab content
+                const tabContents = document.querySelectorAll('.tab-content');
+                tabContents.forEach(tabContent => {
+                    tabContent.classList.remove('active');
+                });
+
+                // Show the selected tab content
+                const selectedTabContent = document.getElementById(tabId);
+                selectedTabContent.classList.add('active');
+
+                // Update tab buttons
+                const tabButtons = document.querySelectorAll('.tab-buttons button');
+                tabButtons.forEach(button => {
+                    button.classList.remove('active');
+                });
+
+                document.getElementById(tabId + '-tab').classList.add('active');
+            }
+
+            // Initialize by showing the medical record tab
+            showTab('medical-record');
+
+            // Preview uploaded image
+            document.getElementById('picture').addEventListener('change', function(event) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById('picture-preview');
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                };
+                reader.readAsDataURL(event.target.files[0]);
             });
 
-            // Show the selected tab content
-            const selectedTabContent = document.getElementById(tabId);
-            selectedTabContent.classList.add('active');
-
-            // Update tab buttons
-            const tabButtons = document.querySelectorAll('.tab-buttons button');
-            tabButtons.forEach(button => {
-                button.classList.remove('active');
+            document.getElementById('health_examination_picture').addEventListener('change', function(event) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById('health-exam-picture-preview');
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                };
+                reader.readAsDataURL(event.target.files[0]);
             });
 
-            document.getElementById(tabId + '-tab').classList.add('active');
-        }
+            // AJAX form submission for health examination picture upload
+            document.getElementById('health-exam-form').addEventListener('submit', function(event) {
+                event.preventDefault();
+                const formData = new FormData(this);
 
-        // Initialize by showing the medical record tab
-        showTab('medical-record');
+                fetch('{{ route('student.health-examination.store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('status-message').style.display = 'block';
+                        document.getElementById('status-message').textContent = 'Waiting for approval...';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
 
-        // Preview uploaded image
-        document.getElementById('picture').addEventListener('change', function(event) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = document.getElementById('picture-preview');
-                img.src = e.target.result;
-                img.style.display = 'block';
-            };
-            reader.readAsDataURL(event.target.files[0]);
-        });
-
-        document.getElementById('health_examination_picture').addEventListener('change', function(event) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = document.getElementById('health-exam-picture-preview');
-                img.src = e.target.result;
-                img.style.display = 'block';
-            };
-            reader.readAsDataURL(event.target.files[0]);
-        });
-
-        // Validate form to ensure picture is uploaded
-        function validateForm() {
-            const pictureInput = document.getElementById('picture');
-            if (!pictureInput.value) {
-                alert('Please upload a profile picture before submitting.');
-                return false;
+            // Validate form to ensure picture is uploaded
+            function validateForm() {
+                const pictureInput = document.getElementById('picture');
+                if (!pictureInput.value) {
+                    alert('Please upload a profile picture before submitting.');
+                    return false;
+                }
+                return true;
             }
-            return true;
-        }
-    </script>
-</x-app-layout>
+        </script>
+    </x-app-layout>

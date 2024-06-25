@@ -101,8 +101,8 @@ Route::middleware(['auth', 'verified'])->prefix('student')->name('student.')->gr
     Route::get('/dental-record', [DentalRecordController::class, 'create'])->name('dental-record.create');
     Route::post('/dental-record/store', [DentalRecordController::class, 'store'])->name('dental-record.store');
     Route::get('/submit-health-exam', [HealthExaminationController::class, 'create'])->name('submit-health-exam');
+    Route::post('/health-examination/store', [HealthExaminationController::class, 'store'])->name('health-examination.store');
     Route::post('/submit-health-exam', [HealthExaminationController::class, 'store'])->name('store-health-exam');
-    Route::post('/health-examination-picture/store', [StudentController::class, 'storeHealthExaminationPicture'])->name('student.health-examination-picture.store');
 });
 
 // Group teacher routes
@@ -152,15 +152,26 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::post('/appointment/add', [AppointmentController::class, 'add'])->name('appointment.add');
     Route::put('/appointment/update/{id}', [AppointmentController::class, 'update'])->name('appointment.update');
     Route::delete('/appointment/delete/{id}', [AppointmentController::class, 'delete'])->name('appointment.delete');
+    
+    // Inventory Routes
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory');
     Route::post('/inventory/add', [InventoryController::class, 'add'])->name('inventory.add');
+    Route::post('/inventory/update/{id}', [InventoryController::class, 'update'])->name('inventory.update');
+    Route::delete('/inventory/delete/{id}', [InventoryController::class, 'delete'])->name('inventory.delete');
+    
     Route::get('/monitoring-report-log', function () {
         return view('admin.monitoring-report-log');
     })->name('monitoring-report-log');
 
     // Notification routes
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications', [NotificationController::class, 'store'])->name('notifications.store');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 });
+
+
+    // Notification routes
+   
 // Grouped routes for profile with middleware for auth
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
