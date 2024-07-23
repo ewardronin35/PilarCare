@@ -14,27 +14,37 @@ class LoginController extends Controller
     }
 
     public function login(Request $request)
-{
-    $credentials = $request->only('email', 'password');
-    Log::info('Login attempt for email: ' . $credentials['email']);
+    {
+        $credentials = $request->only('id_number', 'password');
+        Log::info('Login attempt for ID number: ' . $credentials['id_number']);
 
-    if (Auth::attempt($credentials)) {
-        $request->session()->regenerate();
-        $user = Auth::user();
-        Log::info('User logged in: ' . $user->email);
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+            $user = Auth::user();
+            Log::info('User logged in: ' . $user->id_number);
 
-        if (!$user->hasVerifiedEmail()) {
-            Auth::logout();
-            Log::warning('User tried to login without verifying email: ' . $user->email);
-            return redirect()->route('verification.notice')->withErrors(['email' => 'You need to verify your email address.']);
+            if (!$user->hasVerifiedEmail()) {
+                Auth::logout();
+                Log::warning('User tried to login without verifying email: ' . $user->id_number);
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['email' => 'You need to verify your email address.'],
+                ], 422);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Login successful.',
+                'redirect' => route('dashboard'),
+            ]);
         }
 
-        return $this->redirectTo($user);
+        Log::warning('Login failed for ID number: ' . $credentials['id_number']);
+        return response()->json([
+            'success' => false,
+            'errors' => ['id_number' => 'The provided credentials do not match our records.'],
+        ], 422);
     }
-
-    Log::warning('Login failed for email: ' . $credentials['email']);
-    return back()->withErrors(['email' => 'The provided credentials do not match our records.']);
-}
 
     protected function redirectTo($user)
     {

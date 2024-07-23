@@ -1,4 +1,6 @@
 <x-app-layout>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <style>
         .container {
             display: flex;
@@ -7,7 +9,7 @@
         }
 
         .sidebar {
-            width: 80px; /* Collapsed width */
+            width: 80px;
             background-color: #00d2ff;
             color: white;
             height: 100vh;
@@ -21,18 +23,18 @@
         }
 
         .sidebar:hover {
-            width: 250px; /* Expanded width */
+            width: 250px;
         }
 
         .main-content {
-            margin-left: 80px; /* Collapsed sidebar width */
+            margin-left: 80px;
             width: calc(100% - 80px);
             padding: 20px;
             transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
         }
 
         .sidebar:hover ~ .main-content {
-            margin-left: 250px; /* Expanded sidebar width */
+            margin-left: 250px;
             width: calc(100% - 250px);
         }
 
@@ -101,7 +103,7 @@
         }
 
         .tab-buttons button {
-            background-color: #00d1ff;
+            background-color: #00d2ff;
             color: white;
             padding: 10px 20px;
             border: none;
@@ -109,11 +111,12 @@
             cursor: pointer;
             margin-right: 10px;
             transition: background-color 0.3s, transform 0.3s;
+            font-size: 16px;
+            font-weight: bold;
         }
 
         .tab-buttons button:hover {
             background-color: #00b8e6;
-            transform: scale(1.05);
         }
 
         .tab-buttons button:active {
@@ -133,20 +136,6 @@
             animation: fadeInUp 0.5s ease-in-out;
         }
 
-        .search-bar {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .search-bar input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-
         table {
             width: 100%;
             border-collapse: collapse;
@@ -155,10 +144,129 @@
         table th, table td {
             border: 1px solid #ddd;
             padding: 8px;
+            animation: fadeIn 1s ease-in-out;
+            text-align: center;
         }
 
         table th {
             background-color: #f2f2f2;
+        }
+
+        .image-previews img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .image-previews {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-container {
+            width: 100px;
+            height: 100px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+            transform: scale(1.05);
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+            transform: scale(1.05);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: auto;
+            max-width: 80%;
+            max-height: 80%;
+            animation: fadeInUp 0.5s ease-in-out;
+            overflow: auto;
+        }
+
+        .modal img {
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
 
         @keyframes fadeInUp {
@@ -177,8 +285,6 @@
         <main class="main-content">
             <div class="tab-buttons">
                 <button id="pending-approvals-tab" class="active" onclick="showTab('pending-approvals')">Pending Approvals</button>
-                <button id="submit-exam-tab" onclick="showTab('submit-exam')">Submit Exam</button>
-                <button id="medical-record-tab" onclick="showTab('medical-record')">Medical Record</button>
             </div>
 
             <!-- Pending Approvals Content -->
@@ -190,7 +296,9 @@
                             <thead>
                                 <tr>
                                     <th>Name</th>
-                                    <th>Picture</th>
+                                    <th>Health Exam Picture</th>
+                                    <th>X-ray Picture</th>
+                                    <th>Lab Result Picture</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -198,16 +306,28 @@
                                 @foreach($pendingExaminations as $examination)
                                     <tr>
                                         <td>{{ $examination->user->first_name }} {{ $examination->user->last_name }}</td>
-                                        <td><img src="{{ asset('storage/' . $examination->health_examination_picture) }}" alt="Health Examination Picture" width="100"></td>
                                         <td>
-                                            <form action="{{ route('admin.health-examinations.approve', $examination->id) }}" method="POST" style="display:inline-block;">
-                                                @csrf
-                                                <button type="submit" class="btn btn-success">Approve</button>
-                                            </form>
-                                            <form action="{{ route('admin.health-examinations.reject', $examination->id) }}" method="POST" style="display:inline-block;">
-                                                @csrf
-                                                <button type="submit" class="btn btn-danger">Reject</button>
-                                            </form>
+                                            <div class="image-container">
+                                                <img src="{{ asset('storage/' . $examination->health_examination_picture) }}" alt="Health Examination Picture" onclick="openModal('{{ asset('storage/' . $examination->health_examination_picture) }}')">
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="image-container">
+                                                <img src="{{ asset('storage/' . $examination->xray_picture) }}" alt="X-ray Picture" onclick="openModal('{{ asset('storage/' . $examination->xray_picture) }}')">
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="image-container">
+                                                <img src="{{ asset('storage/' . $examination->lab_result_picture) }}" alt="Lab Result Picture" onclick="openModal('{{ asset('storage/' . $examination->lab_result_picture) }}')">
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-success" onclick="approveExam({{ $examination->id }})">
+                                                <img src="https://img.icons8.com/material-rounded/24/ffffff/checkmark--v1.png"/> Approve
+                                            </button>
+                                            <button type="button" class="btn btn-danger" onclick="rejectExam({{ $examination->id }})">
+                                                <img src="https://img.icons8.com/material-rounded/24/ffffff/delete-sign.png"/> Reject
+                                            </button>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -218,175 +338,27 @@
                     @endif
                 </div>
             </div>
-
-            <!-- Submit Health Examination Content -->
-            <div id="submit-exam" class="tab-content">
-                <h1>Submit Health Examination</h1>
-                <div class="form-container">
-                    <form method="POST" action="{{ route('admin.health-examinations.store') }}" enctype="multipart/form-data">
-                        @csrf
-                        <div class="form-group">
-                            <label for="name">Name</label>
-                            <input type="text" id="name" name="name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="school_id">School ID</label>
-                            <input type="text" id="school_id" name="school_id" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="student_type">Student Type</label>
-                            <input type="text" id="student_type" name="student_type" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="health_examination_picture" class="button"><i class="fa-regular fa-image"></i> Upload Picture</label>
-                            <input type="file" id="health_examination_picture" name="health_examination_picture" accept="image/*" required>
-                            <img id="picture-preview" src="#" alt="Picture Preview" style="display: none;">
-                        </div>
-                        <div class="form-group">
-                            <button type="submit">Submit Examination</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Medical Record Content -->
-            <div id="medical-record" class="tab-content">
-                <div class="search-bar">
-                    <input type="text" id="search-school-id" placeholder="Search School ID">
-                    <button onclick="searchSchoolId()">Search</button>
-                </div>
-
-                <h1>Student Medical Record</h1>
-                <div class="form-container">
-                    <form method="POST" action="{{ route('student.medical-record.store') }}" enctype="multipart/form-data">
-                        @csrf
-                        <div class="form-group">
-                            <label for="name">Name</label>
-                            <input type="text" id="medical-name" name="name" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label for="birthdate">Birthdate</label>
-                            <input type="date" id="medical-birthdate" name="birthdate" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label for="age">Age</label>
-                            <input type="number" id="medical-age" name="age" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label for="address">Address</label>
-                            <input type="text" id="medical-address" name="address" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label for="father-name">Father's Name/Legal Guardian</label>
-                            <input type="text" id="medical-father-name" name="father_name" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label for="mother-name">Mother's Name/Legal Guardian</label>
-                            <input type="text" id="medical-mother-name" name="mother_name" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label for="medical-illness">Pertinent Medical Illness</label>
-                            <input type="text" id="medical-illness" name="medical_illness" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label for="allergies">Allergies (specify)</label>
-                            <input type="text" id="medical-allergies" name="allergies" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label for="pediatrician">Pediatrician</label>
-                            <input type="text" id="medical-pediatrician" name="pediatrician" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label for="picture">Upload Picture</label>
-                            <input type="file" id="medical-picture" name="picture" accept="image/*" disabled>
-                            <img id="medical-picture-preview" src="#" alt="Picture Preview" style="display: none;">
-                        </div>
-
-                        <div class="form-section">
-                            <h2>Medicines OK to give/apply at the clinic (check)</h2>
-                            <div class="checkbox-group">
-                                <label><input type="checkbox" name="medicines[]" value="Paracetamol" disabled> Paracetamol</label>
-                                <label><input type="checkbox" name="medicines[]" value="Ibuprofen" disabled> Ibuprofen</label>
-                                <label><input type="checkbox" name="medicines[]" value="Mefenamic Acid" disabled> Mefenamic Acid</label>
-                                <label><input type="checkbox" name="medicines[]" value="Citirizine/Loratadine" disabled> Citirizine/Loratadine</label>
-                                <label><input type="checkbox" name="medicines[]" value="Camphor + Menthol Liniment" disabled> Camphor + Menthol Liniment</label>
-                                <label><input type="checkbox" name="medicines[]" value="PPA" disabled> PPA</label>
-                                <label><input type="checkbox" name="medicines[]" value="Phenylephrine" disabled> Phenylephrine</label>
-                                <label><input type="checkbox" name="medicines[]" value="Antacid" disabled> Antacid</label>
-                            </div>
-                        </div>
-                        
-                        <div class="form-section">
-                            <h2>Physical Examination</h2>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Section</th>
-                                        <th>Height</th>
-                                        <th>Weight</th>
-                                        <th>Vision</th>
-                                        <th>Remarks</th>
-                                        <th>MD's Signature</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Dynamic rows can be added here -->
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div class="form-section">
-                            <h2>Consent</h2>
-                            <div class="form-group">
-                                <p>
-                                    I, ____________________________, parent/legal guardian of ____________________________, authorize the health professional to administer medication and do medical treatment as needed. In case of emergency, the patient will be transported to the nearest hospital (Brent Hospital).
-                                </p>
-                                <div class="form-group-inline">
-                                    <label for="consent-date">Date</label>
-                                    <input type="date" id="medical-consent-date" name="consent_date" disabled>
-                                </div>
-                                <div class="form-group-inline">
-                                    <label for="signature">Signature over printed name</label>
-                                    <input type="text" id="medical-signature" name="signature" disabled>
-                                </div>
-                                <div class="form-group-inline">
-                                    <label for="contact-no">Contact No:</label>
-                                    <input type="tel" id="medical-contact-no" name="contact_no" disabled>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <button type="submit" disabled>Submit</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
         </main>
     </div>
 
-    <script>
-        function toggleDentalExam() {
-            const dentalExamContainer = document.getElementById('dental-exam-container');
-            if (dentalExamContainer.style.display === 'none' || dentalExamContainer.style.display === '') {
-                dentalExamContainer.style.display = 'block';
-            } else {
-                dentalExamContainer.style.display = 'none';
-            }
-        }
+    <div id="previewModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <img id="modal-image" src="" alt="Image Preview">
+        </div>
+    </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
         function showTab(tabId) {
-            // Hide all tab content
             const tabContents = document.querySelectorAll('.tab-content');
             tabContents.forEach(tabContent => {
                 tabContent.classList.remove('active');
             });
 
-            // Show the selected tab content
             const selectedTabContent = document.getElementById(tabId);
             selectedTabContent.classList.add('active');
 
-            // Update tab buttons
             const tabButtons = document.querySelectorAll('.tab-buttons button');
             tabButtons.forEach(button => {
                 button.classList.remove('active');
@@ -395,37 +367,105 @@
             document.getElementById(tabId + '-tab').classList.add('active');
         }
 
-        function searchSchoolId() {
-            // Get the search input value
-            const schoolId = document.getElementById('search-school-id').value.trim();
-
-            // Perform a dummy check (you can replace this with an actual AJAX call to fetch data)
-            if (schoolId === '12345') {
-                // Enable all form fields if the school ID is valid
-                enableFormFields(true);
-            } else {
-                alert('School ID not found');
-                // Disable all form fields if the school ID is invalid
-                enableFormFields(false);
-            }
+        function openModal(src) {
+            const modal = document.getElementById('previewModal');
+            const modalImg = document.getElementById('modal-image');
+            modalImg.src = src;
+            modal.style.display = 'block';
         }
 
-        function enableFormFields(enable) {
-            const formFields = document.querySelectorAll('.form-container input, .form-container textarea, .form-container select, .form-container button');
-            formFields.forEach(field => {
-                field.disabled = !enable;
+        function closeModal() {
+            const modal = document.getElementById('previewModal');
+            modal.style.display = 'none';
+        }
+
+        function approveExam(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You want to approve this examination!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, approve it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/admin/medical-record/${id}/approve`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    }).then(response => {
+                        if (response.ok) {
+                            Swal.fire(
+                                'Approved!',
+                                'The examination has been approved.',
+                                'success'
+                            ).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire(
+                                'Error!',
+                                'The examination could not be approved.',
+                                'error'
+                            );
+                        }
+                    }).catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire(
+                            'Error!',
+                            'There was a problem with the approval process.',
+                            'error'
+                        );
+                    });
+                }
             });
         }
 
-        document.getElementById('health_examination_picture').addEventListener('change', function(event) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = document.getElementById('picture-preview');
-                img.src = e.target.result;
-                img.style.display = 'block';
-            };
-            reader.readAsDataURL(event.target.files[0]);
-        });
+        function rejectExam(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You want to reject this examination!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, reject it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/admin/medical-record/${id}/reject`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    }).then(response => {
+                        if (response.ok) {
+                            Swal.fire(
+                                'Rejected!',
+                                'The examination has been rejected.',
+                                'success'
+                            ).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire(
+                                'Error!',
+                                'The examination could not be rejected.',
+                                'error'
+                            );
+                        }
+                    }).catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire(
+                            'Error!',
+                            'There was a problem with the rejection process.',
+                            'error'
+                        );
+                    });
+                }
+            });
+        }
 
         document.addEventListener('DOMContentLoaded', function () {
             showTab('pending-approvals');

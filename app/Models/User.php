@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -11,32 +12,50 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
-        'first_name', 'last_name', 'email', 'password', 'contact_number', 'gender', 'role', 'id_number', 'parent_id', 
-        'student_type', 'program', 'year_level', 'year_section', 'bed_type', 'section', 'grade', 'teacher_type', 'staff_role', 'profile_picture',
+        'id_number',
+        'first_name',
+        'last_name',
+        'email',
+        'password',
+        'role',
     ];
 
+    /**
+     * The attributes that should be hidden for arrays.
+     *
+     * @var array<int, string>
+     */
     protected $hidden = [
-        'password', 'remember_token',
+        'password',
+        'remember_token',
     ];
 
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array<string, string>
+     */
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
 
+    /**
+     * Send the email verification notification.
+     *
+     * @return void
+     */
     public function sendEmailVerificationNotification()
     {
         $this->notify(new VerifyEmail);
     }
-
     public function healthExaminations()
-    {
-        return $this->hasMany(HealthExamination::class);
-    }
-
-    // Add this method to establish the relationship
-    public function notifications()
-    {
-        return $this->hasMany(Notification::class, 'user_id', 'id_number');
-    }
+{
+    return $this->hasMany(HealthExamination::class);
+}
 }

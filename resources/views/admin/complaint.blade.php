@@ -100,14 +100,16 @@
         }
 
         .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            background-color: white;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            position: relative;
-        }
+           display: flex;
+    justify-content: space-between;
+         align-items: center;
+    padding: 20px;
+    width: 100%; /* Ensure the header spans the full width */
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative; /* Ensure it stays in the document flow */
+    z-index: 2; /* Ensure it stays on top of other content */
+}
 
         .user-info {
             display: flex;
@@ -174,7 +176,7 @@
             font-weight: bold;
         }
 
-        .appointment-table {
+        .complaints-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
@@ -182,22 +184,23 @@
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             overflow: hidden;
+            animation: fadeInUp 0.5s ease-in-out;
         }
 
-        .appointment-table th,
-        .appointment-table td {
+        .complaints-table th,
+        .complaints-table td {
             padding: 10px;
             text-align: left;
         }
 
-        .appointment-table th {
+        .complaints-table th {
             background-color: #f5f5f5;
             color: #333;
             font-weight: 600;
             border-bottom: 1px solid #ddd;
         }
 
-        .appointment-table td {
+        .complaints-table td {
             border-bottom: 1px solid #eee;
         }
 
@@ -227,6 +230,20 @@
             display: block;
         }
 
+        .preview-button {
+            background-color: #00d1ff;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        .preview-button:hover {
+            background-color: #00b8e6;
+        }
+
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -235,6 +252,78 @@
             to {
                 opacity: 1;
                 transform: translateY(0);
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            border-radius: 10px;
+            animation: slideIn 0.5s ease-in-out;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            margin-top: 10px;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
             }
         }
     </style>
@@ -258,34 +347,26 @@
 
             <div id="student" class="tab-content active">
                 <!-- Student Complaints Table -->
-                <table class="appointment-table">
+                <table class="complaints-table">
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Year and Section</th>
-                            <th>Age</th>
-                            <th>Birthdate</th>
-                            <th>Contact Number</th>
                             <th>Health History</th>
-                            <th>Complaints</th>
-                            <th>Date & Time</th>
-                            <th>Management</th>
-                            <th>Remarks</th>
+                            <th>Description of Sickness</th>
+                            <th>Pain Assessment</th>
+                            <th>Status</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($studentComplaints as $complaint)
                             <tr>
                                 <td>{{ $complaint->name }}</td>
-                                <td>{{ $complaint->year_and_section }}</td>
-                                <td>{{ $complaint->age }}</td>
-                                <td>{{ $complaint->birthdate }}</td>
-                                <td>{{ $complaint->contact_number }}</td>
                                 <td>{{ $complaint->health_history }}</td>
-                                <td>{{ $complaint->complaint }}</td>
-                                <td>{{ $complaint->datetime }}</td>
-                                <td>{{ $complaint->management }}</td>
-                                <td>{{ $complaint->remarks }}</td>
+                                <td>{{ $complaint->sickness_description }}</td>
+                                <td>{{ $complaint->pain_assessment }}</td>
+                                <td>{{ $complaint->status }}</td>
+                                <td><button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button></td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -294,32 +375,26 @@
 
             <div id="staff" class="tab-content">
                 <!-- Staff Complaints Table -->
-                <table class="appointment-table">
+                <table class="complaints-table">
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Age</th>
-                            <th>Birthdate</th>
-                            <th>Contact Number</th>
                             <th>Health History</th>
-                            <th>Complaints</th>
-                            <th>Date & Time</th>
-                            <th>Management</th>
-                            <th>Remarks</th>
+                            <th>Description of Sickness</th>
+                            <th>Pain Assessment</th>
+                            <th>Status</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($staffComplaints as $complaint)
                             <tr>
                                 <td>{{ $complaint->name }}</td>
-                                <td>{{ $complaint->age }}</td>
-                                <td>{{ $complaint->birthdate }}</td>
-                                <td>{{ $complaint->contact_number }}</td>
                                 <td>{{ $complaint->health_history }}</td>
-                                <td>{{ $complaint->complaint }}</td>
-                                <td>{{ $complaint->datetime }}</td>
-                                <td>{{ $complaint->management }}</td>
-                                <td>{{ $complaint->remarks }}</td>
+                                <td>{{ $complaint->sickness_description }}</td>
+                                <td>{{ $complaint->pain_assessment }}</td>
+                                <td>{{ $complaint->status }}</td>
+                                <td><button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button></td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -328,32 +403,26 @@
 
             <div id="parent" class="tab-content">
                 <!-- Parent Complaints Table -->
-                <table class="appointment-table">
+                <table class="complaints-table">
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Age</th>
-                            <th>Birthdate</th>
-                            <th>Contact Number</th>
                             <th>Health History</th>
-                            <th>Complaints</th>
-                            <th>Date & Time</th>
-                            <th>Management</th>
-                            <th>Remarks</th>
+                            <th>Description of Sickness</th>
+                            <th>Pain Assessment</th>
+                            <th>Status</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($parentComplaints as $complaint)
                             <tr>
                                 <td>{{ $complaint->name }}</td>
-                                <td>{{ $complaint->age }}</td>
-                                <td>{{ $complaint->birthdate }}</td>
-                                <td>{{ $complaint->contact_number }}</td>
                                 <td>{{ $complaint->health_history }}</td>
-                                <td>{{ $complaint->complaint }}</td>
-                                <td>{{ $complaint->datetime }}</td>
-                                <td>{{ $complaint->management }}</td>
-                                <td>{{ $complaint->remarks }}</td>
+                                <td>{{ $complaint->sickness_description }}</td>
+                                <td>{{ $complaint->pain_assessment }}</td>
+                                <td>{{ $complaint->status }}</td>
+                                <td><button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button></td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -362,32 +431,26 @@
 
             <div id="teacher" class="tab-content">
                 <!-- Teacher Complaints Table -->
-                <table class="appointment-table">
+                <table class="complaints-table">
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Age</th>
-                            <th>Birthdate</th>
-                            <th>Contact Number</th>
                             <th>Health History</th>
-                            <th>Complaints</th>
-                            <th>Date & Time</th>
-                            <th>Management</th>
-                            <th>Remarks</th>
+                            <th>Description of Sickness</th>
+                            <th>Pain Assessment</th>
+                            <th>Status</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($teacherComplaints as $complaint)
                             <tr>
                                 <td>{{ $complaint->name }}</td>
-                                <td>{{ $complaint->age }}</td>
-                                <td>{{ $complaint->birthdate }}</td>
-                                <td>{{ $complaint->contact_number }}</td>
                                 <td>{{ $complaint->health_history }}</td>
-                                <td>{{ $complaint->complaint }}</td>
-                                <td>{{ $complaint->datetime }}</td>
-                                <td>{{ $complaint->management }}</td>
-                                <td>{{ $complaint->remarks }}</td>
+                                <td>{{ $complaint->sickness_description }}</td>
+                                <td>{{ $complaint->pain_assessment }}</td>
+                                <td>{{ $complaint->status }}</td>
+                                <td><button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button></td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -395,6 +458,21 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal -->
+    <div id="complaint-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Complaint Details</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Complaint details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <script>
         function showTab(tabId) {
@@ -404,14 +482,54 @@
             });
 
             const selectedTabContent = document.getElementById(tabId);
-            selectedTabContent.classList.add('active');
+            if (selectedTabContent) {
+                selectedTabContent.classList.add('active');
+            }
 
             const tabButtons = document.querySelectorAll('.tab-buttons button');
             tabButtons.forEach(button => {
                 button.classList.remove('active');
             });
 
-            document.getElementById(tabId + '-tab').classList.add('active');
+            const selectedTabButton = document.getElementById(tabId + '-tab');
+            if (selectedTabButton) {
+                selectedTabButton.classList.add('active');
+            }
+        }
+
+        function openModal(complaintId) {
+            fetch(`/admin/complaint/${complaintId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const modalBody = document.getElementById('modal-body');
+                    modalBody.innerHTML = `
+                        <p><strong>Name:</strong> ${data.name}</p>
+                        <p><strong>Age:</strong> ${data.age}</p>
+                        <p><strong>Birthdate:</strong> ${data.birthdate}</p>
+                        <p><strong>Contact Number:</strong> ${data.contact_number}</p>
+                        <p><strong>Health History:</strong> ${data.health_history}</p>
+                        <p><strong>Pain Assessment:</strong> ${data.pain_assessment}</p>
+                        <p><strong>Description of Sickness:</strong> ${data.sickness_description}</p>
+                        <p><strong>Status:</strong> ${data.status}</p>
+                        <p><strong>Student Type:</strong> ${data.student_type}</p>
+                        <p><strong>Program:</strong> ${data.program || 'N/A'}</p>
+                        <p><strong>Year:</strong> ${data.year || 'N/A'}</p>
+                        <p><strong>Section:</strong> ${data.section || 'N/A'}</p>
+                        <p><strong>Grade:</strong> ${data.grade || 'N/A'}</p>
+                        <p><strong>Strand:</strong> ${data.strand || 'N/A'}</p>
+                    `;
+                    document.getElementById('complaint-modal').style.display = 'block';
+                })
+                .catch(error => console.error('Error fetching complaint details:', error));
+        }
+
+        function closeModal() {
+            document.getElementById('complaint-modal').style.display = 'none';
         }
 
         document.getElementById('notification-icon').addEventListener('click', function() {

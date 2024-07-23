@@ -1,6 +1,4 @@
 <?php
-// database/migrations/xxxx_xx_xx_create_health_examinations_table.php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,6 +11,8 @@ class CreateHealthExaminationsTable extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('health_examination_picture');
+            $table->string('xray_picture')->nullable();
+            $table->string('lab_result_picture')->nullable();
             $table->boolean('is_approved')->default(false);
             $table->timestamps();
         });

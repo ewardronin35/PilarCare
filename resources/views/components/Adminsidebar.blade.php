@@ -1,8 +1,7 @@
-<!-- resources/views/components/Adminsidebar.blade.php -->
 <div class="sidebar">
     <style>
         .sidebar {
-            width: 80px; /* Collapsed width */
+            width: 100px; /* Collapsed width */
             background-color: #00d2ff;
             color: white;
             height: 100vh;
@@ -12,28 +11,31 @@
             padding-top: 20px;
             transition: width 0.3s ease-in-out;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
         }
 
         .sidebar:hover {
-            width: 250px; /* Expanded width */
+            width: 270px; /* Expanded width */
         }
 
         .logo {
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 20px;
+            margin-bottom: 40px; /* Increased margin to lower menu items */
             transition: opacity 0.3s ease-in-out;
         }
 
         .logo-img {
             width: 40px;
             height: 40px;
-            margin-right: 35px;
+            margin-right: 30px;
         }
 
         .logo-text {
-            font-size: 1.25rem;
+            font-size: 1.5rem;
             font-weight: bold;
             opacity: 0;
         }
@@ -42,36 +44,51 @@
             opacity: 1;
         }
 
+        .menu {
+            flex-grow: 1;
+            padding: 0;
+            padding-top: 20px; /* Added padding to top to lower the menu items */
+        }
+
         .menu ul {
             list-style: none;
             padding: 0;
+            margin: 0;
         }
 
         .menu li {
-            display: flex;
-            align-items: center;
-            margin: 10px 0;
-            padding: 10px 20px;
-            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+            position: relative;
         }
 
-        .menu li:hover {
+        .menu > ul > li {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+            cursor: pointer;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .menu > ul > li:hover {
             background-color: #009ec3;
             transform: translateX(10px);
         }
 
-        .menu li a {
+        .menu > ul > li a {
             color: white;
             text-decoration: none;
-            font-size: 1rem;
+            font-size: 1.2rem; /* Adjusted font size */
             display: flex;
             align-items: center;
+            width: 100%;
         }
 
-        .menu li a .icon {
-            min-width: 20px;
+        .menu > ul > li a .icon {
+            min-width: 30px; /* Adjusted icon size */
             margin-right: 10px;
             text-align: center;
+            font-size: 1.5rem; /* Increased icon size */
         }
 
         .menu-text {
@@ -83,61 +100,154 @@
             opacity: 1;
         }
 
-        .sidebar-footer ul {
-            list-style: none;
-            padding: 0;
+        .submenu {
+            display: none;
+            flex-direction: column;
+            margin-left: 0;
+            padding-left: 20px;
+            width: 100%;
+            box-shadow: none; /* Remove shadow */
         }
 
-        .sidebar-footer li {
+        .menu li.active .submenu {
             display: flex;
-            align-items: center;
-            margin: 10px 0;
-            padding: 10px 20px;
-            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+            width: 100%;
+            box-shadow: none; /* Remove shadow */
         }
 
-        .sidebar-footer li:hover {
+        .submenu li {
+            padding: 5px 20px;
+            margin: 0;
+            background-color: #00b8e6;
+            width: 100%;
+        }
+
+        .submenu li:hover {
             background-color: #009ec3;
-            transform: translateX(10px);
+            transform: none;
         }
 
-        .sidebar-footer li a {
+        .submenu li a {
             color: white;
             text-decoration: none;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
+            display: block;
+            width: 100%;
         }
 
-        .sidebar-footer li a .icon {
-            min-width: 20px;
-            margin-right: 10px;
-            text-align: center;
+        .submenu .submenu {
+            display: none;
+        }
+
+        .submenu li.active .submenu {
+            display: block;
+        }
+
+        .submenu-toggle {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .menu li.active > a > .submenu-toggle {
+            transform: rotate(90deg);
+        }
+
+        /* Media Queries */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px; /* Smaller sidebar for mobile */
+            }
+
+            .sidebar:hover {
+                width: 200px; /* Expanded width for mobile */
+            }
+
+            .logo-text {
+                font-size: 1rem; /* Smaller logo text for mobile */
+            }
+
+            .menu > ul > li {
+                padding: 5px 10px; /* Smaller padding for menu items */
+            }
+
+            .menu > ul > li a {
+                font-size: 1rem; /* Smaller font size for menu items */
+            }
+
+            .menu > ul > li a .icon {
+                font-size: 1.2rem; /* Smaller icon size */
+            }
         }
     </style>
 
-<div class="logo">
+    <div class="logo">
         <img src="{{ asset('images/pilarLogo.png') }}" alt="PilarCare Logo" class="logo-img">
         <span class="logo-text hidden md:inline-block">PilarCare</span>
     </div>
     <nav class="menu">
         <ul>
             <li><a href="{{ route('admin.dashboard') }}" id="admin-dashboard-link"><span class="icon"><i class="fas fa-tachometer-alt"></i></span><span class="menu-text">Dashboard</span></a></li>
-            <li><a href="{{ route('admin.complaint') }}" id="admin-complaint-link"><span class="icon"><i class="fas fa-comments"></i></span><span class="menu-text">Complaint</span></a></li>
-            <li><a href="{{ route('admin.medical-record') }}" id="admin-medical-record-link"><span class="icon"><i class="fas fa-notes-medical"></i></span><span class="menu-text">Records</span></a></li>
+            <li class="has-submenu">
+                <a href="#"><span class="icon"><i class="fas fa-comments"></i></span><span class="menu-text">Complaints</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
+                <ul class="submenu">
+                    <li><a href="{{ route('admin.complaint') }}">View Complaints</a></li>
+                    <li><a href="{{ route('admin.complaint') }}">Add Complaints</a></li>
+                </ul>
+            </li>
+            <li class="has-submenu">
+                <a href="#"><span class="icon"><i class="fas fa-notes-medical"></i></span><span class="menu-text">Records</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
+                <ul class="submenu">
+                    <li><a href="{{ route('admin.medical-record.index') }}">Health Approval</a></li>
+                    <li><a href="{{ route('admin.medical-record.index') }}">View Medical Record</a></li>
+                    <li><a href="{{ route('admin.medical-record.index') }}">View Dental Record</a></li>
+                </ul>
+            </li>
+            <li><a href="{{ route('admin.enrolledstudents') }}" id="admin-enrolled-students-link"><span class="icon"><i class="fas fa-user-graduate"></i></span><span class="menu-text">Enrolled Students</span></a></li>
             <li><a href="{{ route('admin.appointment') }}" id="admin-appointment-link"><span class="icon"><i class="fas fa-calendar-check"></i></span><span class="menu-text">Appointment</span></a></li>
-            <li><a href="{{ route('admin.inventory') }}" id="admin-inventory-link"><span class="icon"><i class="fas fa-boxes"></i></span><span class="menu-text">Inventory</span></a></li>
-            <li><a href="{{ route('admin.monitoring-report-log') }}" id="admin-monitoring-report-link"><span class="icon"><i class="fas fa-chart-line"></i></span><span class="menu-text">Monitoring and Report</span></a></li>
+            <li class="has-submenu">
+                <a href="#"><span class="icon"><i class="fas fa-boxes"></i></span><span class="menu-text">Inventory</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
+                <ul class="submenu">
+                    <li><a href="{{ route('admin.inventory') }}">Add Item</a></li>
+                    <li><a href="{{ route('admin.inventory') }}">Inventory List</a></li>
+                </ul>
+            </li>
+            <li class="has-submenu">
+                <a href="#"><span class="icon"><i class="fas fa-chart-line"></i></span><span class="menu-text">Monitoring and Report</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
+                <ul class="submenu">
+                    <li><a href="{{ route('admin.monitoring-report-log') }}">Release Notification</a></li>
+                    <li><a href="{{ route('admin.monitoring-report-log') }}">View Logs and Daily Transactions</a></li>
+                </ul>
+            </li>
+            <li class="has-submenu">
+                <a href="#"><span class="icon"><i class="fas fa-user"></i></span><span class="menu-text">Profile</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
+                <ul class="submenu">
+                    <li><a href="{{ route('admin.monitoring-report-log') }}">View Profile of Student</a></li>
+                </ul>
+            </li>
         </ul>
     </nav>
-    <div class="sidebar-footer">
-        <ul>
-            <li><a href="#"><span class="icon"><i class="fas fa-cogs"></i></span><span class="menu-text">Settings</span></a></li>
-            <li><a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><span class="icon"><i class="fas fa-sign-out-alt"></i></span><span class="menu-text">Logout</span></a></li>
-            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                @csrf
-            </form>
-        </ul>
-    </div>
 </div>
 
+<script>
+    document.querySelectorAll('.has-submenu > a').forEach(menuItem => {
+        menuItem.addEventListener('click', function(e) {
+            e.preventDefault();
+            var parentLi = this.parentElement;
+            parentLi.classList.toggle('active');
+            document.querySelectorAll('.has-submenu').forEach(item => {
+                if (item !== parentLi) {
+                    item.classList.remove('active');
+                }
+            });
+        });
+    });
+
+    document.addEventListener('mouseover', function(e) {
+        var targetElement = e.target;
+        var isHoverInside = targetElement.closest('.sidebar');
+        if (!isHoverInside) {
+            document.querySelectorAll('.has-submenu').forEach(item => {
+                item.classList.remove('active');
+            });
+        }
+    });
+</script>

@@ -28,7 +28,7 @@ class InventoryController extends Controller
 
         if ($inventoryItem->quantity <= 2) {
             Notification::create([
-                'user_id' => 'admin',  // Assuming 'admin' is used for user identification
+                'user_id' => Auth::user()->id_number,  // Assuming 'id_number' is used for user identification
                 'title' => 'Low Stock Alert',
                 'message' => "The item {$inventoryItem->item_name} is low in stock with only {$inventoryItem->quantity} left.",
             ]);
@@ -52,7 +52,7 @@ class InventoryController extends Controller
 
         if ($inventoryItem->quantity <= 2) {
             Notification::create([
-                'user_id' => 'admin',  // Assuming 'admin' is used for user identification
+                'user_id' => Auth::user()->id_number,  // Assuming 'id_number' is used for user identification
                 'title' => 'Low Stock Alert',
                 'message' => "The item {$inventoryItem->item_name} is low in stock with only {$inventoryItem->quantity} left.",
             ]);

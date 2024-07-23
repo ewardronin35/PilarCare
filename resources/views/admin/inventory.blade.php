@@ -39,6 +39,36 @@
             border-radius: 50%;
         }
 
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        .tab:hover {
+            background-color: #f0f0f0;
+        }
+
+        .tab.active {
+            border-bottom: 2px solid #007bff;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
         .inventory-table {
             width: 100%;
             border-collapse: collapse;
@@ -59,7 +89,6 @@
         }
 
         .form-container {
-            margin-top: 20px;
             background-color: #f9f9f9;
             padding: 20px;
             border-radius: 10px;
@@ -74,17 +103,16 @@
         .form-group label {
             display: block;
             margin-bottom: 5px;
-            font-size: 1rem; /* Match the font size of the labels to the headers */
+            font-size: 1rem;
         }
 
         .form-group input,
-        .form-group textarea,
         .form-group select {
             width: 98%;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
-            font-size: 1rem; /* Match the font size of the inputs to the headers */
+            font-size: 1rem;
         }
 
         .form-group button {
@@ -95,7 +123,7 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s, transform 0.3s;
-            font-size: 1rem; /* Same font size as H1 Inventory */
+            font-size: 1rem;
         }
 
         .form-group button:hover {
@@ -105,6 +133,17 @@
 
         .form-group button:active {
             transform: scale(0.95);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .action-buttons {
@@ -120,7 +159,7 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s, transform 0.3s;
-            font-size: 1rem; /* Same font size as H1 Inventory */
+            font-size: 1rem;
         }
 
         .action-buttons button:hover {
@@ -132,18 +171,6 @@
             transform: scale(0.95);
         }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -188,71 +215,81 @@
         <main class="main-content">
             <h1>Inventory</h1>
 
-            <!-- Inventory Table Content -->
-            <table class="inventory-table">
-                <thead>
-                    <tr>
-                        <th>Item ID</th>
-                        <th>Item Name</th>
-                        <th>Quantity</th>
-                        <th>Brand</th>
-                        <th>Type</th>
-                        <th>Date Acquired</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($inventoryItems as $item)
-                        <tr id="item-row-{{ $item->id }}">
-                            <td>{{ $item->id }}</td>
-                            <td>{{ $item->item_name }}</td>
-                            <td>{{ $item->quantity }}</td>
-                            <td>{{ $item->supplier }}</td>
-                            <td>{{ $item->type }}</td>
-                            <td>{{ $item->date_acquired }}</td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button onclick="openEditModal({{ $item->id }})">Edit</button>
-                                    <button onclick="confirmDelete({{ $item->id }})">Delete</button>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab active" onclick="showTab('add-item')">Add Inventory Item</div>
+                <div class="tab" onclick="showTab('inventory-table')">Inventory Table</div>
+            </div>
 
             <!-- Add Inventory Item Form -->
-            <div class="form-container">
-                <h2>Add Inventory Item</h2>
-                <form id="add-form">
-                    @csrf
-                    <div class="form-group">
-                        <label for="item-name">Item Name</label>
-                        <input type="text" id="item-name" name="item_name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="quantity">Quantity</label>
-                        <input type="number" id="quantity" name="quantity" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="supplier">Brand</label>
-                        <input type="text" id="supplier" name="supplier" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="type">Type</label>
-                        <select id="type" name="type" required>
-                            <option value="Equipment">Equipment</option>
-                            <option value="Medicine">Medicine</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="date-acquired">Date Acquired</label>
-                        <input type="date" id="date-acquired" name="date_acquired" required>
-                    </div>
-                    <div class="form-group">
-                        <button type="button" onclick="addItem()">Add Item</button>
-                    </div>
-                </form>
+            <div id="add-item" class="tab-content active">
+                <div class="form-container">
+                    <h2>Add Inventory Item</h2>
+                    <form id="add-form">
+                        @csrf
+                        <div class="form-group">
+                            <label for="item-name">Item Name</label>
+                            <input type="text" id="item-name" name="item_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="quantity">Quantity</label>
+                            <input type="number" id="quantity" name="quantity" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="supplier">Brand</label>
+                            <input type="text" id="supplier" name="supplier" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="type">Type</label>
+                            <select id="type" name="type" required>
+                                <option value="Equipment">Equipment</option>
+                                <option value="Medicine">Medicine</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="date-acquired">Date Acquired</label>
+                            <input type="date" id="date-acquired" name="date_acquired" required>
+                        </div>
+                        <div class="form-group">
+                            <button type="button" onclick="addItem()">Add Item</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Inventory Table Content -->
+            <div id="inventory-table" class="tab-content">
+                <table class="inventory-table">
+                    <thead>
+                        <tr>
+                            <th>Item ID</th>
+                            <th>Item Name</th>
+                            <th>Quantity</th>
+                            <th>Brand</th>
+                            <th>Type</th>
+                            <th>Date Acquired</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($inventoryItems as $item)
+                            <tr id="item-row-{{ $item->id }}">
+                                <td>{{ $item->id }}</td>
+                                <td>{{ $item->item_name }}</td>
+                                <td>{{ $item->quantity }}</td>
+                                <td>{{ $item->supplier }}</td>
+                                <td>{{ $item->type }}</td>
+                                <td>{{ $item->date_acquired }}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button onclick="openEditModal({{ $item->id }})">Edit</button>
+                                        <button onclick="confirmDelete({{ $item->id }})">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
 
             <!-- Edit Inventory Item Modal -->
@@ -292,12 +329,28 @@
                     </form>
                 </div>
             </div>
-
         </main>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        function showTab(tabId) {
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(tabContent => {
+                tabContent.classList.remove('active');
+            });
+
+            const selectedTabContent = document.getElementById(tabId);
+            selectedTabContent.classList.add('active');
+
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            document.querySelector(`.tab[onclick="showTab('${tabId}')"]`).classList.add('active');
+        }
+
         function closeNotification() {
             const notification = document.getElementById('notification');
             notification.style.opacity = '0';

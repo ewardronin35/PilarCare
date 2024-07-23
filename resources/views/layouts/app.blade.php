@@ -8,195 +8,21 @@
     <!-- Fonts -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap">
     <!-- Styles -->
-    <link rel="stylesheet" href="{{ mix('css/app.css') }}">
-    <link rel="stylesheet" href="{{ url('css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
     <!-- Scripts -->
-    <script src="{{ mix('js/app.js') }}" defer></script>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Nunito', sans-serif;
-        }
-
-        .container {
-            display: flex;
-            min-height: 100vh;
-            flex-direction: row;
-        }
-
-        .sidebar {
-            width: 80px; /* Collapsed width */
-            background-color: #00d2ff;
-            color: white;
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            padding-top: 20px;
-            transition: width 0.3s ease-in-out;
-            overflow: hidden;
-            z-index: 1000;
-        }
-
-        .sidebar:hover {
-            width: 250px; /* Expanded width */
-        }
-
-        .main-content {
-            margin-left: 80px; /* Collapsed sidebar width */
-            flex-grow: 1;
-            padding: 20px;
-            transition: margin-left 0.3s ease-in-out;
-        }
-
-        .sidebar:hover ~ .main-content {
-            margin-left: 250px; /* Expanded sidebar width */
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 20px;
-            background-color: #ffffff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            position: fixed;
-            top: 0;
-            z-index: 999;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-        }
-
-        .user-info .username {
-            margin-right: 10px;
-        }
-
-        .user-info .role {
-            margin-right: 10px;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-
-        .notification-icon {
-            position: relative;
-            cursor: pointer;
-        }
-
-        .notification-icon i {
-            transition: transform 0.3s;
-        }
-
-        .notification-icon.active i {
-            transform: rotate(45deg);
-        }
-
-        .notification-dropdown {
-            display: none;
-            position: absolute;
-            top: 40px;
-            right: 0;
-            width: 300px;
-            background: white;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-        }
-
-        .notification-dropdown.active {
-            display: block;
-        }
-
-        .notification-header {
-            font-weight: bold;
-            padding: 10px;
-            background: #f9f9f9;
-            border-bottom: 1px solid #eee;
-        }
-
-        .notification-item {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-        }
-
-        .notification-item:last-child {
-            border-bottom: none;
-        }
-
-        .notification-item:hover {
-            background: #f1f1f1;
-        }
-
-        .notification-item .icon {
-            margin-right: 10px;
-        }
-
-        .menu ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .menu li {
-            display: flex;
-            align-items: center;
-            margin: 10px 0;
-            padding: 10px 20px;
-            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
-        }
-
-        .menu li:hover {
-            background-color: #009ec3;
-            transform: translateX(10px);
-        }
-
-        .menu li a {
-            color: white;
-            text-decoration: none;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-        }
-
-        .menu li a .icon {
-            min-width: 30px;
-            margin-right: 20px;
-            text-align: center;
-        }
-
-        .menu-text {
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
-        }
-
-        .sidebar:hover .menu-text {
-            opacity: 1;
-        }
-    </style>
 </head>
 <body class="font-sans antialiased">
     <div class="container">
-        <!-- Sidebar inclusion based on user role -->
         @if(Auth::check())
             @if(Auth::user()->role == 'Admin')
                 <x-adminsidebar />
-            @elseif(Auth::user()->role == 'Parent')
-                <x-parentsidebar />
             @elseif(Auth::user()->role == 'Student')
                 <x-studentsidebar />
+            @elseif(Auth::user()->role == 'Parent')
+                <x-parentsidebar />
             @elseif(Auth::user()->role == 'Teacher')
                 <x-teachersidebar />
             @elseif(Auth::user()->role == 'Staff')
@@ -205,71 +31,45 @@
         @endif
 
         <div class="main-content">
-            <!-- Header -->
             <header class="header">
+                <div class="breadcrumb">
+                    <a href="{{ route('admin.dashboard') }}">Dashboard</a>
+                    <span class="separator">/</span>
+                    <span>{{ $pageTitle ?? '' }}</span>
+                </div>
                 <div class="user-info">
                     <span class="username">{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</span>
                     <span class="role">{{ Auth::user()->role }}</span>
-                    <img src="{{ asset('images/pilarLogo.png') }}" alt="User Avatar" class="user-avatar">
-                </div>
-                <div class="notification-icon" id="notification-icon">
-                    <i class="fas fa-bell"></i>
-                    <div id="notification-dropdown" class="notification-dropdown">
-                        <div class="notification-header">Notifications</div>
-                        <div id="notification-content"></div>
+                    <div class="user-avatar" id="user-avatar">
+                        <img src="{{ asset('images/pilarLogo.jpg') }}" alt="Profile Image">
+                    </div>
+                    <div class="dropdown-menu" id="dropdown-menu">
+                        <a href="{{ route('profile.edit') }}" class="dropdown-item">Settings</a>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <a href="{{ route('logout') }}" class="dropdown-item"
+                                onclick="event.preventDefault(); this.closest('form').submit();">Logout</a>
+                        </form>
                     </div>
                 </div>
             </header>
 
-            <!-- Page Content -->
-            <div style="margin-top: 80px;"> <!-- Adjusted margin-top to account for header height -->
+            <div class="content">
                 {{ $slot }}
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        document.getElementById('notification-icon').addEventListener('click', function() {
-            var dropdown = document.getElementById('notification-dropdown');
+        document.getElementById('user-avatar').addEventListener('click', function() {
+            var dropdown = document.getElementById('dropdown-menu');
             dropdown.classList.toggle('active');
-            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-            if (dropdown.classList.contains('active')) {
-                fetchNotifications();
-            }
         });
 
-        function fetchNotifications() {
-            fetch('{{ route("admin.notifications.index") }}')
-                .then(response => response.json())
-                .then(data => {
-                    const notificationContent = document.getElementById('notification-content');
-                    notificationContent.innerHTML = '';
-
-                    if (data.notifications.length > 0) {
-                        data.notifications.forEach(notification => {
-                            const notificationItem = document.createElement('div');
-                            notificationItem.className = 'notification-item';
-                            notificationItem.innerHTML = `
-                                <span class="icon"><i class="fas fa-info-circle"></i></span>
-                                <span>${notification.message}</span>
-                            `;
-                            notificationContent.appendChild(notificationItem);
-                        });
-                    } else {
-                        notificationContent.innerHTML = '<div class="notification-item">No notifications</div>';
-                    }
-                })
-                .catch(error => console.error('Error fetching notifications:', error));
-        }
-
-        // Close the dropdown if clicked outside
         document.addEventListener('click', function(event) {
-            var dropdown = document.getElementById('notification-dropdown');
-            var icon = document.getElementById('notification-icon');
-            if (!dropdown.contains(event.target) && !icon.contains(event.target)) {
+            var dropdown = document.getElementById('dropdown-menu');
+            if (!dropdown.contains(event.target) && !event.target.closest('#user-avatar')) {
                 dropdown.classList.remove('active');
-                dropdown.style.display = 'none';
             }
         });
     </script>

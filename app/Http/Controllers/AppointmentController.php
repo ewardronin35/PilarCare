@@ -1,22 +1,20 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Appointment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AppointmentController extends Controller
 {
     public function index()
     {
-        $appointments = Appointment::all();
-        $role = Auth::user()->role; // Get the authenticated user's role
+        $appointments = Appointment::where('id_number', Auth::user()->id_number)->get();
+        $role = Auth::user()->role;
 
-        // Define the view path based on the user's role
-        $viewPath = "{$role}/appointment";
+        $viewPath = "{$role}.appointment";
 
-        // Check if the view exists
         if (!view()->exists($viewPath)) {
             abort(404, "View for role {$role} not found");
         }
@@ -26,38 +24,69 @@ class AppointmentController extends Controller
 
     public function add(Request $request)
     {
+        Log::info('Request Data: ', $request->all());
+    
         $request->validate([
-            'patient_id' => 'required|string|max:255',
-            'patient_name' => 'required|string|max:255',
             'appointment_date' => 'required|date',
             'appointment_time' => 'required|date_format:H:i',
+            'appointment_type' => 'required|string|max:255',
         ]);
-
-        Appointment::create($request->all());
-
-        return redirect()->route(Auth::user()->role . '.appointment')->with('success', 'Appointment scheduled successfully!');
+    
+        $data = [
+            'id_number' => Auth::user()->id_number,
+            'patient_name' => Auth::user()->name,
+            'appointment_date' => $request->appointment_date,
+            'appointment_time' => $request->appointment_time,
+            'role' => Auth::user()->role,
+            'appointment_type' => $request->appointment_type,
+        ];
+    
+        Log::info('Appointment Data: ', $data);
+    
+        try {
+            $appointment = Appointment::create($data);
+            Log::info('Appointment Created: ', $appointment->toArray());
+    
+            return response()->json(['success' => 'Appointment scheduled successfully!']);
+        } catch (\Exception $e) {
+            Log::error('Error scheduling appointment: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            return response()->json(['error' => 'Something went wrong!'], 500);
+        }
     }
+    
 
     public function update(Request $request, $id)
     {
         $request->validate([
-            'patient_id' => 'required|string|max:255',
-            'patient_name' => 'required|string|max:255',
             'appointment_date' => 'required|date',
             'appointment_time' => 'required|date_format:H:i',
+            'appointment_type' => 'required|string|max:255',
         ]);
 
-        $appointment = Appointment::findOrFail($id);
-        $appointment->update($request->all());
+        try {
+            $appointment = Appointment::findOrFail($id);
+            $appointment->update($request->only(['appointment_date', 'appointment_time', 'appointment_type']));
 
-        return redirect()->route(Auth::user()->role . '.appointment')->with('success', 'Appointment updated successfully!');
+            return response()->json(['success' => 'Appointment updated successfully!']);
+        } catch (\Exception $e) {
+            Log::error('Error updating appointment: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            return response()->json(['error' => 'Something went wrong!'], 500);
+        }
     }
 
     public function delete($id)
     {
-        $appointment = Appointment::findOrFail($id);
-        $appointment->delete();
+        try {
+            $appointment = Appointment::findOrFail($id);
+            $appointment->delete();
 
-        return redirect()->route(Auth::user()->role . '.appointment')->with('success', 'Appointment deleted successfully!');
+            return response()->json(['success' => 'Appointment deleted successfully!']);
+        } catch (\Exception $e) {
+            Log::error('Error deleting appointment: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            return response()->json(['error' => 'Something went wrong!'], 500);
+        }
     }
 }

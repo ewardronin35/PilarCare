@@ -123,9 +123,7 @@
     <nav class="menu">
         <ul>
             <li><a href="{{ route('parent.dashboard') }}"><span class="icon"><i class="fas fa-tachometer-alt"></i></span><span class="menu-text">Dashboard</span></a></li>
-            <li><a href="{{ route('parent.complaint') }}"><span class="icon"><i class="fas fa-comments"></i></span><span class="menu-text">Complaint</span></a></li>
             <li><a href="{{ route('parent.medical-record') }}"><span class="icon"><i class="fas fa-notes-medical"></i></span><span class="menu-text">Records</span></a></li>
-            <li><a href="{{ route('parent.appointment') }}"><span class="icon"><i class="fas fa-calendar-check"></i></span><span class="menu-text">Appointment</span></a></li>
         </ul>
     </nav>
     <div class="sidebar-footer">

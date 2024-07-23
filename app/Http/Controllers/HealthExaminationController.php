@@ -1,59 +1,65 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\HealthExamination;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class HealthExaminationController extends Controller
 {
+    public function create()
+    {
+        return view('student.upload-pictures');
+    }
+
+    public function medicalRecord()
+    {
+        $pendingExaminations = HealthExamination::where('is_approved', false)->with('user')->get();
+        Log::info('Fetched Pending Examinations for Medical Record:', ['pendingExaminations' => $pendingExaminations]);
+        return view('admin.medical-record', compact('pendingExaminations'));
+    }
+
     public function index()
     {
-        // Fetch all pending examinations
-        $pendingExaminations = HealthExamination::where('is_approved', false)->with('user')->get();
-        Log::info('Pending Examinations: ', ['count' => count($pendingExaminations)]);
-        return view('admin.medical-record', compact('pendingExaminations'));
+        $role = auth()->user()->role;
+        $viewPath = "{$role}.medical-record";
+
+        if (!view()->exists($viewPath)) {
+            abort(404, "View for role {$role} not found");
+        }
+
+        $healthExaminations = HealthExamination::where('user_id', auth()->id())->get();
+
+        return view($viewPath, compact('healthExaminations'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'health_examination_picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'pictures' => 'required|array|size:3',
+            'pictures.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
-    
-        if ($request->hasFile('health_examination_picture')) {
-            $path = $request->file('health_examination_picture')->store('health_examinations', 'public');
-            Log::info('Image stored at: ' . $path); // Debugging line
-            $validated['health_examination_picture'] = $path;
-        } else {
-            Log::error('No file found'); // Debugging line
+
+        $paths = [];
+        foreach ($request->file('pictures') as $index => $file) {
+            $path = $file->store('health_examinations', 'public');
+            $paths[] = $path;
+            Log::info('Uploaded picture ' . $index . ' stored at: ' . $path);
         }
-    
-        $validated['user_id'] = auth()->id();
-        $validated['is_approved'] = false;
-    
-        HealthExamination::create($validated);
-    
-        Log::info('Health Examination created: ' . json_encode($validated)); // Debugging line
-    
-        return redirect()->route('student.medical-record.create')->with('success', 'Health Examination created successfully.');
-    }
 
-    public function storeHealthExaminationPicture(Request $request)
-    {
-        $request->validate([
-            'health_examination_picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        $healthExamination = new HealthExamination([
+            'user_id' => auth()->id(),
+            'health_examination_picture' => $paths[0],
+            'xray_picture' => $paths[1],
+            'lab_result_picture' => $paths[2],
+            'is_approved' => false,
         ]);
 
-        $student = Auth::user();
-        $path = $request->file('health_examination_picture')->store('health_examination_pictures', 'public');
+        $healthExamination->save();
 
-        $student->health_examination_picture = $path;
-        $student->save();
+        Log::info('Health Examination created: ', $healthExamination->toArray());
 
-        return response()->json(['success' => true]);
+        return response()->json(['success' => true, 'message' => 'Health Examination created successfully.']);
     }
 
     public function approve($id)

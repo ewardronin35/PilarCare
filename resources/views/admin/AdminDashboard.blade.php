@@ -1,148 +1,200 @@
 <x-app-layout>
     <style>
-        .main-content {
-            flex-grow: 1;
-            padding: 20px;
-            margin-left: 80px; /* Adjust margin to accommodate the sidebar */
-            transition: margin-left 0.3s ease-in-out;
-        }
-        .sidebar:hover ~ .main-content {
-            margin-left: 250px; /* Adjust margin when sidebar is expanded */
-        }
-        .image-container-dashboard {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: calc(80vh - 80px); /* Adjust based on header height */
-        }
-        .image-container-dashboard img {
-            max-width: 100%;
-            height: auto;
-            animation: fadeIn 1s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-        .statistics {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 20px;
-            margin-bottom: 20px;
-        }
+body {
+    background-color: #f8f9fa;
+    font-family: 'Arial', sans-serif;
+}
 
-        .statistics .stat-box {
-            background-color: #ffffff;
-            color: #333;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            width: 30%;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: background-color 0.3s ease-in-out;
-        }
+.main-content {
+    flex-grow: 1;
+    padding: 20px;
+    margin-left: 75px; /* Adjusted to match sidebar width */
+    transition: margin-left 0.3s ease-in-out;
+}
 
-        .statistics .stat-box:hover {
-            background-color: #f0f0f0;
-        }
+.sidebar:hover ~ .main-content {
+    margin-left: 250px; /* Adjusted to match expanded sidebar width */
+}
 
-        .stat-box img {
-            width: 50px;
-            height: 50px;
-            display: block;
-            margin: 0 auto 10px;
-        }
+.profile-box {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
 
-        .stat-box a {
-            color: blue; /* Set link color to blue */
-            text-decoration: none; /* Remove underline */
-        }
+.profile-box img {
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    margin-right: 20px;
+}
 
-        .stat-box a:visited {
-            color: blue; /* Ensure visited links remain blue */
-        }
+.profile-info {
+    display: flex;
+    flex-direction: column;
+}
 
-        .stat-box a:hover {
-            text-decoration: none; /* Ensure underline doesn't appear on hover */
-        }
+.profile-info h2 {
+    margin: 0;
+    font-size: 1.5em;
+    color: #333;
+}
 
-        .notification-icon {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            cursor: pointer;
-        }
+.profile-info p {
+    margin: 0;
+    color: #666;
+}
 
-        .notification-icon i {
-            font-size: 24px;
-        }
+.statistics {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-top: 20px;
+}
 
-        .notification-dropdown {
-            display: none;
-            position: absolute;
-            top: 40px;
-            right: 0;
-            width: 300px;
-            background: white;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-        }
+.statistics .stat-box {
+    background-color: #ffffff;
+    color: #333;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    width: 23%;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease-in-out;
+}
 
-        .notification-dropdown.active {
-            display: block;
-        }
+.statistics .stat-box:hover {
+    background-color: #f0f0f0;
+}
 
-        .notification-header {
-            font-weight: bold;
-            padding: 10px;
-            background: #f9f9f9;
-            border-bottom: 1px solid #eee;
-        }
+.stat-box img {
+    width: 50px;
+    height: 50px;
+    display: block;
+    margin: 0 auto 10px;
+}
 
-        .notification-item {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-        }
+.stat-box a {
+    color: #007bff;
+    text-decoration: none;
+}
 
-        .notification-item:last-child {
-            border-bottom: none;
-        }
+.stat-box a:visited {
+    color: #007bff;
+}
 
-        .notification-item:hover {
-            background: #f1f1f1;
-        }
+.stat-box a:hover {
+    text-decoration: none;
+}
 
-        .notification-item .icon {
-            margin-right: 10px;
-        }
+.chart-container {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    width: 100%;
+}
+
+.data-table-wrapper {
+    margin-top: 20px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th, .data-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.data-table th {
+    background-color: #f9f9f9;
+}
+
+.data-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+.edit-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+}
+
+.edit-btn:hover {
+    background-color: #0056b3;
+}
+
+.nav-tabs {
+    border-bottom: 1px solid #ddd;
+}
+
+.nav-tabs .nav-item {
+    margin-bottom: -1px;
+}
+
+.nav-tabs .nav-link {
+    border: 1px solid transparent;
+    border-top-left-radius: 0.25rem;
+    border-top-right-radius: 0.25rem;
+}
+
+.nav-tabs .nav-link:hover {
+    border-color: #e9ecef #e9ecef #ddd;
+}
+
+.nav-tabs .nav-link.active {
+    color: #495057;
+    background-color: #fff;
+    border-color: #ddd #ddd #fff;
+}
+
+.tab-content {
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-top: none;
+}
+
+
     </style>
 
     <div class="main-content">
-        <!-- Notification Icon and Dropdown -->
-        <div class="notification-icon" id="notification-icon">
-            <i class="fas fa-bell"></i>
-            <div id="notification-dropdown" class="notification-dropdown">
-                <div class="notification-header">Notifications</div>
-                <div id="notification-content"></div>
+        <div class="profile-box">
+            <img src="{{ asset('images/pilarLogo.jpg') }}" alt="Profile Image">
+            <div class="profile-info">
+                <h2>{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</h2>
+                <p>{{ Auth::user()->role }}</p>
+                <a href="{{ route('profile.edit') }}" class="btn btn-primary mt-2">Edit Profile</a>
             </div>
         </div>
 
-        <!-- Statistics -->
         <div class="statistics">
             <div class="stat-box">
                 <a href="{{ route('admin.appointment') }}">
                     <img src="https://img.icons8.com/ios-filled/50/000000/appointment-reminders.png" alt="Appointments Icon">
                     <h2>{{ $appointmentCount }}</h2>
                     <p>Appointments</p>
+                </a>
+            </div>
+            <div class="stat-box">
+                <a href="{{ route('admin.inventory') }}">
+                    <img src="https://img.icons8.com/ios-filled/50/000000/warehouse.png" alt="Inventory Icon">
+                    <h2>{{ $inventoryCount }}</h2>
+                    <p>Inventory Items</p>
                 </a>
             </div>
             <div class="stat-box">
@@ -153,66 +205,179 @@
                 </a>
             </div>
             <div class="stat-box">
-                <a href="{{ route('admin.inventory') }}">
-                    <img src="https://img.icons8.com/ios-filled/50/000000/warehouse.png" alt="Inventory Icon">
-                    <h2>{{ $inventoryCount }}</h2>
-                    <p>Inventory Items</p>
+                <a href="{{ route('admin.pendingApproval') }}">
+                    <img src="https://img.icons8.com/ios-filled/50/000000/pending.png" alt="Pending Approval Icon">
+                    <h2>{{ $pendingApprovalCount }}</h2>
+                    <p>Pending Approvals</p>
                 </a>
             </div>
         </div>
-        <!-- Welcome message -->
-        <h1 class="h1-header" style="margin-top: 80px;">Welcome, {{ Auth::user()->first_name }} {{ Auth::user()->last_name }}!</h1>
 
-        <!-- Image container -->
-        <div class="image-container-dashboard">
-            <img src="{{ asset('images/pilarLogo.png') }}" alt="Login Image">
+        <div class="chart-container">
+            <h3>Monthly Registered Users</h3>
+            <canvas id="monthlyUsersChart"></canvas>
+        </div>
+
+        <div class="data-table-wrapper">
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="student-tab" data-toggle="tab" href="#student" role="tab" aria-controls="student" aria-selected="true">Student</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="staff-tab" data-toggle="tab" href="#staff" role="tab" aria-controls="staff" aria-selected="false">Staff</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="parent-tab" data-toggle="tab" href="#parent" role="tab" aria-controls="parent" aria-selected="false">Parent</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="teacher-tab" data-toggle="tab" href="#teacher" role="tab" aria-controls="teacher" aria-selected="false">Teacher</a>
+                </li>
+            </ul>
+            <div class="tab-content" id="myTabContent">
+                <div class="tab-pane fade show active" id="student" role="tabpanel" aria-labelledby="student-tab">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Sl.No</th>
+                                <th>Name</th>
+                                <th>Degree</th>
+                                <th>Contact No</th>
+                                <th>Email</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($students as $student)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td>{{ $student->first_name }} {{ $student->last_name }}</td>
+                                    <td>{{ $student->degree }}</td>
+                                    <td>{{ $student->contact_no }}</td>
+                                    <td>{{ $student->email }}</td>
+                                    <td>
+                                        <a href="#" class="edit-btn">Edit</a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-pane fade" id="staff" role="tabpanel" aria-labelledby="staff-tab">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Sl.No</th>
+                                <th>Name</th>
+                                <th>Degree</th>
+                                <th>Contact No</th>
+                                <th>Email</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($staff as $staffMember)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td>{{ $staffMember->first_name }} {{ $staffMember->last_name }}</td>
+                                    <td>{{ $staffMember->degree }}</td>
+                                    <td>{{ $staffMember->contact_no }}</td>
+                                    <td>{{ $staffMember->email }}</td>
+                                    <td>
+                                        <a href="#" class="edit-btn">Edit</a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-pane fade" id="parent" role="tabpanel" aria-labelledby="parent-tab">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Sl.No</th>
+                                <th>Name</th>
+                                <th>Degree</th>
+                                <th>Contact No</th>
+                                <th>Email</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($parents as $parent)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td>{{ $parent->first_name }} {{ $parent->last_name }}</td>
+                                    <td>{{ $parent->degree }}</td>
+                                    <td>{{ $parent->contact_no }}</td>
+                                    <td>{{ $parent->email }}</td>
+                                    <td>
+                                        <a href="#" class="edit-btn">Edit</a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-pane fade" id="teacher" role="tabpanel" aria-labelledby="teacher-tab">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Sl.No</th>
+                                <th>Name</th>
+                                <th>Degree</th>
+                                <th>Contact No</th>
+                                <th>Email</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($teachers as $teacher)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td>{{ $teacher->first_name }} {{ $teacher->last_name }}</td>
+                                    <td>{{ $teacher->degree }}</td>
+                                    <td>{{ $teacher->contact_no }}</td>
+                                    <td>{{ $teacher->email }}</td>
+                                    <td>
+                                        <a href="#" class="edit-btn">Edit</a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    document.getElementById('notification-icon').addEventListener('click', function() {
-        var dropdown = document.getElementById('notification-dropdown');
-        dropdown.classList.toggle('active');
-        if (dropdown.style.display === 'none' || dropdown.style.display === '') {
-            dropdown.style.display = 'block';
-            fetchNotifications();
-        } else {
-            dropdown.style.display = 'none';
-        }
-    });
 
-    function fetchNotifications() {
-        fetch('{{ route("admin.notifications.index") }}')
-            .then(response => response.json())
-            .then(data => {
-                const notificationContent = document.getElementById('notification-content');
-                notificationContent.innerHTML = '';
-
-                if (data.notifications.length > 0) {
-                    data.notifications.forEach(notification => {
-                        const notificationItem = document.createElement('div');
-                        notificationItem.className = 'notification-item';
-                        notificationItem.innerHTML = `
-                            <span class="icon"><i class="fas fa-info-circle"></i></span>
-                            <span>${notification.message}</span>
-                        `;
-                        notificationContent.appendChild(notificationItem);
-                    });
-                } else {
-                    notificationContent.innerHTML = '<div class="notification-item">No notifications</div>';
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('monthlyUsersChart').getContext('2d');
+        const monthlyUsersChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Patients',
+                    data: [12, 19, 3, 5, 2, 3, 10, 15, 8, 9, 10, 11],
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }, {
+                    label: 'Revenue',
+                    data: [1200, 1900, 300, 500, 200, 300, 1000, 1500, 800, 900, 1000, 1100],
+                    type: 'line',
+                    fill: false,
+                    borderColor: 'rgba(153, 102, 255, 1)'
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
                 }
-            })
-            .catch(error => console.error('Error fetching notifications:', error));
-    }
-
-    // Close the dropdown if clicked outside
-    document.addEventListener('click', function(event) {
-        var dropdown = document.getElementById('notification-dropdown');
-        var icon = document.getElementById('notification-icon');
-        if (!dropdown.contains(event.target) && !icon.contains(event.target)) {
-            dropdown.classList.remove('active');
-            dropdown.style.display = 'none';
-        }
-    });
-</script>
+            }
+        });
+    </script>
 </x-app-layout>
