@@ -71,7 +71,8 @@
         }
 
         .menu > ul > li:hover {
-            background-color: #009ec3;
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #000;
             transform: translateX(10px);
         }
 
@@ -82,6 +83,10 @@
             display: flex;
             align-items: center;
             width: 100%;
+        }
+
+        .menu > ul > li:hover a {
+            color: #000;
         }
 
         .menu > ul > li a .icon {
@@ -104,42 +109,36 @@
             display: none;
             flex-direction: column;
             margin-left: 0;
-            padding-left: 20px;
+            padding-left: 0;
             width: 100%;
-            box-shadow: none; /* Remove shadow */
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
         }
 
         .menu li.active .submenu {
             display: flex;
             width: 100%;
-            box-shadow: none; /* Remove shadow */
+            background-color: rgba(255, 255, 255, 0.8);
         }
 
         .submenu li {
-            padding: 5px 20px;
+            padding: 10px 20px;
             margin: 0;
-            background-color: #00b8e6;
-            width: 100%;
+            width: calc(100% - 40px); /* Adjusting width to prevent overflow */
+            color: #000;
+            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
         }
 
         .submenu li:hover {
-            background-color: #009ec3;
-            transform: none;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #000;
+            transform: translateX(10px);
         }
 
         .submenu li a {
-            color: white;
+            color: #000;
             text-decoration: none;
             display: block;
             width: 100%;
-        }
-
-        .submenu .submenu {
-            display: none;
-        }
-
-        .submenu li.active .submenu {
-            display: block;
         }
 
         .submenu-toggle {
@@ -190,18 +189,25 @@
                 <a href="#"><span class="icon"><i class="fas fa-comments"></i></span><span class="menu-text">Complaints</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
                 <ul class="submenu">
                     <li><a href="{{ route('admin.complaint') }}">View Complaints</a></li>
-                    <li><a href="{{ route('admin.complaint') }}">Add Complaints</a></li>
+                    <li><a href="{{ route('admin.complaint.add') }}">Add Complaints</a></li>
                 </ul>
             </li>
             <li class="has-submenu">
                 <a href="#"><span class="icon"><i class="fas fa-notes-medical"></i></span><span class="menu-text">Records</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
                 <ul class="submenu">
                     <li><a href="{{ route('admin.medical-record.index') }}">Health Approval</a></li>
-                    <li><a href="{{ route('admin.medical-record.index') }}">View Medical Record</a></li>
-                    <li><a href="{{ route('admin.medical-record.index') }}">View Dental Record</a></li>
+                    <li><a href="{{ route('admin.medical-records') }}">View Medical Record</a></li>
+                    <li><a href="{{ route('admin.dental-record.index') }}">View Dental Record</a></li>
                 </ul>
             </li>
-            <li><a href="{{ route('admin.enrolledstudents') }}" id="admin-enrolled-students-link"><span class="icon"><i class="fas fa-user-graduate"></i></span><span class="menu-text">Enrolled Students</span></a></li>
+            <li class="has-submenu">
+                <a href="#"><span class="icon"><i class="fas fa-user-check"></i></span><span class="menu-text">Approved Users</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
+                <ul class="submenu">
+                    <li><a href="{{ route('admin.students.upload') }}" id="admin-enrolled-students-link">Enrolled Students</a></li>
+                    <li><a href="{{ route('admin.staff.upload') }}">Staffs</a></li>
+                    <li><a href="{{ route('admin.teachers.upload') }}">Teachers</a></li>
+                </ul>
+            </li>
             <li><a href="{{ route('admin.appointment') }}" id="admin-appointment-link"><span class="icon"><i class="fas fa-calendar-check"></i></span><span class="menu-text">Appointment</span></a></li>
             <li class="has-submenu">
                 <a href="#"><span class="icon"><i class="fas fa-boxes"></i></span><span class="menu-text">Inventory</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>

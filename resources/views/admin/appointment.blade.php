@@ -1,12 +1,18 @@
 <x-app-layout>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Arial', sans-serif;
+        }
+
         .container {
             display: flex;
         }
 
         .main-content {
             flex-grow: 1;
+            margin-top: 30px;
             padding: 20px;
             margin-left: 80px;
             transition: margin-left 0.3s ease-in-out;
@@ -18,6 +24,7 @@
 
         .tabs {
             display: flex;
+            justify-content: center;
             border-bottom: 2px solid #ddd;
             margin-bottom: 20px;
         }
@@ -26,16 +33,18 @@
             padding: 10px 20px;
             cursor: pointer;
             transition: background-color 0.3s ease-in-out;
+            background-color: #f8f9fa;
+            color: #333;
         }
 
         .tab:hover {
-            background-color: #f0f0f0;
+            background-color: #e0e0e0;
         }
 
         .tab.active {
-            border-bottom: 2px solid #007bff;
+            border-bottom: 2px solid #0056b3;
             font-weight: bold;
-            color: #007bff;
+            color: #0056b3;
         }
 
         .tab-content {
@@ -75,17 +84,21 @@
 
         .form-group {
             margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
         }
 
         .form-group label {
             display: block;
             margin-bottom: 5px;
             font-size: 1rem;
+            flex: 1;
         }
+        .dotor
 
         .form-group input,
         .form-group select {
-            width: 100%;
+            width: 48%;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
@@ -184,18 +197,53 @@
             text-decoration: none;
             cursor: pointer;
         }
+
+        .profile-box {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background-image: url('{{ asset('images/bg.jpg') }}');
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            color: white;
+            width: calc(50% - 10px);
+            animation: fadeInUp 0.5s ease-in-out;
+
+        }
+
+        .profile-box img {
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            margin-right: 20px;
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .profile-info h2 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .profile-info p {
+            margin: 0;
+        }
     </style>
 
     <div class="container">
         <x-adminsidebar />
 
         <main class="main-content">
-            <h1>Appointments</h1>
-
-            <!-- Tabs -->
             <div class="tabs">
                 <div class="tab active" onclick="showTab('add-appointment')">Add Appointment</div>
                 <div class="tab" onclick="showTab('appointment-table')">Appointment List</div>
+                <div class="tab" onclick="showTab('doctors')">Doctors</div>
             </div>
 
             <!-- Add Appointment Form -->
@@ -206,7 +254,7 @@
                         @csrf
                         <div class="form-group">
                             <label for="id-number">ID Number</label>
-                            <input type="text" id="id-number" name="id_number" required>
+                            <input type="text" id="id-number" name="id_number" required oninput="fetchPatientName()">
                         </div>
                         <div class="form-group">
                             <label for="patient-name">Patient Name</label>
@@ -222,11 +270,10 @@
                         </div>
                         <div class="form-group">
                             <label for="appointment-type">Appointment Type</label>
-                            <input type="text" id="appointment-type" name="appointment_type" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="role">Role</label>
-                            <input type="text" id="role" name="role" required>
+                            <select id="appointment-type" name="appointment_type" required>
+                                <option value="Dr. Isnani">Dr. Isnani</option>
+                                <option value="Dr. Nurmina">Dr. Nurmina</option>
+                            </select>
                         </div>
                         <div class="form-group">
                             <button type="button" onclick="addAppointment()">Add Appointment</button>
@@ -245,7 +292,6 @@
                             <th>Appointment Date</th>
                             <th>Appointment Time</th>
                             <th>Appointment Type</th>
-                            <th>Role</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -257,7 +303,6 @@
                                 <td>{{ $appointment->appointment_date }}</td>
                                 <td>{{ $appointment->appointment_time }}</td>
                                 <td>{{ $appointment->appointment_type }}</td>
-                                <td>{{ $appointment->role }}</td>
                                 <td>
                                     <div class="action-buttons">
                                         <button onclick="openEditModal({{ $appointment->id }})">Edit</button>
@@ -268,6 +313,26 @@
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Doctors Profile -->
+            <div id="doctors" class="tab-content">
+                <div class="content-row">
+                    <div class="profile-box">
+                        <img src="https://img.icons8.com/?size=100&id=9570&format=png&color=000000" alt="Dr. Isnani">
+                        <div class="profile-info">
+                            <h2>Dr. Isnani</h2>
+                            <p>General Physician</p>
+                        </div>
+                    </div>
+                    <div class="profile-box">
+                        <img src="https://img.icons8.com/?size=100&id=9570&format=png&color=000000" alt="Dr. Nurmina">
+                        <div class="profile-info">
+                            <h2>Dr. Nurmina</h2>
+                            <p>School Dentist</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Edit Appointment Modal -->
@@ -296,11 +361,10 @@
                         </div>
                         <div class="form-group">
                             <label for="edit-appointment-type">Appointment Type</label>
-                            <input type="text" id="edit-appointment-type" name="appointment_type" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="edit-role">Role</label>
-                            <input type="text" id="edit-role" name="role" required>
+                            <select id="edit-appointment-type" name="appointment_type" required>
+                                <option value="Dr. Isnani">Dr. Isnani</option>
+                                <option value="Dr. Nurmina">Dr. Nurmina</option>
+                            </select>
                         </div>
                         <div class="form-group">
                             <button type="button" onclick="updateAppointment()">Update Appointment</button>
@@ -330,6 +394,18 @@
             document.querySelector(`.tab[onclick="showTab('${tabId}')"]`).classList.add('active');
         }
 
+        function fetchPatientName() {
+            // Fetch the patient name based on the ID number
+            const idNumber = document.getElementById('id-number').value;
+            // Replace this URL with the actual route to fetch patient details
+            fetch(`/fetch-patient-name/${idNumber}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('patient-name').value = data.name;
+                })
+                .catch(error => console.error('Error fetching patient name:', error));
+        }
+
         function closeNotification() {
             const notification = document.getElementById('notification');
             notification.style.opacity = '0';
@@ -356,7 +432,6 @@
             document.getElementById('edit-appointment-date').value = appointment.children[2].innerText;
             document.getElementById('edit-appointment-time').value = appointment.children[3].innerText;
             document.getElementById('edit-appointment-type').value = appointment.children[4].innerText;
-            document.getElementById('edit-role').value = appointment.children[5].innerText;
             document.getElementById('edit-modal').style.display = 'block';
         }
 

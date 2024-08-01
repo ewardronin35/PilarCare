@@ -1,8 +1,9 @@
 <x-app-layout>
     <style>
+        .main-content {
+            margin-left: 80px;
+        }
         body {
-            background: url('{{ asset('images/bg.jpg') }}') no-repeat center center fixed;
-            background-size: cover;
             margin: 0;
             padding: 0;
             font-family: 'Arial', sans-serif;
@@ -18,6 +19,8 @@
             animation: fadeInUp 0.5s ease-in-out;
             width: 100%;
             box-sizing: border-box;
+            overflow-y: auto;
+            max-height: auto;
         }
 
         .form-group {
@@ -31,35 +34,33 @@
             display: block;
             margin-bottom: 10px;
             width: 100%;
-            font-size: 18px;
+            font-size: 16px;
         }
 
         .form-group input,
         .form-group textarea,
         .form-group select {
             width: calc(50% - 10px);
-            padding: 15px;
+            padding: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
             box-sizing: border-box;
-            font-size: 16px;
+            font-size: 14px;
         }
 
         .form-group textarea {
             width: 100%;
-            padding-left: 15px;
+            padding-left: 20px;
         }
 
         .form-group button {
             background-color: #00d1ff;
             color: white;
-            padding: 15px 20px;
+            padding: 10px 15px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            width: 100%;
-            margin-top: 20px;
-            font-size: 18px;
+            font-size: 16px;
         }
 
         .form-group button:hover {
@@ -87,7 +88,7 @@
             content: attr(data-icon);
             position: absolute;
             left: 10px;
-            top: 60%;
+            top: 70%;
             transform: translateY(-50%);
             font-family: "Font Awesome 5 Free";
             font-weight: 900;
@@ -98,8 +99,9 @@
 
         .input-wrapper input,
         .input-wrapper select {
-            width: 100%;
-            padding-left: 45px;
+            width: 90%;
+            padding: 15px;
+            padding-left: 35px;
         }
 
         .textarea-wrapper {
@@ -124,6 +126,34 @@
         .textarea-wrapper textarea {
             width: 100%;
             padding-left: 15px;
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-container .input-wrapper {
+            width: auto;
+            flex: 1;
+        }
+
+        .search-container button {
+            background-color: #00d1ff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .search-container button:hover {
+            background-color: #00b8e6;
         }
 
         .complaint-status {
@@ -165,13 +195,98 @@
             background-color: #dc3545;
             color: white;
         }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            width: 100%;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 2;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-info .username {
+            margin-right: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .notification-icon {
+            margin-right: 20px;
+            position: relative;
+        }
+
+        .notification-dropdown {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 10px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            width: 300px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .notification-dropdown.active {
+            display: block;
+        }
+
+        .notification-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-item:hover {
+            background-color: #f9f9f9;
+            transform: translateX(10px);
+        }
+
+        .notification-item .icon {
+            margin-right: 10px;
+        }
+
+        .notification-header {
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: bold;
+        }
     </style>
 
     <div class="form-container" id="complaint-form-container">
-        <h2>{{ ucfirst($role) }} Health Complaint</h2>
-        <form id="complaint-form">
+        <h2>Health Complaint</h2>
+        <div class="search-container">
+            <div class="input-wrapper" data-icon="&#xf007;">
+                <input type="text" id="id_number" name="id_number" placeholder="Enter ID Number">
+            </div>
+            <button type="button" onclick="fetchStudentData()">Search</button>
+        </div>
+        <form id="complaint-form" action="{{ route('admin.complaint.store') }}" method="POST">
             @csrf
             <input type="hidden" name="role" value="{{ strtolower(Auth::user()->role) }}">
+            <input type="hidden" name="student_type" value="TED">
+            <input type="hidden" name="year" value="{{ date('Y') }}">
             <div class="form-group">
                 <div class="input-wrapper" data-icon="&#xf007;">
                     <label for="name">Name</label>
@@ -193,10 +308,6 @@
                 </div>
             </div>
             <div class="form-group">
-                <div class="input-wrapper" data-icon="&#xf0f1;">
-                    <label for="health_history">Health History</label>
-                    <input type="text" id="health_history" name="health_history" required>
-                </div>
                 <div class="input-wrapper" data-icon="&#xf0f0;">
                     <label for="pain_assessment">Pain Assessment (1 to 10)</label>
                     <select id="pain_assessment" name="pain_assessment" required>
@@ -205,98 +316,15 @@
                         @endfor
                     </select>
                 </div>
+                <div class="input-wrapper" data-icon="&#xf0f1;">
+                    <label for="medicine_given">Medicine Given</label>
+                    <select id="medicine_given" name="medicine_given" required></select>
+                </div>
             </div>
             <div class="form-group">
                 <div class="textarea-wrapper">
                     <label for="sickness_description">Description of Sickness</label>
                     <textarea id="sickness_description" name="sickness_description" rows="4" required></textarea>
-                </div>
-            </div>
-            <div class="form-group">
-                <div class="input-wrapper" data-icon="&#xf19d;">
-                    <label for="student_type">Student Type</label>
-                    <select id="student_type" name="student_type" required onchange="toggleStudentFields()">
-                        <option value="">Select Student Type</option>
-                        <option value="TED">TED</option>
-                        <option value="BED">BED</option>
-                        <option value="SHS">SHS</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-group" id="ted-fields" style="display: none;">
-                <div class="input-wrapper" data-icon="&#xf19d;">
-                    <label for="program">Program (for TED)</label>
-                    <select id="program" name="program">
-                        <option value="">Select Program</option>
-                        <option value="BSN">BSN</option>
-                        <option value="BSHM">BSHM</option>
-                        <option value="BSTM">BSTM</option>
-                        <option value="BSIT">BSIT</option>
-                        <option value="BEED">BEED</option>
-                        <option value="BLIS">BLIS</option>
-                        <option value="BSBA">BSBA</option>
-                    </select>
-                </div>
-                <div class="input-wrapper" data-icon="&#xf549;">
-                    <label for="year">Year</label>
-                    <select id="year" name="year">
-                        <option value="">Select Year</option>
-                        @for ($i = 1; $i <= 4; $i++)
-                            <option value="{{ $i }}">{{ $i }} Year</option>
-                        @endfor
-                    </select>
-                </div>
-                <div class="input-wrapper" data-icon="&#xf2bb;">
-                    <label for="ted_section">Section</label>
-                    <select id="ted_section" name="ted_section">
-                        <option value="">Select Section</option>
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="C">C</option>
-                        <option value="D">D</option>
-                        <option value="E">E</option>
-                        <option value="F">F</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-group" id="bed-fields" style="display: none;">
-                <div class="input-wrapper" data-icon="&#xf549;">
-                    <label for="bed_grade">Grade (for BED)</label>
-                    <select id="bed_grade" name="bed_grade">
-                        <option value="">Select Grade</option>
-                        <option value="Kinder 1">Kinder 1</option>
-                        <option value="Kinder 2">Kinder 2</option>
-                        @for ($i = 1; $i <= 10; $i++)
-                            <option value="{{ $i }}">Grade {{ $i }}</option>
-                        @endfor
-                    </select>
-                </div>
-                <div class="input-wrapper" data-icon="&#xf2bb;">
-                    <label for="bed_section">Section</label>
-                    <input type="text" id="bed_section" name="bed_section">
-                </div>
-            </div>
-            <div class="form-group" id="shs-fields" style="display: none;">
-                <div class="input-wrapper" data-icon="&#xf549;">
-                    <label for="shs_grade">Grade (for SHS)</label>
-                    <select id="shs_grade" name="shs_grade">
-                        <option value="">Select Grade</option>
-                        <option value="11">Grade 11</option>
-                        <option value="12">Grade 12</option>
-                    </select>
-                </div>
-                <div class="input-wrapper" data-icon="&#xf549;">
-                    <label for="strand">Strand (for SHS)</label>
-                    <select id="strand" name="strand">
-                        <option value="">Select Strand</option>
-                        <option value="STEM">STEM</option>
-                        <option value="HUMSS">HUMSS</option>
-                        <option value="ABM">ABM</option>
-                    </select>
-                </div>
-                <div class="input-wrapper" data-icon="&#xf2bb;">
-                    <label for="shs_section">Section</label>
-                    <input type="text" id="shs_section" name="shs_section">
                 </div>
             </div>
             <div class="form-group">
@@ -317,28 +345,73 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        function toggleStudentFields() {
-            var studentType = document.getElementById('student_type').value;
-            document.getElementById('ted-fields').style.display = studentType === 'TED' ? 'block' : 'none';
-            document.getElementById('bed-fields').style.display = studentType === 'BED' ? 'block' : 'none';
-            document.getElementById('shs-fields').style.display = studentType === 'SHS' ? 'block' : 'none';
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchAvailableMedicines();
+        });
 
-            document.querySelectorAll('#ted-fields input, #ted-fields select').forEach(el => {
-                el.required = studentType === 'TED';
-            });
-            document.querySelectorAll('#bed-fields input, #bed-fields select').forEach(el => {
-                el.required = studentType === 'BED';
-            });
-            document.querySelectorAll('#shs-fields input, #shs-fields select').forEach(el => {
-                el.required = studentType === 'SHS';
+        function fetchAvailableMedicines() {
+            fetch('{{ route('admin.inventory.available-medicines') }}')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Medicines:', data); // Debugging log
+                const medicineSelect = document.getElementById('medicine_given');
+                medicineSelect.innerHTML = ''; // Clear existing options
+                data.forEach(medicine => {
+                    const option = document.createElement('option');
+                    option.value = medicine;
+                    option.textContent = medicine;
+                    medicineSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching medicines:', error);
             });
         }
 
-        document.getElementById('complaint-form').addEventListener('submit', function (event) {
+        function fetchStudentData() {
+            const idNumber = document.getElementById('id_number').value;
+            if (!idNumber) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Please enter an ID number.'
+                });
+                return;
+            }
+
+            fetch(`/complaint/student/${idNumber}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Student data:', data); // Debugging log
+                if (data.error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error
+                    });
+                } else {
+                    document.getElementById('name').value = data.name;
+                    document.getElementById('age').value = data.age;
+                    document.getElementById('birthdate').value = data.birthdate;
+                    document.getElementById('contact_number').value = data.contact_number;
+                    // Add other fields as necessary
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching student data:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An unexpected error occurred. Please try again later.'
+                });
+            });
+        }
+
+        document.getElementById('complaint-form').addEventListener('submit', function(event) {
             event.preventDefault();
             const formData = new FormData(this);
 
-            fetch('{{ route("parent.complaint.store") }}', {
+            fetch('{{ route("admin.complaint.store") }}', {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -374,7 +447,8 @@
         });
 
         function updateStatus(status) {
-            fetch('{{ route("parent.complaint.update-status", ["id" => 1]) }}', { // Replace 1 with the actual complaint ID
+            const complaintId = /* Set this to the correct complaint ID */;
+            fetch('{{ url("/admin/complaint/update-status") }}/' + complaintId, {
                 method: 'POST',
                 body: JSON.stringify({ status: status }),
                 headers: {

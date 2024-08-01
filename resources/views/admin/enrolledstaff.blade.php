@@ -1,6 +1,6 @@
 <x-app-layout>
     <style>
-        .container {
+            .container {
             display: flex;
             flex-direction: row;
             min-height: 100vh;
@@ -279,8 +279,8 @@
 
     <div class="main-content">
         <div class="upload-section">
-            <h2>Upload Student List</h2>
-            <p>Please ensure the Excel file follows the format: ID Number, First Name, Last Name, Grade/Course</p>
+            <h2>Upload Staff List</h2>
+            <p>Please ensure the Excel file follows the format: ID Number, First Name, Last Name, Role</p>
             <form id="upload-form" enctype="multipart/form-data">
                 @csrf
                 <div class="form-group">
@@ -294,9 +294,9 @@
         </div>
 
         <div class="students-section">
-            <h2>Enrolled Students</h2>
-            @if($students->isEmpty())
-                <p>No students enrolled yet.</p>
+            <h2>Enrolled Staff</h2>
+            @if($staff->isEmpty())
+                <p>No staff enrolled yet.</p>
             @else
                 <table class="students-table">
                     <thead>
@@ -304,26 +304,26 @@
                             <th>ID</th>
                             <th>First Name</th>
                             <th>Last Name</th>
-                            <th>Grade/Course</th>
+                            <th>Role</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="students-table-body">
-                        @foreach($students as $student)
-                            <tr id="student-row-{{ $student->id }}">
-                                <td>{{ $student->id_number }}</td>
-                                <td>{{ $student->first_name }}</td>
-                                <td>{{ $student->last_name }}</td>
-                                <td>{{ $student->grade_or_course }}</td>
+                        @foreach($staff as $staffMember)
+                            <tr id="student-row-{{ $staffMember->id }}">
+                                <td>{{ $staffMember->id_number }}</td>
+                                <td>{{ $staffMember->first_name }}</td>
+                                <td>{{ $staffMember->last_name }}</td>
+                                <td>{{ $staffMember->role }}</td>
                                 <td>
-                                    <button class="preview-button" style="background-color: {{ $student->approved ? '#28a745' : '#dc3545' }};">
-                                        {{ $student->approved ? 'Active' : 'Inactive' }}
+                                    <button class="preview-button" style="background-color: {{ $staffMember->approved ? '#28a745' : '#dc3545' }};">
+                                        {{ $staffMember->approved ? 'Active' : 'Inactive' }}
                                     </button>
                                 </td>
                                 <td>
                                     <label class="switch">
-                                        <input type="checkbox" class="toggle-approval" data-student-id="{{ $student->id }}" {{ $student->approved ? 'checked' : '' }}>
+                                        <input type="checkbox" class="toggle-approval" data-student-id="{{ $staffMember->id }}" {{ $staffMember->approved ? 'checked' : '' }}>
                                         <span class="slider"></span>
                                     </label>
                                 </td>
@@ -342,7 +342,7 @@
 
             var formData = new FormData(this);
 
-            fetch('{{ route('admin.students.import') }}', {
+            fetch('{{ route('admin.staff.import') }}', {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -359,7 +359,7 @@
                         showConfirmButton: false,
                         timer: 1500
                     });
-                    updateStudentsTable(data.students);
+                    updateStudentsTable(data.staff);
                 } else {
                     Swal.fire({
                         icon: 'error',
@@ -380,26 +380,26 @@
             });
         });
 
-        function updateStudentsTable(students) {
+        function updateStudentsTable(staff) {
             var tbody = document.getElementById('students-table-body');
             tbody.innerHTML = '';
-            students.forEach(student => {
+            staff.forEach(staffMember => {
                 var row = document.createElement('tr');
-                row.id = 'student-row-' + student.id;
+                row.id = 'student-row-' + staffMember.id;
 
                 row.innerHTML = `
-                    <td>${student.id_number}</td>
-                    <td>${student.first_name}</td>
-                    <td>${student.last_name}</td>
-                    <td>${student.grade_or_course}</td>
+                    <td>${staffMember.id_number}</td>
+                    <td>${staffMember.first_name}</td>
+                    <td>${staffMember.last_name}</td>
+                    <td>${staffMember.role}</td>
                     <td>
-                        <button class="preview-button" style="background-color: ${student.approved ? '#28a745' : '#dc3545'};">
-                            ${student.approved ? 'Active' : 'Inactive'}
+                        <button class="preview-button" style="background-color: ${staffMember.approved ? '#28a745' : '#dc3545'};">
+                            ${staffMember.approved ? 'Active' : 'Inactive'}
                         </button>
                     </td>
                     <td>
                         <label class="switch">
-                            <input type="checkbox" class="toggle-approval" data-student-id="${student.id}" ${student.approved ? 'checked' : ''}>
+                            <input type="checkbox" class="toggle-approval" data-student-id="${staffMember.id}" ${staffMember.approved ? 'checked' : ''}>
                             <span class="slider"></span>
                         </label>
                     </td>
@@ -418,7 +418,7 @@
                     var formData = new FormData();
                     formData.append('approved', approved);
 
-                    var actionUrl = `{{ url('admin/students') }}/${studentId}/toggle-approval`;
+                    var actionUrl = `{{ url('admin/staff') }}/${studentId}/toggle-approval`;
 
                     fetch(actionUrl, {
                         method: 'POST',
@@ -437,12 +437,12 @@
                                 showConfirmButton: false,
                                 timer: 1500
                             });
-                            updateStudentRow(studentId, data.student);
+                            updateStudentRow(studentId, data.staffMember);
                         } else {
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error',
-                                text: 'There was a problem updating the student status.',
+                                text: 'There was a problem updating the staff status.',
                                 showConfirmButton: true,
                             });
                         }
@@ -452,7 +452,7 @@
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: 'There was a problem updating the student status.',
+                            text: 'There was a problem updating the staff status.',
                             showConfirmButton: true,
                         });
                     });
@@ -460,21 +460,21 @@
             });
         }
 
-        function updateStudentRow(studentId, student) {
+        function updateStudentRow(studentId, staffMember) {
             var row = document.getElementById('student-row-' + studentId);
             row.innerHTML = `
-                <td>${student.id_number}</td>
-                <td>${student.first_name}</td>
-                <td>${student.last_name}</td>
-                <td>${student.grade_or_course}</td>
+                <td>${staffMember.id_number}</td>
+                <td>${staffMember.first_name}</td>
+                <td>${staffMember.last_name}</td>
+                <td>${staffMember.role}</td>
                 <td>
-                    <button class="preview-button" style="background-color: ${student.approved ? '#28a745' : '#dc3545'};">
-                        ${student.approved ? 'Active' : 'Inactive'}
+                    <button class="preview-button" style="background-color: ${staffMember.approved ? '#28a745' : '#dc3545'};">
+                        ${staffMember.approved ? 'Active' : 'Inactive'}
                     </button>
                 </td>
                 <td>
                     <label class="switch">
-                        <input type="checkbox" class="toggle-approval" data-student-id="${student.id}" ${student.approved ? 'checked' : ''}>
+                        <input type="checkbox" class="toggle-approval" data-student-id="${staffMember.id}" ${staffMember.approved ? 'checked' : ''}>
                         <span class="slider"></span>
                     </label>
                 </td>
@@ -483,7 +483,7 @@
         }
 
         // Initial load
-        fetch('{{ route('admin.students.enrolled') }}', {
+        fetch('{{ route('admin.staff.enrolled') }}', {
             method: 'GET',
             headers: {
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -495,8 +495,8 @@
             }
             return response.json();
         })
-        .then(students => {
-            updateStudentsTable(students);
+        .then(staff => {
+            updateStudentsTable(staff);
         })
         .catch(error => {
             console.error('Error:', error);

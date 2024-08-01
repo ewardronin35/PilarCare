@@ -19,6 +19,7 @@ class Complaint extends Model
         'pain_assessment',
         'sickness_description',
         'status',
-        'role', 
+        'role',
+        'id_number', // Add this line
     ];
 }

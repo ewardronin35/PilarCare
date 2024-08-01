@@ -2,6 +2,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.nocaptcha.sitekey') }}"></script>
 
     <style>
         body {
@@ -20,7 +21,7 @@
         .container {
             background-color: #fff;
             width: 750px;
-            height: 500px;
+            height: 450px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             display: flex;
@@ -228,6 +229,9 @@
                     <x-input-error :messages="$errors->get('password')" class="mt-2" />
                 </div>
 
+                <!-- reCAPTCHA v3 token -->
+                <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
+
                 <div class="flex items-center justify-center mt-4">
                     @if (Route::has('password.request'))
                         <a class="forgot-password-link" href="{{ route('password.request') }}">
@@ -236,7 +240,7 @@
                     @endif
                 </div>
 
-                <div class="button-container mt-4 mb-3">
+                <div class="button-container">
                     <button type="submit" class="log-in-button">
                         {{ __('Log in') }}
                     </button>
@@ -258,6 +262,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            grecaptcha.ready(function() {
+                grecaptcha.execute('{{ config('services.nocaptcha.sitekey') }}', { action: 'login' }).then(function(token) {
+                    document.getElementById('g-recaptcha-response').value = token;
+                });
+            });
+
             document.getElementById('login-form').addEventListener('submit', function(event) {
                 event.preventDefault();
                 login();

@@ -12,6 +12,7 @@ class CreateComplaintsTable extends Migration
     {
         Schema::create('complaints', function (Blueprint $table) {
             $table->id();
+            $table->string('id_number')->unique();
             $table->string('name');
             $table->integer('age');
             $table->date('birthdate');

@@ -7,6 +7,7 @@
         .main-content {
             flex-grow: 1;
             padding: 20px;
+            margin-top: 30px;
             margin-left: 80px; /* Adjust margin to accommodate the sidebar */
             transition: margin-left 0.3s ease-in-out;
         }
@@ -14,14 +15,17 @@
         .sidebar:hover + .main-content {
             margin-left: 250px; /* Adjust margin when sidebar is expanded */
         }
-
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px;
+            padding: 25px;
             background-color: #ffffff;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: calc(100% - 150px);
+            position: fixed;
+            top: 0;
+            z-index: 999;
         }
 
         .user-info {

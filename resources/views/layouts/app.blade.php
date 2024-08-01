@@ -33,22 +33,27 @@
         <div class="main-content">
             <header class="header">
                 <div class="breadcrumb">
-                    <a href="{{ route('admin.dashboard') }}">Dashboard</a>
+                    <a href="#">Dashboard</a>
                     <span class="separator">/</span>
                     <span>{{ $pageTitle ?? '' }}</span>
                 </div>
                 <div class="user-info">
+                    <div class="notification-icon" id="notification-icon">
+                        <i class="fas fa-bell"></i>
+                        <div class="notification-dropdown" id="notification-dropdown">
+                            <div class="dropdown-item">No new notifications</div>
+                        </div>
+                    </div>
                     <span class="username">{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</span>
-                    <span class="role">{{ Auth::user()->role }}</span>
                     <div class="user-avatar" id="user-avatar">
                         <img src="{{ asset('images/pilarLogo.jpg') }}" alt="Profile Image">
                     </div>
                     <div class="dropdown-menu" id="dropdown-menu">
-                        <a href="{{ route('profile.edit') }}" class="dropdown-item">Settings</a>
+                        <a href="{{ route('profile.edit') }}" class="dropdown-item"><i class="fas fa-cog"></i> Settings</a>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <a href="{{ route('logout') }}" class="dropdown-item"
-                                onclick="event.preventDefault(); this.closest('form').submit();">Logout</a>
+                               onclick="event.preventDefault(); showLogoutAlert();"><i class="fas fa-sign-out-alt"></i> Logout</a>
                         </form>
                     </div>
                 </div>
@@ -60,18 +65,44 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.getElementById('user-avatar').addEventListener('click', function() {
             var dropdown = document.getElementById('dropdown-menu');
             dropdown.classList.toggle('active');
         });
 
+        document.getElementById('notification-icon').addEventListener('click', function() {
+            var notificationDropdown = document.getElementById('notification-dropdown');
+            notificationDropdown.classList.toggle('active');
+        });
+
         document.addEventListener('click', function(event) {
             var dropdown = document.getElementById('dropdown-menu');
+            var notificationDropdown = document.getElementById('notification-dropdown');
             if (!dropdown.contains(event.target) && !event.target.closest('#user-avatar')) {
                 dropdown.classList.remove('active');
             }
+            if (!notificationDropdown.contains(event.target) && !event.target.closest('#notification-icon')) {
+                notificationDropdown.classList.remove('active');
+            }
         });
+
+        function showLogoutAlert() {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, logout!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.querySelector('form[method="POST"]').submit();
+                }
+            });
+        }
     </script>
 </body>
 </html>

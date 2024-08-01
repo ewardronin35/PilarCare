@@ -15,7 +15,7 @@
             height: 100vh;
             font-family: 'Arial', sans-serif;
             animation: fadeInBackground 1s ease-in-out;
-            overflow: hidden; /* Ensure no scroll */
+            overflow: hidden;
         }
 
         .container {
@@ -237,6 +237,52 @@
         .terms-container input {
             margin-right: 10px;
         }
+
+        .spinner {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            height: 2em;
+            width: 2em;
+            overflow: show;
+            margin: auto;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+        }
+
+        .spinner:before {
+            content: '';
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+
+        .spinner:not(:required):after {
+            content: '';
+            display: block;
+            font-size: 10px;
+            width: 1em;
+            height: 1em;
+            margin-top: -0.5em;
+            animation: spinner 150ms infinite linear;
+            border-radius: 0.5em;
+            box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) -1.5em 0 0 0, rgba(0, 0, 0, 0.75) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
+        }
+
+        @keyframes spinner {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 
     <div class="container">
@@ -311,6 +357,9 @@
         </div>
     </div>
 
+    <!-- Loading Spinner -->
+    <div class="spinner" id="spinner"></div>
+
     <!-- Terms Modal -->
     <div id="termsModal" class="modal">
         <div class="modal-content">
@@ -324,11 +373,14 @@
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('registration-form').addEventListener('submit', function(event) {
                 event.preventDefault();
+                showSpinner(); // Show the loading spinner
                 grecaptcha.ready(function() {
                     grecaptcha.execute('{{ config('services.nocaptcha.sitekey') }}', { action: 'submit' }).then(function(token) {
                         document.getElementById('g-recaptcha-response').value = token;
                         if (validateForm()) {
                             submitForm();
+                        } else {
+                            hideSpinner(); // Hide the spinner if validation fails
                         }
                     });
                 });
@@ -395,6 +447,14 @@
             document.getElementById('termsModal').style.display = 'none';
         }
 
+        function showSpinner() {
+            document.getElementById('spinner').style.display = 'block';
+        }
+
+        function hideSpinner() {
+            document.getElementById('spinner').style.display = 'none';
+        }
+
         async function submitForm() {
             const form = document.getElementById('registration-form');
             const formData = new FormData(form);
@@ -410,6 +470,7 @@
                 });
 
                 const data = await response.json();
+                hideSpinner(); // Hide the spinner once the response is received
 
                 if (data.success) {
                     Swal.fire({
@@ -479,6 +540,7 @@
                 }
             } catch (error) {
                 console.error('Error:', error);
+                hideSpinner(); // Hide the spinner if an error occurs
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',

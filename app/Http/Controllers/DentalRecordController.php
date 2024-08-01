@@ -6,6 +6,20 @@ use Illuminate\Http\Request;
 
 class DentalRecordController extends Controller
 {
+    public function index()
+    {
+        // Your logic to view a single dental record
+        $records = DentalRecord::all();
+        return view('admin.dental-record.index', compact('records'));
+    }
+
+    public function viewAllRecords()
+    {
+        // Your logic to view all dental records
+        $records = DentalRecord::all();
+        return view('admin.dental-records.index', compact('records'));
+    }
+
     public function create()
     {
         return view('student.dental-record.create');

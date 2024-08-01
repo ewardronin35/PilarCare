@@ -1,7 +1,9 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Complaint;
+use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -36,7 +38,8 @@ class ComplaintController extends Controller
 
     public function addComplaint()
     {
-        return view('admin.addcomplaint');
+        $role = strtolower(Auth::user()->role);
+        return view('admin.addcomplaint', compact('role'));
     }
 
     public function store(Request $request)
@@ -89,7 +92,6 @@ class ComplaintController extends Controller
             'message' => 'Complaint added successfully!',
             'complaint' => $complaint
         ], 200);
-        
     }
 
     public function updateStatus(Request $request, $id)
@@ -125,4 +127,16 @@ class ComplaintController extends Controller
             return response()->json(['error' => 'Complaint not found'], 404);
         }
     }
+
+    public function fetchStudentData($id)
+    {
+        $student = Student::where('id_number', $id)->first();
+
+        if ($student) {
+            return response()->json($student);
+        } else {
+            return response()->json(['error' => 'Student not found'], 404);
+        }
+    }
+    
 }

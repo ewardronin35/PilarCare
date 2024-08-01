@@ -1,175 +1,230 @@
 <x-app-layout>
     <style>
-body {
-    background-color: #f8f9fa;
-    font-family: 'Arial', sans-serif;
-}
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Arial', sans-serif;
+        }
 
-.main-content {
-    flex-grow: 1;
-    padding: 20px;
-    margin-left: 75px; /* Adjusted to match sidebar width */
-    transition: margin-left 0.3s ease-in-out;
-}
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+            margin-top: 40px;
+            margin-left: 75px;
+            transition: margin-left 0.3s ease-in-out;
+            overflow-y: auto;
+            max-height: auto;
+            
+        }
 
-.sidebar:hover ~ .main-content {
-    margin-left: 250px; /* Adjusted to match expanded sidebar width */
-}
+        .sidebar:hover ~ .main-content {
+            margin-left: 250px;
+        }
 
-.profile-box {
-    display: flex;
-    align-items: center;
-    padding: 20px;
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
-}
+        .profile-box {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background-image: url('{{ asset('images/bg.jpg') }}');
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            color: white;
+        }
 
-.profile-box img {
-    border-radius: 50%;
-    width: 80px;
-    height: 80px;
-    margin-right: 20px;
-}
+        .profile-box img {
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            margin-right: 20px;
+        }
 
-.profile-info {
-    display: flex;
-    flex-direction: column;
-}
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+        }
 
-.profile-info h2 {
-    margin: 0;
-    font-size: 1.5em;
-    color: #333;
-}
+        .profile-info h2 {
+            margin: 0;
+            font-size: 1.5em;
+        }
 
-.profile-info p {
-    margin: 0;
-    color: #666;
-}
+        .profile-info p {
+            margin: 0;
+        }
 
-.statistics {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    margin-top: 20px;
-}
+        .edit-profile-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+            text-align: center;
+            text-decoration: none;
+            margin-top: 10px;
+        }
 
-.statistics .stat-box {
-    background-color: #ffffff;
-    color: #333;
-    padding: 20px;
-    border-radius: 8px;
-    text-align: center;
-    width: 23%;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: background-color 0.3s ease-in-out;
-}
+        .edit-profile-btn:hover {
+            background-color: #0056b3;
+        }
 
-.statistics .stat-box:hover {
-    background-color: #f0f0f0;
-}
+        .statistics {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            gap: 10px;
+        }
 
-.stat-box img {
-    width: 50px;
-    height: 50px;
-    display: block;
-    margin: 0 auto 10px;
-}
+        .statistics .stat-box {
+            background-color: #ffffff;
+            color: #333;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            width: calc(25% - 10px);
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease-in-out;
+        }
 
-.stat-box a {
-    color: #007bff;
-    text-decoration: none;
-}
+        .statistics .stat-box:hover {
+            background-color: #f0f0f0;
+        }
 
-.stat-box a:visited {
-    color: #007bff;
-}
+        .stat-box img {
+            width: 50px;
+            height: 50px;
+            display: block;
+            margin: 0 auto 10px;
+        }
 
-.stat-box a:hover {
-    text-decoration: none;
-}
+        .stat-box a {
+            color: #007bff;
+            text-decoration: none;
+        }
 
-.chart-container {
-    background-color: #ffffff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-top: 20px;
-    width: 100%;
-}
+        .stat-box a:visited {
+            color: #007bff;
+        }
 
-.data-table-wrapper {
-    margin-top: 20px;
-}
+        .stat-box a:hover {
+            text-decoration: none;
+        }
 
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-}
+        .content-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            gap: 10px;
+        }
 
-.data-table th, .data-table td {
-    padding: 15px;
-    text-align: left;
-    border-bottom: 1px solid #e0e0e0;
-}
+        .chart-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 49%;
+        }
 
-.data-table th {
-    background-color: #f9f9f9;
-}
+        .data-table-wrapper {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 49%;
+            overflow-x: auto;
+        }
 
-.data-table tr:hover {
-    background-color: #f1f1f1;
-}
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            animation: fadeInUp 0.5s ease-in-out;
+        }
 
-.edit-btn {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease-in-out;
-}
+        .data-table th, .data-table td {
+            padding: 10px;
+            text-align: left;
+        }
 
-.edit-btn:hover {
-    background-color: #0056b3;
-}
+        .data-table th {
+            background-color: #f5f5f5;
+            color: #333;
+            font-weight: 600;
+            border-bottom: 1px solid #ddd;
+        }
 
-.nav-tabs {
-    border-bottom: 1px solid #ddd;
-}
+        .data-table td {
+            border-bottom: 1px solid #eee;
+        }
 
-.nav-tabs .nav-item {
-    margin-bottom: -1px;
-}
+        .nav-tabs {
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            gap: 10px;
+            list-style: none; /* Remove default list-style */
+            padding-left: 0;
+        }
 
-.nav-tabs .nav-link {
-    border: 1px solid transparent;
-    border-top-left-radius: 0.25rem;
-    border-top-right-radius: 0.25rem;
-}
+        .nav-tabs .nav-item {
+            margin-bottom: -1px;
+        }
 
-.nav-tabs .nav-link:hover {
-    border-color: #e9ecef #e9ecef #ddd;
-}
+        .nav-tabs .nav-link {
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            transition: background-color 0.3s ease-in-out;
+        }
 
-.nav-tabs .nav-link.active {
-    color: #495057;
-    background-color: #fff;
-    border-color: #ddd #ddd #fff;
-}
+        .nav-tabs .nav-link:hover {
+            background-color: #0056b3;
+        }
 
-.tab-content {
-    padding: 20px;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-top: none;
-}
+        .nav-tabs .nav-link.active {
+            background-color: #0056b3;
+        }
 
+        .tab-content {
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-top: none;
+        }
 
+        .tab-pane {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .tab-pane.active {
+            display: block;
+            opacity: 1;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 
     <div class="main-content">
@@ -178,7 +233,7 @@ body {
             <div class="profile-info">
                 <h2>{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</h2>
                 <p>{{ Auth::user()->role }}</p>
-                <a href="{{ route('profile.edit') }}" class="btn btn-primary mt-2">Edit Profile</a>
+                <a href="{{ route('profile.edit') }}" class="edit-profile-btn">Edit Profile</a>
             </div>
         </div>
 
@@ -206,145 +261,131 @@ body {
             </div>
             <div class="stat-box">
                 <a href="{{ route('admin.pendingApproval') }}">
-                    <img src="https://img.icons8.com/ios-filled/50/000000/pending.png" alt="Pending Approval Icon">
+                    <img src="https://img.icons8.com/?size=100&id=10247&format=png&color=000000" alt="Pending Approval Icon">
                     <h2>{{ $pendingApprovalCount }}</h2>
                     <p>Pending Approvals</p>
                 </a>
             </div>
         </div>
 
-        <div class="chart-container">
-            <h3>Monthly Registered Users</h3>
-            <canvas id="monthlyUsersChart"></canvas>
-        </div>
+        <div class="content-row">
+            <div class="chart-container">
+                <h3>Monthly Registered Users</h3>
+                <canvas id="monthlyUsersChart"></canvas>
+            </div>
 
-        <div class="data-table-wrapper">
-            <ul class="nav nav-tabs" id="myTab" role="tablist">
-                <li class="nav-item">
-                    <a class="nav-link active" id="student-tab" data-toggle="tab" href="#student" role="tab" aria-controls="student" aria-selected="true">Student</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="staff-tab" data-toggle="tab" href="#staff" role="tab" aria-controls="staff" aria-selected="false">Staff</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="parent-tab" data-toggle="tab" href="#parent" role="tab" aria-controls="parent" aria-selected="false">Parent</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="teacher-tab" data-toggle="tab" href="#teacher" role="tab" aria-controls="teacher" aria-selected="false">Teacher</a>
-                </li>
-            </ul>
-            <div class="tab-content" id="myTabContent">
-                <div class="tab-pane fade show active" id="student" role="tabpanel" aria-labelledby="student-tab">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Sl.No</th>
-                                <th>Name</th>
-                                <th>Degree</th>
-                                <th>Contact No</th>
-                                <th>Email</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($students as $student)
+            <div class="data-table-wrapper">
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="student-tab" data-toggle="tab" href="#student" role="tab" aria-controls="student" aria-selected="true">Student</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="staff-tab" data-toggle="tab" href="#staff" role="tab" aria-controls="staff" aria-selected="false">Staff</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="parent-tab" data-toggle="tab" href="#parent" role="tab" aria-controls="parent" aria-selected="false">Parent</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="teacher-tab" data-toggle="tab" href="#teacher" role="tab" aria-controls="teacher" aria-selected="false">Teacher</a>
+                    </li>
+                </ul>
+                <div class="tab-content" id="myTabContent">
+                    <div class="tab-pane fade show active" id="student" role="tabpanel" aria-labelledby="student-tab">
+                        <table class="data-table">
+                            <thead>
                                 <tr>
-                                    <td>{{ $loop->iteration }}</td>
-                                    <td>{{ $student->first_name }} {{ $student->last_name }}</td>
-                                    <td>{{ $student->degree }}</td>
-                                    <td>{{ $student->contact_no }}</td>
-                                    <td>{{ $student->email }}</td>
-                                    <td>
-                                        <a href="#" class="edit-btn">Edit</a>
-                                    </td>
+                                    <th>Sl.No</th>
+                                    <th>Name</th>
+                                    <th>Degree</th>
+                                    <th>Contact No</th>
+                                    <th>Email</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                <div class="tab-pane fade" id="staff" role="tabpanel" aria-labelledby="staff-tab">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Sl.No</th>
-                                <th>Name</th>
-                                <th>Degree</th>
-                                <th>Contact No</th>
-                                <th>Email</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($staff as $staffMember)
+                            </thead>
+                            <tbody>
+                                @foreach($students as $student)
+                                    <tr>
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td>{{ $student->first_name }} {{ $student->last_name }}</td>
+                                        <td>{{ $student->degree }}</td>
+                                        <td>{{ $student->contact_no }}</td>
+                                        <td>{{ $student->email }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane fade" id="staff" role="tabpanel" aria-labelledby="staff-tab">
+                        <table class="data-table">
+                            <thead>
                                 <tr>
-                                    <td>{{ $loop->iteration }}</td>
-                                    <td>{{ $staffMember->first_name }} {{ $staffMember->last_name }}</td>
-                                    <td>{{ $staffMember->degree }}</td>
-                                    <td>{{ $staffMember->contact_no }}</td>
-                                    <td>{{ $staffMember->email }}</td>
-                                    <td>
-                                        <a href="#" class="edit-btn">Edit</a>
-                                    </td>
+                                    <th>Sl.No</th>
+                                    <th>Name</th>
+                                    <th>Degree</th>
+                                    <th>Contact No</th>
+                                    <th>Email</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                <div class="tab-pane fade" id="parent" role="tabpanel" aria-labelledby="parent-tab">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Sl.No</th>
-                                <th>Name</th>
-                                <th>Degree</th>
-                                <th>Contact No</th>
-                                <th>Email</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($parents as $parent)
+                            </thead>
+                            <tbody>
+                                @foreach($staff as $staffMember)
+                                    <tr>
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td>{{ $staffMember->first_name }} {{ $staffMember->last_name }}</td>
+                                        <td>{{ $staffMember->degree }}</td>
+                                        <td>{{ $staffMember->contact_no }}</td>
+                                        <td>{{ $staffMember->email }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane fade" id="parent" role="tabpanel" aria-labelledby="parent-tab">
+                        <table class="data-table">
+                            <thead>
                                 <tr>
-                                    <td>{{ $loop->iteration }}</td>
-                                    <td>{{ $parent->first_name }} {{ $parent->last_name }}</td>
-                                    <td>{{ $parent->degree }}</td>
-                                    <td>{{ $parent->contact_no }}</td>
-                                    <td>{{ $parent->email }}</td>
-                                    <td>
-                                        <a href="#" class="edit-btn">Edit</a>
-                                    </td>
+                                    <th>Sl.No</th>
+                                    <th>Name</th>
+                                    <th>Degree</th>
+                                    <th>Contact No</th>
+                                    <th>Email</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                <div class="tab-pane fade" id="teacher" role="tabpanel" aria-labelledby="teacher-tab">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Sl.No</th>
-                                <th>Name</th>
-                                <th>Degree</th>
-                                <th>Contact No</th>
-                                <th>Email</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($teachers as $teacher)
+                            </thead>
+                            <tbody>
+                                @foreach($parents as $parent)
+                                    <tr>
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td>{{ $parent->first_name }} {{ $parent->last_name }}</td>
+                                        <td>{{ $parent->degree }}</td>
+                                        <td>{{ $parent->contact_no }}</td>
+                                        <td>{{ $parent->email }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane fade" id="teacher" role="tabpanel" aria-labelledby="teacher-tab">
+                        <table class="data-table">
+                            <thead>
                                 <tr>
-                                    <td>{{ $loop->iteration }}</td>
-                                    <td>{{ $teacher->first_name }} {{ $teacher->last_name }}</td>
-                                    <td>{{ $teacher->degree }}</td>
-                                    <td>{{ $teacher->contact_no }}</td>
-                                    <td>{{ $teacher->email }}</td>
-                                    <td>
-                                        <a href="#" class="edit-btn">Edit</a>
-                                    </td>
+                                    <th>Sl.No</th>
+                                    <th>Name</th>
+                                    <th>Degree</th>
+                                    <th>Contact No</th>
+                                    <th>Email</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach($teachers as $teacher)
+                                    <tr>
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td>{{ $teacher->first_name }} {{ $teacher->last_name }}</td>
+                                        <td>{{ $teacher->degree }}</td>
+                                        <td>{{ $teacher->contact_no }}</td>
+                                        <td>{{ $teacher->email }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -358,17 +399,29 @@ body {
             data: {
                 labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                 datasets: [{
-                    label: 'Patients',
+                    label: 'Students',
                     data: [12, 19, 3, 5, 2, 3, 10, 15, 8, 9, 10, 11],
                     backgroundColor: 'rgba(75, 192, 192, 0.2)',
                     borderColor: 'rgba(75, 192, 192, 1)',
                     borderWidth: 1
                 }, {
-                    label: 'Revenue',
-                    data: [1200, 1900, 300, 500, 200, 300, 1000, 1500, 800, 900, 1000, 1100],
-                    type: 'line',
-                    fill: false,
-                    borderColor: 'rgba(153, 102, 255, 1)'
+                    label: 'Teachers',
+                    data: [8, 15, 5, 10, 6, 7, 9, 12, 5, 6, 8, 10],
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }, {
+                    label: 'Staff',
+                    data: [5, 10, 2, 4, 3, 5, 6, 8, 4, 5, 6, 7],
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }, {
+                    label: 'Parents',
+                    data: [7, 12, 4, 8, 5, 6, 7, 10, 6, 7, 9, 11],
+                    backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                    borderColor: 'rgba(255, 206, 86, 1)',
+                    borderWidth: 1
                 }]
             },
             options: {
@@ -378,6 +431,18 @@ body {
                     }
                 }
             }
+        });
+
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function (event) {
+                event.preventDefault();
+                document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+                document.querySelectorAll('.tab-pane').forEach(tab => tab.classList.remove('active', 'show'));
+
+                this.classList.add('active');
+                const tabId = this.getAttribute('href').substring(1);
+                document.getElementById(tabId).classList.add('active', 'show');
+            });
         });
     </script>
 </x-app-layout>

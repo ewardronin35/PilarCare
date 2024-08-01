@@ -1,76 +1,120 @@
 <x-app-layout>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
-        .container {
-            display: flex;
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Arial', sans-serif;
         }
 
         .main-content {
             flex-grow: 1;
             padding: 20px;
-            margin-left: 80px;
+            margin-top: 40px;
+            margin-left: 75px;
             transition: margin-left 0.3s ease-in-out;
+            overflow-y: auto;
+            max-height: auto;
         }
 
-        .sidebar:hover + .main-content {
+        .sidebar:hover ~ .main-content {
             margin-left: 250px;
-        }
-
-        .tabs {
-            display: flex;
-            border-bottom: 2px solid #ddd;
-            margin-bottom: 20px;
-        }
-
-        .tab {
-            padding: 10px 20px;
-            cursor: pointer;
-            transition: background-color 0.3s ease-in-out;
-        }
-
-        .tab:hover {
-            background-color: #f0f0f0;
-        }
-
-        .tab.active {
-            border-bottom: 2px solid #007bff;
-            font-weight: bold;
-            color: #007bff;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
         }
 
         .appointment-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             animation: fadeInUp 0.5s ease-in-out;
         }
 
         .appointment-table th,
         .appointment-table td {
-            border: 1px solid #ddd;
             padding: 10px;
             text-align: left;
         }
 
         .appointment-table th {
-            background-color: #00d1ff;
+            background-color: #007bff;
             color: white;
+            font-weight: bold;
         }
 
-        .form-container {
-            background-color: #f9f9f9;
+        .appointment-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .appointment-table td {
+            border-bottom: 1px solid #ddd;
+        }
+
+        .appointment-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-buttons button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+            font-size: 1rem;
+        }
+
+        .action-buttons button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        .action-buttons button:active {
+            transform: scale(0.95);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 60px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
             padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
             border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            animation: fadeInUp 0.5s ease-in-out;
+            animation: slideIn 0.5s ease-in-out;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease-in-out;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
         }
 
         .form-group {
@@ -84,16 +128,17 @@
         }
 
         .form-group input,
-        .form-group select {
+        .form-group textarea {
             width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
             font-size: 1rem;
+            box-sizing: border-box;
         }
 
         .form-group button {
-            background-color: #00d1ff;
+            background-color: #007bff;
             color: white;
             padding: 10px 20px;
             border: none;
@@ -104,7 +149,7 @@
         }
 
         .form-group button:hover {
-            background-color: #00b8e6;
+            background-color: #0056b3;
             transform: scale(1.05);
         }
 
@@ -123,183 +168,122 @@
             }
         }
 
-        .action-buttons {
-            display: flex;
-            gap: 10px;
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
-        .action-buttons button {
-            background-color: #00d1ff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.3s;
-            font-size: 1rem;
-        }
-
-        .action-buttons button:hover {
-            background-color: #00b8e6;
-            transform: scale(1.05);
-        }
-
-        .action-buttons button:active {
-            transform: scale(0.95);
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgb(0,0,0);
-            background-color: rgba(0,0,0,0.4);
-            padding-top: 60px;
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: 5% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            border-radius: 10px;
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
     </style>
 
-    <div class="container">
-        <x-parentsidebar />
+    <div class="main-content">
+        <h1>Appointments</h1>
 
-        <main class="main-content">
-            <h1>Appointments</h1>
+        <!-- Appointment Table -->
+        <table class="appointment-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Type</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr id="appointment-row-1">
+                    <td>2024-07-25</td>
+                    <td>10:00 AM</td>
+                    <td>Consultation</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button onclick="openRescheduleModal(1)">Reschedule</button>
+                            <button onclick="openReasonModal(1)">Cancel</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr id="appointment-row-2">
+                    <td>2024-07-26</td>
+                    <td>11:00 AM</td>
+                    <td>Check-up</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button onclick="openRescheduleModal(2)">Reschedule</button>
+                            <button onclick="openReasonModal(2)">Cancel</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr id="appointment-row-3">
+                    <td>2024-07-27</td>
+                    <td>02:00 PM</td>
+                    <td>Follow-up</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button onclick="openRescheduleModal(3)">Reschedule</button>
+                            <button onclick="openReasonModal(3)">Cancel</button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-            <!-- Tabs -->
-            <div class="tabs">
-                <div class="tab active" onclick="showTab('add-appointment')">Add Appointment</div>
-                <div class="tab" onclick="showTab('appointment-table')">Appointment List</div>
-            </div>
-
-            <!-- Add Appointment Form -->
-            <div id="add-appointment" class="tab-content active">
-                <div class="form-container">
-                    <h2>Add Appointment</h2>
-                    <form id="add-form">
-                        @csrf
-                        <div class="form-group">
-                            <label for="appointment-date">Appointment Date</label>
-                            <input type="date" id="appointment-date" name="appointment_date" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="appointment-time">Appointment Time</label>
-                            <input type="time" id="appointment-time" name="appointment_time" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="appointment-type">Appointment Type</label>
-                            <input type="text" id="appointment-type" name="appointment_type" required>
-                        </div>
-                        <div class="form-group">
-                            <button type="button" onclick="simulateAddAppointment()">Add Appointment</button>
-                        </div>
-                    </form>
+    <!-- Reschedule Modal -->
+    <div id="reschedule-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeRescheduleModal()">&times;</span>
+            <h2>Reschedule Appointment</h2>
+            <form id="reschedule-form">
+                @csrf
+                <input type="hidden" id="reschedule-appointment-id" name="id">
+                <div class="form-group">
+                    <label for="reschedule-appointment-date">New Date</label>
+                    <input type="date" id="reschedule-appointment-date" name="appointment_date" required>
                 </div>
-            </div>
-
-            <!-- Appointment Table Content -->
-            <div id="appointment-table" class="tab-content">
-                <table class="appointment-table">
-                    <thead>
-                        <tr>
-                            <th>Appointment Date</th>
-                            <th>Appointment Time</th>
-                            <th>Appointment Type</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="appointments-body">
-                        @foreach ($appointments as $appointment)
-                            <tr id="appointment-row-{{ $appointment->id }}">
-                                <td>{{ $appointment->appointment_date }}</td>
-                                <td>{{ $appointment->appointment_time }}</td>
-                                <td>{{ $appointment->appointment_type }}</td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button onclick="openEditModal({{ $appointment->id }})">Edit</button>
-                                        <button onclick="confirmDelete({{ $appointment->id }})">Delete</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Edit Appointment Modal -->
-            <div id="edit-modal" class="modal">
-                <div class="modal-content">
-                    <span class="close" onclick="closeEditModal()">&times;</span>
-                    <h2>Edit Appointment</h2>
-                    <form id="edit-form">
-                        @csrf
-                        <input type="hidden" id="edit-appointment-id" name="id">
-                        <div class="form-group">
-                            <label for="edit-appointment-date">Appointment Date</label>
-                            <input type="date" id="edit-appointment-date" name="appointment_date" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="edit-appointment-time">Appointment Time</label>
-                            <input type="time" id="edit-appointment-time" name="appointment_time" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="edit-appointment-type">Appointment Type</label>
-                            <input type="text" id="edit-appointment-type" name="appointment_type" required>
-                        </div>
-                        <div class="form-group">
-                            <button type="button" onclick="updateAppointment()">Update Appointment</button>
-                        </div>
-                    </form>
+                <div class="form-group">
+                    <label for="reschedule-appointment-time">New Time</label>
+                    <input type="time" id="reschedule-appointment-time" name="appointment_time" required>
                 </div>
-            </div>
-        </main>
+                <div class="form-group">
+                    <button type="button" onclick="rescheduleAppointment()">Reschedule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reason Modal -->
+    <div id="reason-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeReasonModal()">&times;</span>
+            <h2>Reason for Cancellation</h2>
+            <form id="reason-form">
+                @csrf
+                <input type="hidden" id="reason-appointment-id" name="id">
+                <div class="form-group">
+                    <label for="appointment_reason">Reason</label>
+                    <textarea id="appointment_reason" name="appointment_reason" rows="4" required></textarea>
+                </div>
+                <div class="form-group">
+                    <button type="button" onclick="submitReason()">Submit Reason</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        function showTab(tabId) {
-            const tabContents = document.querySelectorAll('.tab-content');
-            tabContents.forEach(tabContent => {
-                tabContent.classList.remove('active');
-            });
-
-            const selectedTabContent = document.getElementById(tabId);
-            selectedTabContent.classList.add('active');
-
-            const tabs = document.querySelectorAll('.tab');
-            tabs.forEach(tab => {
-                tab.classList.remove('active');
-            });
-
-            document.querySelector(`.tab[onclick="showTab('${tabId}')"]`).classList.add('active');
-        }
-
         function showNotification(message) {
             Swal.fire({
                 icon: 'success',
@@ -310,29 +294,27 @@
             });
         }
 
-        function simulateAddAppointment() {
-            const form = document.getElementById('add-form');
-            const appointmentDate = form.elements['appointment_date'].value;
-            const appointmentTime = form.elements['appointment_time'].value;
-            const appointmentType = form.elements['appointment_type'].value;
+        function openRescheduleModal(id) {
+            document.getElementById('reschedule-appointment-id').value = id;
+            document.getElementById('reschedule-modal').style.display = 'block';
+        }
 
-            if (appointmentDate && appointmentTime && appointmentType) {
-                const newRow = document.createElement('tr');
-                newRow.innerHTML = `
-                    <td>${appointmentDate}</td>
-                    <td>${appointmentTime}</td>
-                    <td>${appointmentType}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button onclick="openEditModal('new')">Edit</button>
-                            <button onclick="confirmDelete('new')">Delete</button>
-                        </div>
-                    </td>
-                `;
-                document.getElementById('appointments-body').appendChild(newRow);
+        function closeRescheduleModal() {
+            document.getElementById('reschedule-modal').style.display = 'none';
+        }
 
-                showNotification('Appointment added successfully!');
-                form.reset();
+        function rescheduleAppointment() {
+            const form = document.getElementById('reschedule-form');
+            const id = form.elements['id'].value;
+            const date = form.elements['appointment_date'].value;
+            const time = form.elements['appointment_time'].value;
+
+            if (date && time) {
+                const appointmentRow = document.getElementById(`appointment-row-${id}`);
+                appointmentRow.cells[0].innerText = date;
+                appointmentRow.cells[1].innerText = time;
+                showNotification('Appointment rescheduled successfully!');
+                closeRescheduleModal();
             } else {
                 Swal.fire({
                     icon: 'error',
@@ -344,39 +326,36 @@
             }
         }
 
-        function openEditModal(id) {
-            const appointment = document.getElementById(`appointment-row-${id}`);
-            if (appointment) {
-                document.getElementById('edit-appointment-id').value = id;
-                document.getElementById('edit-appointment-date').value = appointment.children[0].innerText;
-                document.getElementById('edit-appointment-time').value = appointment.children[1].innerText;
-                document.getElementById('edit-appointment-type').value = appointment.children[2].innerText;
-                document.getElementById('edit-modal').style.display = 'block';
-            }
+        function openReasonModal(id) {
+            document.getElementById('reason-appointment-id').value = id;
+            document.getElementById('reason-modal').style.display = 'block';
         }
 
-        function closeEditModal() {
-            document.getElementById('edit-modal').style.display = 'none';
+        function closeReasonModal() {
+            document.getElementById('reason-modal').style.display = 'none';
         }
 
-        function confirmDelete(id) {
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const appointmentRow = document.getElementById(`appointment-row-${id}`);
-                    if (appointmentRow) {
-                        appointmentRow.remove();
-                        showNotification('Appointment deleted successfully');
-                    }
+        function submitReason() {
+            const form = document.getElementById('reason-form');
+            const id = form.elements['id'].value;
+            const reason = form.elements['appointment_reason'].value;
+
+            if (reason) {
+                const appointmentRow = document.getElementById(`appointment-row-${id}`);
+                if (appointmentRow) {
+                    appointmentRow.remove();
+                    showNotification('Appointment cancelled successfully!');
+                    closeReasonModal();
                 }
-            });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Please provide a reason for cancellation',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            }
         }
     </script>
 </x-app-layout>

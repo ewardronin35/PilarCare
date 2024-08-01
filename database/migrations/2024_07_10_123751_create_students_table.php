@@ -18,6 +18,7 @@ class CreateStudentsTable extends Migration
             $table->string('first_name');
             $table->string('last_name');
             $table->string('grade_or_course');
+            $table->boolean('approved')->default(0);
             $table->timestamps();
         });
     }

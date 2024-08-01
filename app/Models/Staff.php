@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Student extends Model
+class Staff extends Model
 {
     use HasFactory;
 
@@ -13,7 +13,6 @@ class Student extends Model
         'id_number',
         'first_name',
         'last_name',
-        'grade_or_course',
-        'approved' // Adjust this field name as needed
+        'approved'
     ];
 }

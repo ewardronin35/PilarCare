@@ -78,4 +78,35 @@ class HealthExaminationController extends Controller
 
         return redirect()->route('admin.medical-record.index')->with('success', 'Health Examination rejected and deleted successfully.');
     }
+
+    public function update(Request $request)
+    {
+        $validated = $request->validate([
+            'examination_id' => 'required|exists:health_examinations,id',
+            'health_examination_picture' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'xray_picture' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'lab_result_picture' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $examination = HealthExamination::findOrFail($request->examination_id);
+
+        if ($request->hasFile('health_examination_picture')) {
+            $path = $request->file('health_examination_picture')->store('health_examinations', 'public');
+            $examination->health_examination_picture = $path;
+        }
+
+        if ($request->hasFile('xray_picture')) {
+            $path = $request->file('xray_picture')->store('health_examinations', 'public');
+            $examination->xray_picture = $path;
+        }
+
+        if ($request->hasFile('lab_result_picture')) {
+            $path = $request->file('lab_result_picture')->store('health_examinations', 'public');
+            $examination->lab_result_picture = $path;
+        }
+
+        $examination->save();
+
+        return response()->json(['success' => true, 'message' => 'Health Examination updated successfully.']);
+    }
 }

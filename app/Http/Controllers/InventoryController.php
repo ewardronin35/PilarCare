@@ -68,4 +68,10 @@ class InventoryController extends Controller
 
         return response()->json(['success' => 'Item deleted successfully!']);
     }
+    public function getAvailableMedicines()
+    {
+        $medicines = Inventory::where('quantity', '>', 0)->pluck('item_name');
+        return response()->json($medicines);
+    }
+    
 }

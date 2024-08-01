@@ -10,16 +10,19 @@ class AppointmentController extends Controller
 {
     public function index()
     {
-        $appointments = Appointment::where('id_number', Auth::user()->id_number)->get();
-        $role = Auth::user()->role;
+        $user = Auth::user();
+        $appointments = Appointment::where('id_number', $user->id_number)->get();
+        $appointmentCount = $appointments->count(); // Count the appointments for the logged-in student
+        $complaintCount = 0; // Replace with actual logic to count complaints if needed
 
+        $role = $user->role;
         $viewPath = "{$role}.appointment";
 
         if (!view()->exists($viewPath)) {
             abort(404, "View for role {$role} not found");
         }
 
-        return view($viewPath, compact('appointments'));
+        return view($viewPath, compact('appointments', 'appointmentCount', 'complaintCount'));
     }
 
     public function add(Request $request)
@@ -54,7 +57,6 @@ class AppointmentController extends Controller
             return response()->json(['error' => 'Something went wrong!'], 500);
         }
     }
-    
 
     public function update(Request $request, $id)
     {

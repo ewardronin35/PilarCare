@@ -1,35 +1,77 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use App\Models\Staff;
 use Illuminate\Http\Request;
+use App\Models\Staff;
+use App\Models\User;
+use App\Imports\StaffImport;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Validators\ValidationException;
 
 class StaffController extends Controller
 {
-    public function store(Request $request)
+    public function showUploadForm()
+    {
+        $staff = Staff::all();
+        Log::info('Staff:', $staff->toArray());
+        return view('admin.enrolledstaff', compact('staff'));
+    }
+
+    public function import(Request $request)
     {
         $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:staff',
-            'contact_number' => 'required|string|max:12',
-            'gender' => 'required|string',
-            'id_number' => 'required|string|unique:staff',
-            'staff_role' => 'required|string',
-            'password' => 'required|string|min:8|confirmed',
+            'file' => 'required|mimes:xlsx,csv',
         ]);
 
-        Staff::create([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'email' => $request->email,
-            'contact_number' => $request->contact_number,
-            'gender' => $request->gender,
-            'id_number' => $request->id_number,
-            'staff_role' => $request->staff_role,
-            'password' => bcrypt($request->password),
-        ]);
+        try {
+            $import = new StaffImport;
+            Excel::import($import, $request->file('file'));
 
-        return redirect()->route('home')->with('success', 'Staff registered successfully.');
+            $staff = Staff::all();
+            $duplicates = $import->getDuplicates();
+
+            if (count($duplicates) > 0) {
+                $duplicateMessages = [];
+                foreach ($duplicates as $duplicate) {
+                    $duplicateMessages[] = "Duplicate entry for ID Number: {$duplicate->id_number}";
+                }
+                return response()->json(['success' => false, 'errors' => $duplicateMessages]);
+            }
+
+            return response()->json(['success' => true, 'message' => 'Staff imported successfully.', 'staff' => $staff]);
+        } catch (ValidationException $e) {
+            $failures = $e->failures();
+            $errorMessages = [];
+            foreach ($failures as $failure) {
+                $errorMessages[] = 'Row ' . $failure->row() . ': ' . implode(', ', $failure->errors());
+            }
+            return response()->json(['success' => false, 'errors' => $errorMessages]);
+        } catch (\Exception $e) {
+            Log::error('Error importing staff: ' . $e->getMessage());
+            return response()->json(['success' => false, 'errors' => ['There was a problem importing the staff.']]);
+        }
+    }
+
+    public function toggleApproval(Request $request, $id)
+    {
+        $staffMember = Staff::findOrFail($id);
+        $staffMember->approved = $request->input('approved');
+        $staffMember->save();
+
+        $user = User::where('id_number', $staffMember->id_number)->first();
+        if ($user) {
+            $user->approved = $staffMember->approved;
+            $user->save();
+        }
+
+        return response()->json(['success' => true, 'message' => 'Staff status updated successfully.', 'staffMember' => $staffMember]);
+    }
+
+    public function enrolledStaff()
+    {
+        $staff = Staff::all();
+        return response()->json($staff);
     }
 }
