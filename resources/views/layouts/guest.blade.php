@@ -9,9 +9,6 @@
 
     <title>{{ config('app.name', 'PilarCare') }}</title>
 
-    <link rel="stylesheet" href="{{ url('css/login.css') }}">
-    <link rel="stylesheet" href="{{ url('css/register.css') }}"> <!-- Corrected the filename -->
-
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />

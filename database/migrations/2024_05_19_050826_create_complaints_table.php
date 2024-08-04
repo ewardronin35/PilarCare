@@ -12,22 +12,18 @@ class CreateComplaintsTable extends Migration
     {
         Schema::create('complaints', function (Blueprint $table) {
             $table->id();
+            $table->string('id_number')->unique();
             $table->string('name');
             $table->integer('age');
             $table->date('birthdate');
             $table->text('health_history')->nullable();
-            $table->string('year_section');
+            $table->string('year')->nullable();
+            $table->string('section')->nullable();
             $table->string('contact_number');
-            $table->timestamps();
-        });
-
-        Schema::create('complaint_details', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('complaint_id')->constrained()->onDelete('cascade');
-            $table->timestamp('datetime');
-            $table->string('complaint');
-            $table->string('management');
-            $table->string('remarks')->nullable();
+            $table->integer('pain_assessment');
+            $table->text('sickness_description');
+            $table->string('status')->default('In progress');
+            $table->string('role'); 
             $table->timestamps();
         });
     }
@@ -37,7 +33,6 @@ class CreateComplaintsTable extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('complaint_details');
         Schema::dropIfExists('complaints');
     }
 }

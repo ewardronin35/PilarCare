@@ -57,4 +57,24 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
+
+    /**
+     * Store the user's profile picture.
+     */
+    public function storeProfilePicture(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'profile_picture' => 'required|image|max:2048',
+        ]);
+
+        $user = Auth::user();
+
+        if ($request->hasFile('profile_picture')) {
+            $filePath = $request->file('profile_picture')->store('profile_pictures', 'public');
+            $user->profile_picture = $filePath;
+            $user->save();
+        }
+
+        return Redirect::route('profile.edit')->with('status', 'profile-picture-updated');
+    }
 }

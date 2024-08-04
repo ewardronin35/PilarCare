@@ -1,6 +1,8 @@
 <x-guest-layout>
-    <!-- Custom container to wrap the form and testimonial section -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.nocaptcha.sitekey') }}"></script>
 
     <style>
         body {
@@ -17,8 +19,9 @@
         }
 
         .container {
-            background-color: rgba(255, 255, 255, 0.9);
-            width: 800px;
+            background-color: #fff;
+            width: 750px;
+            height: 450px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             display: flex;
@@ -28,27 +31,14 @@
 
         .login-form-container {
             width: 50%;
-            padding: 40px;
+            padding: 30px;
         }
 
         .center-signup {
             text-align: center;
             color: #171A1F;
-            font-size: 34px;
+            font-size: 28px;
             margin-bottom: 20px;
-        }
-
-        .login-form h3 {
-            margin-bottom: 20px;
-            font-size: 24px;
-            color: #424856;
-        }
-
-        .login-form label {
-            color: #424856;
-            font-weight: bold;
-            display: block;
-            margin-bottom: 8px;
         }
 
         .input-wrapper {
@@ -64,7 +54,7 @@
             color: black;
         }
 
-        .login-form input[type="email"],
+        .login-form input[type="text"],
         .login-form input[type="password"] {
             background-color: #F3F4F6;
             border: 1px solid #ccc;
@@ -76,7 +66,7 @@
             transition: all 0.3s ease-in-out;
         }
 
-        .login-form input[type="email"]:focus,
+        .login-form input[type="text"]:focus,
         .login-form input[type="password"]:focus {
             border-color: #1CE5FF;
             box-shadow: 0 0 8px rgba(28, 229, 255, 0.6);
@@ -123,9 +113,10 @@
         .right-side {
             width: 50%;
             height: 100%;
-            padding: 40px;
+            padding: 30px;
             background-color: #003FFF;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             animation: slideIn 1s ease-in-out;
@@ -135,6 +126,13 @@
             max-width: 100%;
             max-height: 100%;
             animation: bounceIn 1s ease-in-out;
+        }
+
+        .logo-text {
+            margin-top: 20px;
+            color: #fff;
+            font-size: 24px;
+            text-align: center;
         }
 
         .signup-link {
@@ -186,45 +184,55 @@
                 opacity: 1;
             }
         }
+
+        /* Ensure the Toastr container is always on top */
+        #toast-container {
+            z-index: 9999 !important;
+        }
+
+        .label {
+            color: black;
+        }
     </style>
+
     <div class="container">
-        <!-- Left Side (Login Form) -->
         <div class="login-form-container">
-            <form method="POST" action="{{ route('login') }}" class="login-form">
+            <form method="POST" action="{{ route('login') }}" class="login-form" id="login-form">
                 @csrf
                 <div class="center-signup">
                     <h2>Sign in</h2>
                 </div>
 
-                <!-- Email Address -->
-                <div class="form-group mt-5">
-                    <x-input-label for="email" :value="__('Email')" />
+                <div class="form-group mt-4">
+                    <x-input-label for="id_number" :value="__('ID Number')" class="label"/>
                     <div class="input-wrapper">
-                        <i class="fa-regular fa-envelope"></i>
-                        <x-text-input id="email" class="form-control"
-                                      type="email" name="email" :value="old('email')"
+                        <i class="fa-regular fa-id-card"></i>
+                        <x-text-input id="id_number" class="form-control"
+                                      type="text" name="id_number" :value="old('id_number')"
                                       required autofocus autocomplete="username"
-                                      placeholder="example.email@gmail.com" />
+                                      maxlength="7" pattern="[A-Za-z]{1}[0-9]{6}"
+                                      placeholder="Enter your ID number" />
                     </div>
-                    <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                    <x-input-error :messages="$errors->get('id_number')" class="mt-2" />
                 </div>
 
-                <!-- Password -->
-                <div class="form-group mt-5">
-                    <x-input-label for="password" :value="__('Password')" />
+                <div class="form-group mt-4">
+                    <x-input-label for="password" :value="__('Password')" class="label"/>
                     <div class="input-wrapper">
                         <i class="fas fa-lock"></i>
                         <x-text-input id="password" class="form-control"
                                       type="password"
                                       name="password"
                                       required autocomplete="current-password"
-                                      placeholder="Enter at least 8+ characters" />
+                                      placeholder="Enter your password" />
                     </div>
                     <x-input-error :messages="$errors->get('password')" class="mt-2" />
                 </div>
 
-                <!-- Forgot Password Link -->
-                <div class="flex items-center justify-center mt-5">
+                <!-- reCAPTCHA v3 token -->
+                <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
+
+                <div class="flex items-center justify-center mt-4">
                     @if (Route::has('password.request'))
                         <a class="forgot-password-link" href="{{ route('password.request') }}">
                             {{ __('Forgot your password?') }}
@@ -232,22 +240,89 @@
                     @endif
                 </div>
 
-                <!-- Log In Button -->
-                <div class="button-container mt-5 mb-5">
-                    <x-primary-button class="log-in-button">
+                <div class="button-container">
+                    <button type="submit" class="log-in-button">
                         {{ __('Log in') }}
-                    </x-primary-button>
+                    </button>
                 </div>
 
-                <div class="flex items-center justify-center mt-5">
+                <div class="flex items-center justify-center mt-2">
                     <p>Don't have an account? <a href="{{ route('register') }}" class="signup-link">Sign up</a></p>
                 </div>
             </form>
         </div>
 
-        <!-- Right Side (Logo) -->
         <div class="right-side">
             <img src="{{ asset('images/pilarLogo.png') }}" alt="Pilar College of Zamboanga City Logo" class="logo">
+            <div class="logo-text">PilarCare</div>
         </div>
     </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            grecaptcha.ready(function() {
+                grecaptcha.execute('{{ config('services.nocaptcha.sitekey') }}', { action: 'login' }).then(function(token) {
+                    document.getElementById('g-recaptcha-response').value = token;
+                });
+            });
+
+            document.getElementById('login-form').addEventListener('submit', function(event) {
+                event.preventDefault();
+                login();
+            });
+        });
+
+        function login() {
+            const form = document.getElementById('login-form');
+            const formData = new FormData(form);
+
+            fetch('{{ route('login') }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                },
+                body: formData
+            })
+            .then(response => {
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    return response.text().then(text => { throw new Error(text) });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    toastr.success('Login successful.', 'Success', {
+                        closeButton: true,
+                        progressBar: true,
+                        positionClass: 'toast-top-right',
+                        timeOut: 3000,
+                        onHidden: function() {
+                            window.location.href = data.redirect;
+                        }
+                    });
+                } else {
+                    const errors = Object.values(data.errors).flat().join('<br>');
+                    toastr.error(errors, 'Error', {
+                        closeButton: true,
+                        progressBar: true,
+                        positionClass: 'toast-top-right',
+                        timeOut: 5000,
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                toastr.error('An unexpected error occurred. Please try again later.', 'Error', {
+                    closeButton: true,
+                    progressBar: true,
+                    positionClass: 'toast-top-right',
+                    timeOut: 5000,
+                });
+            });
+        }
+    </script>
 </x-guest-layout>

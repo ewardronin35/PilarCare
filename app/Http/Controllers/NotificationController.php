@@ -1,28 +1,49 @@
 <?php
-// app/Http/Controllers/NotificationController.php
 namespace App\Http\Controllers;
 
+use App\Models\Notification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
 {
-    public function create()
+    public function index()
     {
-        return view('notifications.create');
+        $notifications = Notification::where('user_id', Auth::user()->id_number)->get();
+        \Log::info('Fetched notifications: ', $notifications->toArray());
+
+        return response()->json(['notifications' => $notifications]);
+
     }
 
     public function store(Request $request)
     {
-        // Validate the form data
         $request->validate([
-            'school_id' => 'required|string|max:255',
-            'name' => 'required|string|max:255',
-            'notification_info' => 'required|email|max:255',
-            'notification_for' => 'required|string|in:student,parent,staff'
+            'user_id' => 'required|string|exists:users,id_number',
+            'title' => 'required|string|max:255',
+            'message' => 'required|string',
+            'scheduled_time' => 'nullable|date'
         ]);
 
-        // Handle the notification logic (e.g., save to database, send email, etc.)
+        Notification::create([
+            'user_id' => $request->user_id,
+            'title' => $request->title,
+            'message' => $request->message,
+            'scheduled_time' => $request->scheduled_time ?? now()
+        ]);
 
-        return redirect()->route('notifications.create')->with('success', 'Notification sent successfully!');
+        return response()->json([
+            'message' => 'Notification created successfully'
+        ]);
+    }
+
+    public function destroy($id)
+    {
+        $notification = Notification::findOrFail($id);
+        $notification->delete();
+
+        return response()->json([
+            'message' => 'Notification deleted successfully'
+        ]);
     }
 }

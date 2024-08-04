@@ -13,12 +13,13 @@ class Complaint extends Model
         'age',
         'birthdate',
         'health_history',
-        'year_section',
+        'year',
+        'section',
         'contact_number',
+        'pain_assessment',
+        'sickness_description',
+        'status',
+        'role',
+        'id_number', // Add this line
     ];
-
-    public function details()
-    {
-        return $this->hasMany(ComplaintDetail::class);
-    }
 }
