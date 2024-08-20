@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Student;
+use App\Models\Parents;
+use App\Models\Staff;
+use App\Models\Teacher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -11,6 +14,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema; // <-- Add this line
 
 class RegisteredUserController extends Controller
 {
@@ -27,15 +31,12 @@ class RegisteredUserController extends Controller
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'string', 'in:Student,Teacher,Staff'],
             'g-recaptcha-response' => ['required'],
         ]);
     }
 
-    protected function createUser(array $data)
+    protected function createUser(array $data, $role, $approved)
     {
-        $role = $this->determineRole($data['id_number']);
-
         return User::create([
             'id_number' => $data['id_number'],
             'first_name' => $data['first_name'],
@@ -43,20 +44,38 @@ class RegisteredUserController extends Controller
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'role' => $role,
-            'approved' => false,
+            'approved' => $approved,
         ]);
     }
 
-    protected function determineRole($idNumber)
+    protected function determineRoleAndApproval($idNumber)
     {
-        if (preg_match('/^S[0-9]{6}$/', $idNumber)) {
-            return 'Student';
-        } elseif (preg_match('/^ST[0-9]{6}$/', $idNumber)) {
-            return 'Staff';
-        } elseif (preg_match('/^T[0-9]{6}$/', $idNumber)) {
-            return 'Teacher';
+        // Check if the column exists before querying
+        if (Schema::hasColumn('students', 'id_number')) {
+            if ($student = Student::where('id_number', $idNumber)->first()) {
+                return ['role' => 'Student', 'approved' => $student->approved];
+            }
         }
-        return 'Parent'; // Default role if none of the patterns match
+
+        if (Schema::hasColumn('parents', 'id_number')) {
+            if ($parent = Parents::where('id_number', $idNumber)->first()) {
+                return ['role' => 'Parent', 'approved' => $parent->approved];
+            }
+        }
+
+        if (Schema::hasColumn('staff', 'id_number')) {
+            if ($staff = Staff::where('id_number', $idNumber)->first()) {
+                return ['role' => 'Staff', 'approved' => $staff->approved];
+            }
+        }
+
+        if (Schema::hasColumn('teachers', 'id_number')) {
+            if ($teacher = Teacher::where('id_number', $idNumber)->first()) {
+                return ['role' => 'Teacher', 'approved' => $teacher->approved];
+            }
+        }
+
+        return null; // Return null if no matching role is found
     }
 
     public function store(Request $request)
@@ -84,16 +103,17 @@ class RegisteredUserController extends Controller
             ], 422);
         }
 
-        // Check if the user exists in the students table and is approved
-        $student = Student::where('id_number', $request->id_number)->first();
-        if (!$student || !$student->approved) {
+        // Determine the role and approval status based on the ID number
+        $roleAndApproval = $this->determineRoleAndApproval($request->id_number);
+
+        if (!$roleAndApproval) {
             return response()->json([
                 'success' => false,
-                'errors' => ['id_number' => 'You are not authorized to register.']
+                'errors' => ['id_number' => 'You are not enrolled. Please enroll first.']
             ], 422);
         }
 
-        $user = $this->createUser($request->all());
+        $user = $this->createUser($request->all(), $roleAndApproval['role'], $roleAndApproval['approved']);
         event(new Registered($user));
         $user->sendEmailVerificationNotification();
         Auth::login($user);

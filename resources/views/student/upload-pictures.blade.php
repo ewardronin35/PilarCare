@@ -2,175 +2,140 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+
         .container {
             display: flex;
-            flex-direction: row;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 80px;
-            background-color: #00d2ff;
-            color: white;
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            padding-top: 20px;
-            transition: width 0.3s ease-in-out;
-            overflow: hidden;
-            z-index: 1000;
-        }
-
-        .sidebar:hover {
-            width: 250px;
-        }
-
-        .main-content {
-            margin-left: 80px;
-            width: calc(100% - 80px);
+            flex-direction: column;
+            align-items: center;
             padding: 20px;
-            transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
         }
 
-        .sidebar:hover ~ .main-content {
-            margin-left: 250px;
-            width: calc(100% - 250px);
+        .modal-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 20px;
         }
 
-        .table-container {
-            margin-top: 20px;
-            background-color: #f9f9f9;
-            padding: 20px;
+        .modal-card {
+            background-color: #fff;
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            animation: fadeInUp 0.5s ease-in-out;
+            width: 500px;
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 20px;
         }
 
-        .table {
-            width: 100%;
-            border-collapse: collapse;
+        .modal-card h3 {
+            margin: 15px 0 5px 0;
+        }
+
+        .upload-section {
+            border: 2px dashed #007bff;
             border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .table th, .table td {
-            padding: 15px;
-            text-align: left;
-        }
-
-        .table th {
-            background-color: #007bff;
-            color: white;
-        }
-
-        .table tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-
-        .table tr:hover {
-            background-color: #ddd;
-        }
-
-        .table td button {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
+            padding: 20px;
+            position: relative;
             cursor: pointer;
-            transition: background-color 0.3s, transform 0.3s;
+            background-color: #f9f9f9;
         }
 
-        .table td button:hover {
-            background-color: #0056b3;
-            transform: scale(1.05);
+        .upload-section:hover {
+            background-color: #e6f0ff;
         }
 
-        .table td button:active {
-            transform: scale(0.95);
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
+        .upload-section input[type=file] {
+            opacity: 0;
+            position: absolute;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
-            overflow: auto;
-            background-color: rgb(0, 0, 0);
-            background-color: rgba(0, 0, 0, 0.4);
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 600px;
-            border-radius: 10px;
-            animation: fadeInUp 0.5s ease-in-out;
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
             cursor: pointer;
         }
 
-        .form-group {
-            margin-bottom: 15px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-group label {
-            margin-bottom: 5px;
+        .upload-section .upload-text {
+            color: #007bff;
             font-weight: bold;
+            font-size: 16px;
         }
 
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            padding: 10px;
-            border: 1px solid #ddd;
+        .file-list {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .file-item .progress-bar {
+            width: 70%;
+            height: 5px;
             border-radius: 5px;
-            font-size: 14px;
+            background-color: #e0e0e0;
+            margin-left: 10px;
+            position: relative;
         }
 
-        .form-group button {
+        .file-item .progress-bar span {
+            display: block;
+            height: 100%;
+            border-radius: 5px;
             background-color: #007bff;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .file-item .file-remove {
+            color: #ff0000;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .submit-btn {
+            background-color: #28a745;
             color: white;
             padding: 10px 20px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s, transform 0.3s;
-            margin-top: 10px;
+            margin-top: 20px;
             text-align: center;
             display: flex;
             justify-content: center;
             align-items: center;
+            animation: fadeInUp 0.5s ease-in-out;
         }
 
-        .form-group button:hover {
-            background-color: #0056b3;
+        .submit-btn:hover {
+            background-color: #218838;
             transform: scale(1.05);
         }
 
-        .form-group button:active {
+        .submit-btn:active {
             transform: scale(0.95);
+        }
+
+        .pending-approval {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #007bff;
+            margin-top: 20px;
+            border: 2px solid #007bff;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #e9f7fe;
+            width: 80%;
         }
 
         @keyframes fadeInUp {
@@ -178,135 +143,222 @@
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
-
     </style>
 
-   
-<div class="container">
-        <main class="main-content">
-            <h1>Health Examinations</h1>
+    <div class="container">
+        <form id="upload-pictures-form" method="POST" action="{{ route('student.health-examination.store') }}" enctype="multipart/form-data">
+            @csrf
 
-            <div class="table-container">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Health Examination Picture</th>
-                            <th>X-ray Picture</th>
-                            <th>Lab Result Picture</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($healthExaminations as $examination)
-                            <tr>
-                                <td>
-                                    <img src="{{ asset('storage/' . $examination->health_examination_picture) }}" alt="Health Examination Picture" style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px;">
-                                </td>
-                                <td>
-                                    <img src="{{ asset('storage/' . $examination->xray_picture) }}" alt="X-ray Picture" style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px;">
-                                </td>
-                                <td>
-                                    <img src="{{ asset('storage/' . $examination->lab_result_picture) }}" alt="Lab Result Picture" style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px;">
-                                </td>
-                                <td>
-                                    <button onclick="openEditModal({{ $examination->id }})">Edit</button>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Edit Modal -->
-            <div id="editModal" class="modal">
-                <div class="modal-content">
-                    <span class="close" onclick="closeEditModal()">&times;</span>
-                    <h2>Edit Health Examination</h2>
-                    <form id="edit-form" method="POST" action="{{ route('student.health-examination.update') }}" enctype="multipart/form-data">
-                        @csrf
-                        @method('PUT')
-                        <input type="hidden" id="examination_id" name="examination_id">
-                        
-                        <div class="form-group">
-                            <label for="health_examination_picture">Health Examination Picture</label>
-                            <label for="health_examination_picture" class="button">Select Picture</label>
-                            <input type="file" id="health_examination_picture" name="health_examination_picture" accept="image/*">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="xray_picture">X-ray Picture</label>
-                            <label for="xray_picture" class="button">Select Picture</label>
-                            <input type="file" id="xray_picture" name="xray_picture" accept="image/*">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="lab_result_picture">Lab Result Picture</label>
-                            <label for="lab_result_picture" class="button">Select Picture</label>
-                            <input type="file" id="lab_result_picture" name="lab_result_picture" accept="image/*">
-                        </div>
-                        
-                        <div class="form-group">
-                            <button type="submit">Update</button>
-                        </div>
-                    </form>
+            <!-- Lab Exam Modal -->
+            <div class="modal-container">
+                <div class="modal-card">
+                    <h3>Lab Exam - 4 Pictures</h3>
+                    <div class="upload-section" id="lab-upload-section">
+                        <span class="upload-text">Drag files to upload or Browse files</span>
+                        <input type="file" name="lab_result_pictures[]" id="lab_result_pictures" accept="image/*" multiple>
+                    </div>
+                    <div class="file-list" id="lab_result_pictures-file-list"></div>
                 </div>
             </div>
-        </main>
+
+            <!-- X-ray Modal -->
+            <div class="modal-container">
+                <div class="modal-card">
+                    <h3>X-ray - 2 Pictures</h3>
+                    <div class="upload-section" id="xray-upload-section">
+                        <span class="upload-text">Drag files to upload or Browse files</span>
+                        <input type="file" name="xray_pictures[]" id="xray_pictures" accept="image/*" multiple>
+                    </div>
+                    <div class="file-list" id="xray_pictures-file-list"></div>
+                </div>
+            </div>
+
+            <!-- Health Examination Modal -->
+            <div class="modal-container">
+                <div class="modal-card">
+                    <h3>Health Examination - 1 Picture</h3>
+                    <div class="upload-section" id="health-upload-section">
+                        <span class="upload-text">Drag files to upload or Browse files</span>
+                        <input type="file" name="health_examination_picture" id="health_examination_picture" accept="image/*">
+                    </div>
+                    <div class="file-list" id="health_examination_picture-file-list"></div>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn">Submit All</button>
+        </form>
+
+        <div id="pending-approval-message" class="pending-approval" style="display: none;">
+            Your submission is pending approval. Please wait for further instructions. Thank you!
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        function openEditModal(id) {
-            document.getElementById('examination_id').value = id;
-            document.getElementById('editModal').style.display = 'block';
-        }
+        document.addEventListener("DOMContentLoaded", function () {
+            const fileInputs = document.querySelectorAll('input[type="file"]');
+            const maxFileCounts = {
+                lab_result_pictures: 4,
+                xray_pictures: 2,
+                health_examination_picture: 1,
+            };
 
-        function closeEditModal() {
-            document.getElementById('editModal').style.display = 'none';
-        }
+            // This will store the names of files already uploaded globally
+            const uploadedFiles = new Set();
 
-        document.getElementById('edit-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const formData = new FormData(this);
+            fileInputs.forEach(input => {
+                input.addEventListener('change', function () {
+                    const section = input.name.replace('[]', '');
+                    const fileListId = input.id + '-file-list';
+                    const fileList = document.getElementById(fileListId);
 
-            fetch('{{ route('student.health-examination.update') }}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
+                    if (!fileList) {
+                        console.error('File list element not found for input:', input.id);
+                        return;
+                    }
+
+                    const files = Array.from(this.files);
+                    let duplicateFound = false;
+
+                    // Check for duplicates in the new files
+                    files.forEach(file => {
+                        if (uploadedFiles.has(file.name)) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Duplicate File',
+                                text: `The file "${file.name}" has already been uploaded. Please choose a different file.`,
+                            });
+                            duplicateFound = true;
+                        }
+                    });
+
+                    if (duplicateFound) {
+                        input.value = ''; // Clear the input to prevent submission of duplicate files
+                        return;
+                    }
+
+                    // Append new files to the uploaded files set and update the displayed list
+                    files.forEach(file => {
+                        uploadedFiles.add(file.name);
+
+                        const fileItem = document.createElement('div');
+                        fileItem.classList.add('file-item');
+
+                        const fileName = document.createElement('span');
+                        fileName.textContent = file.name;
+
+                        const progressBarContainer = document.createElement('div');
+                        progressBarContainer.classList.add('progress-bar');
+
+                        const progressBar = document.createElement('span');
+                        progressBar.style.width = '0%';
+
+                        progressBarContainer.appendChild(progressBar);
+
+                        const fileRemove = document.createElement('span');
+                        fileRemove.innerHTML = '&times;';
+                        fileRemove.classList.add('file-remove');
+                        fileRemove.addEventListener('click', function () {
+                            uploadedFiles.delete(file.name);
+                            fileList.removeChild(fileItem);
+                        });
+
+                        fileItem.appendChild(fileName);
+                        fileItem.appendChild(progressBarContainer);
+                        fileItem.appendChild(fileRemove);
+
+                        fileList.appendChild(fileItem);
+
+                        // Simulate progress bar
+                        setTimeout(() => {
+                            progressBar.style.width = '100%';
+                        }, 1000);
+                    });
+
+                    // Show SweetAlert after files are added
                     Swal.fire({
                         icon: 'success',
-                        title: 'Success',
-                        text: 'Health examination updated successfully.'
-                    }).then(() => {
-                        location.reload();
+                        title: 'Files Uploaded',
+                        text: 'Your files have been added to the list successfully.'
                     });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'There was an error updating the health examination.'
-                    });
-                }
-            })
-            .catch(error => {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'There was an error updating the health examination.'
                 });
-                console.error('Error:', error);
             });
+
+            const uploadForm = document.getElementById('upload-pictures-form');
+            if (uploadForm) {
+                uploadForm.addEventListener('submit', function (event) {
+                    event.preventDefault();
+
+                    const formData = new FormData(this);
+
+                    fetch('{{ route('student.health-examination.store') }}', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        },
+                    })
+                        .then(response => response.json()) {
+        if (!response.ok) {
+            return response.text().then(text => { throw new Error(text) });
+        }
+        return response.json();
+    })
+                        .then(data => {
+                            if (data.success) {
+                                const uploadSection = document.getElementById('upload-section');
+                                if (uploadSection) uploadSection.style.display = 'none';
+
+                                const pendingApprovalMessage = document.getElementById('pending-approval-message');
+                                if (pendingApprovalMessage) pendingApprovalMessage.style.display = 'block';
+
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Pictures Uploaded',
+                                    text: 'Your pictures have been uploaded successfully and are now pending approval. Please wait for further instructions.',
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Upload Failed',
+                                    text: 'There was a problem uploading your pictures. Please try again.',
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Upload Failed',
+                                text: 'An unexpected error occurred. Please try again.',
+                            });
+                            console.error('Error:', error);
+                        });
+                });
+            }
+
+            setInterval(function () {
+                fetch('{{ route('student.health-examination.status') }}', {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    },
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.is_approved) {
+                            window.location.href = '{{ route('student.medical-record.create') }}';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error checking approval status:', error);
+                    });
+            }, 5000);
         });
     </script>
 </x-app-layout>

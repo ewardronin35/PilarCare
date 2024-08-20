@@ -34,6 +34,6 @@ class AdminDashboardController extends Controller
     public function pendingApprovals()
     {
         $pendingApprovals = HealthExamination::where('is_approved', false)->get();
-        return view('admin.pending-approvals', compact('pendingApprovals'));
+        return view('admin.uploadHealthExamination', compact('pendingApprovals'));
     }
 }

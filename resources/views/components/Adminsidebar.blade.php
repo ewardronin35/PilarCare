@@ -1,5 +1,8 @@
 <div class="sidebar">
     <style>
+        /* Import Poppins Font */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
         .sidebar {
             width: 100px; /* Collapsed width */
             background-color: #00d2ff;
@@ -14,6 +17,7 @@
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
+            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
         }
 
         .sidebar:hover {
@@ -38,6 +42,7 @@
             font-size: 1.5rem;
             font-weight: bold;
             opacity: 0;
+            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
         }
 
         .sidebar:hover .logo-text {
@@ -68,11 +73,12 @@
             cursor: pointer;
             flex-direction: column;
             align-items: flex-start;
+            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
         }
 
         .menu > ul > li:hover {
-            background-color: rgba(255, 255, 255, 0.8);
-            color: #000;
+            background-color: #1f1f90;
+            color: white;
             transform: translateX(10px);
         }
 
@@ -83,10 +89,12 @@
             display: flex;
             align-items: center;
             width: 100%;
+            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
+            font-weight: 500; /* Medium weight for better readability */
         }
 
         .menu > ul > li:hover a {
-            color: #000;
+            color: white;
         }
 
         .menu > ul > li a .icon {
@@ -117,7 +125,6 @@
         .menu li.active .submenu {
             display: flex;
             width: 100%;
-            background-color: rgba(255, 255, 255, 0.8);
         }
 
         .submenu li {
@@ -126,11 +133,11 @@
             width: calc(100% - 40px); /* Adjusting width to prevent overflow */
             color: #000;
             transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
+            font-weight: 400; /* Regular weight for submenu items */
         }
 
         .submenu li:hover {
-            background-color: rgba(255, 255, 255, 0.9);
-            color: #000;
             transform: translateX(10px);
         }
 
@@ -195,8 +202,8 @@
             <li class="has-submenu">
                 <a href="#"><span class="icon"><i class="fas fa-notes-medical"></i></span><span class="menu-text">Records</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
                 <ul class="submenu">
-                    <li><a href="{{ route('admin.medical-record.index') }}">Health Approval</a></li>
-                    <li><a href="{{ route('admin.medical-records') }}">View Medical Record</a></li>
+                    <li><a href="{{ route('admin.uploadHealthExamination') }}">Health Approval</a></li>
+                    <li><a href="{{ route('admin.medical-record.index') }}">View Medical Record</a></li>
                     <li><a href="{{ route('admin.dental-record.index') }}">View Dental Record</a></li>
                 </ul>
             </li>
@@ -226,7 +233,7 @@
             <li class="has-submenu">
                 <a href="#"><span class="icon"><i class="fas fa-user"></i></span><span class="menu-text">Profile</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
                 <ul class="submenu">
-                    <li><a href="{{ route('admin.monitoring-report-log') }}">View Profile of Student</a></li>
+                    <li><a href="{{ route('admin.profiles') }}">View Profile of Student</a></li>
                 </ul>
             </li>
         </ul>

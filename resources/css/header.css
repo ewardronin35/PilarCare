@@ -1,0 +1,110 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    width: 100%;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    z-index: 2;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+}
+
+.user-info .username {
+    margin-right: 10px;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.notification-icon {
+    margin-right: 20px;
+    position: relative;
+}
+
+.notification-dropdown {
+    display: none;
+    position: absolute;
+    top: 50px;
+    right: 10px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+    width: 300px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+.notification-dropdown.active {
+    display: block;
+}
+
+.notification-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #e0e0e0;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.notification-item:last-child {
+    border-bottom: none;
+}
+
+.notification-item:hover {
+    background-color: #f9f9f9;
+    transform: translateX(10px);
+}
+
+.notification-item .icon {
+    margin-right: 10px;
+}
+
+.notification-header {
+    padding: 10px;
+    border-bottom: 1px solid #e0e0e0;
+    font-weight: bold;
+}
+
+.profile-box {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    background-image: url('{{ asset('images/bg.jpg') }}');
+    background-size: cover;
+    background-position: center;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    color: white;
+}
+
+.profile-box img {
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    margin-right: 20px;
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-info h2 {
+    margin: 0;
+    font-size: 1.5em;
+}
+
+.profile-info p {
+    margin: 0;
+}

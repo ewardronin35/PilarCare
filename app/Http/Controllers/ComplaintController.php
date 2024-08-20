@@ -1,20 +1,32 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Complaint;
 use App\Models\Student;
+use App\Models\Inventory;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\InventoryController;
+
 
 class ComplaintController extends Controller
 {
     public function index()
     {
+    
         $role = strtolower(Auth::user()->role);
         $complaints = Complaint::where('role', $role)->get();
 
+    foreach ($complaints as $complaint) {
+        $user = User::where('id_number', $complaint->id_number)->first();
+        if ($user) {
+            $complaint->first_name = $user->first_name;
+            $complaint->last_name = $user->last_name;
+        }
+    }
+    
         switch ($role) {
             case 'student':
                 return view('student.complaint', compact('complaints', 'role'));
@@ -25,11 +37,10 @@ class ComplaintController extends Controller
             case 'staff':
                 return view('staff.complaint', compact('complaints', 'role'));
             case 'admin':
-                $allComplaints = Complaint::all();
-                $studentComplaints = $allComplaints->where('role', 'student');
-                $staffComplaints = $allComplaints->where('role', 'staff');
-                $parentComplaints = $allComplaints->where('role', 'parent');
-                $teacherComplaints = $allComplaints->where('role', 'teacher');
+                $studentComplaints = Complaint::where('role', 'student')->get();
+                $staffComplaints = Complaint::where('role', 'staff')->get();
+                $parentComplaints = Complaint::where('role', 'parent')->get();
+                $teacherComplaints = Complaint::where('role', 'teacher')->get();
                 return view('admin.complaint', compact('studentComplaints', 'staffComplaints', 'parentComplaints', 'teacherComplaints'));
             default:
                 abort(403, 'Unauthorized action.');
@@ -44,55 +55,56 @@ class ComplaintController extends Controller
 
     public function store(Request $request)
     {
+        \Log::info('Received request data:', $request->all());  // Debugging statement
+
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+            'id_number' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
             'age' => 'required|integer',
             'birthdate' => 'required|date',
+            'year' => 'required|string|max:255',
             'contact_number' => 'required|string|max:255',
-            'health_history' => 'required|string',
-            'pain_assessment' => 'required|integer|min:1|max:10',
+            'pain_assessment' => 'required|integer',
             'sickness_description' => 'required|string',
-            'teacher_type' => 'required_if:role,teacher|string',
-            'student_type' => 'required_if:role,student|string',
-            'year' => 'nullable|string',
-            'section' => 'nullable|string',
-            'program' => 'nullable|string',
-            'grade' => 'nullable|string',
-            'strand' => 'nullable|string',
+            'role' => 'required|string|max:255',
+            'medicine_given' => 'required|string|max:255'
         ]);
-
+    
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
-
-        $complaintData = $request->all();
-        $complaintData['role'] = strtolower(Auth::user()->role);
-
-        if ($request->role === 'student') {
-            if ($request->student_type === 'TED') {
-                $complaintData['grade'] = null;
-                $complaintData['strand'] = null;
-            } elseif ($request->student_type === 'BED') {
-                $complaintData['program'] = null;
-                $complaintData['year'] = null;
-                $complaintData['strand'] = null;
-            } elseif ($request->student_type === 'SHS') {
-                $complaintData['program'] = null;
-                $complaintData['year'] = null;
+    
+        try {
+            $complaint = Complaint::create([
+                'id_number' => $request->id_number,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'age' => $request->age,
+                'birthdate' => $request->birthdate,
+                'year' => $request->year,
+                'contact_number' => $request->contact_number,
+                'pain_assessment' => $request->pain_assessment,
+                'sickness_description' => $request->sickness_description,
+                'role' => $request->role,
+                'medicine_given' => $request->medicine_given
+            ]);    
+            // Update inventory stock
+            $inventory = Inventory::where('item_name', $request->medicine_given)->first();
+            if ($inventory) {
+                $inventory->quantity -= 1;
+                $inventory->save();
             }
+    
+            return response()->json(['success' => true, 'message' => 'Complaint successfully saved']);
+            \Log::info('Complaint successfully saved:', $complaint->toArray());  
+            \Log::info('Form data received:', $request->all());// Debugging statement
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'An error occurred while saving the complaint. Please try again.', 'error' => $e->getMessage()], 500);
         }
-
-        $complaint = Complaint::create($complaintData);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Complaint added successfully!',
-            'complaint' => $complaint
-        ], 200);
     }
+    
 
     public function updateStatus(Request $request, $id)
     {
@@ -107,36 +119,86 @@ class ComplaintController extends Controller
             ], 422);
         }
 
-        $complaint = Complaint::findOrFail($id);
-        $complaint->update(['status' => $request->status]);
+        try {
+            $complaint = Complaint::findOrFail($id);
+            $complaint->update(['status' => $request->status]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Status updated successfully!',
-            'status' => $complaint->status
-        ], 200);
+            return response()->json([
+                'success' => true,
+                'message' => 'Status updated successfully!',
+                'status' => $complaint->status
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while updating the status. Please try again.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function show($id)
     {
-        $complaint = Complaint::find($id);
+        try {
+            $complaint = Complaint::find($id);
 
-        if ($complaint) {
-            return response()->json($complaint);
-        } else {
-            return response()->json(['error' => 'Complaint not found'], 404);
+            if ($complaint) {
+                return response()->json($complaint);
+            } else {
+                return response()->json(['error' => 'Complaint not found'], 404);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred. Please try again.',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
     public function fetchStudentData($id)
     {
-        $student = Student::where('id_number', $id)->first();
-
-        if ($student) {
-            return response()->json($student);
-        } else {
-            return response()->json(['error' => 'Student not found'], 404);
+        try {
+            \DB::enableQueryLog();
+            \Log::info('Fetching data for ID: ' . $id);
+            
+            // Fetch the user from the users table
+            $user = User::where('id_number', $id)->first();
+            \Log::info('User: ' . json_encode($user));
+    
+        
+            // Check if the user exists, since we need the first_name and last_name from this table
+            if ($user) {
+                return response()->json([
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'role' => $user->role,
+                    'id_number' => $user->id_number
+                ]);
+            } else {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred. Please try again.',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
     
+
+    public function getAvailableMedicines()
+    {
+        try {
+            $medicines = Inventory::where('quantity', '>', 0)->where('type', 'medicine')->pluck('item_name');
+            return response()->json($medicines);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred. Please try again.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

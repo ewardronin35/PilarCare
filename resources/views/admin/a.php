@@ -1,30 +1,4 @@
-<x-app-layout>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/foundation/6.2.3/foundation.min.css">
-  <link rel="stylesheet" href="{{ asset('css/dental.css') }}">
-
-  <div class="row dental-charting">
-    <div class="large-3 columns">
-      <div class="row">
-        <div class="large-6 columns">
-          <p>Upper Left</p>
-          @for ($i = 11; $i <= 18; $i++)
-            <input type="text" class="input input-tooth-{{ $i }}" placeholder="{{ $i - 10 }}">
-          @endfor
-        </div>
-        <div class="large-6 columns">
-          <p>Upper Right</p>
-          @for ($i = 21; $i <= 28; $i++)
-            <input type="text" class="input input-tooth-{{ $i }}" placeholder="{{ $i - 10 }}">
-          @endfor
-        </div>
-      </div>
-    </div>
-
-    <div class="large-6 columns chart">
-      <div class="row">
-        <div class="large-12 columns">
-          <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="289.61084" height="370.54398">
-       <defs>
+<defs>
     <marker refX="0" refY="0" orient="auto" overflow="visible">
       <circle r="0.8" cy="0" cx="3"/>
       <circle r="0.8" cy="0" cx="6.5"/>
@@ -866,29 +840,7 @@
     <tspan x="12.515995" y="214.18651">17</tspan>
   </text>
 </svg>
-          </svg>
-        </div>
-      </div>
-    </div>
-
-    <div class="large-3 columns">
-      <div class="row">
-        <div class="large-6 columns">
-          <p>Lower Left</p>
-          @for ($i = 31; $i <= 38; $i++)
-            <input type="text" class="input input-tooth-{{ $i }}" placeholder="{{ $i - 20 }}">
-          @endfor
-        </div>
-        <div class="large-6 columns">
-          <p>Lower Right</p>
-          @for ($i = 41; $i <= 48; $i++)
-            <input type="text" class="input input-tooth-{{ $i }}" placeholder="{{ $i - 20 }}">
-          @endfor
-        </div>
-      </div>
-    </div>
-  </div>
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js'></script>
   <script  src="{{ asset('js/dental.js') }}"></script>
 
   <script>
@@ -911,4 +863,3 @@
             });
         });
     </script>
-</x-app-layout>

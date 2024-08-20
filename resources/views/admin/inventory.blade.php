@@ -12,22 +12,6 @@
             transition: margin-left 0.3s ease-in-out;
         }
 
-        .sidebar:hover + .main-content {
-            margin-left: 250px; /* Adjust margin when sidebar is expanded */
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 25px;
-            background-color: #ffffff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            width: calc(100% - 150px);
-            position: fixed;
-            top: 0;
-            z-index: 999;
-        }
-
         .user-info {
             display: flex;
             align-items: center;
@@ -213,8 +197,7 @@
         }
     </style>
 
-    <div class="container">
-        <x-adminsidebar />
+
 
         <main class="main-content">
             <h1>Inventory</h1>

@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Appointment;
+use App\Models\User;  // Add this line
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -27,17 +28,18 @@ class AppointmentController extends Controller
 
     public function add(Request $request)
     {
-        Log::info('Request Data: ', $request->all());
     
         $request->validate([
             'appointment_date' => 'required|date',
             'appointment_time' => 'required|date_format:H:i',
             'appointment_type' => 'required|string|max:255',
+            'patient_name' => 'required|string|max:255',  // Add validation for patient_name
         ]);
-    
+        $user = Auth::user();
+
         $data = [
             'id_number' => Auth::user()->id_number,
-            'patient_name' => Auth::user()->name,
+            'patient_name' => $request->patient_name,
             'appointment_date' => $request->appointment_date,
             'appointment_time' => $request->appointment_time,
             'role' => Auth::user()->role,
@@ -53,7 +55,6 @@ class AppointmentController extends Controller
             return response()->json(['success' => 'Appointment scheduled successfully!']);
         } catch (\Exception $e) {
             Log::error('Error scheduling appointment: ' . $e->getMessage());
-            Log::error($e->getTraceAsString());
             return response()->json(['error' => 'Something went wrong!'], 500);
         }
     }
@@ -89,6 +90,19 @@ class AppointmentController extends Controller
             Log::error('Error deleting appointment: ' . $e->getMessage());
             Log::error($e->getTraceAsString());
             return response()->json(['error' => 'Something went wrong!'], 500);
+        }
+    }
+    public function fetchPatientName($id)
+    {
+        $user = User::where('id_number', $id)->first();
+
+        if ($user) {
+            return response()->json([
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+            ]);
+        } else {
+            return response()->json(['error' => 'Patient not found'], 404);
         }
     }
 }

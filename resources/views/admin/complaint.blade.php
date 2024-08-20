@@ -6,20 +6,6 @@
             min-height: 100vh;
         }
 
-        .sidebar {
-            width: 100px;
-            background-color: #00d2ff;
-            color: white;
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            transition: width 0.3s ease-in-out;
-        }
-
-        .sidebar:hover {
-            width: 250px;
-        }
 
         .logo {
             display: flex;
@@ -83,9 +69,7 @@
             transition: opacity 0.3s ease-in-out;
         }
 
-        .sidebar:hover .menu-text {
-            opacity: 1;
-        }
+     
 
         .main-content {
             margin-left: 80px;
@@ -94,90 +78,12 @@
             transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
         }
 
-        .sidebar:hover ~ .main-content {
-            margin-left: 250px;
-            width: calc(100% - 250px);
-        }
+      
 
-        .header {
-           display: flex;
-    justify-content: space-between;
-         align-items: center;
-    padding: 20px;
-    width: 100%; /* Ensure the header spans the full width */
-    background-color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: relative; /* Ensure it stays in the document flow */
-    z-index: 2; /* Ensure it stays on top of other content */
-}
-
-        .user-info {
-            display: flex;
-            align-items: center;
-        }
-
-        .user-info .username {
-            margin-right: 10px;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-        }
-
-        .notification-icon {
-            margin-right: 20px;
-            position: relative;
-        }
-
-        .notification-dropdown {
-            display: none;
-            position: absolute;
-            top: 50px;
-            right: 10px;
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 5px;
-            width: 300px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            z-index: 10;
-        }
-
-        .notification-dropdown.active {
-            display: block;
-        }
-
-        .notification-item {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #e0e0e0;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.3s;
-        }
-
-        .notification-item:last-child {
-            border-bottom: none;
-        }
-
-        .notification-item:hover {
-            background-color: #f9f9f9;
-            transform: translateX(10px);
-        }
-
-        .notification-item .icon {
-            margin-right: 10px;
-        }
-
-        .notification-header {
-            padding: 10px;
-            border-bottom: 1px solid #e0e0e0;
-            font-weight: bold;
-        }
+        
 
         .complaints-table {
-            width: 100%;
+            width: 95%;
             border-collapse: collapse;
             margin-top: 20px;
             background-color: white;
@@ -350,8 +256,8 @@
                 <table class="complaints-table">
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Health History</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
                             <th>Description of Sickness</th>
                             <th>Pain Assessment</th>
                             <th>Status</th>
@@ -361,8 +267,8 @@
                     <tbody>
                         @foreach ($studentComplaints as $complaint)
                             <tr>
-                                <td>{{ $complaint->name }}</td>
-                                <td>{{ $complaint->health_history }}</td>
+                                <td>{{ $complaint->first_name }}</td>
+                                <td>{{ $complaint->last_name }}</td>
                                 <td>{{ $complaint->sickness_description }}</td>
                                 <td>{{ $complaint->pain_assessment }}</td>
                                 <td>{{ $complaint->status }}</td>
@@ -378,8 +284,8 @@
                 <table class="complaints-table">
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Health History</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
                             <th>Description of Sickness</th>
                             <th>Pain Assessment</th>
                             <th>Status</th>
@@ -389,8 +295,8 @@
                     <tbody>
                         @foreach ($staffComplaints as $complaint)
                             <tr>
-                                <td>{{ $complaint->name }}</td>
-                                <td>{{ $complaint->health_history }}</td>
+                                <td>{{ $complaint->first_name }}</td>
+                                <td>{{ $complaint->last_name }}</td>
                                 <td>{{ $complaint->sickness_description }}</td>
                                 <td>{{ $complaint->pain_assessment }}</td>
                                 <td>{{ $complaint->status }}</td>
@@ -406,8 +312,8 @@
                 <table class="complaints-table">
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Health History</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
                             <th>Description of Sickness</th>
                             <th>Pain Assessment</th>
                             <th>Status</th>
@@ -417,8 +323,8 @@
                     <tbody>
                         @foreach ($parentComplaints as $complaint)
                             <tr>
-                                <td>{{ $complaint->name }}</td>
-                                <td>{{ $complaint->health_history }}</td>
+                                <td>{{ $complaint->first_name }}</td>
+                                <td>{{ $complaint->last_name }}</td>
                                 <td>{{ $complaint->sickness_description }}</td>
                                 <td>{{ $complaint->pain_assessment }}</td>
                                 <td>{{ $complaint->status }}</td>
@@ -434,19 +340,19 @@
                 <table class="complaints-table">
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Health History</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
                             <th>Description of Sickness</th>
                             <th>Pain Assessment</th>
                             <th>Status</th>
-                            <th>Action</th>
+                            <th>Preview</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($teacherComplaints as $complaint)
                             <tr>
-                                <td>{{ $complaint->name }}</td>
-                                <td>{{ $complaint->health_history }}</td>
+                                <td>{{ $complaint->first_name }}</td>
+                                <td>{{ $complaint->last_name }}</td>
                                 <td>{{ $complaint->sickness_description }}</td>
                                 <td>{{ $complaint->pain_assessment }}</td>
                                 <td>{{ $complaint->status }}</td>
@@ -512,16 +418,12 @@
                         <p><strong>Age:</strong> ${data.age}</p>
                         <p><strong>Birthdate:</strong> ${data.birthdate}</p>
                         <p><strong>Contact Number:</strong> ${data.contact_number}</p>
-                        <p><strong>Health History:</strong> ${data.health_history}</p>
                         <p><strong>Pain Assessment:</strong> ${data.pain_assessment}</p>
                         <p><strong>Description of Sickness:</strong> ${data.sickness_description}</p>
-                        <p><strong>Status:</strong> ${data.status}</p>
-                        <p><strong>Student Type:</strong> ${data.student_type}</p>
                         <p><strong>Program:</strong> ${data.program || 'N/A'}</p>
                         <p><strong>Year:</strong> ${data.year || 'N/A'}</p>
                         <p><strong>Section:</strong> ${data.section || 'N/A'}</p>
-                        <p><strong>Grade:</strong> ${data.grade || 'N/A'}</p>
-                        <p><strong>Strand:</strong> ${data.strand || 'N/A'}</p>
+
                     `;
                     document.getElementById('complaint-modal').style.display = 'block';
                 })
@@ -544,7 +446,7 @@
                 dropdown.classList.remove('active');
             }
         });
-
+    
         showTab('student');
     </script>
 </x-app-layout>

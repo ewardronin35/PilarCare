@@ -9,17 +9,16 @@ class Complaint extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name',
+        'id_number', // Added this line
+        'first_name',
+        'last_name',
         'age',
         'birthdate',
-        'health_history',
         'year',
-        'section',
         'contact_number',
         'pain_assessment',
         'sickness_description',
         'status',
         'role',
-        'id_number', // Add this line
     ];
 }

@@ -10,14 +10,14 @@ class DentalRecordController extends Controller
     {
         // Your logic to view a single dental record
         $records = DentalRecord::all();
-        return view('admin.dental-record.index', compact('records'));
+        return view('admin.dental-record', compact('records'));
     }
 
     public function viewAllRecords()
     {
         // Your logic to view all dental records
         $records = DentalRecord::all();
-        return view('admin.dental-records.index', compact('records'));
+        return view('admin.dental-records', compact('records'));
     }
 
     public function create()

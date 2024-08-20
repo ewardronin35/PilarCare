@@ -82,12 +82,10 @@ body, html {
 }
 
 .main-content {
-    flex-grow: 1;
-    background-color: #f0f2f5;
+    margin-left: 80px;
+    width: calc(100% - 80px);
     padding: 20px;
-    margin-left: 10px;
-    width: calc(100% - 150px);
-    transition: margin-left 0.3s ease-in-out;
+    transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
 }
 
 .sidebar:hover ~ .main-content {
@@ -100,42 +98,17 @@ body, html {
     justify-content: space-between;
     align-items: center;
     padding: 25px;
-    background-color: #ffffff;
+    background-color: #00d2ff;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     width: calc(100% - 150px);
     position: fixed;
     top: 0;
     z-index: 999;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.user-info {
-    display: flex;
-    align-items: center;
-}
 
-.username {
-    margin-right: 10px;
-}
 
-.role {
-    display: none; /* Hide role as per requirements */
-}
-
-.user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    margin-left: 10px;
-    cursor: pointer;
-    position: relative;
-}
-
-.user-avatar img {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-}
 
 .dropdown-menu {
     display: none;
@@ -148,6 +121,7 @@ body, html {
     overflow: hidden;
     z-index: 1000;
     animation: slideDown 0.3s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .dropdown-menu.active {
@@ -169,7 +143,24 @@ body, html {
 .notification-icon {
     position: relative;
     cursor: pointer;
-    margin-right: 20px; /* Move the notification bell to the left */
+    margin-right: 20px;
+    animation: bellRing 2s linear infinite;
+}
+
+.notification-icon i {
+    font-size: 20px;
+    color: #666;
+}
+
+.notification-count {
+    position: absolute;
+    top: -5px;
+    right: -10px;
+    background-color: #dc3545;
+    color: white;
+    font-size: 12px;
+    border-radius: 50%;
+    padding: 2px 6px;
 }
 
 .notification-dropdown {
@@ -204,22 +195,104 @@ body, html {
 .breadcrumb {
     display: flex;
     align-items: center;
-    font-size: 14px;
-    color: #666;
+    font-size: 16px;
+    font-family: 'Poppins', sans-serif;
+    color: #fff;
+    background-color: #00CFFF;
+    padding: 10px 15px;
+    border-radius: 5px;
 }
 
 .breadcrumb a {
     color: #666;
     text-decoration: none;
     margin-right: 10px;
+    transition: color 0.3s ease;
 }
 
 .breadcrumb a:hover {
+    color: violet;
     text-decoration: underline;
 }
 
 .breadcrumb .separator {
     margin-right: 10px;
+}
+.fixed-user-info {
+    display: flex;
+    align-items: center;
+    position: fixed;
+    top: 25px;
+    right: 30px; /* Adjust this value for the right spacing */
+    z-index: 1000;
+}
+
+.fixed-user-info .notification-icon {
+    position: relative;
+    margin-right: 15px;
+    animation: bellRing 2s linear infinite;
+}
+
+.fixed-user-info .notification-icon i {
+    font-size: 20px;
+    color: #333;
+}
+
+.fixed-user-info .notification-count {
+    position: absolute;
+    top: -5px;
+    right: -10px;
+    background-color: #dc3545;
+    color: white;
+    font-size: 12px;
+    border-radius: 50%;
+    padding: 2px 6px;
+}
+
+.fixed-user-info .username {
+    font-family: 'Poppins', sans-serif;
+    font-size: 16px;
+    color: #fff;
+    font-weight: 500;
+    margin-right: 15px;
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+}
+
+.fixed-user-info .username::after {
+    content: '|';
+    margin-left: 10px;
+    margin-right: 10px;
+    color: #333;
+}
+
+.fixed-user-info .user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+}
+
+.fixed-user-info .user-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.fixed-user-info .username:hover {
+    color: #333; /* Light violet on hover */
+}
+
+/* Animation for bell icon */
+@keyframes bellRing {
+    0% { transform: rotate(0); }
+    20% { transform: rotate(-15deg); }
+    40% { transform: rotate(15deg); }
+    60% { transform: rotate(-15deg); }
+    80% { transform: rotate(15deg); }
+    100% { transform: rotate(0); }
 }
 
 /* Animations */
@@ -228,24 +301,10 @@ body, html {
         opacity: 0;
         transform: translateY(-10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
     }
 }
 
-/* Media Queries */
-@media (max-width: 768px) {
-    .sidebar {
-        width: 60px;
-    }
-
-    .main-content {
-        margin-left: 60px;
-        width: calc(100% - 60px);
-    }
-
-    .header {
-        width: calc(100% - 60px);
-    }
-}

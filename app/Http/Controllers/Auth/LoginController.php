@@ -12,7 +12,7 @@ use App\Models\Student;
 
 class LoginController extends Controller
 {
-    public function showLoginForm()
+    public function create()
     {
         return view('auth.login');
     }
@@ -57,7 +57,6 @@ class LoginController extends Controller
                 ], 422);
             }
 
-            // Skip approval and enrollment check for admin (case insensitive)
             if (strtolower($user->role) !== 'admin') {
                 if (!$user->approved) {
                     Auth::logout();
@@ -68,7 +67,6 @@ class LoginController extends Controller
                     ], 422);
                 }
 
-                // Check if the user is enrolled in the students table if they are not an admin
                 $student = Student::where('id_number', $user->id_number)->first();
 
                 if (!$student) {

@@ -16,10 +16,6 @@
             
         }
 
-        .sidebar:hover ~ .main-content {
-            margin-left: 250px;
-        }
-
         .profile-box {
             display: flex;
             align-items: center;
@@ -275,6 +271,7 @@
             </div>
 
             <div class="data-table-wrapper">
+            <h1>Registered Users</h1>
                 <ul class="nav nav-tabs" id="myTab" role="tablist">
                     <li class="nav-item">
                         <a class="nav-link active" id="student-tab" data-toggle="tab" href="#student" role="tab" aria-controls="student" aria-selected="true">Student</a>
@@ -291,23 +288,22 @@
                 </ul>
                 <div class="tab-content" id="myTabContent">
                     <div class="tab-pane fade show active" id="student" role="tabpanel" aria-labelledby="student-tab">
+                        
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th>Sl.No</th>
-                                    <th>Name</th>
-                                    <th>Degree</th>
-                                    <th>Contact No</th>
+                                    <th>ID No.</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
                                     <th>Email</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($students as $student)
                                     <tr>
-                                        <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $student->first_name }} {{ $student->last_name }}</td>
-                                        <td>{{ $student->degree }}</td>
-                                        <td>{{ $student->contact_no }}</td>
+                                        <td>{{ $student->id_number }}</td>
+                                        <td>{{ $student->first_name }}</td>
+                                        <td>{{ $student->last_name }}</td>
                                         <td>{{ $student->email }}</td>
                                     </tr>
                                 @endforeach
@@ -318,10 +314,9 @@
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th>Sl.No</th>
-                                    <th>Name</th>
-                                    <th>Degree</th>
-                                    <th>Contact No</th>
+                                <th>ID No.</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
                                     <th>Email</th>
                                 </tr>
                             </thead>
@@ -342,17 +337,15 @@
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th>Sl.No</th>
-                                    <th>Name</th>
-                                    <th>Degree</th>
-                                    <th>Contact No</th>
+                                <th>ID No.</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
                                     <th>Email</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($parents as $parent)
                                     <tr>
-                                        <td>{{ $loop->iteration }}</td>
                                         <td>{{ $parent->first_name }} {{ $parent->last_name }}</td>
                                         <td>{{ $parent->degree }}</td>
                                         <td>{{ $parent->contact_no }}</td>
@@ -366,10 +359,9 @@
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th>Sl.No</th>
-                                    <th>Name</th>
-                                    <th>Degree</th>
-                                    <th>Contact No</th>
+                                <th>ID No.</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
                                     <th>Email</th>
                                 </tr>
                             </thead>

@@ -1,5 +1,8 @@
 <div class="sidebar">
     <style>
+        /* Import Poppins Font */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
         .sidebar {
             width: 100px; /* Collapsed width */
             background-color: #00d2ff;
@@ -14,6 +17,7 @@
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
+            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
         }
 
         .sidebar:hover {
@@ -38,6 +42,7 @@
             font-size: 1.5rem;
             font-weight: bold;
             opacity: 0;
+            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
         }
 
         .sidebar:hover .logo-text {
@@ -68,10 +73,12 @@
             cursor: pointer;
             flex-direction: column;
             align-items: flex-start;
+            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
         }
 
         .menu > ul > li:hover {
-            background-color: #009ec3;
+            background-color: #1f1f90;
+            color: white;
             transform: translateX(10px);
         }
 
@@ -82,6 +89,12 @@
             display: flex;
             align-items: center;
             width: 100%;
+            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
+            font-weight: 500; /* Medium weight for better readability */
+        }
+
+        .menu > ul > li:hover a {
+            color: white;
         }
 
         .menu > ul > li a .icon {
@@ -100,36 +113,75 @@
             opacity: 1;
         }
 
-        .sidebar-footer ul {
-            list-style: none;
-            padding: 0;
+        .submenu {
+            display: none;
+            flex-direction: column;
+            margin-left: 0;
+            padding-left: 0;
+            width: 100%;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
         }
 
-        .sidebar-footer li {
+        .menu li.active .submenu {
             display: flex;
-            align-items: center;
-            margin: 10px 0;
-            padding: 10px 20px;
-            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+            width: 100%;
         }
 
-        .sidebar-footer li:hover {
-            background-color: #009ec3;
+        .submenu li {
+            padding: 10px 20px;
+            margin: 0;
+            width: calc(100% - 40px); /* Adjusting width to prevent overflow */
+            color: #000;
+            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
+            font-weight: 400; /* Regular weight for submenu items */
+        }
+
+        .submenu li:hover {
             transform: translateX(10px);
         }
 
-        .sidebar-footer li a {
-            color: white;
+        .submenu li a {
+            color: #000;
             text-decoration: none;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
+            display: block;
+            width: 100%;
         }
 
-        .sidebar-footer li a .icon {
-            min-width: 20px;
-            margin-right: 10px;
-            text-align: center;
+        .submenu-toggle {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .menu li.active > a > .submenu-toggle {
+            transform: rotate(90deg);
+        }
+
+        /* Media Queries */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px; /* Smaller sidebar for mobile */
+            }
+
+            .sidebar:hover {
+                width: 200px; /* Expanded width for mobile */
+            }
+
+            .logo-text {
+                font-size: 1rem; /* Smaller logo text for mobile */
+            }
+
+            .menu > ul > li {
+                padding: 5px 10px; /* Smaller padding for menu items */
+            }
+
+            .menu > ul > li a {
+                font-size: 1rem; /* Smaller font size for menu items */
+            }
+
+            .menu > ul > li a .icon {
+                font-size: 1.2rem; /* Smaller icon size */
+            }
         }
     </style>
 
@@ -139,13 +191,20 @@
     </div>
     <nav class="menu">
         <ul>
-            <li><a href="{{ route('student.dashboard') }}"><span class="icon"><i class="fas fa-tachometer-alt"></i></span><span class="menu-text">Dashboard</span></a></li>
-            <li><a href="{{ route('student.complaint') }}"><span class="icon"><i class="fas fa-comments"></i></span><span class="menu-text">Complaint</span></a></li>
-            <li><a href="{{ route('student.upload-pictures') }}"><span class="icon"><i class="fas fa-notes-medical"></i></span><span class="menu-text">Records</span></a></li>
-            <li><a href="{{ route('student.appointment') }}"><span class="icon"><i class="fas fa-calendar-check"></i></span><span class="menu-text">Appointment</span></a></li>
+            <li><a href="{{ route('student.dashboard') }}" id="student-dashboard-link"><span class="icon"><i class="fas fa-tachometer-alt"></i></span><span class="menu-text">Dashboard</span></a></li>
+            <li><a href="{{ route('student.complaint') }}"><span class="icon"><i class="fas fa-comments"></i></span><span class="menu-text">Complaints</span><span class="submenu-toggle"></span></a>
+    
+            </li>
+            <li class="has-submenu">
+                <a href="#"><span class="icon"><i class="fas fa-notes-medical"></i></span><span class="menu-text">Records</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
+                <ul class="submenu">
+                    <li><a href="{{ route('student.upload-pictures') }}">Health Approval</a></li>
+                    <li><a href="{{ route('student.medical-record') }}">View Medical Record</a></li>
+                    <li><a href="{{ route('student.dental-record') }}">View Dental Record</a></li>
+                </ul>
+    </li>  
         </ul>
     </nav>
-  
 </div>
 
 <script>

@@ -2,73 +2,92 @@
 namespace App\Http\Controllers;
 
 use App\Models\HealthExamination;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
+
 class HealthExaminationController extends Controller
 {
+    public function index()
+    {
+        $healthExaminations = HealthExamination::where('user_id', auth()->id())->get();
+        return view('student.upload-pictures', compact('healthExaminations'));
+    }
     public function create()
     {
-        return view('student.upload-pictures');
+        $healthExamination = HealthExamination::where('user_id', auth()->id())->first();
+    
+        if ($healthExamination) {
+            if ($healthExamination->is_approved) {
+                return redirect()->route('student.medical-record.create');
+            } else {
+                return view('student.upload-pictures')->with('pending', true);
+            }
+        }
+    
+        return view('student.upload-pictures')->with('pending', false);
     }
 
     public function medicalRecord()
     {
         $pendingExaminations = HealthExamination::where('is_approved', false)->with('user')->get();
-        Log::info('Fetched Pending Examinations for Medical Record:', ['pendingExaminations' => $pendingExaminations]);
+        
         return view('admin.medical-record', compact('pendingExaminations'));
     }
-
-    public function index()
-    {
-        $role = auth()->user()->role;
-        $viewPath = "{$role}.medical-record";
-
-        if (!view()->exists($viewPath)) {
-            abort(404, "View for role {$role} not found");
-        }
-
-        $healthExaminations = HealthExamination::where('user_id', auth()->id())->get();
-
-        return view($viewPath, compact('healthExaminations'));
-    }
-
+    
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'pictures' => 'required|array|size:3',
-            'pictures.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'health_examination_picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'xray_pictures.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'lab_result_pictures.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
-
-        $paths = [];
-        foreach ($request->file('pictures') as $index => $file) {
-            $path = $file->store('health_examinations', 'public');
-            $paths[] = $path;
-            Log::info('Uploaded picture ' . $index . ' stored at: ' . $path);
+    
+        $healthExamination = new HealthExamination();
+        $healthExamination->user_id = auth()->id();
+    
+        if ($request->hasFile('health_examination_picture')) {
+            $healthExamination->health_examination_picture = $request->file('health_examination_picture')->store('health_examinations', 'public');
         }
-
-        $healthExamination = new HealthExamination([
-            'user_id' => auth()->id(),
-            'health_examination_picture' => $paths[0],
-            'xray_picture' => $paths[1],
-            'lab_result_picture' => $paths[2],
-            'is_approved' => false,
-        ]);
-
+    
+        if ($request->hasFile('xray_pictures')) {
+            $xrayPaths = [];
+            foreach ($request->file('xray_pictures') as $xray) {
+                $xrayPaths[] = $xray->store('health_examinations', 'public');
+            }
+            $healthExamination->xray_picture = json_encode($xrayPaths);
+        }
+    
+        if ($request->hasFile('lab_result_pictures')) {
+            $labPaths = [];
+            foreach ($request->file('lab_result_pictures') as $lab) {
+                $labPaths[] = $lab->store('health_examinations', 'public');
+            }
+            $healthExamination->lab_result_picture = json_encode($labPaths);
+        }
+    
+        $healthExamination->is_approved = false;
         $healthExamination->save();
-
-        Log::info('Health Examination created: ', $healthExamination->toArray());
-
-        return response()->json(['success' => true, 'message' => 'Health Examination created successfully.']);
+    
+        session(['health_examination_pending' => true]);
+    
+        return response()->json(['success' => true, 'message' => 'Health Examination submitted successfully and is waiting for approval.']);
     }
-
+    
+    
+    
+    
     public function approve($id)
     {
         $examination = HealthExamination::findOrFail($id);
         $examination->is_approved = true;
         $examination->save();
 
-        return redirect()->route('admin.medical-record.index')->with('success', 'Health Examination approved successfully.');
+
+        return redirect()->route('admin.uploadHealthExamination')->with('success', 'Health Examination approved successfully.');
     }
 
     public function reject($id)
@@ -76,16 +95,17 @@ class HealthExaminationController extends Controller
         $examination = HealthExamination::findOrFail($id);
         $examination->delete();
 
-        return redirect()->route('admin.medical-record.index')->with('success', 'Health Examination rejected and deleted successfully.');
+        return redirect()->route('admin.uploadHealthExamination')->with('success', 'Health Examination rejected and deleted successfully.');
     }
 
     public function update(Request $request)
     {
         $validated = $request->validate([
-            'examination_id' => 'required|exists:health_examinations,id',
-            'health_examination_picture' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'xray_picture' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'lab_result_picture' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+          'health_examination_picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'xray_pictures' => 'required|array|min:2|max:2', // Ensuring exactly 2 X-ray pictures
+            'xray_pictures.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+         'lab_result_pictures' => 'required|array|min:4|max:4', // Ensuring exactly 4 Lab result pictures
+            'lab_result_pictures.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $examination = HealthExamination::findOrFail($request->examination_id);
@@ -109,4 +129,29 @@ class HealthExaminationController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Health Examination updated successfully.']);
     }
+
+    public function viewAllRecords()
+    {
+
+        $pendingExaminations = HealthExamination::where('is_approved', false)->with('user')->get();
+        Log::info('Fetched all health examinations records.');
+        return view('admin.uploadHealthExamination', compact('pendingExaminations'));
+    }
+    public function checkApprovalStatus()
+    {
+        try {
+            $user = Auth::user();
+            $healthExamination = HealthExamination::where('user_id', $user->id)->where('is_approved', true)->first();
+    
+            return response()->json([
+                'is_approved' => $healthExamination ? true : false,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred while checking approval status.'
+            ], 500);
+        }
+    }
+    
+
 }

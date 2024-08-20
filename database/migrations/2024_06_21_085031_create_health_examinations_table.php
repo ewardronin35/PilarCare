@@ -11,8 +11,8 @@ class CreateHealthExaminationsTable extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('health_examination_picture');
-            $table->string('xray_picture')->nullable();
-            $table->string('lab_result_picture')->nullable();
+            $table->json('xray_pictures')->nullable(); // Storing multiple X-ray pictures as JSON array
+            $table->json('lab_result_pictures')->nullable(); // Storing multiple Lab Result pictures as JSON array
             $table->boolean('is_approved')->default(false);
             $table->timestamps();
         });
