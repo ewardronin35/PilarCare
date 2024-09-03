@@ -242,16 +242,18 @@
                 <button id="history-tab" onclick="showTab('history')">Health History</button>
             </div>
         </div>
-
+        <form method="GET" action="{{ route('admin.medical-record.search') }}" id="search-form">
         <div class="search-bar">
             <input type="text" placeholder="Search Records..." id="search-input">
             <button id="search-button">Search</button>
         </div>
-
+    </form>
         <div id="medical" class="forms-container">
             <div class="form-container-gray">
                 <div class="profile-picture">
-                    <img id="profile-picture-preview" src="{{ asset('images/pilarLogo.jpg') }}" alt="Profile Picture">
+                <img id="profile-picture-preview" 
+         src="{{ isset($record) && $record->profile_picture ? asset('storage/' . $record->profile_picture) : asset('images/pilarLogo.jpg') }}" 
+         alt="Profile Picture">
                     <button id="profile-picture-button" class="button">Choose Profile Picture</button>
                     <input type="file" id="profile-picture-upload" name="profile_picture" accept="image/*">
                 </div>
@@ -260,79 +262,80 @@
                     <div class="form-group-inline">
                         <div class="form-group">
                             <label for="name"><img src="https://img.icons8.com/ios-filled/50/000000/name.png" alt="name icon" width="20"> Name</label>
-                            <input type="text" id="name" name="name" required>
-                        </div>
+                                <input type="text" id="name" name="name" value="{{ $record->name ?? '' }}" required>
+                                </div>
                         <div class="form-group">
                             <label for="birthdate"><img src="https://img.icons8.com/ios-filled/50/000000/calendar.png" alt="calendar icon" width="20"> Birthdate</label>
-                            <input type="date" id="birthdate" name="birthdate" required>
-                        </div>
+                                <input type="date" id="birthdate" name="birthdate" value="{{ $record->birthdate ?? '' }}" required>
+                                </div>
                     </div>
                     <div class="form-group-inline">
                         <div class="form-group">
                             <label for="age"><img src="https://img.icons8.com/ios-filled/50/000000/hourglass.png" alt="hourglass icon" width="20"> Age</label>
-                            <input type="number" id="age" name="age" required>
-                        </div>
+                                <input type="number" id="age" name="age" value="{{ $age ?? '' }}" readonly required>
+                                </div>
                         <div class="form-group">
                             <label for="address"><img src="https://img.icons8.com/ios-filled/50/000000/address.png" alt="address icon" width="20"> Address</label>
-                            <input type="text" id="address" name="address" required>
-                        </div>
+                                <input type="text" id="address" name="address" value="{{ $record->address ?? '' }}" required>
+                                </div>
                     </div>
                     <div class="form-group-inline">
                         <div class="form-group">
                             <label for="personal-contact-number"><img src="https://img.icons8.com/ios-filled/50/000000/phone.png" alt="phone icon" width="20"> Personal Contact Number</label>
-                            <input type="text" id="personal-contact-number" name="personal_contact_number" required>
-                        </div>
+                                <input type="text" id="personal-contact-number" name="personal_contact_number" value="{{ $record->personal_contact_number ?? '' }}" required>
+                                </div>
                         <div class="form-group">
                             <label for="emergency-contact-number"><img src="https://img.icons8.com/ios-filled/50/000000/phone.png" alt="phone icon" width="20"> Emergency Contact Number</label>
-                            <input type="text" id="emergency-contact-number" name="emergency_contact_number" required>
-                        </div>
+                                <input type="text" id="emergency-contact-number" name="emergency_contact_number" value="{{ $record->emergency_contact_number ?? '' }}" required>
+                                </div>
                     </div>
                     <div class="form-group-inline">
                         <div class="form-group">
                             <label for="father-name"><img src="https://img.icons8.com/ios-filled/50/000000/father.png" alt="father icon" width="20"> Father's Name/Legal Guardian</label>
-                            <input type="text" id="father-name" name="father_name" required>
-                        </div>
+                                <input type="text" id="father-name" name="father_name" value="{{ $record->father_name ?? '' }}" required>
+                                </div>
                         <div class="form-group">
                             <label for="mother-name"><img src="https://img.icons8.com/ios-filled/50/000000/mother.png" alt="mother icon" width="20"> Mother's Name/Legal Guardian</label>
-                            <input type="text" id="mother-name" name="mother_name" required>
-                        </div>
+                                <input type="text" id="mother-name" name="mother_name" value="{{ $record->mother_name ?? '' }}" required>
+                                </div>
                     </div>
                     <div class="form-group-inline">
                         <div class="form-group">
                             <label for="past-illness"><img src="https://img.icons8.com/ios-filled/50/000000/medical-history.png" alt="medical history icon" width="20"> Past Illness and Injuries</label>
-                            <input type="text" id="past-illness" name="past_illness" required>
-                        </div>
+                                <input type="text" id="past-illness" name="past_illness" value="{{ $record->past_illness ?? '' }}" required>
+                                </div>
                         <div class="form-group">
                             <label for="chronic-conditions"><img src="https://img.icons8.com/ios-filled/50/000000/heart-with-pulse.png" alt="heart icon" width="20"> Chronic Conditions</label>
-                            <input type="text" id="chronic-conditions" name="chronic_conditions" required>
-                        </div>
+                                <input type="text" id="chronic-conditions" name="chronic_conditions" value="{{ $record->chronic_conditions ?? '' }}" required>
+                                </div>
                     </div>
                     <div class="form-group-inline">
                         <div class="form-group">
                             <label for="surgical-history"><img src="https://img.icons8.com/ios-filled/50/000000/scalpel.png" alt="scalpel icon" width="20"> Surgical History</label>
-                            <input type="text" id="surgical-history" name="surgical_history" required>
-                        </div>
+                                <input type="text" id="surgical-history" name="surgical_history" value="{{ $record->surgical_history ?? '' }}" required>
+                                </div>
                         <div class="form-group">
                             <label for="family-medical-history"><img src="https://img.icons8.com/ios-filled/50/000000/family.png" alt="family icon" width="20"> Family Medical History</label>
-                            <input type="text" id="family-medical-history" name="family_medical_history" required>
-                        </div>
+                                <input type="text" id="family-medical-history" name="family_medical_history" value="{{ $record->family_medical_history ?? '' }}" required>
+                                </div>
                     </div>
                     <div class="form-group">
                         <label for="allergies"><img src="https://img.icons8.com/?size=100&id=VRsLjkBqVGWW&format=png&color=000000" alt="allergies icon" width="20"> Allergies (specify)</label>
-                        <input type="text" id="allergies" name="allergies" required>
-                    </div>
+                            <input type="text" id="allergies" name="allergies" value="{{ $record->allergies ?? '' }}" required>
+                            </div>
                     <div class="form-section">
                         <h2>Medicines OK to give/apply at the clinic (check)</h2>
                         <div class="checkbox-group">
-                            <label><input type="checkbox" name="medicines[]" value="Paracetamol"> Paracetamol</label>
-                            <label><input type="checkbox" name="medicines[]" value="Ibuprofen"> Ibuprofen</label>
-                            <label><input type="checkbox" name="medicines[]" value="Mefenamic Acid"> Mefenamic Acid</label>
-                            <label><input type="checkbox" name="medicines[]" value="Citirizine/Loratadine"> Citirizine/Loratadine</label>
-                            <label><input type="checkbox" name="medicines[]" value="Camphor + Menthol Liniment"> Camphor + Menthol Liniment</label>
-                            <label><input type="checkbox" name="medicines[]" value="PPA"> PPA</label>
-                            <label><input type="checkbox" name="medicines[]" value="Phenylephrine"> Phenylephrine</label>
-                            <label><input type="checkbox" name="medicines[]" value="Antacid"> Antacid</label>
-                        </div>
+            <label><input type="checkbox" name="medicines[]" value="Paracetamol" @if(in_array('Paracetamol', json_decode($record->medicines ?? '[]'))) checked @endif> Paracetamol</label>
+            <label><input type="checkbox" name="medicines[]" value="Ibuprofen" @if(in_array('Ibuprofen', json_decode($record->medicines ?? '[]'))) checked @endif> Ibuprofen</label>
+            <label><input type="checkbox" name="medicines[]" value="Mefenamic Acid" @if(in_array('Mefenamic Acid', json_decode($record->medicines ?? '[]'))) checked @endif> Mefenamic Acid</label>
+            <label><input type="checkbox" name="medicines[]" value="Citirizine/Loratadine" @if(in_array('Citirizine/Loratadine', json_decode($record->medicines ?? '[]'))) checked @endif> Citirizine/Loratadine</label>
+            <label><input type="checkbox" name="medicines[]" value="Camphor + Menthol Liniment" @if(in_array('Camphor + Menthol Liniment', json_decode($record->medicines ?? '[]'))) checked @endif> Camphor + Menthol Liniment</label>
+            <label><input type="checkbox" name="medicines[]" value="PPA" @if(in_array('PPA', json_decode($record->medicines ?? '[]'))) checked @endif> PPA</label>
+            <label><input type="checkbox" name="medicines[]" value="Phenylephrine" @if(in_array('Phenylephrine', json_decode($record->medicines ?? '[]'))) checked @endif> Phenylephrine</label>
+            <label><input type="checkbox" name="medicines[]" value="Antacid" @if(in_array('Antacid', json_decode($record->medicines ?? '[]'))) checked @endif> Antacid</label>
+        </div>
+
                     </div>
                     <div class="form-group">
                         <button type="button" class="button" onclick="temporarySave('medical')">Save</button>
@@ -459,67 +462,91 @@
         }
 
         document.getElementById('profile-picture-upload').addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('profile-picture-preview').src = e.target.result;
-                }
-                reader.readAsDataURL(file);
+    const file = this.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('profile-picture-preview').src = e.target.result;
+        }
+        reader.readAsDataURL(file);
 
-                // Show SweetAlert confirmation
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Profile Picture Updated',
-                    text: 'Your profile picture has been successfully updated.',
-                });
-            }
+        // Show SweetAlert confirmation
+        Swal.fire({
+            icon: 'success',
+            title: 'Profile Picture Updated',
+            text: 'Your profile picture has been successfully updated.',
         });
+    }
+});
 
-        document.getElementById('profile-picture-button').addEventListener('click', function() {
-            document.getElementById('profile-picture-upload').click();
-        });
+document.getElementById('profile-picture-button').addEventListener('click', function() {
+    document.getElementById('profile-picture-upload').click();
+});
 
-        function temporarySave(formType) {
-            const medicalRecordForm = document.getElementById('medical-record-form');
-            const physicalExaminationForm = document.getElementById('physical-examination-form');
+document.getElementById('search-button').addEventListener('click', function() {
+    const userId = document.getElementById('search-input').value;
 
-            const formData = new FormData(
-                formType === 'medical' ? medicalRecordForm : physicalExaminationForm
-            );
+    fetch(`{{ route('admin.medical-record.search') }}?user_id=${userId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const record = data.record;
 
-            if (formType === 'medical') {
-                const tbody = document.getElementById('medical-record-history-body');
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${formData.get('name')}</td>
-                    <td>${formData.get('age')}</td>
-                    <td>${formData.get('personal_contact_number')}</td>
-                    <td>${formData.get('past_illness')}</td>
-                    <td>${formData.get('surgical_history')}</td>
-                `;
-                tbody.appendChild(tr);
-            } else {
-                const tbody = document.getElementById('physical-examination-history-body');
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${formData.get('height')}</td>
-                    <td>${formData.get('weight')}</td>
-                    <td>${formData.get('vision')}</td>
-                    <td>${formData.get('medicine_intake')}</td>
-                    <td>${formData.get('remarks')}</td>
-                `;
-                tbody.appendChild(tr);
-            }
+            // Populate the form fields with the retrieved data
+            document.getElementById('name').value = record.name;
+            document.getElementById('birthdate').value = record.birthdate;
+            document.getElementById('age').value = record.age;
+            document.getElementById('address').value = record.address;
+            document.getElementById('personal-contact-number').value = record.personal_contact_number;
+            document.getElementById('emergency-contact-number').value = record.emergency_contact_number;
+            document.getElementById('father-name').value = record.father_name;
+            document.getElementById('mother-name').value = record.mother_name;
+            document.getElementById('past-illness').value = record.past_illness;
+            document.getElementById('chronic-conditions').value = record.chronic_conditions;
+            document.getElementById('surgical-history').value = record.surgical_history;
+            document.getElementById('family-medical-history').value = record.family_medical_history;
+            document.getElementById('allergies').value = record.allergies;
 
-            // Show SweetAlert confirmation
+            // Populate the checkbox group with the medicines
+            const medicines = JSON.parse(record.medicines);
+            const medicineCheckboxes = document.querySelectorAll('input[name="medicines[]"]');
+            medicineCheckboxes.forEach(checkbox => {
+                checkbox.checked = medicines.includes(checkbox.value);
+            });
+
+            // Show success alert
             Swal.fire({
                 icon: 'success',
-                title: 'Temporary Save',
-                text: 'The form data has been temporarily saved.',
+                title: 'Record Found',
+                text: `Record for ${record.name} has been loaded.`,
+            });
+        } else {
+            // Show error alert if no records were found
+            Swal.fire({
+                icon: 'error',
+                title: 'No Records Found',
+                text: 'No medical records were found for the given user ID.',
             });
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'There was an error processing your request. Please try again.',
+        });
+    });
+});
 
+
+      
         function approveSignature() {
             Swal.fire({
                 icon: 'success',
@@ -528,9 +555,6 @@
             });
         }
 
-        document.getElementById('search-button').addEventListener('click', function() {
-            const query = document.getElementById('search-input').value;
-            alert(`Search triggered for: ${query}`);
-        });
+
     </script>
 </x-app-layout>

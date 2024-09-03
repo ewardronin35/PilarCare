@@ -5,8 +5,12 @@ use App\Models\HealthExamination;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\User;
+use App\Models\Notification; // Import the Notification model
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf; // <-- Correct namespace
+
 
 
 class HealthExaminationController extends Controller
@@ -18,8 +22,11 @@ class HealthExaminationController extends Controller
     }
     public function create()
     {
-        $healthExamination = HealthExamination::where('user_id', auth()->id())->first();
-    
+        $currentSchoolYear = $this->getCurrentSchoolYear();
+        $healthExamination = HealthExamination::where('user_id', auth()->id())
+            ->where('school_year', $currentSchoolYear)
+            ->first();
+
         if ($healthExamination) {
             if ($healthExamination->is_approved) {
                 return redirect()->route('student.medical-record.create');
@@ -27,7 +34,7 @@ class HealthExaminationController extends Controller
                 return view('student.upload-pictures')->with('pending', true);
             }
         }
-    
+
         return view('student.upload-pictures')->with('pending', false);
     }
 
@@ -40,56 +47,108 @@ class HealthExaminationController extends Controller
     
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'health_examination_picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'xray_pictures.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'lab_result_pictures.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
-    
-        $healthExamination = new HealthExamination();
-        $healthExamination->user_id = auth()->id();
-    
-        if ($request->hasFile('health_examination_picture')) {
-            $healthExamination->health_examination_picture = $request->file('health_examination_picture')->store('health_examinations', 'public');
-        }
-    
-        if ($request->hasFile('xray_pictures')) {
-            $xrayPaths = [];
-            foreach ($request->file('xray_pictures') as $xray) {
-                $xrayPaths[] = $xray->store('health_examinations', 'public');
+        try {
+            // Validate the incoming request data
+            $validated = $request->validate([
+                'health_examination_picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'xray_pictures.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'lab_result_pictures.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            ]);
+
+            $currentSchoolYear = $this->getCurrentSchoolYear();
+
+            // Check if the student has already uploaded health documents for this school year
+            $existingExamination = HealthExamination::where('user_id', auth()->id())
+                ->where('school_year', $currentSchoolYear)
+                ->first();
+
+            if ($existingExamination) {
+                return response()->json(['success' => false, 'message' => 'You have already submitted health documents for the current school year.'], 400);
             }
-            $healthExamination->xray_picture = json_encode($xrayPaths);
-        }
-    
-        if ($request->hasFile('lab_result_pictures')) {
-            $labPaths = [];
-            foreach ($request->file('lab_result_pictures') as $lab) {
-                $labPaths[] = $lab->store('health_examinations', 'public');
+
+            // Create a new HealthExamination instance
+            $healthExamination = new HealthExamination();
+            $healthExamination->user_id = auth()->id();
+            $healthExamination->school_year = $currentSchoolYear;
+
+            // Handle the health examination picture upload
+            if ($request->hasFile('health_examination_picture')) {
+                $healthExamination->health_examination_picture = $request->file('health_examination_picture')->store('health_examinations', 'public');
             }
-            $healthExamination->lab_result_picture = json_encode($labPaths);
+
+            // Handle the x-ray pictures upload
+            if ($request->hasFile('xray_pictures')) {
+                $xrayPaths = [];
+                foreach ($request->file('xray_pictures') as $xray) {
+                    $xrayPaths[] = $xray->store('health_examinations', 'public');
+                }
+                $healthExamination->xray_picture = json_encode($xrayPaths);
+            }
+
+            // Handle the lab result pictures upload
+            if ($request->hasFile('lab_result_pictures')) {
+                $labPaths = [];
+                foreach ($request->file('lab_result_pictures') as $lab) {
+                    $labPaths[] = $lab->store('health_examinations', 'public');
+                }
+                $healthExamination->lab_result_picture = json_encode($labPaths);
+            }
+
+            // Mark the health examination as not approved by default
+            $healthExamination->is_approved = false;
+            $healthExamination->save();
+
+            // Set a session variable to indicate that the health examination is pending approval
+            session(['health_examination_pending' => true]);
+
+            // Return a JSON response indicating success
+            return response()->json(['success' => true, 'message' => 'Health Examination submitted successfully and is waiting for approval.']);
+        } catch (\Exception $e) {
+            // Log the exception message
+            \Log::error('Error in HealthExaminationController@store: ' . $e->getMessage());
+
+            // Return a JSON response indicating failure
+            return response()->json(['success' => false, 'message' => 'An error occurred while processing your request. Please try again later.'], 500);
         }
-    
-        $healthExamination->is_approved = false;
-        $healthExamination->save();
-    
-        session(['health_examination_pending' => true]);
-    
-        return response()->json(['success' => true, 'message' => 'Health Examination submitted successfully and is waiting for approval.']);
     }
-    
+
+    private function getCurrentSchoolYear()
+    {
+        $currentYear = date('Y');
+        $nextYear = $currentYear + 1;
+        return $currentYear . '-' . $nextYear;
+    }
     
     
     
     public function approve($id)
     {
+        // Find the HealthExamination record, throw a 404 error if not found
         $examination = HealthExamination::findOrFail($id);
+    
+        // Approve the examination
         $examination->is_approved = true;
         $examination->save();
-
-
-        return redirect()->route('admin.uploadHealthExamination')->with('success', 'Health Examination approved successfully.');
+    
+        // Find the user associated with the health examination
+        $user = User::find($examination->user_id);
+    
+        // Ensure the user exists before creating a notification
+        if ($user) {
+            Notification::create([
+                'user_id' => $user->id_number, // Use the correct identifier from the users table
+                'title' => 'Health Examination Approved',
+                'message' => 'Your health examination has been approved. You can now proceed with your medical record.',
+                'scheduled_time' => now(), // You can set a specific time if needed
+            ]);
+    
+            return redirect()->route('admin.uploadHealthExamination')->with('success', 'Health Examination approved successfully.');
+        } else {
+            // Handle the case where the user is not found
+            return redirect()->route('admin.uploadHealthExamination')->with('error', 'User not found. Notification was not sent.');
+        }
     }
-
+    
     public function reject($id)
     {
         $examination = HealthExamination::findOrFail($id);
@@ -152,6 +211,50 @@ class HealthExaminationController extends Controller
             ], 500);
         }
     }
+    public function downloadPdf($id)
+    {
+        // Fetch the health examination record
+        $healthExamination = HealthExamination::findOrFail($id);
+        $role = strtolower(Auth::user()->role);
     
-
+        // Fetch the student information from the users table
+        $student = $healthExamination->user;
+    
+        // Fetch the image paths from storage
+        $healthImage = $healthExamination->health_examination_picture ? storage_path('app/public/' . $healthExamination->health_examination_picture) : null;
+        $xrayImages = $healthExamination->xray_picture ? json_decode($healthExamination->xray_picture, true) : [];
+        $labImages = $healthExamination->lab_result_picture ? json_decode($healthExamination->lab_result_picture, true) : [];
+    
+        // Collect all images for the PDF
+        $images = [];
+        if ($healthImage) {
+            $images['Health Examination'] = $healthImage;
+        }
+        if ($xrayImages) {
+            foreach ($xrayImages as $xray) {
+                $images['X-ray'][] = storage_path('app/public/' . $xray);
+            }
+        }
+        if ($labImages) {
+            foreach ($labImages as $lab) {
+                $images['Lab Exam'][] = storage_path('app/public/' . $lab);
+            }
+        }
+    
+        // Pass the images and student information to the PDF view
+        $pdf = PDF::loadView('pdf.health-examination', compact('healthExamination', 'role', 'student', 'images'));
+    
+        // Download the PDF
+        return $pdf->download('health-examination.pdf');
+    }
+    
+    public function show($id)
+    {
+        // Fetch the health examination record by ID
+        $healthExamination = HealthExamination::findOrFail($id);
+    
+        // Return the view and pass the health examination data
+        return view('student.medical-record', compact('healthExamination'));
+    }
+    
 }

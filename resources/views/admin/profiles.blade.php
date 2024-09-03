@@ -166,8 +166,7 @@
                 <img src="{{ asset('images/pilarLogo.jpg') }}" alt="Profile Image">
                 <div class="profile-card-content">
                     <h3>Eduard Roland Donor </h3>
-                    <p>Active | Male | Born 23.05.1992</p>
-                    <p>Activity Level: 87%</p>
+                    <p>Active | Male | Born 23.05.2003</p>
                     <div class="social-icons">
                         <a href="#"><i class="fab fa-facebook"></i></a>
                         <a href="#"><i class="fab fa-twitter"></i></a>
@@ -178,9 +177,8 @@
             <div class="profile-card" onclick="openModal('Alessa Robert', 'Active | Male | Born 23.05.1992', 'Activity Level: 87%', 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.')">
                 <img src="{{ asset('images/pilarLogo.jpg') }}" alt="Profile Image">
                 <div class="profile-card-content">
-                    <h3>Alessa Robert</h3>
-                    <p>Active | Male | Born 23.05.1992</p>
-                    <p>Activity Level: 87%</p>
+                    <h3>Ashraf Dammang</h3>
+                    <p>Active | Male | Born 23.05.2002</p>
                     <div class="social-icons">
                         <a href="#"><i class="fab fa-facebook"></i></a>
                         <a href="#"><i class="fab fa-twitter"></i></a>
@@ -191,9 +189,8 @@
             <div class="profile-card" onclick="openModal('Alessa Robert', 'Active | Male | Born 23.05.1992', 'Activity Level: 87%', 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.')">
                 <img src="{{ asset('images/pilarLogo.jpg') }}" alt="Profile Image">
                 <div class="profile-card-content">
-                    <h3>Alessa Robert</h3>
-                    <p>Active | Male | Born 23.05.1992</p>
-                    <p>Activity Level: 87%</p>
+                    <h3>Alfraskhan Jose</h3>
+                    <p>Active | Male | Born 23.05.2001</p>
                     <div class="social-icons">
                         <a href="#"><i class="fab fa-facebook"></i></a>
                         <a href="#"><i class="fab fa-twitter"></i></a>

@@ -11,84 +11,7 @@
             transition: margin-left 0.3s ease-in-out;
         }
 
-        .sidebar:hover ~ .main-content {
-            margin-left: 250px; /* Expanded sidebar width */
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            background-color: white;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            position: relative;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-        }
-
-        .user-info .username {
-            margin-right: 10px;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-        }
-
-        .notification-icon {
-            margin-right: 20px;
-            position: relative;
-        }
-
-        .notification-dropdown {
-            display: none;
-            position: absolute;
-            top: 50px;
-            right: 10px;
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 5px;
-            width: 300px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            z-index: 10;
-        }
-
-        .notification-dropdown.active {
-            display: block;
-        }
-
-        .notification-item {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #e0e0e0;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.3s;
-        }
-
-        .notification-item:last-child {
-            border-bottom: none;
-        }
-
-        .notification-item:hover {
-            background-color: #f9f9f9;
-            transform: translateX(10px);
-        }
-
-        .notification-item .icon {
-            margin-right: 10px;
-        }
-
-        .notification-header {
-            padding: 10px;
-            border-bottom: 1px solid #e0e0e0;
-            font-weight: bold;
-        }
+      
 
         .form-container {
             margin-top: 20px;
@@ -211,7 +134,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
     <div class="container">
-        <x-adminsidebar /> <!-- Using the sidebar component -->
 
         <main class="main-content">
             <!-- Tabs for different logs -->

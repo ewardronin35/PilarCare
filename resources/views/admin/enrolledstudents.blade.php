@@ -8,178 +8,6 @@
             min-height: 100vh;
         }
 
-        .sidebar {
-            width: 100px;
-            background-color: #00d2ff;
-            color: white;
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            transition: width 0.3s ease-in-out;
-        }
-
-        .sidebar:hover {
-            width: 250px;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 20px 0;
-            transition: opacity 0.3s ease-in-out;
-        }
-
-        .logo-img {
-            width: 40px;
-            height: 40px;
-            margin-right: 34px;
-        }
-
-        .logo-text {
-            font-size: 1.25rem;
-            font-weight: bold;
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
-        }
-
-        .sidebar:hover .logo-text {
-            opacity: 1;
-        }
-
-        .menu ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .menu li {
-            display: flex;
-            align-items: center;
-            margin: 10px 0;
-            padding: 10px 20px;
-            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
-        }
-
-        .menu li:hover {
-            background-color: #009ec3;
-            transform: translateX(10px);
-        }
-
-        .menu li a {
-            color: white;
-            text-decoration: none;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-        }
-
-        .menu li a .icon {
-            min-width: 20px;
-            margin-right: 10px;
-            text-align: center;
-        }
-
-        .menu-text {
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
-        }
-
-        .sidebar:hover .menu-text {
-            opacity: 1;
-        }
-
-        .main-content {
-            margin-left: 80px;
-            width: calc(100% - 80px);
-            padding: 20px;
-            transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
-            background: #f4f6f9;
-        }
-
-        .sidebar:hover ~ .main-content {
-            margin-left: 250px;
-            width: calc(100% - 250px);
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 25px;
-            background-color: #ffffff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            width: calc(100% - 150px);
-            position: fixed;
-            top: 0;
-            z-index: 999;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-        }
-
-        .user-info .username {
-            margin-right: 10px;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-        }
-
-        .notification-icon {
-            margin-right: 20px;
-            position: relative;
-        }
-
-        .notification-dropdown {
-            display: none;
-            position: absolute;
-            top: 50px;
-            right: 10px;
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 5px;
-            width: 300px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            z-index: 10;
-        }
-
-        .notification-dropdown.active {
-            display: block;
-        }
-
-        .notification-item {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #e0e0e0;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.3s;
-        }
-
-        .notification-item:last-child {
-            border-bottom: none;
-        }
-
-        .notification-item:hover {
-            background-color: #f9f9f9;
-            transform: translateX(10px);
-        }
-
-        .notification-item .icon {
-            margin-right: 10px;
-        }
-
-        .notification-header {
-            padding: 10px;
-            border-bottom: 1px solid #e0e0e0;
-            font-weight: bold;
-        }
-
         .students-table {
             width: 95%;
             border-collapse: collapse;
@@ -390,7 +218,6 @@
         .tab-content.active {
             display: block;
             animation: fadeIn 0.5s ease-in-out;
-            
         }
 
         @keyframes fadeIn {
@@ -436,49 +263,67 @@
         .save-button:hover {
             background-color: #218838;
         }
+
         .toggle-button {
-        background-color: #00d1ff;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease-in-out;
-    margin-bottom: 10px;
-}
+            background-color: #00d1ff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+            margin-bottom: 10px;
+        }
 
-.toggle-button:hover {
-    background-color: #00b8e6;
-}
+        .toggle-button:hover {
+            background-color: #00b8e6;
+        }
 
-#upload-section {
-    transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out;
-    overflow: hidden;
-    max-height: 500px; /* Adjust as needed */
-    opacity: 1;
-}
+        #upload-section {
+            transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out;
+            overflow: hidden;
+            max-height: 500px; /* Adjust as needed */
+            opacity: 1;
+        }
 
-#upload-section.hidden {
-    max-height: 0;
-    opacity: 0;
-    padding: 0;
-    margin: 0;
-}
+        #upload-section.hidden {
+            max-height: 0;
+            opacity: 0;
+            padding: 0;
+            margin: 0;
+        }
 
-.students-section {
-        max-height: 400px;
-        overflow-y: auto;
-        margin-top: 20px;
-    }
-    .students-table-container {
-        overflow-x: auto;
-    }
+        .students-section {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .students-table-container {
+            overflow-x: auto;
+        }
+
+        /* Search input styles */
+        .search-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+
+        .search-container input[type="text"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            width: 300px;
+        }
     </style>
 
     <div class="main-content">
         <div class="tabs">
             <div class="tab active" data-tab="upload-tab">Upload Student List</div>
             <div class="tab" data-tab="late-student-tab">Add Late Students</div>
+            <div class="tab" data-tab="students-tab">View Students</div>
         </div>
 
         <div id="upload-tab" class="tab-content active">
@@ -518,64 +363,69 @@
             </div>
         </div>
 
-        <div class="students-section">
-            <h2>Enrolled Students</h2>
-            @if($students->isEmpty())
-                <p>No students enrolled yet.</p>
-            @else
-                <table class="students-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>Grade/Course</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="students-table-body">
-                        @foreach($students as $student)
-                            <tr id="student-row-{{ $student->id }}">
-                                <td>{{ $student->id_number }}</td>
-                                <td>{{ $student->first_name }}</td>
-                                <td>{{ $student->last_name }}</td>
-                                <td>{{ $student->grade_or_course }}</td>
-                                <td>
-                                    <button class="preview-button status-button" style="background-color: {{ $student->approved ? '#28a745' : '#dc3545' }};">
-                                        {{ $student->approved ? 'Active' : 'Inactive' }}
-                                    </button>
-                                </td>
-                                <td>
-                                    <button class="preview-button edit-button" data-student-id="{{ $student->id }}">Edit</button>
-                                    <button class="delete-button" onclick="deleteStudent({{ $student->id }})">Delete</button>
-                                    <label class="switch">
-                                        <input type="checkbox" class="toggle-approval" data-student-id="{{ $student->id }}" {{ $student->approved ? 'checked' : '' }}>
-                                        <span class="slider"></span>
-                                    </label>
-                                </td>
+        <div id="students-tab" class="tab-content">
+            <div class="students-section">
+                <h2>Enrolled Students</h2>
+                <div class="search-container">
+                    <input type="text" id="student-search" placeholder="Search by ID, Name, or Grade/Course">
+                </div>
+                @if($students->isEmpty())
+                    <p>No students enrolled yet.</p>
+                @else
+                    <table class="students-table" id="students-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                                <th>Grade/Course</th>
+                                <th>Status</th>
+                                <th>Actions</th>
                             </tr>
-                            <tr id="edit-form-row-{{ $student->id }}" class="edit-form">
-                                <td colspan="6">
-                                    <form id="edit-form-{{ $student->id }}">
-                                        @csrf
-                                        <input type="hidden" name="id" value="{{ $student->id }}">
-                                        <label for="id_number">ID Number</label>
-                                        <input type="text" name="id_number" value="{{ $student->id_number }}" required>
-                                        <label for="first_name">First Name</label>
-                                        <input type="text" name="first_name" value="{{ $student->first_name }}" required>
-                                        <label for="last_name">Last Name</label>
-                                        <input type="text" name="last_name" value="{{ $student->last_name }}" required>
-                                        <label for="grade_or_course">Grade/Course</label>
-                                        <input type="text" name="grade_or_course" value="{{ $student->grade_or_course }}" required>
-                                        <button type="submit" class="save-button">Save</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            @endif
+                        </thead>
+                        <tbody id="students-table-body">
+                            @foreach($students as $student)
+                                <tr id="student-row-{{ $student->id }}">
+                                    <td>{{ $student->id_number }}</td>
+                                    <td>{{ $student->first_name }}</td>
+                                    <td>{{ $student->last_name }}</td>
+                                    <td>{{ $student->grade_or_course }}</td>
+                                    <td>
+                                        <button class="preview-button status-button" style="background-color: {{ $student->approved ? '#28a745' : '#dc3545' }};">
+                                            {{ $student->approved ? 'Active' : 'Inactive' }}
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <button class="preview-button edit-button" data-student-id="{{ $student->id }}">Edit</button>
+                                        <button class="delete-button" onclick="deleteStudent({{ $student->id }})">Delete</button>
+                                        <label class="switch">
+                                            <input type="checkbox" class="toggle-approval" data-student-id="{{ $student->id }}" {{ $student->approved ? 'checked' : '' }}>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </td>
+                                </tr>
+                                <tr id="edit-form-row-{{ $student->id }}" class="edit-form">
+                                    <td colspan="6">
+                                        <form id="edit-form-{{ $student->id }}">
+                                            @csrf
+                                            <input type="hidden" name="id" value="{{ $student->id }}">
+                                            <label for="id_number">ID Number</label>
+                                            <input type="text" name="id_number" value="{{ $student->id_number }}" required>
+                                            <label for="first_name">First Name</label>
+                                            <input type="text" name="first_name" value="{{ $student->first_name }}" required>
+                                            <label for="last_name">Last Name</label>
+                                            <input type="text" name="last_name" value="{{ $student->last_name }}" required>
+                                            <label for="grade_or_course">Grade/Course</label>
+                                            <input type="text" name="grade_or_course" value="{{ $student->grade_or_course }}" required>
+                                            <button type="submit" class="save-button">Save</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
+            </div>
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -605,18 +455,19 @@
                     const fileName = event.target.files[0].name;
                     document.getElementById('file-name').textContent = fileName;
                 });
-                const toggleButton = document.getElementById('toggle-upload');
-        const uploadSection = document.getElementById('upload-section');
 
-        toggleButton.addEventListener('click', function() {
-            if (uploadSection.classList.contains('hidden')) {
-                uploadSection.classList.remove('hidden');
-                toggleButton.textContent = 'Hide Upload Section';
-            } else {
-                uploadSection.classList.add('hidden');
-                toggleButton.textContent = 'Show Upload Section';
-            }
-        });
+                const toggleButton = document.getElementById('toggle-upload');
+                const uploadSection = document.getElementById('upload-section');
+
+                toggleButton.addEventListener('click', function() {
+                    if (uploadSection.classList.contains('hidden')) {
+                        uploadSection.classList.remove('hidden');
+                        toggleButton.textContent = 'Hide Upload Section';
+                    } else {
+                        uploadSection.classList.add('hidden');
+                        toggleButton.textContent = 'Show Upload Section';
+                    }
+                });
 
                 document.getElementById('upload-form').addEventListener('submit', function(event) {
                     event.preventDefault();
@@ -712,6 +563,24 @@
                             text: 'There was a problem adding the student.',
                             showConfirmButton: true,
                         });
+                    });
+                });
+
+                document.getElementById('student-search').addEventListener('input', function() {
+                    var searchTerm = this.value.toLowerCase();
+                    var rows = document.querySelectorAll('#students-table tbody tr');
+
+                    rows.forEach(function(row) {
+                        var id = row.children[0].textContent.toLowerCase();
+                        var firstName = row.children[1].textContent.toLowerCase();
+                        var lastName = row.children[2].textContent.toLowerCase();
+                        var grade = row.children[3].textContent.toLowerCase();
+
+                        if (id.includes(searchTerm) || firstName.includes(searchTerm) || lastName.includes(searchTerm) || grade.includes(searchTerm)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
                     });
                 });
 

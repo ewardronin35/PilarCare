@@ -4,23 +4,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Notification extends Model
+class PhysicalExamination extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'title',
-        'message',
-        'scheduled_time',
-        'role',  // Add this line
-
+        'height',
+        'weight',
+        'vision',
+        'medicine_intake',
+        'remarks',
+        'md_approved', // MD approval status
     ];
-
-    protected $dates = ['scheduled_time'];
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id_number');
+        return $this->belongsTo(User::class);
     }
 }

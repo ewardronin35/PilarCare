@@ -10,6 +10,7 @@ class HealthExamination extends Model
 
     protected $fillable = [
         'user_id',
+        'school_year',
         'health_examination_picture',
         'xray_picture',
         'lab_result_picture',

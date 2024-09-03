@@ -10,8 +10,20 @@ class DentalRecord extends Model
 
     protected $fillable = [
         'patient_name',
-        'date_of_birth',
-        'treatment',
-        'dentist',
+        'grade_section',
+        'user_id',
     ];
+    public $timestamps = false;
+
+
+    // Relationship to the Teeth model
+    public function teeth()
+    {
+        return $this->hasMany(Teeth::class, 'dental_record_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
 }

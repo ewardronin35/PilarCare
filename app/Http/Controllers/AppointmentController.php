@@ -105,4 +105,27 @@ class AppointmentController extends Controller
             return response()->json(['error' => 'Patient not found'], 404);
         }
     }
+    // Add this method in your AppointmentController
+public function getAppointmentsByMonth(Request $request)
+{
+    $year = $request->input('year');
+    $month = $request->input('month');
+
+    $appointments = Appointment::whereYear('appointment_date', $year)
+        ->whereMonth('appointment_date', $month)
+        ->get();
+
+    return response()->json($appointments);
+}
+public function getAppointmentsByDate(Request $request)
+{
+    $date = $request->input('date');
+
+    $appointments = Appointment::whereDate('appointment_date', $date)->get();
+
+    return response()->json([
+        'appointments' => $appointments
+    ]);
+}
+
 }

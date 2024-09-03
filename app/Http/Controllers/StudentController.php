@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Imports\StudentsImport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon; // Make sure to import Carbon
 use Maatwebsite\Excel\Validators\ValidationException;
 use Illuminate\Support\Facades\Validator;
 
@@ -160,4 +162,41 @@ class StudentController extends Controller
             'students' => $students,
         ]);
     }
+    public function getStudentInfo($id_number)
+    {
+        // Fetch data from the students table
+        $student = DB::table('students')
+            ->where('id_number', $id_number)
+            ->first(['first_name', 'last_name', 'grade_or_course']);
+    
+        // Fetch data from the information table
+        $information = DB::table('information')
+            ->where('id_number', $id_number)
+            ->first(['birthdate']);
+    
+        if ($student) {
+            // Calculate age if birthdate is available
+            $age = null;
+            if ($information && $information->birthdate) {
+                $birthdate = Carbon::parse($information->birthdate);
+                $age = $birthdate->age;
+            }
+    
+            return response()->json([
+                'success' => true,
+                'student' => [
+                    'name' => $student->first_name . ' ' . $student->last_name,
+                    'grade_section' => $student->grade_or_course, // Make sure this field is correct
+                ],
+                'information' => [
+                    'birthdate' => $information->birthdate ?? null,
+                    'age' => $age,
+                ]
+            ]);
+        } else {
+            return response()->json(['success' => false]);
+        }
+    }
+    
+    
 }

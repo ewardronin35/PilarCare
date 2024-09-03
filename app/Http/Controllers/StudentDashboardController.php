@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Appointment;
 use App\Models\Complaint;
 use App\Models\Information;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -18,12 +19,13 @@ class StudentDashboardController extends Controller
         
         $complaints = Complaint::where('id_number', $user->id_number)->get();
         $complaintCount = $complaints->count();
-    
+        $notifications = Notification::where('user_id', Auth::user()->id_number)->get();
+
         // Check if the user's profile information is complete
         $information = Information::where('id_number', $user->id_number)->first();
         $showModal = !$information; // If no information exists, show the modal
     
-        return view('student.StudentDashboard', compact('appointments', 'appointmentCount', 'complaints', 'complaintCount', 'showModal'));
+        return view('student.StudentDashboard', compact('appointments', 'appointmentCount', 'complaints', 'complaintCount', 'showModal', 'notifications'));
     }
     
     public function storeProfile(Request $request)

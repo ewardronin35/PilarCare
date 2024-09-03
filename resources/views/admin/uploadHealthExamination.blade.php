@@ -8,9 +8,6 @@
             min-height: 100vh;
         }
 
-        
-
-
         .main-content {
             margin-left: 80px;
             width: calc(100% - 80px);
@@ -30,57 +27,6 @@
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             animation: fadeInUp 0.5s ease-in-out;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-
-        .form-group-inline {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .form-group button,
-        .form-group label.button {
-            background-color: #00d1ff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.3s;
-            text-align: center;
-        }
-
-        .form-group button:hover,
-        .form-group label.button:hover {
-            background-color: #00b8e6;
-            transform: scale(1.05);
-        }
-
-        .form-group button:active,
-        .form-group label.button:active {
-            transform: scale(0.95);
-        }
-
-        .form-group input[type="file"] {
-            display: none;
         }
 
         .tab-buttons {
@@ -207,8 +153,7 @@
             width: 100%;
             height: 100%;
             overflow: auto;
-            background-color: rgb(0, 0, 0);
-            background-color: rgba(0, 0, 0, 0.4);
+            background-color: rgba(0, 0, 0, 0.6);
             animation: fadeIn 0.5s ease-in-out;
         }
 
@@ -217,18 +162,19 @@
             margin: 5% auto;
             padding: 20px;
             border: 1px solid #888;
-            width: auto;
-            max-width: 80%;
-            max-height: 80%;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 10px;
             animation: fadeInUp 0.5s ease-in-out;
-            overflow: auto;
+            overflow: hidden;
+            text-align: center;
         }
 
         .modal img {
-            width: auto;
-            height: auto;
             max-width: 100%;
-            max-height: 100%;
+            max-height: 70vh; /* Ensures the image doesn't exceed the viewport height */
+            object-fit: contain; /* Maintains aspect ratio */
+            border-radius: 10px;
         }
 
         .close {
@@ -267,7 +213,6 @@
     </style>
 
     <div class="container">
-    
         <main class="main-content">
             <div class="tab-buttons">
                 <button id="pending-approvals-tab" class="active" onclick="showTab('pending-approvals')">Pending Approvals</button>
@@ -283,8 +228,8 @@
                                 <tr>
                                     <th>Name</th>
                                     <th>Health Exam Picture</th>
-                                    <th>X-ray Picture</th>
-                                    <th>Lab Result Picture</th>
+                                    <th>X-ray Pictures</th>
+                                    <th>Lab Result Pictures</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -298,13 +243,21 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <div class="image-container">
-                                                <img src="{{ asset('storage/' . $examination->xray_picture) }}" alt="X-ray Picture" onclick="openModal('{{ asset('storage/' . $examination->xray_picture) }}')">
+                                            <div class="image-previews">
+                                                @foreach(json_decode($examination->xray_picture) as $xray)
+                                                    <div class="image-container">
+                                                        <img src="{{ asset('storage/' . $xray) }}" alt="X-ray Picture" onclick="openModal('{{ asset('storage/' . $xray) }}')">
+                                                    </div>
+                                                @endforeach
                                             </div>
                                         </td>
                                         <td>
-                                            <div class="image-container">
-                                                <img src="{{ asset('storage/' . $examination->lab_result_picture) }}" alt="Lab Result Picture" onclick="openModal('{{ asset('storage/' . $examination->lab_result_picture) }}')">
+                                            <div class="image-previews">
+                                                @foreach(json_decode($examination->lab_result_picture) as $lab)
+                                                    <div class="image-container">
+                                                        <img src="{{ asset('storage/' . $lab) }}" alt="Lab Result Picture" onclick="openModal('{{ asset('storage/' . $lab) }}')">
+                                                    </div>
+                                                @endforeach
                                             </div>
                                         </td>
                                         <td>
@@ -321,7 +274,6 @@
                         </table>
                     @else
                         <p>No pending examinations available.</p>
-                        
                     @endif
                 </div>
             </div>

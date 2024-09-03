@@ -1,405 +1,245 @@
-$('.input-tooth-11').focus(function(){
-  $('.tooth-11-parent').css('fill', '#2199e8');
-}).blur(function(){
-  $('.tooth-11-parent').css('fill', 'none'); 
-});
-$('.tooth-11').mouseover(function(){
-  $('.tooth-11-parent').css('fill', '#2199e8');
-}).mouseleave(function(){
-  $('.tooth-11-parent').css('fill', 'none');
-}); 
+$(document).ready(function () {
+    let teethData = {
+        11: 'Upper Right Central Incisor',
+        12: 'Upper Right Lateral Incisor',
+        13: 'Upper Right Canine',
+        14: 'Upper Right First Premolar',
+        15: 'Upper Right Second Premolar',
+        16: 'Upper Right First Molar',
+        17: 'Upper Right Second Molar',
+        18: 'Upper Right Third Molar',
+        21: 'Upper Left Central Incisor',
+        22: 'Upper Left Lateral Incisor',
+        23: 'Upper Left Canine',
+        24: 'Upper Left First Premolar',
+        25: 'Upper Left Second Premolar',
+        26: 'Upper Left First Molar',
+        27: 'Upper Left Second Molar',
+        28: 'Upper Left Third Molar',
+        31: 'Lower Left Central Incisor',
+        32: 'Lower Left Lateral Incisor',
+        33: 'Lower Left Canine',
+        34: 'Lower Left First Premolar',
+        35: 'Lower Left Second Premolar',
+        36: 'Lower Left First Molar',
+        37: 'Lower Left Second Molar',
+        38: 'Lower Left Third Molar',
+        41: 'Lower Right Central Incisor',
+        42: 'Lower Right Lateral Incisor',
+        43: 'Lower Right Canine',
+        44: 'Lower Right First Premolar',
+        45: 'Lower Right Second Premolar',
+        46: 'Lower Right First Molar',
+        47: 'Lower Right Second Molar',
+        48: 'Lower Right Third Molar'
+    };
 
+    // Function to determine the fill color based on the tooth status
+    function getColorBasedOnStatus(status) {
+        if (status === 'Aching') {
+            return 'red';
+        } else if (status === 'Cavity') {
+            return 'orange';
+        } else if (status === 'Missing') {
+            return 'gray';
+        } else {
+            return 'green'; // Default color for Healthy
+        }
+    }
 
+    // Interaction logic for each tooth
+    function handleToothInteraction(toothNumber) {
+        const parentClass = `.tooth-${toothNumber}`; // Target the specific class
 
+        // Set the initial color based on the status fetched via AJAX
+        $.ajax({
+            url: getToothStatusUrl, // Use the URL passed from Blade
+            method: 'GET',
+            data: {
+                tooth_number: toothNumber,
+                dental_record_id: $('#dental-record-id').val()
+            },
+            success: function (response) {
+                let status = response.status || 'Healthy'; // Default to Healthy if not found
+                let fillColor = getColorBasedOnStatus(status);
+                $(parentClass).css('fill', fillColor);
+                console.log(`Initial color set for Tooth ${toothNumber}: ${status}`);
+            },
+            error: function (xhr) {
+                console.error('Error fetching tooth status:', xhr.responseText);
+            }
+        });
 
-$('.input-tooth-11').focus(function(){
-  $('.tooth-11-parent').css('fill', '#2199e8');
-}).blur(function(){
-  $('.tooth-11-parent').css('fill', 'none'); 
-});
-$('.tooth-11').mouseover(function(){
-  $('.tooth-11-parent').css('fill', '#2199e8');
-}).mouseleave(function(){
-  $('.tooth-11-parent').css('fill', 'none');
-});              
-  
+        // Hover event on tooth SVG
+        $(parentClass).mouseover(function () {
+            $(parentClass).css('fill', 'lightblue');
+            console.log(`Hovered over Tooth ${toothNumber}`);
+        }).mouseleave(function () {
+            $(parentClass).css('fill', getColorBasedOnStatus(teethStatuses[toothNumber]));
+            console.log(`Mouse left Tooth ${toothNumber}`);
+        });
 
-$('.input-tooth-12').focus(function(){
-  $('.tooth-12-parent').css('fill', 'green');
-});
-$('.tooth-12').mouseover(function(){
-  $('.tooth-12-parent').css('fill', 'green');
-}); 
-$('.tooth-12').mouseleave(function(){
-  $('.tooth-12-parent').css('fill', 'none');
-});
+        // Focus event on input field
+        $(`.input-tooth-${toothNumber}`).focus(function () {
+            $(parentClass).css('fill', 'yellow');
+            console.log(`Focused on Tooth ${toothNumber}`);
+        }).blur(function () {
+            $(parentClass).css('fill', getColorBasedOnStatus(teethStatuses[toothNumber]));
+            console.log(`Blurred from Tooth ${toothNumber}`);
+        });
+    }
 
-$('.tooth-13').mouseover(function(){
-  $('.tooth-13-parent').css('fill', 'green');
-});
+    // Apply interaction logic for each tooth
+    const teethNumbers = [
+        11, 12, 13, 14, 15, 16, 17, 18, 21, 22, 23, 24, 25, 26, 27, 28,
+        31, 32, 33, 34, 35, 36, 37, 38, 41, 42, 43, 44, 45, 46, 47, 48
+    ];
+    teethNumbers.forEach(handleToothInteraction);
 
-$('.input-tooth-13').focus(function(){
-  $('.tooth-13-parent').css('fill', 'green');
-}); 
+    // Show modal on tooth click and fetch the latest status
+    $('.svg-container path').click(function () {
+        var toothClass = $(this).attr('class');
+        var toothNumber = toothClass.match(/tooth-(\d+)/)[1];
+        var description = teethData[toothNumber] || 'No description available';
 
-$('.tooth-13').mouseleave(function(){
-  $('.tooth-13-parent').css('fill', 'none');
-});
+        $.ajax({
+            url: getToothStatusUrl, // Use the URL passed from Blade
+            method: 'GET',
+            data: {
+                tooth_number: toothNumber,
+                dental_record_id: $('#dental-record-id').val()
+            },
+            success: function (response) {
+                let status = response.status || 'Healthy'; // Default to Healthy if not found
+                $('#modal-status').val(status);
+                console.log(`Loaded Tooth ${toothNumber} Status: ${status}`);
+            },
+            error: function (xhr) {
+                console.error('Error fetching tooth status:', xhr.responseText);
+            }
+        });
 
-$('.tooth-14').mouseover(function(){
-  $('.tooth-14-parent').css('fill', 'green');
-});
+        $('#modal-tooth').val('Tooth ' + toothNumber);
+        $('#modal-notes').val(description).prop('disabled', true);
+        $('#previewModal').show();
+    });
 
-$('.input-tooth-14').focus(function(){
-  $('.tooth-14-parent').css('fill', 'green');
-}); 
+    // Close modal
+    $('.close').click(function () {
+        $('#previewModal').hide();
+    });
 
-$('.tooth-14').mouseleave(function(){
-  $('.tooth-14-parent').css('fill', 'none');
-});
+    $(window).click(function (event) {
+        if (event.target.id === 'previewModal') {
+            $('#previewModal').hide();
+        }
+    });
 
-$('.tooth-15').mouseover(function(){
-  $('.tooth-15-parent').css('fill', 'green');
-});
+    // Save tooth details with AJAX
+    $('#save-tooth-details').click(function () {
+        var toothNumber = $('#modal-tooth').val().split(' ')[1]; // Extract the tooth number
+        var status = $('#modal-status').val();
+        var notes = $('#modal-notes').val();
+        var dentalRecordId = $('#dental-record-id').val(); // Retrieve the dental record ID
 
-$('.input-tooth-15').focus(function(){
-  $('.tooth-15-parent').css('fill', 'green');
-}); 
+        console.log('Attempting to save tooth details...');
+        console.log('Tooth Number:', toothNumber);
+        console.log('Status:', status);
+        console.log('Notes:', notes);
+        console.log('Dental Record ID:', dentalRecordId);
 
-$('.tooth-15').mouseleave(function(){
-  $('.tooth-15-parent').css('fill', 'none');
-});
+        // Check if the dentalRecordId is present
+        if (!dentalRecordId) {
+            console.error('Error: Dental Record ID is missing.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Dental Record ID is missing.',
+            });
+            return; // Stop the function execution if dentalRecordId is missing
+        }
 
-$('.tooth-16').mouseover(function(){
-  $('.tooth-16-parent').css('fill', 'green');
-});
+        $.ajax({
+            url: storeToothUrl, // Use the URL passed from Blade
+            method: 'POST',
+            data: {
+                _token: $('input[name="_token"]').val(),
+                dental_record_id: dentalRecordId, // Include the dental record ID
+                tooth_number: toothNumber,
+                status: status,
+                notes: notes
+            },
+            success: function (response) {
+                console.log('Response:', response); // Log the response for debugging
 
-$('.input-tooth-16').focus(function(){
-  $('.tooth-16-parent').css('fill', 'green');
-}); 
+                // Update the color of the tooth based on the new status
+                teethStatuses[toothNumber] = status; // Update the local teethStatuses object
+                const parentClass = `.tooth-${toothNumber}`;
+                $(parentClass).css('fill', getColorBasedOnStatus(status));
 
-$('.tooth-16').mouseleave(function(){
-  $('.tooth-16-parent').css('fill', 'none');
-});
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Tooth details saved successfully!',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+                $('#previewModal').hide();
+            },
+            error: function (xhr) {
+                console.error('Error saving tooth details:', xhr.responseText); // Log the error to the console for debugging
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to save tooth details!',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            }
+        });
+    });
 
-$('.tooth-17').mouseover(function(){
-  $('.tooth-17-parent').css('fill', 'green');
-});
+    // Toggle form visibility
+    $('.toggle-form-btn').click(function () {
+        $('.dental-examination-form').toggle();
+        $(this).text(function (i, text) {
+            return text === "Hide Form" ? "Show Form" : "Hide Form";
+        });
 
-$('.input-tooth-17').focus(function(){
-  $('.tooth-17-parent').css('fill', 'green');
-}); 
-
-$('.tooth-17').mouseleave(function(){
-  $('.tooth-17-parent').css('fill', 'none');
-});
-
-$('.tooth-18').mouseover(function(){
-  $('.tooth-18-parent').css('fill', 'green');
-});
-
-$('.input-tooth-18').focus(function(){
-  $('.tooth-18-parent').css('fill', 'green');
-}); 
-
-$('.input-tooth-19').click(function(){
-  $('.tooth-19-parent').css('fill', 'green');
-}); 
-
-$('.tooth-18').mouseleave(function(){
-  $('.tooth-18-parent').css('fill', 'none');
-});
-
-/*Segundo Quadrante*/
-
-$('.input-tooth-21').focus(function(){
-  $('.tooth-21-parent').css('fill', 'green');
-}); 
-
-$('.tooth-21').mouseover(function(){
-  $('.tooth-21-parent').css('fill', 'green');
-});
-
-$('.tooth-21').mouseleave(function(){
-  $('.tooth-21-parent').css('fill', 'none');
-});
-
-$('.input-tooth-22').focus(function(){
-  $('.tooth-22-parent').css('fill', 'green');
-}); 
-
-$('.tooth-22').mouseover(function(){
-  $('.tooth-22-parent').css('fill', 'green');
-});
-
-$('.tooth-22').mouseleave(function(){
-  $('.tooth-22-parent').css('fill', 'none');
-});
-
-$('.input-tooth-23').focus(function(){
-  $('.tooth-23-parent').css('fill', 'green');
-}); 
-
-$('.tooth-23').mouseover(function(){
-  $('.tooth-23-parent').css('fill', 'green');
-});
-
-$('.tooth-23').mouseleave(function(){
-  $('.tooth-23-parent').css('fill', 'none');
-});
-
-$('.input-tooth-24').focus(function(){
-  $('.tooth-24-parent').css('fill', 'green');
-}); 
-
-$('.tooth-24').mouseover(function(){
-  $('.tooth-24-parent').css('fill', 'green');
-});
-
-$('.tooth-24').mouseleave(function(){
-  $('.tooth-24-parent').css('fill', 'none');
-});
-
-$('.input-tooth-25').focus(function(){
-  $('.tooth-25-parent').css('fill', 'green');
-}); 
-
-$('.tooth-25').mouseover(function(){
-  $('.tooth-25-parent').css('fill', 'green');
-});
-
-$('.tooth-25').mouseleave(function(){
-  $('.tooth-25-parent').css('fill', 'none');
-});
-
-$('.input-tooth-26').focus(function(){
-  $('.tooth-26-parent').css('fill', 'green');
-}); 
-
-$('.tooth-26').mouseover(function(){
-  $('.tooth-26-parent').css('fill', 'green');
-});
-
-$('.tooth-26').mouseleave(function(){
-  $('.tooth-26-parent').css('fill', 'none');
-});
-
-$('.input-tooth-27').focus(function(){
-  $('.tooth-27-parent').css('fill', 'green');
-}); 
-
-$('.tooth-27').mouseover(function(){
-  $('.tooth-27-parent').css('fill', 'green');
-});
-
-$('.tooth-27').mouseleave(function(){
-  $('.tooth-27-parent').css('fill', 'none');
-});
-
-$('.input-tooth-28').focus(function(){
-  $('.tooth-28-parent').css('fill', 'green');
-}); 
-
-$('.tooth-28').mouseover(function(){
-  $('.tooth-28-parent').css('fill', 'green');
-});
-
-$('.tooth-28').mouseleave(function(){
-  $('.tooth-28-parent').css('fill', 'none');
-});
-
-/*Terceiro Quadrante*/
-
-$('.input-tooth-31').focus(function(){
-  $('.tooth-31-parent').css('fill', 'green');
-}); 
-
-$('.tooth-31').mouseover(function(){
-  $('.tooth-31-parent').css('fill', 'green');
+        console.log('Form visibility toggled');
+    });
 });
 
-$('.tooth-31').mouseleave(function(){
-  $('.tooth-31-parent').css('fill', 'none');
-});
 
-$('.input-tooth-32').focus(function(){
-  $('.tooth-32-parent').css('fill', 'green');
-}); 
+$('#save-dental-record').click(function () {
+    var dentalRecordId = $('#dental-record-id').val();
+    var idNumber = $('#id_number').val(); // Capture the ID number
+    console.log('Saving dental record with ID:', dentalRecordId);
+    console.log('ID Number:', idNumber);
 
-$('.tooth-32').mouseover(function(){
-  $('.tooth-32-parent').css('fill', 'green');
-});
-
-$('.tooth-32').mouseleave(function(){
-  $('.tooth-32-parent').css('fill', 'none');
-});
-
-$('.input-tooth-33').focus(function(){
-  $('.tooth-33-parent').css('fill', 'green');
-}); 
-
-$('.tooth-33').mouseover(function(){
-  $('.tooth-33-parent').css('fill', 'green');
-});
-
-$('.tooth-33').mouseleave(function(){
-  $('.tooth-33-parent').css('fill', 'none');
-});
-
-$('.input-tooth-34').focus(function(){
-  $('.tooth-34-parent').css('fill', 'green');
-}); 
-
-$('.tooth-34').mouseover(function(){
-  $('.tooth-34-parent').css('fill', 'green');
-});
-
-$('.tooth-34').mouseleave(function(){
-  $('.tooth-34-parent').css('fill', 'none');
-});
-
-$('.input-tooth-35').focus(function(){
-  $('.tooth-35-parent').css('fill', 'green');
-}); 
-
-$('.tooth-35').mouseover(function(){
-  $('.tooth-35-parent').css('fill', 'green');
-});
-
-$('.tooth-35').mouseleave(function(){
-  $('.tooth-35-parent').css('fill', 'none');
-});
-
-$('.input-tooth-36').focus(function(){
-  $('.tooth-36-parent').css('fill', 'green');
-}); 
-
-$('.tooth-36').mouseover(function(){
-  $('.tooth-36-parent').css('fill', 'green');
-});
-
-$('.tooth-36').mouseleave(function(){
-  $('.tooth-36-parent').css('fill', 'none');
-});
-
-$('.input-tooth-37').focus(function(){
-  $('.tooth-37-parent').css('fill', 'green');
-}); 
-
-$('.tooth-37').mouseover(function(){
-  $('.tooth-37-parent').css('fill', 'green');
-});
-
-$('.tooth-37').mouseleave(function(){
-  $('.tooth-37-parent').css('fill', 'none');
-});
-
-$('.input-tooth-38').focus(function(){
-  $('.tooth-38-parent').css('fill', 'green');
-}); 
-
-$('.tooth-38').mouseover(function(){
-  $('.tooth-38-parent').css('fill', 'green');
-});
-
-$('.tooth-38').mouseleave(function(){
-  $('.tooth-38-parent').css('fill', 'none');
-});
-
-/*Quarto Quadrante*/
-
-$('.input-tooth-41').focus(function(){
-  $('.tooth-41-parent').css('fill', 'green');
-}); 
-
-$('.tooth-41').mouseover(function(){
-  $('.tooth-41-parent').css('fill', 'green');
-});
-
-$('.tooth-41').mouseleave(function(){
-  $('.tooth-41-parent').css('fill', 'none');
-});
-
-$('.input-tooth-42').focus(function(){
-  $('.tooth-42-parent').css('fill', 'green');
-}); 
-
-$('.tooth-42').mouseover(function(){
-  $('.tooth-42-parent').css('fill', 'green');
-});
-
-$('.tooth-42').mouseleave(function(){
-  $('.tooth-42-parent').css('fill', 'none');
-});
-
-$('.input-tooth-43').focus(function(){
-  $('.tooth-43-parent').css('fill', 'green');
-}); 
-
-$('.tooth-43').mouseover(function(){
-  $('.tooth-43-parent').css('fill', 'green');
-});
-
-$('.tooth-43').mouseleave(function(){
-  $('.tooth-43-parent').css('fill', 'none');
-});
-
-$('.input-tooth-44').focus(function(){
-  $('.tooth-44-parent').css('fill', 'green');
-}); 
-
-$('.tooth-44').mouseover(function(){
-  $('.tooth-44-parent').css('fill', 'green');
-});
-
-$('.tooth-44').mouseleave(function(){
-  $('.tooth-44-parent').css('fill', 'none');
-});
-
-$('.input-tooth-45').focus(function(){
-  $('.tooth-45-parent').css('fill', 'green');
-}); 
-
-$('.tooth-45').mouseover(function(){
-  $('.tooth-45-parent').css('fill', 'green');
-});
-
-$('.tooth-45').mouseleave(function(){
-  $('.tooth-45-parent').css('fill', 'none');
-});
-
-$('.input-tooth-46').focus(function(){
-  $('.tooth-46-parent').css('fill', 'green');
-}); 
-
-$('.tooth-46').mouseover(function(){
-  $('.tooth-46-parent').css('fill', 'green');
-});
-
-$('.tooth-46').mouseleave(function(){
-  $('.tooth-46-parent').css('fill', 'none');
-});
-
-$('.input-tooth-47').focus(function(){
-  $('.tooth-47-parent').css('fill', 'green');
-}); 
-
-$('.tooth-47').mouseover(function(){
-  $('.tooth-47-parent').css('fill', 'green');
-});
-
-$('.tooth-47').mouseleave(function(){
-  $('.tooth-47-parent').css('fill', 'none');
-});
-
-$('.input-tooth-48').focus(function(){
-  $('.tooth-48-parent').css('fill', 'green');
-}); 
-
-$('.tooth-48').mouseover(function(){
-  $('.tooth-48-parent').css('fill', 'green');
-});
-
-$('.tooth-48').mouseleave(function(){
-  $('.tooth-48-parent').css('fill', 'none');
+    var formData = $('#dental-record-form').serialize();
+    $.ajax({
+        url: storeDentalRecordUrl, // Use the URL passed from Blade
+        method: 'POST',
+        data: formData,
+        success: function (response) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Dental record saved successfully!',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        },
+        error: function (xhr) {
+            console.error('Error:', xhr.responseText);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to save dental record!',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        }
+    });
 });

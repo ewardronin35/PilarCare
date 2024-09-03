@@ -1,5 +1,4 @@
 <?php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -10,22 +9,24 @@ class CreateMedicalRecordsTable extends Migration
     {
         Schema::create('medical_records', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // Foreign key to users table
+
             $table->string('name');
             $table->date('birthdate');
             $table->integer('age');
             $table->string('address');
+            $table->string('personal_contact_number');
+            $table->string('emergency_contact_number');
             $table->string('father_name');
             $table->string('mother_name');
-            $table->string('medical_illness');
+            $table->string('past_illness');
+            $table->string('chronic_conditions');
+            $table->string('surgical_history');
+            $table->string('family_medical_history');
             $table->string('allergies');
-            $table->string('pediatrician');
             $table->json('medicines'); // Store as JSON
-            $table->json('physical_examination'); // Store as JSON
-            $table->string('consent_signature');
-            $table->date('consent_date');
-            $table->string('contact_no');
-            $table->string('picture_path'); // Store the picture path
-            $table->timestamps();
+            $table->string('profile_picture')->nullable(); // Store the picture path
+            $table->timestamps(); // This will include 'created_at' and 'updated_at' fields
         });
     }
 

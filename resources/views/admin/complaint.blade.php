@@ -240,6 +240,10 @@
                 {{ session('success') }}
             </div>
         @endif
+        <div class="tabs">
+        <div class="tab active" data-tab="add-complaint-tab">Add Complaint</div>
+        <a href="{{ route('admin.complaint.add') }}" class="tab">Complaint List</a>
+    </div>
 
         <!-- Complaints Table -->
         <div class="complaints-section">

@@ -10,6 +10,7 @@ class CreateHealthExaminationsTable extends Migration
         Schema::create('health_examinations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('school_year');
             $table->string('health_examination_picture');
             $table->json('xray_pictures')->nullable(); // Storing multiple X-ray pictures as JSON array
             $table->json('lab_result_pictures')->nullable(); // Storing multiple Lab Result pictures as JSON array
