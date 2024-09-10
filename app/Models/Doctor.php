@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Staff extends Model
+class Doctor extends Model
 {
     use HasFactory;
 
@@ -13,10 +13,9 @@ class Staff extends Model
         'id_number',
         'first_name',
         'last_name',
-        'approved'
+        'specialization', // Adjusted attribute for doctors
+        'approved',
     ];
-    public function dentalRecords()
-    {
-        return $this->hasMany(DentalRecord::class, 'id_number', 'id_number');
-    }
+
+    // Optionally, you can add relationships or additional methods here
 }

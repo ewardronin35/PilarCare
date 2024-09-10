@@ -1,10 +1,9 @@
 <div class="sidebar">
     <style>
-        /* Import Poppins Font */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
         .sidebar {
-            width: 100px; /* Collapsed width */
+            width: 100px;
             background-color: #00d2ff;
             color: white;
             height: 100vh;
@@ -17,18 +16,17 @@
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
-            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
+            font-family: 'Poppins', sans-serif;
         }
 
         .sidebar:hover {
-            width: 270px; /* Expanded width */
+            width: 270px;
         }
 
         .logo {
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 40px; /* Increased margin to lower menu items */
             transition: opacity 0.3s ease-in-out;
         }
 
@@ -42,7 +40,6 @@
             font-size: 1.5rem;
             font-weight: bold;
             opacity: 0;
-            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
         }
 
         .sidebar:hover .logo-text {
@@ -51,8 +48,7 @@
 
         .menu {
             flex-grow: 1;
-            padding: 0;
-            padding-top: 20px; /* Added padding to top to lower the menu items */
+            padding-top: 20px;
         }
 
         .menu ul {
@@ -63,45 +59,32 @@
 
         .menu li {
             position: relative;
-        }
-
-        .menu > ul > li {
+            padding: 10px 20px;
             display: flex;
             align-items: center;
-            padding: 10px 20px;
-            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
             cursor: pointer;
-            flex-direction: column;
-            align-items: flex-start;
-            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
+            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
         }
 
-        .menu > ul > li:hover {
+        .menu li:hover {
             background-color: #1f1f90;
-            color: white;
             transform: translateX(10px);
         }
 
-        .menu > ul > li a {
+        .menu li a {
             color: white;
             text-decoration: none;
-            font-size: 1.2rem; /* Adjusted font size */
+            font-size: 1.2rem;
             display: flex;
             align-items: center;
             width: 100%;
-            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
-            font-weight: 500; /* Medium weight for better readability */
         }
 
-        .menu > ul > li:hover a {
-            color: white;
-        }
-
-        .menu > ul > li a .icon {
-            min-width: 30px; /* Adjusted icon size */
+        .menu li a .icon {
+            min-width: 30px;
             margin-right: 10px;
             text-align: center;
-            font-size: 1.5rem; /* Increased icon size */
+            font-size: 1.5rem;
         }
 
         .menu-text {
@@ -119,7 +102,6 @@
             margin-left: 0;
             padding-left: 0;
             width: 100%;
-            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
         }
 
         .menu li.active .submenu {
@@ -129,12 +111,8 @@
 
         .submenu li {
             padding: 10px 20px;
-            margin: 0;
-            width: calc(100% - 40px); /* Adjusting width to prevent overflow */
             color: #000;
             transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
-            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
-            font-weight: 400; /* Regular weight for submenu items */
         }
 
         .submenu li:hover {
@@ -157,61 +135,43 @@
             transform: rotate(90deg);
         }
 
-        /* Media Queries */
         @media (max-width: 768px) {
             .sidebar {
-                width: 60px; /* Smaller sidebar for mobile */
+                width: 60px;
             }
 
             .sidebar:hover {
-                width: 200px; /* Expanded width for mobile */
+                width: 200px;
             }
 
-            .logo-text {
-                font-size: 1rem; /* Smaller logo text for mobile */
+            .menu li a {
+                font-size: 1rem;
             }
 
-            .menu > ul > li {
-                padding: 5px 10px; /* Smaller padding for menu items */
-            }
-
-            .menu > ul > li a {
-                font-size: 1rem; /* Smaller font size for menu items */
-            }
-
-            .menu > ul > li a .icon {
-                font-size: 1.2rem; /* Smaller icon size */
+            .menu li a .icon {
+                font-size: 1.2rem;
             }
         }
     </style>
 
     <div class="logo">
         <img src="{{ asset('images/pilarLogo.png') }}" alt="PilarCare Logo" class="logo-img">
-        <span class="logo-text hidden md:inline-block">PilarCare</span>
+        <span class="logo-text">PilarCare</span>
     </div>
+
     <nav class="menu">
         <ul>
-            <li><a href="{{ route('student.dashboard') }}" id="student-dashboard-link"><span class="icon"><i class="fas fa-tachometer-alt"></i></span><span class="menu-text">Dashboard</span></a></li>
-            <li><a href="{{ route('student.complaint') }}"><span class="icon"><i class="fas fa-comments"></i></span><span class="menu-text">Complaints</span><span class="submenu-toggle"></span></a>
-            <li><a href="{{ route('student.appointment') }}" id="admin-appointment-link"><span class="icon"><i class="fas fa-calendar-check"></i></span><span class="menu-text">Appointment</span></a></li>
-
-    
-            </li>
+            <li><a href="{{ route('doctor.dashboard') }}"><span class="icon"><i class="fas fa-tachometer-alt"></i></span><span class="menu-text">Dashboard</span></a></li>
+            <li><a href="{{ route('doctor.appointments') }}"><span class="icon"><i class="fas fa-calendar-check"></i></span><span class="menu-text">Appointments</span></a></li>
+            <li><a href="{{ route('doctor.patients') }}"><span class="icon"><i class="fas fa-user-md"></i></span><span class="menu-text">Patients</span></a></li>
             <li class="has-submenu">
                 <a href="#"><span class="icon"><i class="fas fa-notes-medical"></i></span><span class="menu-text">Records</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
                 <ul class="submenu">
-                    <li><a href="{{ route('student.upload-pictures') }}">Health Approval</a></li>
-                    <li><a href="{{ route('student.medical-record') }}">View Medical Record</a></li>
-                    <li><a href="{{ route('student.dental-record') }}">View Dental Record</a></li>
+                    <li><a href="{{ route('doctor.medical-record.index') }}">Medical Records</a></li>
+                    <li><a href="{{ route('doctor.dental-record.index') }}">Dental Records</a></li>
                 </ul>
-    </li>  
-    <li class="has-submenu">
-            <a href="#"><span class="icon"><i class="fas fa-user-circle"></i></span><span class="menu-text">Profile</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
-            <ul class="submenu">
-                <li><a href="#">Profile Management</a></li>
-                <li><a href="#">Create Parent's Account</a></li>
-            </ul>
-        </li>
+            </li>
+            <li><a href="{{ route('doctor.settings') }}"><span class="icon"><i class="fas fa-cogs"></i></span><span class="menu-text">Settings</span></a></li>
         </ul>
     </nav>
 </div>

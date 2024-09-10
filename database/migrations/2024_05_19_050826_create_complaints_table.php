@@ -16,11 +16,12 @@ class CreateComplaintsTable extends Migration
             $table->integer('age');
             $table->date('birthdate');
             $table->string('year');
-            $table->string('contact_number');
+            $table->string('personal_contact_number');
             $table->integer('pain_assessment');
             $table->text('sickness_description');
             $table->string('status')->default('In progress');
             $table->string('role'); 
+            $table->string('medicine_given')->nullable();
             $table->timestamps();
         });
     }

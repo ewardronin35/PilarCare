@@ -101,9 +101,11 @@ $(document).ready(function () {
         var toothClass = $(this).attr('class');
         var toothNumber = toothClass.match(/tooth-(\d+)/)[1];
         var description = teethData[toothNumber] || 'No description available';
-
+        var svgPath = $(this).attr('d');  // Capture the SVG path from the clicked tooth
+    
+        // Make an AJAX call to fetch the current status of the tooth
         $.ajax({
-            url: getToothStatusUrl, // Use the URL passed from Blade
+            url: getToothStatusUrl, // The URL passed from Blade
             method: 'GET',
             data: {
                 tooth_number: toothNumber,
@@ -111,18 +113,20 @@ $(document).ready(function () {
             },
             success: function (response) {
                 let status = response.status || 'Healthy'; // Default to Healthy if not found
-                $('#modal-status').val(status);
+                $('#modal-status').val(status); // Set the current tooth status in the modal
                 console.log(`Loaded Tooth ${toothNumber} Status: ${status}`);
             },
             error: function (xhr) {
                 console.error('Error fetching tooth status:', xhr.responseText);
             }
         });
-
-        $('#modal-tooth').val('Tooth ' + toothNumber);
-        $('#modal-notes').val(description).prop('disabled', true);
-        $('#previewModal').show();
+    
+        $('#modal-tooth').val('Tooth ' + toothNumber); // Show the tooth number in the modal
+        $('#modal-notes').val(description).prop('disabled', true); // Pre-fill notes (optional)
+        $('#modal-svg-path').val(svgPath); // Set the SVG path in the hidden input field
+        $('#previewModal').show(); // Show the modal
     });
+    
 
     // Close modal
     $('.close').click(function () {
@@ -134,20 +138,57 @@ $(document).ready(function () {
             $('#previewModal').hide();
         }
     });
+    $('#save-dental-record').off('click').on('click', function (e) {
+        e.preventDefault(); // Prevent default form submission
+        
+        var dentalRecordId = $('#dental-record-id').val();
+        var idNumber = $('#id_number').val(); // Capture the ID number
+        console.log('Saving dental record with ID:', dentalRecordId);
+        console.log('ID Number:', idNumber);
 
+        var formData = $('#dental-record-form').serialize();
+        $.ajax({
+            url: storeDentalRecordUrl, // Use the URL passed from Blade
+            method: 'POST',
+            data: formData,
+            success: function (response) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Dental record saved successfully!',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            },
+            error: function (xhr) {
+                console.error('Error:', xhr.responseText);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to save dental record!',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            }
+        });
+    });
+    
+    
     // Save tooth details with AJAX
     $('#save-tooth-details').click(function () {
         var toothNumber = $('#modal-tooth').val().split(' ')[1]; // Extract the tooth number
         var status = $('#modal-status').val();
         var notes = $('#modal-notes').val();
         var dentalRecordId = $('#dental-record-id').val(); // Retrieve the dental record ID
-
+        var svgPath = $('.tooth-' + toothNumber).attr('d'); // Capture the SVG path of the clicked tooth
+    
         console.log('Attempting to save tooth details...');
         console.log('Tooth Number:', toothNumber);
         console.log('Status:', status);
         console.log('Notes:', notes);
         console.log('Dental Record ID:', dentalRecordId);
-
+        console.log('SVG Path:', svgPath);
+    
         // Check if the dentalRecordId is present
         if (!dentalRecordId) {
             console.error('Error: Dental Record ID is missing.');
@@ -158,7 +199,18 @@ $(document).ready(function () {
             });
             return; // Stop the function execution if dentalRecordId is missing
         }
-
+    
+        // Check if svgPath is present
+        if (!svgPath) {
+            console.error('Error: SVG Path is missing.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'SVG Path is missing.',
+            });
+            return; // Stop the function execution if svgPath is missing
+        }
+    
         $.ajax({
             url: storeToothUrl, // Use the URL passed from Blade
             method: 'POST',
@@ -167,16 +219,17 @@ $(document).ready(function () {
                 dental_record_id: dentalRecordId, // Include the dental record ID
                 tooth_number: toothNumber,
                 status: status,
-                notes: notes
+                notes: notes,
+                svg_path: svgPath // Include the SVG path in the request
             },
             success: function (response) {
                 console.log('Response:', response); // Log the response for debugging
-
+    
                 // Update the color of the tooth based on the new status
                 teethStatuses[toothNumber] = status; // Update the local teethStatuses object
                 const parentClass = `.tooth-${toothNumber}`;
                 $(parentClass).css('fill', getColorBasedOnStatus(status));
-
+    
                 Swal.fire({
                     icon: 'success',
                     title: 'Success',
@@ -198,6 +251,7 @@ $(document).ready(function () {
             }
         });
     });
+    
 
     // Toggle form visibility
     $('.toggle-form-btn').click(function () {

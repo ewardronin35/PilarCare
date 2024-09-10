@@ -3,11 +3,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateInformationsTable extends Migration
+class CreateInformationTable extends Migration
 {
     public function up()
     {
-        Schema::create('informations', function (Blueprint $table) {
+        Schema::create('information', function (Blueprint $table) {
             $table->id();
             $table->string('id_number')->unique();
             $table->string('parent_name_father')->nullable();

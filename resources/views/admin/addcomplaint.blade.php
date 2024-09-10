@@ -1,9 +1,8 @@
 <x-app-layout>
     <style>
         .main-content {
-            margin-left: 80px;
-            font-size: 16px;
-            margin-top: 100px;
+           
+            margin-top: 90px;
         }
 
         .form-container {
@@ -184,53 +183,72 @@
         }
     </style>
 
-    <div class="tabs">
-        <div class="tab active" data-tab="add-complaint-tab">Add Complaint</div>
-        <a href="{{ route('admin.complaint') }}" class="tab">Complaint List</a>
+<div class="tabs">
+        <!-- Add icons using Font Awesome -->
+        <div class="tab active" data-tab="add-complaint-tab">
+            <i class="fas fa-plus-circle"></i> Add Complaint
+        </div>
+        <a href="{{ route('admin.complaint') }}" class="tab">
+            <i class="fas fa-list-alt"></i> Complaint List
+        </a>
     </div>
 
     <div id="add-complaint-tab" class="tab-content active">
         <div class="form-container" id="complaint-form-container">
-            <h2>Health Complaint</h2>
+            <h2><i class="fas fa-medkit"></i> Health Complaint</h2>
+
+            <!-- Search section -->
             <div class="search-container">
                 <div class="input-wrapper">
+                    <label for="id_number">
+                        <i class="fas fa-id-card"></i> ID Number
+                    </label>
                     <input type="text" id="id_number" name="id_number" placeholder="Enter ID Number">
                 </div>
-                <button type="button" onclick="fetchStudentData()">Search</button>
+                <button type="button" onclick="fetchPersonData()">
+                    <i class="fas fa-search"></i> Search
+                </button>
             </div>
+
             <form id="complaint-form" action="{{ route('admin.complaint.store') }}" method="POST">
                 @csrf
                 <input type="hidden" name="role" id="role" value="">
                 <input type="hidden" name="student_type" value="TED">
                 <input type="hidden" name="year" value="{{ date('Y') }}">
                 <input type="hidden" name="id_number" id="hidden_id_number" value="">
+
+                <!-- First Name and Last Name fields -->
                 <div class="form-group">
                     <div class="input-wrapper">
-                        <label for="first_name">First Name</label>
+                        <label for="first_name"><i class="fas fa-user"></i> First Name</label>
                         <input type="text" id="first_name" name="first_name" value="{{ old('first_name') }}" required>
                     </div>
                     <div class="input-wrapper">
-                        <label for="last_name">Last Name</label>
+                        <label for="last_name"><i class="fas fa-user"></i> Last Name</label>
                         <input type="text" id="last_name" name="last_name" value="{{ old('last_name') }}" required>
                     </div>
                 </div>
+
+                <!-- Age and Birthdate fields -->
                 <div class="form-group">
                     <div class="input-wrapper">
-                        <label for="age">Age</label>
+                        <label for="age"><i class="fas fa-hourglass-half"></i> Age</label>
                         <input type="number" id="age" name="age" required>
                     </div>
                     <div class="input-wrapper">
-                        <label for="birthdate">Birthdate</label>
+                        <label for="birthdate"><i class="fas fa-calendar"></i> Birthdate</label>
                         <input type="date" id="birthdate" name="birthdate" required>
                     </div>
                 </div>
+
+                <!-- Contact Number and Pain Assessment fields -->
                 <div class="form-group">
                     <div class="input-wrapper">
-                        <label for="contact_number">Contact Number</label>
-                        <input type="text" id="contact_number" name="contact_number" required>
-                    </div>
+                    <label for="personal_contact_number"><i class="fas fa-phone"></i> Personal Contact Number</label>
+                    <input type="text" id="personal_contact_number" name="personal_contact_number" value="">
+                        </div>
                     <div class="input-wrapper">
-                        <label for="pain_assessment">Pain Assessment (1 to 10)</label>
+                        <label for="pain_assessment"><i class="fas fa-thermometer-half"></i> Pain Assessment (1 to 10)</label>
                         <select id="pain_assessment" name="pain_assessment" required>
                             @for ($i = 1; $i <= 10; $i++)
                                 <option value="{{ $i }}">{{ $i }}</option>
@@ -238,21 +256,28 @@
                         </select>
                     </div>
                 </div>
+
+                <!-- Medicine Given field -->
                 <div class="form-group">
                     <div class="input-wrapper">
-                        <label for="medicine_given">Medicine Given</label>
+                        <label for="medicine_given"><i class="fas fa-pills"></i> Medicine Given</label>
                         <select id="medicine_given" name="medicine_given" required></select>
                     </div>
                 </div>
+
+                <!-- Description of Sickness field -->
                 <div class="form-group">
                     <div class="textarea-wrapper">
-                        <label for="sickness_description">Description of Sickness</label>
+                        <label for="sickness_description"><i class="fas fa-notes-medical"></i> Description of Sickness</label>
                         <textarea id="sickness_description" name="sickness_description" rows="4" required></textarea>
                     </div>
                 </div>
-                
+
+                <!-- Submit button -->
                 <div class="form-group">
-                    <button type="submit">Submit</button>
+                    <button type="submit">
+                        <i class="fas fa-paper-plane"></i> Submit
+                    </button>
                 </div>
             </form>
         </div>
@@ -260,11 +285,21 @@
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             fetchAvailableMedicines();
         });
+
+        function calculateAge() {
+            const birthdate = new Date(document.getElementById('birthdate').value);
+            const today = new Date();
+            let age = today.getFullYear() - birthdate.getFullYear();
+            const m = today.getMonth() - birthdate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthdate.getDate())) {
+                age--;
+            }
+            document.getElementById('age').value = age;
+        }
 
         function fetchAvailableMedicines() {
             fetch('{{ route('admin.inventory.available-medicines') }}')
@@ -284,51 +319,52 @@
                 });
         }
 
-        function fetchStudentData() {
-            const idNumber = document.getElementById('id_number').value;
-            if (!idNumber) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Please enter an ID number.'
+        function fetchPersonData() {
+    const idNumber = document.getElementById('id_number').value;
+
+    if (!idNumber) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Please enter an ID number.'
+        });
+        return;
+    }
+
+    fetch(`/admin/complaint/person/${idNumber}`)
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    throw new Error(errorData.error || 'Unknown error');
                 });
-                return;
             }
+            return response.json();
+        })
+        .then(data => {
+            // Fill in the fetched data into the form
+            document.getElementById('first_name').value = data.first_name || '';
+            document.getElementById('last_name').value = data.last_name || '';
+            document.getElementById('age').value = data.age || '';
+            document.getElementById('birthdate').value = data.birthdate || '';
+            document.getElementById('personal_contact_number').value = data.personal_contact_number || ''; // Ensure this line exists
+            document.getElementById('role').value = data.role || '';
+            document.getElementById('hidden_id_number').value = data.id_number || '';
 
-            fetch(`/admin/complaint/student/${idNumber}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: data.error
-                        });
-                    } else {
-                        document.getElementById('first_name').value = data.first_name || '';
-                        document.getElementById('last_name').value = data.last_name || '';
-                        document.getElementById('age').value = data.age || '';
-                        document.getElementById('birthdate').value = data.birthdate || '';
-                        document.getElementById('contact_number').value = data.contact_number || '';
-                        document.getElementById('role').value = data.role || '';
-                        document.getElementById('hidden_id_number').value = data.id_number || '';
-
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Student Data Fetched',
-                            text: 'Student data successfully fetched.'
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching student data:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'An unexpected error occurred. Please try again later.'
-                    });
-                });
-        }
+            Swal.fire({
+                icon: 'success',
+                title: 'Person Data Fetched',
+                text: 'Person data successfully fetched.'
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching person data:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred: ' + error.message
+            });
+        });
+}
 
         document.getElementById('complaint-form').addEventListener('submit', function(event) {
             event.preventDefault();
@@ -342,51 +378,27 @@
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 }
             })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(errorData => {
-                        throw new Error(JSON.stringify(errorData));
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: data.message,
+                    }).then(() => {
+                        document.getElementById('complaint-form').reset(); // Reset the form
+                        fetchAvailableMedicines(); // Refresh available medicines
                     });
                 }
-                return response.json();
-            })
-            .then(data => {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: data.message,
-                }).then(() => {
-                    document.getElementById('complaint-form').reset(); // Reset the form
-                    fetchAvailableMedicines(); // Refresh available medicines
-                    updateInventory(medicineGiven); // Update inventory
-                });
             })
             .catch(error => {
                 console.error('Error:', error);
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'An error occurred. Please try again. ' + error.message
+                    text: 'An error occurred. Please try again.'
                 });
             });
         });
-
-        function updateInventory(medicineName) {
-            fetch('/admin/inventory/update-quantity', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({ medicine: medicineName })
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Inventory updated:', data);
-            })
-            .catch(error => {
-                console.error('Error updating inventory:', error);
-            });
-        }
     </script>
 </x-app-layout>

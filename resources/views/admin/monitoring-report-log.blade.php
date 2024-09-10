@@ -7,6 +7,7 @@
         .main-content {
             margin-left: 80px; /* Collapsed sidebar width */
             width: 100%;
+            margin-top: 40px;
             padding: 20px;
             transition: margin-left 0.3s ease-in-out;
         }

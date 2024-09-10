@@ -15,10 +15,11 @@ class Complaint extends Model
         'age',
         'birthdate',
         'year',
-        'contact_number',
+        'personal_contact_number',
         'pain_assessment',
         'sickness_description',
         'status',
         'role',
+        'medicine_given',
     ];
 }

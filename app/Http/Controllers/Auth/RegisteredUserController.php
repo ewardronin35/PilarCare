@@ -7,6 +7,8 @@ use App\Models\Student;
 use App\Models\Parents;
 use App\Models\Staff;
 use App\Models\Teacher;
+use App\Models\Nurse;  // Include Nurse model
+use App\Models\Doctor;  // Include Doctor model
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -14,7 +16,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Schema; // <-- Add this line
+use Illuminate\Support\Facades\Schema;
 
 class RegisteredUserController extends Controller
 {
@@ -48,30 +50,71 @@ class RegisteredUserController extends Controller
         ]);
     }
 
-    protected function determineRoleAndApproval($idNumber)
+    protected function determineRoleAndApproval($idNumber, $firstName, $lastName)
     {
-        // Check if the column exists before querying
+        // Check if the student's first and last name matches the database record
         if (Schema::hasColumn('students', 'id_number')) {
-            if ($student = Student::where('id_number', $idNumber)->first()) {
+            $student = Student::where('id_number', $idNumber)
+                              ->where('first_name', $firstName)
+                              ->where('last_name', $lastName)
+                              ->first();
+            if ($student) {
                 return ['role' => 'Student', 'approved' => $student->approved];
             }
         }
 
+        // Check if the parent's first and last name matches the database record
         if (Schema::hasColumn('parents', 'id_number')) {
-            if ($parent = Parents::where('id_number', $idNumber)->first()) {
+            $parent = Parents::where('id_number', $idNumber)
+                             ->where('first_name', $firstName)
+                             ->where('last_name', $lastName)
+                             ->first();
+            if ($parent) {
                 return ['role' => 'Parent', 'approved' => $parent->approved];
             }
         }
 
+        // Check if the staff's first and last name matches the database record
         if (Schema::hasColumn('staff', 'id_number')) {
-            if ($staff = Staff::where('id_number', $idNumber)->first()) {
+            $staff = Staff::where('id_number', $idNumber)
+                          ->where('first_name', $firstName)
+                          ->where('last_name', $lastName)
+                          ->first();
+            if ($staff) {
                 return ['role' => 'Staff', 'approved' => $staff->approved];
             }
         }
 
+        // Check if the teacher's first and last name matches the database record
         if (Schema::hasColumn('teachers', 'id_number')) {
-            if ($teacher = Teacher::where('id_number', $idNumber)->first()) {
+            $teacher = Teacher::where('id_number', $idNumber)
+                              ->where('first_name', $firstName)
+                              ->where('last_name', $lastName)
+                              ->first();
+            if ($teacher) {
                 return ['role' => 'Teacher', 'approved' => $teacher->approved];
+            }
+        }
+
+        // Check if the nurse's first and last name matches the database record
+        if (Schema::hasColumn('nurses', 'id_number')) {
+            $nurse = Nurse::where('id_number', $idNumber)
+                          ->where('first_name', $firstName)
+                          ->where('last_name', $lastName)
+                          ->first();
+            if ($nurse) {
+                return ['role' => 'Nurse', 'approved' => $nurse->approved];
+            }
+        }
+
+        // Check if the doctor's first and last name matches the database record
+        if (Schema::hasColumn('doctors', 'id_number')) {
+            $doctor = Doctor::where('id_number', $idNumber)
+                            ->where('first_name', $firstName)
+                            ->where('last_name', $lastName)
+                            ->first();
+            if ($doctor) {
+                return ['role' => 'Doctor', 'approved' => $doctor->approved];
             }
         }
 
@@ -103,13 +146,17 @@ class RegisteredUserController extends Controller
             ], 422);
         }
 
-        // Determine the role and approval status based on the ID number
-        $roleAndApproval = $this->determineRoleAndApproval($request->id_number);
+        // Determine the role and approval status based on the ID number, first name, and last name
+        $roleAndApproval = $this->determineRoleAndApproval(
+            $request->id_number, 
+            $request->first_name, 
+            $request->last_name
+        );
 
         if (!$roleAndApproval) {
             return response()->json([
                 'success' => false,
-                'errors' => ['id_number' => 'You are not enrolled. Please enroll first.']
+                'errors' => ['id_number' => 'The ID number, first name, and last name do not match any records. Please check your information.']
             ], 422);
         }
 

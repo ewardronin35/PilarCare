@@ -28,7 +28,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 40px; /* Increased margin to lower menu items */
             transition: opacity 0.3s ease-in-out;
         }
 
@@ -208,14 +207,18 @@
                 </ul>
             </li>
             <li class="has-submenu">
-                <a href="#"><span class="icon"><i class="fas fa-user-check"></i></span><span class="menu-text">Approved Users</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
-                <ul class="submenu">
-                    <li><a href="{{ route('admin.students.upload') }}" id="admin-enrolled-students-link">Enrolled Students</a></li>
+            <a href="#"><span class="icon"><i class="fas fa-users"></i></span><span class="menu-text">Manage Users</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
+            <ul class="submenu">
+                    <li><a href="{{ route('admin.students.upload') }}" id="admin-enrolled-students-link">Students</a></li>
                     <li><a href="{{ route('admin.staff.upload') }}">Staffs</a></li>
                     <li><a href="{{ route('admin.teachers.upload') }}">Teachers</a></li>
+                    <li><a href="{{ route('admin.nurses.upload') }}">Nurse</a></li>
+                    <li><a href="{{ route('admin.doctors.upload') }}">Doctor</a></li>
                 </ul>
             </li>
-            <li><a href="{{ route('admin.appointment') }}" id="admin-appointment-link"><span class="icon"><i class="fas fa-calendar-check"></i></span><span class="menu-text">Appointment</span></a></li>
+            <li class=>
+                <a href="{{ route('admin.appointment') }}"><span class="icon"><i class="fas fa-calendar-check"></i></span><span class="menu-text">Appointment</span></a>
+            </li>
             <li class="has-submenu">
                 <a href="#"><span class="icon"><i class="fas fa-boxes"></i></span><span class="menu-text">Inventory</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
                 <ul class="submenu">
@@ -230,12 +233,7 @@
                     <li><a href="{{ route('admin.monitoring-report-log') }}">View Logs and Daily Transactions</a></li>
                 </ul>
             </li>
-            <li class="has-submenu">
-                <a href="#"><span class="icon"><i class="fas fa-user"></i></span><span class="menu-text">Profile</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
-                <ul class="submenu">
-                    <li><a href="{{ route('admin.profiles') }}">View Profile of Student</a></li>
-                </ul>
-            </li>
+            <li><a href="#"><span class="icon"><i class="fas fa-cogs"></i></span><span class="menu-text">Settings</span></a></li>
         </ul>
     </nav>
 </div>

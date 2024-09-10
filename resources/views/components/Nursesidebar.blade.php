@@ -28,7 +28,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 40px; /* Increased margin to lower menu items */
             transition: opacity 0.3s ease-in-out;
         }
 
@@ -191,27 +190,31 @@
     </div>
     <nav class="menu">
         <ul>
-            <li><a href="{{ route('student.dashboard') }}" id="student-dashboard-link"><span class="icon"><i class="fas fa-tachometer-alt"></i></span><span class="menu-text">Dashboard</span></a></li>
-            <li><a href="{{ route('student.complaint') }}"><span class="icon"><i class="fas fa-comments"></i></span><span class="menu-text">Complaints</span><span class="submenu-toggle"></span></a>
-            <li><a href="{{ route('student.appointment') }}" id="admin-appointment-link"><span class="icon"><i class="fas fa-calendar-check"></i></span><span class="menu-text">Appointment</span></a></li>
-
-    
-            </li>
+            <li><a href="{{ route('nurse.dashboard') }}" id="nurse-dashboard-link"><span class="icon"><i class="fas fa-tachometer-alt"></i></span><span class="menu-text">Dashboard</span></a></li>
             <li class="has-submenu">
                 <a href="#"><span class="icon"><i class="fas fa-notes-medical"></i></span><span class="menu-text">Records</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
                 <ul class="submenu">
-                    <li><a href="{{ route('student.upload-pictures') }}">Health Approval</a></li>
-                    <li><a href="{{ route('student.medical-record') }}">View Medical Record</a></li>
-                    <li><a href="{{ route('student.dental-record') }}">View Dental Record</a></li>
+                    <li><a href="{{ route('nurse.uploadHealthExamination') }}">Upload Health Examination</a></li>
+                    <li><a href="{{ route('nurse.medical-record.index') }}">Medical Records</a></li>
+                    <li><a href="{{ route('nurse.dental-record.index') }}">Dental Records</a></li>
                 </ul>
-    </li>  
-    <li class="has-submenu">
-            <a href="#"><span class="icon"><i class="fas fa-user-circle"></i></span><span class="menu-text">Profile</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
-            <ul class="submenu">
-                <li><a href="#">Profile Management</a></li>
-                <li><a href="#">Create Parent's Account</a></li>
-            </ul>
-        </li>
+            </li>
+            <li><a href="{{ route('nurse.appointment') }}"><span class="icon"><i class="fas fa-calendar-check"></i></span><span class="menu-text">Appointments</span></a></li>
+            <li class="has-submenu">
+                <a href="#"><span class="icon"><i class="fas fa-boxes"></i></span><span class="menu-text">Inventory</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
+                <ul class="submenu">
+                    <li><a href="{{ route('nurse.inventory.add') }}">Add Item</a></li>
+                    <li><a href="{{ route('nurse.inventory') }}">Inventory List</a></li>
+                </ul>
+            </li>
+            <li class="has-submenu">
+                <a href="#"><span class="icon"><i class="fas fa-chart-line"></i></span><span class="menu-text">Reports</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
+                <ul class="submenu">
+                    <li><a href="#">Daily Reports</a></li>
+                    <li><a href="#">Transaction Logs</a></li>
+                </ul>
+            </li>
+            <li><a href="#"><span class="icon"><i class="fas fa-cogs"></i></span><span class="menu-text">Settings</span></a></li>
         </ul>
     </nav>
 </div>

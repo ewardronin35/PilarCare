@@ -39,4 +39,5 @@ class Information extends Model
     {
         return $this->belongsTo(User::class, 'id_number', 'id_number');
     }
+    
 }

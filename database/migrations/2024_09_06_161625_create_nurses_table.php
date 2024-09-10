@@ -1,31 +1,25 @@
 <?php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+class CreateNursesTable extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    public function up()
     {
-        Schema::create('staff', function (Blueprint $table) {
+        Schema::create('nurses', function (Blueprint $table) {
             $table->id();
             $table->string('id_number')->unique();
             $table->string('first_name');
             $table->string('last_name');
+            $table->string('department'); // Adjusted column for nurses
             $table->boolean('approved')->default(0);
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
-        Schema::dropIfExists('staff');
+        Schema::dropIfExists('nurses');
     }
-};
+}

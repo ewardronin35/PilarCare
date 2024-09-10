@@ -32,12 +32,11 @@ class StudentDashboardController extends Controller
     {
         try {
             $request->validate([
-                'parent_name_father' => 'required|string|max:255',
-                'parent_name_mother' => 'required|string|max:255',
-                'emergency_contact_number' => 'required|string|max:15',
-                'personal_contact_number' => 'required|string|max:15',
+                'parent_name_father' => ['required', 'regex:/^[A-Za-z\s]+$/'], // Only letters and spaces
+                'parent_name_mother' => ['required', 'regex:/^[A-Za-z\s]+$/'], // Only letters and spaces
+                'emergency_contact_number' => ['required', 'digits:11'], // Exactly 11 digits
+                'personal_contact_number' => ['required', 'digits:11'], // Exactly 11 digits
                 'birthdate' => 'required|date',
-                'address' => 'required|string|max:255',
                 'profile_picture' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                 'medical_history' => 'required|string',
                 'allergies' => 'required|string',
@@ -47,9 +46,10 @@ class StudentDashboardController extends Controller
                 'agree_terms' => 'required|accepted',
                 'id_number' => 'required|string|max:7',
             ]);
-    
+        
+            // Process the uploaded profile picture
             $profilePicture = $request->file('profile_picture')->store('profile_pictures', 'public');
-    
+        
             Information::create([
                 'id_number' => $request->id_number,
                 'parent_name_father' => $request->parent_name_father,

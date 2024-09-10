@@ -11,15 +11,20 @@
                 <button class="tab-button active" data-tab="record-tab">Dental Record</button>
                 <button class="tab-button" data-tab="history-tab">Dental History</button>
             </div>
+
+         
             <div id="record-tab" class="tab-content active">
                 <div class="dental-charting">
                     <h2>Dental Record</h2>
                     <div class="form-section-inline">
-    <label for="student-name">Name:</label>
-    <input type="text" id="student-name" class="form-control">
-    <label for="grade-sections">Grade & Section:</label>
-    <input type="text" id="grade-sections" class="form-control">
-</div>
+                      
+                    <label for="id_number">ID Number:</label>
+                    <input type="text" id="id_number" name="id_number" class="form-control" readonly>
+                    <label for="student-name">Patient Name:</label>
+                    <input type="text" id="student-name" class="form-control" readonly>
+                    <label for="grade-sections">Grade & Section:</label>
+                    <input type="text" id="grade-sections" class="form-control" readonly>
+                    </div>
 
                     <div class="svg-container">
                     <div class="labels">
@@ -757,11 +762,18 @@
     class="tooth-48"
     d="m 46.842051,219.06796 c 1.174729,-0.0304 2.284947,0.0529 3.643979,-0.304 1.942297,-1.82075 2.638975,-1.82329 3.874331,-2.61197 0.232343,-0.0586 2.680288,-2.19834 0.909097,-5.42624 -0.978091,-1.65176 -1.215436,-2.22236 -0.807156,-3.43336 -0.960239,-2.82396 -0.439585,-3.45978 -0.652953,-5.18009"
     style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"/>
-
                         </svg>
                     </div>
       
                 </div>
+            </div>
+            <div class="legend">
+                <h3>Legend</h3>
+                <ul>
+                    <li><span class="legend-box healthy"></span> Healthy</li>
+                    <li><span class="legend-box aching"></span> Aching</li>
+                    <li><span class="legend-box missing"></span> Missing</li>
+                </ul>
             </div>
             <div id="history-tab" class="tab-content">
     <h2>Dental History</h2>
@@ -1053,6 +1065,7 @@
             @csrf
             <div class="form-group">
                 <label for="modal-tooth">Tooth:</label>
+                <input type="hidden" id="dental-record-id" name="dental_record_id">
                 <input type="text" id="modal-tooth" name="tooth_number" class="form-control" readonly>
             </div>
             <div class="form-group">
@@ -1074,10 +1087,47 @@
 
 
     <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js'></script>
-    <script src="{{ asset('js/dental.js') }}"></script>
+    <script src="{{ asset('js/admindental.js') }}"></script>
     <script src="{{ asset('js/dentalexam.js') }}"></script>
     <script>
     window.dentalExamStoreUrl = "{{ route('admin.dental-examination.store') }}";
+    window.getToothStatusUrl = "{{ route('admin.getToothStatus') }}";
+    window.searchRecordsUrl = "{{ route('admin.searchRecords') }}";
+    const modal = document.getElementById("previewModal");
+        const closeModalButton = document.querySelector(".close");
+        const saveButton = document.getElementById("save-tooth-details");
+
+        closeModalButton.onclick = function() {
+            modal.style.display = "none";
+        };
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        };
+
+        saveButton.onclick = function() {
+            saveButton.classList.add("animate-save");
+            setTimeout(() => saveButton.classList.remove("animate-save"), 1000);
+        };
+        document.addEventListener('DOMContentLoaded', function() {
+                const tabButtons = document.querySelectorAll('.tab-button');
+                const tabContents = document.querySelectorAll('.tab-content');
+
+                tabButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        // Remove 'active' class from all buttons and tab contents
+                        tabButtons.forEach(btn => btn.classList.remove('active'));
+                        tabContents.forEach(content => content.classList.remove('active'));
+
+                        // Add 'active' class to the clicked button and corresponding tab content
+                        const tab = this.getAttribute('data-tab');
+                        this.classList.add('active');
+                        document.getElementById(tab).classList.add('active');
+                      });
+                });
+            });
 </script>
 
 </x-app-layout>

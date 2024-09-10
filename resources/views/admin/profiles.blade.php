@@ -1,13 +1,10 @@
 <x-app-layout>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         .container {
             display: flex;
             flex-direction: row;
             min-height: 100vh;
-        }
-
-        .sidebar:hover .menu-text {
-            opacity: 1;
         }
 
         .main-content {
@@ -159,45 +156,28 @@
         }
     </style>
 
-    <div class="main-content">
-        <h1>Profile View of Students</h1>
+<div class="main-content">
+        <h1>Profile View of {{ ucfirst(Auth::user()->role) }}</h1>
+
+        <!-- Tab Navigation -->
+        <div class="tabs">
+            <button class="tab-btn" onclick="switchTab('students')">Students</button>
+            <button class="tab-btn" onclick="switchTab('teachers')">Teachers</button>
+            <button class="tab-btn" onclick="switchTab('staff')">Staff</button>
+            <button class="tab-btn" onclick="switchTab('parents')">Parents</button>
+        </div>
+
+        <!-- Profile Cards -->
         <div class="profile-cards">
-            <div class="profile-card" onclick="openModal('Alessa Robert', 'Active | Male | Born 23.05.1992', 'Activity Level: 87%', 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.')">
-                <img src="{{ asset('images/pilarLogo.jpg') }}" alt="Profile Image">
-                <div class="profile-card-content">
-                    <h3>Eduard Roland Donor </h3>
-                    <p>Active | Male | Born 23.05.2003</p>
-                    <div class="social-icons">
-                        <a href="#"><i class="fab fa-facebook"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-dribbble"></i></a>
+            @foreach($profiles as $profile)
+                <div class="profile-card" onclick="openModal('{{ $profile->name }}', '{{ $profile->role }} | Born {{ $profile->birthdate }}', 'Activity Level: {{ rand(50, 100) }}%', 'Description about {{ $profile->name }}')">
+                    <img src="{{ asset('images/profiles/' . $profile->profile_picture) }}" alt="Profile Image">
+                    <div class="profile-card-content">
+                        <h3>{{ $profile->name }}</h3>
+                        <p>{{ $profile->role }} | Born {{ $profile->birthdate }}</p>
                     </div>
                 </div>
-            </div>
-            <div class="profile-card" onclick="openModal('Alessa Robert', 'Active | Male | Born 23.05.1992', 'Activity Level: 87%', 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.')">
-                <img src="{{ asset('images/pilarLogo.jpg') }}" alt="Profile Image">
-                <div class="profile-card-content">
-                    <h3>Ashraf Dammang</h3>
-                    <p>Active | Male | Born 23.05.2002</p>
-                    <div class="social-icons">
-                        <a href="#"><i class="fab fa-facebook"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-dribbble"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="profile-card" onclick="openModal('Alessa Robert', 'Active | Male | Born 23.05.1992', 'Activity Level: 87%', 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.')">
-                <img src="{{ asset('images/pilarLogo.jpg') }}" alt="Profile Image">
-                <div class="profile-card-content">
-                    <h3>Alfraskhan Jose</h3>
-                    <p>Active | Male | Born 23.05.2001</p>
-                    <div class="social-icons">
-                        <a href="#"><i class="fab fa-facebook"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-dribbble"></i></a>
-                    </div>
-                </div>
-            </div>
+            @endforeach
         </div>
     </div>
 
@@ -208,13 +188,12 @@
                 <h2 id="modal-title">Profile Details</h2>
                 <span class="close" onclick="closeModal()">&times;</span>
             </div>
-            <div class="modal-body" id="modal-body">
-                <!-- Profile details will be loaded here -->
-            </div>
+            <div class="modal-body" id="modal-body"></div>
         </div>
     </div>
 
     <script>
+        // Open Modal Function
         function openModal(name, status, activity, description) {
             document.getElementById('modal-title').innerText = name;
             document.getElementById('modal-body').innerHTML = `
@@ -229,11 +208,9 @@
             document.getElementById('profile-modal').style.display = 'none';
         }
 
-        document.addEventListener('click', function(event) {
-            const modal = document.getElementById('profile-modal');
-            if (event.target === modal) {
-                closeModal();
-            }
-        });
+        // Handle switching tabs
+        function switchTab(role) {
+            window.location.href = `/admin/profiles?role=${role}`;
+        }
     </script>
 </x-app-layout>

@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon; // Make sure to import Carbon
 use Maatwebsite\Excel\Validators\ValidationException;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class StudentController extends Controller
 {
@@ -59,12 +60,26 @@ class StudentController extends Controller
     public function delete($id)
     {
         try {
+            // Find the student in the students table
             $student = Student::findOrFail($id);
-            $student->delete();
     
-            return response()->json(['success' => true, 'message' => 'Student deleted successfully.']);
+            // Find and delete the corresponding user in the users table
+            $user = User::where('id_number', $student->id_number)->first();
+            if ($user) {
+                $user->delete();
+                Log::info('User deleted:', ['id_number' => $student->id_number]);
+            } else {
+                Log::warning('No matching user found for id_number:', ['id_number' => $student->id_number]);
+            }
+    
+            // Delete the student from the students table
+            $student->delete();
+            Log::info('Student deleted:', ['id' => $id]);
+    
+            return response()->json(['success' => true, 'message' => 'Student and corresponding user deleted successfully.']);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'errors' => ['There was a problem deleting the student.']]);
+            Log::error('Error deleting student or user: ' . $e->getMessage());
+            return response()->json(['success' => false, 'errors' => ['There was a problem deleting the student and user.']]);
         }
     }
     
@@ -198,5 +213,45 @@ class StudentController extends Controller
         }
     }
     
-    
+    public function exportStudents()
+    {
+        $students = Student::all();
+        
+        return (new FastExcel($students))->download('students.xlsx', function ($student) {
+            return [
+                'ID' => $student->id,
+                'First Name' => $student->first_name,
+                'Last Name' => $student->last_name,
+                'Grade/Course' => $student->grade_or_course,
+            ];
+        });
+    }
+    public function downloadStudent()
+    {
+        $filePath = 'templates/student_template.xlsx';
+
+        if (Storage::exists($filePath)) {
+            try {
+                $fileSize = Storage::size($filePath);
+                Log::info('File size: ' . $fileSize);
+            } catch (\Exception $e) {
+                Log::error('Error retrieving file size: ' . $e->getMessage());
+            }
+        } else {
+            Log::error('File not found: ' . $filePath);
+        }
+        
+        // If file exists, proceed with download
+        return Storage::download($filePath, 'student_template.xlsx');
+    }
+    public function show($id)
+{
+    $student = Student::find($id);
+    if (!$student) {
+        return response()->json(['error' => 'Student not found'], 404);
+    }
+
+    return response()->json($student);
+}
+
 }

@@ -1,5 +1,6 @@
 <x-app-layout>
     <link rel="stylesheet" href="{{ asset('css/dental.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <div class="main-container">
         <!-- Left side: Dental Record -->
@@ -33,7 +34,6 @@
                             <span class="lower-right-label">Lower Right</span>
                         </div>
                         <svg class="diagram" viewBox="0 0 300 400">
-              
                         <path
     class="tooth-11 tooth-11-parent"
     d="m 113.894,31.723601 c 0.0561,0.43476 3.08165,4.91178 3.84449,6.93412 1.03137,2.18327 2.67371,4.15697 7.0469,5.19412 3.57083,-0.36803 7.19248,-0.4467 10.19825,-4.03315 l 7.38989,-9.40518 1.34756,-2.99193 c 0.97308,-2.16029 -1.13419,-4.14679 -3.10702,-4.99829 l -5.34936,-1.19716 c -3.12438,-0.16807 -5.19809,-0.93656 -11.30278,0.59905 l -5.72815,1.04816 c -2.08382,0.77109 -4.86648,0.46927 -4.92056,4.35665 0.10953,1.48595 -0.58405,2.8577 0.58078,4.49361 z"
@@ -762,7 +762,6 @@
     class="tooth-48"
     d="m 46.842051,219.06796 c 1.174729,-0.0304 2.284947,0.0529 3.643979,-0.304 1.942297,-1.82075 2.638975,-1.82329 3.874331,-2.61197 0.232343,-0.0586 2.680288,-2.19834 0.909097,-5.42624 -0.978091,-1.65176 -1.215436,-2.22236 -0.807156,-3.43336 -0.960239,-2.82396 -0.439585,-3.45978 -0.652953,-5.18009"
     style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"/>
-
                             </svg>
                             
                     </div>
@@ -776,6 +775,9 @@
         <div class="dental-examination-form">
         <div class="dental-history">
             <h2>Dental History</h2>
+            <a href="{{ route('student.dentalRecord.pdf', $dentalRecord->id_number) }}" class="btn btn-primary">
+        <i class="fas fa-download"></i> Download PDF
+    </a>
 
             <!-- Patient Information -->
             <table class="history-table">
@@ -919,7 +921,12 @@
             @csrf
             <div class="form-group">
                 <label for="modal-tooth">Tooth:</label>
-                <input type="hidden" id="dental-record-id" name="dental_record_id" value="{{ $dentalRecord->id ?? '' }}">
+                @if(isset($dentalRecord->id))
+    <input type="hidden" id="dental-record-id" name="dental_record_id" value="{{ $dentalRecord->id }}">
+@else
+    <input type="hidden" id="dental-record-id" name="dental_record_id" value="">
+@endif
+
                 <input type="text" id="modal-tooth" name="tooth_number" class="form-control" readonly>
             </div>
             <div class="form-group">
@@ -934,6 +941,7 @@
                 <label for="modal-notes">Notes:</label>
                 <textarea id="modal-notes" name="notes" class="form-control"></textarea>
             </div>
+            <input type="hidden" id="modal-svg-path" name="svg_path">
             <button type="button" id="save-tooth-details" class="save-button">Save</button>
         </form>
     </div>

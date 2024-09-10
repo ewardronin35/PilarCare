@@ -6,7 +6,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\User;
 use App\Models\Notification; // Import the Notification model
-
+use App\Models\Student;
+use App\Models\Teacher;
+    use App\Models\Staff;
+    use App\Models\Information;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf; // <-- Correct namespace
@@ -215,10 +218,40 @@ class HealthExaminationController extends Controller
     {
         // Fetch the health examination record
         $healthExamination = HealthExamination::findOrFail($id);
-        $role = strtolower(Auth::user()->role);
     
-        // Fetch the student information from the users table
-        $student = $healthExamination->user;
+        // Fetch the user information using the 'user_id' field from the health examination
+        $user = User::find($healthExamination->user_id);
+    
+        // Fetch the user's additional information like birthdate, address
+        $information = Information::where('id_number', $user->id_number)->first();
+    
+        // Determine role-specific data
+        $role = strtolower($user->role); // Assuming role is stored in lowercase in the database
+        $gradeOrCourse = 'N/A'; // Default to N/A if no role-specific data is found
+        
+        // Fetch grade_or_course or department based on the user's role
+        if ($role === 'student') {
+            $student = Student::where('id_number', $user->id_number)->first();
+            $gradeOrCourse = $student ? $student->grade_or_course : 'N/A';
+        } elseif ($role === 'teacher') {
+            $teacher = Teacher::where('id_number', $user->id_number)->first();
+            $gradeOrCourse = $teacher ? $teacher->specialization : 'N/A'; // Replace 'specialization' with the relevant field
+        } elseif ($role === 'staff') {
+            $staff = Staff::where('id_number', $user->id_number)->first();
+            $gradeOrCourse = $staff ? $staff->department : 'N/A'; // Replace 'department' with the relevant field
+        }
+    
+        // If no data is found for user or information, default to 'N/A'
+        $name = $user ? $user->first_name . ' ' . $user->last_name : 'N/A';
+        $birthdate = $information ? $information->birthdate : 'N/A';
+        $address = $information ? $information->address : 'N/A';
+    
+        // Fetch the Pilar College logo for the PDF
+        $logoPath = public_path('images/pilarLogo.png');
+        $logoBase64 = '';
+        if (file_exists($logoPath)) {
+            $logoBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath));
+        }
     
         // Fetch the image paths from storage
         $healthImage = $healthExamination->health_examination_picture ? storage_path('app/public/' . $healthExamination->health_examination_picture) : null;
@@ -241,12 +274,14 @@ class HealthExaminationController extends Controller
             }
         }
     
-        // Pass the images and student information to the PDF view
-        $pdf = PDF::loadView('pdf.health-examination', compact('healthExamination', 'role', 'student', 'images'));
+        // Pass the fetched data to the PDF view
+        $pdf = PDF::loadView('pdf.health-examination', compact('healthExamination', 'name', 'gradeOrCourse', 'birthdate', 'address', 'images', 'logoBase64'));
     
         // Download the PDF
         return $pdf->download('health-examination.pdf');
     }
+    
+    
     
     public function show($id)
     {

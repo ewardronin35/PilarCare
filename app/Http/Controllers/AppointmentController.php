@@ -121,7 +121,9 @@ public function getAppointmentsByDate(Request $request)
 {
     $date = $request->input('date');
 
-    $appointments = Appointment::whereDate('appointment_date', $date)->get();
+    $appointments = Appointment::whereDate('appointment_date', $date)
+        ->where('id_number', Auth::user()->id_number) // Ensure it's specific to the logged-in user
+        ->get();
 
     return response()->json([
         'appointments' => $appointments

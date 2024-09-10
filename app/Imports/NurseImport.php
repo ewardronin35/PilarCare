@@ -1,46 +1,44 @@
 <?php
 namespace App\Imports;
 
-use App\Models\Teacher;
+use App\Models\Nurse;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Validators\ValidationException;
 
-
-class TeacherImport implements ToModel, WithValidation, WithHeadingRow
+class NurseImport implements ToModel, WithValidation, WithHeadingRow
 {
     protected $duplicates = [];
 
     public function model(array $row)
     {
-        $existingTeacher = Teacher::where('id_number', $row['id_number'])->first();
+        $existingNurse = Nurse::where('id_number', $row['id_number'])->first();
     
-        if ($existingTeacher) {
+        if ($existingNurse) {
             Log::info('Duplicate entry found:', $row);
-            throw ValidationException::withMessages(['id_number' => 'Teacher already exists']);
+            throw ValidationException::withMessages(['id_number' => 'Nurse already exists']);
         }
     
-        Log::info('Importing Teacher:', $row);
+        Log::info('Importing Nurse:', $row);
     
-        return new Teacher([
+        return new Nurse([
             'id_number' => $row['id_number'],
             'first_name' => $row['first_name'],
             'last_name' => $row['last_name'],
-            'bed_or_hed' => $row['bed_or_hed'],
+            'department' => $row['department'],  // Adjusted field for nurses
             'approved' => false,
         ]);
     }
-    
 
     public function rules(): array
     {
         return [
-            '*.id_number' => 'required|unique:teacher,id_number',
+            '*.id_number' => 'required|unique:nurses,id_number',
             '*.first_name' => 'required',
             '*.last_name' => 'required',
-            '*.bed_or_hed' => 'required',
+            '*.department' => 'required',  // Adjusted validation for nurses
         ];
     }
 
@@ -51,7 +49,7 @@ class TeacherImport implements ToModel, WithValidation, WithHeadingRow
             '*.id_number.unique' => 'ID Number must be unique',
             '*.first_name.required' => 'First Name is required',
             '*.last_name.required' => 'Last Name is required',
-            '*.bed_or_hed.required' => 'BED or HED is required',
+            '*.department.required' => 'Department is required',
         ];
     }
 

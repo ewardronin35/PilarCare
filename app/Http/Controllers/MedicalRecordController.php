@@ -8,6 +8,7 @@ use App\Models\PhysicalExamination;
 use App\Models\HealthExamination;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use PDF;
 
 use Carbon\Carbon;
 
@@ -29,48 +30,52 @@ class MedicalRecordController extends Controller
     }
     
 
-        public function index()
-        {
-            $user = Auth::user();
+    public function index()
+    {
+        $user = Auth::user();
+
+        // Fetch information from the Information table
+        $information = Information::where('id_number', $user->id_number)->first();
         
-            // Fetch information from the Information table
-            $information = Information::where('id_number', $user->id_number)->first();
-            
-            // Fetch the specific medical record for the user
-            $medicalRecord = MedicalRecord::where('name', $user->first_name . ' ' . $user->last_name)->first();
-            
-            // Fetch all medical records
-            $medicalRecords = MedicalRecord::all();
+        // Fetch the specific medical record for the user
+        $medicalRecord = MedicalRecord::where('user_id', $user->id)->first();
         
-            // Fetch all physical examination records (assuming you have a model for it)
-            $physicalExaminations = PhysicalExamination::all(); // Adjust this to match your actual model and filtering
+        // Fetch all medical records for the user
+        $medicalRecords = MedicalRecord::where('user_id', $user->id)->get();
         
-            // Combine first name and last name from the user table
-            $name = $user->first_name . ' ' . $user->last_name;
-        
-            // Calculate the age based on the birthdate
-            $age = $information ? Carbon::parse($information->birthdate)->age : null;
-        
-            // Fetch the Health Examination data
-            $healthExamination = HealthExamination::where('user_id', $user->id)->first();
-        
-            // Check the role of the user and return the corresponding view with all variables
-            switch ($user->role) {
-                case 'Admin':
-                    return view('admin.medical-record', compact('information', 'name', 'age', 'healthExamination', 'medicalRecord', 'medicalRecords', 'physicalExaminations')); // View for admin
-                case 'Student':
-                    return view('student.medical-record', compact('information', 'name', 'age', 'healthExamination', 'medicalRecord', 'medicalRecords', 'physicalExaminations')); // View for student
-                case 'Parent':
-                    return view('parent.medical-record', compact('information', 'name', 'age', 'healthExamination', 'medicalRecord', 'medicalRecords', 'physicalExaminations')); // View for parent
-                case 'Staff':
-                    return view('staff.medical-record', compact('information', 'name', 'age', 'healthExamination', 'medicalRecord', 'medicalRecords', 'physicalExaminations')); // View for staff
-                case 'Teacher':
-                    return view('teacher.medical-record', compact('information', 'name', 'age', 'healthExamination', 'medicalRecord', 'medicalRecords', 'physicalExaminations')); // View for teacher
-                default:
-                    return redirect()->route('home')->with('error', 'Unauthorized access'); // Redirect for unauthorized access
-            }
+        // Fetch all physical examination records
+        $physicalExaminations = PhysicalExamination::where('user_id', $user->id)->get();
+    
+        // Fetch health examination pictures for the user
+        $healthExamination = HealthExamination::where('user_id', $user->id)->first(); // Ensure this is fetched
+    
+        $healthExaminationPictures = HealthExamination::where('user_id', $user->id)
+            ->select('health_examination_picture', 'xray_picture', 'lab_result_picture')
+            ->get();
+    
+        // Combine first name and last name
+        $name = $user->first_name . ' ' . $user->last_name;
+    
+        // Calculate age based on the birthdate
+        $age = $information ? Carbon::parse($information->birthdate)->age : null;
+    
+        // Check the role of the user and return the corresponding view with all variables
+        switch ($user->role) {
+            case 'Admin':
+                return view('admin.medical-record', compact('information', 'name', 'age', 'healthExamination', 'medicalRecord', 'medicalRecords', 'physicalExaminations', 'healthExaminationPictures'));
+            case 'Student':
+                return view('student.medical-record', compact('information', 'name', 'age', 'healthExamination', 'medicalRecord', 'medicalRecords', 'physicalExaminations' , 'healthExaminationPictures'));
+            case 'Parent':
+                return view('parent.medical-record', compact('information', 'name', 'age', 'healthExamination', 'medicalRecord', 'medicalRecords', 'physicalExaminations' , 'healthExaminationPictures'));
+            case 'Staff':
+                return view('staff.medical-record', compact('information', 'name', 'age', 'healthExamination', 'medicalRecord', 'medicalRecords', 'physicalExaminations' , 'healthExaminationPictures'));
+            case 'Teacher':
+                return view('teacher.medical-record', compact('information', 'name', 'age', 'healthExamination', 'medicalRecord', 'medicalRecords', 'physicalExaminations' , 'healthExaminationPictures'));
+            default:
+                return redirect()->route('home')->with('error', 'Unauthorized access');
         }
-        
+    }
+    
     
     
         public function store(Request $request)
@@ -167,7 +172,56 @@ class MedicalRecordController extends Controller
                 return redirect()->back()->with('error', 'No records found.');
             }
         }
+        public function downloadPdf($id)
+        {
+            // Fetch the medical record by ID
+            $medicalRecord = MedicalRecord::findOrFail($id);
+            
+            // Fetch the related information by 'id_number'
+            $information = Information::where('id_number', $medicalRecord->id_number)->first();
         
+            // Fetch the physical examination record
+            $physicalExamination = PhysicalExamination::where('user_id', $medicalRecord->user_id)->first();
+            
+            // Initialize the profile picture base64 variable
+            $profilePictureBase64 = null;
         
+            // Check if the information has a profile picture and convert it to base64
+            if ($information && $information->profile_picture) {
+                // Profile picture path stored in the information table
+                $profilePicturePath = storage_path('app/public/' . $information->profile_picture);
+                
+                // Check if the profile picture file exists before converting it to base64
+                if (file_exists($profilePicturePath)) {
+                    $profilePictureBase64 = 'data:image/jpeg;base64,' . base64_encode(file_get_contents($profilePicturePath));
+                } else {
+                    // Log the error if file doesn't exist
+                    \Log::error('Profile picture not found at: ' . $profilePicturePath);
+                }
+            }
+        
+            // Use a default profile picture if no custom picture is available
+            if (!$profilePictureBase64) {
+                $defaultProfilePicturePath = public_path('images/default-profile.jpg');
+                if (file_exists($defaultProfilePicturePath)) {
+                    $profilePictureBase64 = 'data:image/jpeg;base64,' . base64_encode(file_get_contents($defaultProfilePicturePath));
+                }
+            }
+        
+            // Fetch the clinic logo and encode it in base64
+            $logoPath = public_path('images/pilarLogo.jpg');
+            $logoBase64 = "data:image/jpg;base64," . base64_encode(file_get_contents($logoPath));
+        
+            // Pass the data to the PDF view
+            $pdf = PDF::loadView('pdf.medical-record', [
+                'medicalRecord' => $medicalRecord,
+                'physicalExamination' => $physicalExamination,
+                'profilePicture' => $profilePictureBase64, // This is now in base64 format
+                'logoBase64' => $logoBase64
+            ]);
+        
+            // Return the PDF for download with a dynamic file name
+            return $pdf->download('medical_record_' . $medicalRecord->name . '.pdf');
+        }
         
 }

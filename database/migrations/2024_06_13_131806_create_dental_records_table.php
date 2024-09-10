@@ -11,12 +11,12 @@ class CreateDentalRecordsTable extends Migration
     {
         Schema::create('dental_records', function (Blueprint $table) {
             $table->id();
-            $table->string('user_id'); // Match this with the id_number definition in users table
+            $table->string('id_number'); // Reference to id_number from students/teachers/staff
+            $table->string('user_type'); // Store the type (student, teacher, or staff)
             $table->string('patient_name');
             $table->string('grade_section');
             
 
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 

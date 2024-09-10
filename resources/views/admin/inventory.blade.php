@@ -58,22 +58,30 @@
         }
 
         .inventory-table {
-            width: 100%;
+            animation: fadeInUp 0.5s ease-in-out;
+            width: 90%;
             border-collapse: collapse;
             margin-top: 20px;
-            animation: fadeInUp 0.5s ease-in-out;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: scroll;
         }
 
         .inventory-table th,
         .inventory-table td {
-            border: 1px solid #ddd;
             padding: 10px;
             text-align: left;
+            white-space: nowrap;
         }
 
         .inventory-table th {
-            background-color: #00d1ff;
-            color: white;
+            background-color: #f5f5f5;
+            color: #333;
+            font-weight: 600;
+            border-bottom: 1px solid #ddd;
         }
 
         .form-container {
@@ -249,7 +257,6 @@
                 <table class="inventory-table">
                     <thead>
                         <tr>
-                            <th>Item ID</th>
                             <th>Item Name</th>
                             <th>Quantity</th>
                             <th>Brand</th>
@@ -261,7 +268,6 @@
                     <tbody>
                         @foreach ($inventoryItems as $item)
                             <tr id="item-row-{{ $item->id }}">
-                                <td>{{ $item->id }}</td>
                                 <td>{{ $item->item_name }}</td>
                                 <td>{{ $item->quantity }}</td>
                                 <td>{{ $item->supplier }}</td>

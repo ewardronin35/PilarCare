@@ -19,6 +19,12 @@ class HealthExamination extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id', 'id_number');
     }
+ 
+public function information()
+{
+    return $this->hasOne(Information::class, 'id_number', 'id_number');
+}
+
 }

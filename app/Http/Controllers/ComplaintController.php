@@ -5,6 +5,10 @@ use App\Models\Complaint;
 use App\Models\Student;
 use App\Models\Inventory;
 use App\Models\User;
+use App\Models\Teacher;
+use App\Models\Staff;
+use App\Models\Parents;
+use App\Models\Information;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -56,7 +60,8 @@ class ComplaintController extends Controller
     public function store(Request $request)
     {
         \Log::info('Received request data:', $request->all());  // Debugging statement
-
+    
+        // Validate incoming request data
         $validator = Validator::make($request->all(), [
             'id_number' => 'required|string|max:255',
             'first_name' => 'required|string|max:255',
@@ -64,18 +69,19 @@ class ComplaintController extends Controller
             'age' => 'required|integer',
             'birthdate' => 'required|date',
             'year' => 'required|string|max:255',
-            'contact_number' => 'required|string|max:255',
-            'pain_assessment' => 'required|integer',
-            'sickness_description' => 'required|string',
+            'personal_contact_number' => 'required|string|max:255',
+            'pain_assessment' => 'required|integer|min:1|max:10',
+            'sickness_description' => 'required|string|max:1000',
             'role' => 'required|string|max:255',
             'medicine_given' => 'required|string|max:255'
         ]);
-    
+        
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
     
         try {
+            // Create the complaint
             $complaint = Complaint::create([
                 'id_number' => $request->id_number,
                 'first_name' => $request->first_name,
@@ -83,27 +89,30 @@ class ComplaintController extends Controller
                 'age' => $request->age,
                 'birthdate' => $request->birthdate,
                 'year' => $request->year,
-                'contact_number' => $request->contact_number,
+                'personal_contact_number' => $request->personal_contact_number,
                 'pain_assessment' => $request->pain_assessment,
                 'sickness_description' => $request->sickness_description,
                 'role' => $request->role,
                 'medicine_given' => $request->medicine_given
             ]);    
-            // Update inventory stock
+    
+            // Check if the medicine exists in the inventory and reduce quantity
             $inventory = Inventory::where('item_name', $request->medicine_given)->first();
             if ($inventory) {
                 $inventory->quantity -= 1;
                 $inventory->save();
+            } else {
+                return response()->json(['success' => false, 'message' => 'Medicine not found in inventory'], 404);
             }
     
             return response()->json(['success' => true, 'message' => 'Complaint successfully saved']);
             \Log::info('Complaint successfully saved:', $complaint->toArray());  
-            \Log::info('Form data received:', $request->all());// Debugging statement
-
+    
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'An error occurred while saving the complaint. Please try again.', 'error' => $e->getMessage()], 500);
         }
     }
+    
     
 
     public function updateStatus(Request $request, $id)
@@ -186,7 +195,78 @@ class ComplaintController extends Controller
             ], 500);
         }
     }
+    public function fetchPersonData($id)
+    {
+        try {
+            // Fetch from 'User' table first (for all roles)
+            $user = User::where('id_number', $id)->first();
+        
+            if (!$user) {
+                // Check 'students', 'teachers', and 'staff' tables
+                $student = Student::where('id_number', $id)->first();
+                $teacher = Teacher::where('id_number', $id)->first();
+                $staff = Staff::where('id_number', $id)->first();
+        
+                if ($student) {
+                    $user = $student;
+                    $user->role = 'student';
+                } elseif ($teacher) {
+                    $user = $teacher;
+                    $user->role = 'teacher';
+                } elseif ($staff) {
+                    $user = $staff;
+                    $user->role = 'staff';
+                } else {
+                    return response()->json(['error' => 'Person not found'], 404);
+                }
+            }
+        
+            // Fetch 'information' table for birthdate and personal_contact_number
+            $information = \DB::table('information')
+                ->where('id_number', $id)
+                ->first(['birthdate', 'personal_contact_number']);
+        
+            // Log the information fetched
+            \Log::info('Information fetched: ', (array) $information);
+        
+            if (!$information) {
+                // Handle the case where no matching record is found in 'information' table
+                return response()->json(['error' => 'Information not found for this ID number'], 404);
+            }
+        
+            // Overwrite the user birthdate and contact number
+            $user->birthdate = $information->birthdate;
+            $user->personal_contact_number = $information->personal_contact_number;
+        
+            // Calculate the age based on the birthdate
+            $age = $this->calculateAge($user->birthdate);
+        
+            return response()->json([
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'role' => $user->role,
+                'id_number' => $user->id_number,
+                'birthdate' => $user->birthdate,
+                'age' => $age,
+                'personal_contact_number' => $user->personal_contact_number
+            ], 200);
+        
+        } catch (\Exception $e) {
+            \Log::error('Error fetching person data: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'An error occurred: ' . $e->getMessage()
+            ], 500);
+        }
+    }
     
+    
+    private function calculateAge($birthdate)
+    {
+        $birthDate = new \DateTime($birthdate);
+        $currentDate = new \DateTime();
+        $age = $currentDate->diff($birthDate)->y;
+        return $age;
+    }
 
     public function getAvailableMedicines()
     {

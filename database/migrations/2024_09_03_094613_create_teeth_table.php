@@ -13,6 +13,7 @@ class CreateTeethTable extends Migration
             $table->string('tooth_number'); // E.g., '11', '12', etc.
             $table->string('status'); // E.g., 'Healthy', 'Decayed', etc.
             $table->text('notes')->nullable(); // Additional notes about the tooth
+            $table->text('svg_path')->nullable();
             $table->timestamps(); // Created at and updated at timestamps
 
             // Foreign key constraint

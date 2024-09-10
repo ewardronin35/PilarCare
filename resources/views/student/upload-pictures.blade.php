@@ -1,18 +1,18 @@
 <x-app-layout>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background-color: #f5f7fa;
+            font-family: 'Poppins', sans-serif;
         }
         .modal-container-wrapper {
             display: flex;
             justify-content: space-between;
             width: 100%;
-            margin-top: 20px; /* Add space between the top of the wrapper and any preceding content */
-            gap: 50px; /* Ensures there is space between each modal */
-
+            margin-top: 20px;
+            gap: 50px;
         }
         .main-content {
             margin-top: 100px;
@@ -25,7 +25,7 @@
         }
         .modal-container {
             flex: 1;
-            max-width: calc(33.33% - 30px); /* To ensure equal spacing between modals */
+            max-width: calc(33.33% - 30px);
         }
         .modal-card {
             background-color: #fff;
@@ -35,7 +35,6 @@
             text-align: center;
             padding: 20px;
             margin-bottom: 30px;
-            
         }
         .modal-card h3 {
             margin: 15px 0 5px 0;
@@ -75,6 +74,11 @@
             justify-content: space-between;
             margin-bottom: 10px;
         }
+        .file-item .file-name {
+            cursor: pointer;
+            color: #007bff;
+            text-decoration: underline;
+        }
         .file-item .progress-bar {
             width: 70%;
             height: 5px;
@@ -97,9 +101,10 @@
             font-size: 18px;
         }
         .submit-btn {
-            background-color: #28a745;
+            background-color: #007bff;
             color: white;
-            padding: 15px 30px; /* Increased padding for a larger button */
+            font-family: 'Poppins', sans-serif;
+            padding: 15px 30px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
@@ -116,7 +121,7 @@
             z-index: 1000;
         }
         .submit-btn:hover {
-            background-color: #218838;
+            background-color: #0056b3;
             transform: scale(1.05);
         }
         .submit-btn:active {
@@ -140,19 +145,11 @@
         }
         .school-year-container select {
             padding: 10px;
+            font-family: 'Poppins', sans-serif;
+
             font-size: 16px;
             border-radius: 5px;
             border: 1px solid #007bff;
-        }
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
     </style>
 
@@ -221,169 +218,209 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-     document.addEventListener("DOMContentLoaded", function () {
-    localStorage.removeItem('uploadCompleted');
+        document.addEventListener("DOMContentLoaded", function () {
+            const pendingApprovalMessage = document.getElementById('pending-approval-message');
+            const uploadSection = document.getElementById('upload-section');
 
-    const fileInputs = document.querySelectorAll('input[type="file"]');
-    const globalUploadedFiles = new Set(); // Global set to track all uploaded files
+            const fileInputs = document.querySelectorAll('input[type="file"]');
+            const globalUploadedFiles = new Set(); // Global set to track all uploaded files
 
-    fileInputs.forEach(input => {
-        input.addEventListener('change', function () {
-            const section = input.name.replace('[]', '');
-            const fileListId = input.id + '-file-list';
-            const fileList = document.getElementById(fileListId);
+            const sectionNames = {
+                'lab_result_pictures': 'Lab Picture',
+                'xray_pictures': 'X-ray Picture',
+                'health_examination_picture': 'Health Examination Picture',
+            };
 
-            if (!fileList) {
-                console.error('File list element not found for input:', input.id);
-                return;
+            const fileCount = {
+                'lab_result_pictures': 1,
+                'xray_pictures': 1,
+                'health_examination_picture': 1,
+            };
+
+            // Check for pending approval status from localStorage
+            if (localStorage.getItem('uploadCompleted') === 'true') {
+                uploadSection.style.display = 'none';
+                pendingApprovalMessage.style.display = 'block';
             }
 
-            const files = Array.from(this.files);
-            let duplicateFound = false;
+            fileInputs.forEach(input => {
+                input.addEventListener('change', function () {
+                    const section = input.name.replace('[]', '');
+                    const fileListId = input.id + '-file-list';
+                    const fileList = document.getElementById(fileListId);
 
-            // Check for duplicates across all modals
-            files.forEach(file => {
-                if (globalUploadedFiles.has(file.name)) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Duplicate File',
-                        text: `The file "${file.name}" has already been uploaded. Please choose a different file.`,
+                    if (!fileList) {
+                        console.error('File list element not found for input:', input.id);
+                        return;
+                    }
+
+                    const files = Array.from(this.files);
+                    let duplicateFound = false;
+
+                    // Check for duplicates across all modals
+                    files.forEach(file => {
+                        if (globalUploadedFiles.has(file.name)) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Duplicate File',
+                                text: `The file "${file.name}" has already been uploaded. Please choose a different file.`,
+                            });
+                            duplicateFound = true;
+                        }
                     });
-                    duplicateFound = true;
-                }
-            });
 
-            if (duplicateFound) {
-                input.value = ''; // Clear the input to prevent submission of duplicate files
-                return;
-            }
+                    if (duplicateFound) {
+                        input.value = ''; // Clear the input to prevent submission of duplicate files
+                        return;
+                    }
 
-            // Append new files to the global uploaded files set and update the displayed list
-            files.forEach(file => {
-                globalUploadedFiles.add(file.name); // Track globally
+                    files.forEach(file => {
+                        globalUploadedFiles.add(file.name); // Track globally
 
-                const fileItem = document.createElement('div');
-                fileItem.classList.add('file-item');
+                        const fileItem = document.createElement('div');
+                        fileItem.classList.add('file-item');
 
-                const fileName = document.createElement('span');
-                fileName.textContent = file.name;
+                        const fileName = document.createElement('span');
+                        fileName.classList.add('file-name');
 
-                const progressBarContainer = document.createElement('div');
-                progressBarContainer.classList.add('progress-bar');
+                        // Use custom file names based on the section and file count
+                        if (sectionNames[section]) {
+                            fileName.textContent = `${sectionNames[section]} ${fileCount[section]}`;
+                            fileCount[section]++; // Increment count for the section
+                        } else {
+                            fileName.textContent = file.name;
+                        }
 
-                const progressBar = document.createElement('span');
-                progressBar.style.width = '0%';
+                        const fileRemove = document.createElement('span');
+                        fileRemove.innerHTML = '&times;';
+                        fileRemove.classList.add('file-remove');
+                        fileRemove.addEventListener('click', function () {
+                            globalUploadedFiles.delete(file.name); // Remove from global set
+                            fileList.removeChild(fileItem);
 
-                progressBarContainer.appendChild(progressBar);
+                            // Decrease count when removing the file
+                            if (sectionNames[section]) {
+                                fileCount[section]--;
+                            }
+                        });
 
-                const fileRemove = document.createElement('span');
-                fileRemove.innerHTML = '&times;';
-                fileRemove.classList.add('file-remove');
-                fileRemove.addEventListener('click', function () {
-                    globalUploadedFiles.delete(file.name); // Remove from global set
-                    fileList.removeChild(fileItem);
-                });
+                        fileItem.appendChild(fileName);
+                        fileItem.appendChild(fileRemove);
 
-                fileItem.appendChild(fileName);
-                fileItem.appendChild(progressBarContainer);
-                fileItem.appendChild(fileRemove);
-
-                fileList.appendChild(fileItem);
-
-                // Simulate progress bar
-                setTimeout(() => {
-                    progressBar.style.width = '100%';
-                }, 1000);
-            });
-
-            // Show SweetAlert after files are added
-            Swal.fire({
-                icon: 'success',
-                title: 'Files Uploaded',
-                text: 'Your files have been added to the list successfully.'
-            });
-        });
-    });
-
-    const uploadForm = document.getElementById('upload-pictures-form');
-    if (uploadForm) {
-        uploadForm.addEventListener('submit', function (event) {
-            event.preventDefault();
-
-            const formData = new FormData(this);
-
-            fetch('{{ route('student.health-examination.store') }}', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                },
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.text().then(text => { throw new Error(text); });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    // Hide the upload section and show the pending approval message
-                    const uploadSection = document.getElementById('upload-section');
-                    if (uploadSection) uploadSection.style.display = 'none';
-
-                    const pendingApprovalMessage = document.getElementById('pending-approval-message');
-                    if (pendingApprovalMessage) pendingApprovalMessage.style.display = 'block';
+                        fileList.appendChild(fileItem);
+                    });
 
                     Swal.fire({
                         icon: 'success',
-                        title: 'Pictures Uploaded',
-                        text: 'Your pictures have been uploaded successfully and are now pending approval. Please wait for further instructions.',
+                        title: 'Files Uploaded',
+                        text: 'Your files have been added to the list successfully.'
                     });
-
-                    // Store a flag in localStorage to keep the state after reload
-                    localStorage.setItem('uploadCompleted', 'true');
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Upload Failed',
-                        text: 'There was a problem uploading your pictures. Please try again.',
-                    });
-                }
-            })
-            .catch(error => {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Upload Failed',
-                    text: 'An unexpected error occurred. Please try again.',
                 });
-                console.error('Error:', error);
             });
-        });
-    }
 
-    // Check localStorage for the uploadCompleted flag
-    if (localStorage.getItem('uploadCompleted') === 'true') {
-        document.getElementById('upload-section').style.display = 'none';
-        document.getElementById('pending-approval-message').style.display = 'block';
-    }
+            const uploadForm = document.getElementById('upload-pictures-form');
+            if (uploadForm) {
+                uploadForm.addEventListener('submit', function (event) {
+                    event.preventDefault();
 
-    setInterval(function () {
-        fetch('{{ route('student.health-examination.status') }}', {
-            method: 'GET',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.is_approved) {
-                window.location.href = '{{ route('student.medical-record.create') }}';
+                    const formData = new FormData(this);
+
+                    fetch('{{ route('student.health-examination.store') }}', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        },
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.text().then(text => { throw new Error(text); });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            uploadSection.style.display = 'none';
+                            pendingApprovalMessage.style.display = 'block';
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Pictures Uploaded',
+                                text: 'Your pictures have been uploaded successfully and are now pending approval.',
+                            });
+
+                            // Store a flag in localStorage to keep the state after reload
+                            localStorage.setItem('uploadCompleted', 'true');
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Upload Failed',
+                                text: 'There was a problem uploading your pictures. Please try again.',
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Upload Failed',
+                            text: 'An unexpected error occurred. Please try again.',
+                        });
+                        console.error('Error:', error);
+                    });
+                });
             }
-        })
-        .catch(error => {
-            console.error('Error checking approval status:', error);
+
+            // Set an interval to check the status of the health examination approval
+            setInterval(function () {
+                fetch('{{ route('student.health-examination.status') }}', {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.is_approved) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Approved',
+                            text: 'Your submission has been approved. Proceed to the next step.',
+                        }).then(() => {
+                            window.location.href = '{{ route('student.medical-record.create') }}';
+                        });
+                    } else if (data.is_declined) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Submission Declined',
+                            text: 'Your submission has been declined. Please upload proper pictures and try again.',
+                        }).then(() => {
+                            // Clear localStorage and reset the form for new submission
+                            localStorage.removeItem('uploadCompleted');
+                            window.location.reload();
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking approval status:', error);
+                });
+            }, 5000); // Check every 5 seconds
+              // Function to preview image in a modal
+    function previewImageInModal(file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            Swal.fire({
+                title: 'Preview',
+                imageUrl: e.target.result,
+                imageAlt: 'Uploaded Image',
+                showCloseButton: true,
+                showCancelButton: true,
+                focusConfirm: false,
+                confirmButtonText: 'Close'
+            });
+        };
+        reader.readAsDataURL(file); // Read the file as a data URL to display in SweetAlert
+    }
         });
-    }, 5000);
-});
     </script>
 </x-app-layout>
+

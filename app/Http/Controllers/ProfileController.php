@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
+use App\Models\Student;
+use App\Models\Teacher;
+use App\Models\Staff;
+use App\Models\Parents;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -91,4 +95,29 @@ class ProfileController extends Controller
 
         return Redirect::route('profile.edit')->with('status', 'profile-picture-updated');
     }
+    public function index(Request $request)
+    {
+        $role = $request->input('role', 'students'); // Default to students
+
+        switch ($role) {
+            case 'students':
+                $profiles = Student::all();
+                break;
+            case 'teachers':
+                $profiles = Teacher::all();
+                break;
+            case 'staff':
+                $profiles = Staff::all();
+                break;
+            case 'parents':
+                $profiles = Parents::all();
+                break;
+            default:
+                $profiles = Student::all(); // Default to students
+                break;
+        }
+
+        return view('admin.profiles', compact('profiles', 'role'));
+    }
+    
 }

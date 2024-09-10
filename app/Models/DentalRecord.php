@@ -8,11 +8,8 @@ class DentalRecord extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'patient_name',
-        'grade_section',
-        'user_id',
-    ];
+    protected $fillable = ['id_number', 'user_type', 'patient_name', 'grade_section'];
+
     public $timestamps = false;
 
 
@@ -24,6 +21,15 @@ class DentalRecord extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id');
+        switch ($this->user_type) {
+            case 'student':
+                return $this->belongsTo(Student::class, 'id_number', 'id_number');
+            case 'teacher':
+                return $this->belongsTo(Teacher::class, 'id_number', 'id_number');
+            case 'staff':
+                return $this->belongsTo(Staff::class, 'id_number', 'id_number');
+            default:
+                return null;
+        }
     }
 }

@@ -7,9 +7,14 @@
             flex-direction: row;
             min-height: 100vh;
         }
+      
+        .main-content {
+            margin-top: 20px;
+        }
 
         .students-table {
             width: 95%;
+            height: 100%;
             border-collapse: collapse;
             margin-top: 20px;
             background-color: white;
@@ -316,7 +321,103 @@
             border-radius: 5px;
             font-size: 16px;
             width: 300px;
-        }
+                }
+/* Modal Background Overlay */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4); /* Dark overlay background */
+    justify-content: center;
+    align-items: center; /* Centers the modal vertically and horizontally */
+    display: flex;
+}
+
+/* Modal Content */
+.modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    width: 40%;
+    max-width: 600px;
+    animation: slideIn 0.5s ease-out;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Close Button */
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+}
+
+/* Input Fields */
+.modal-content input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+    font-size: 14px;
+}
+
+/* Save Button */
+.modal-content .save-button {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+.modal-content .save-button:hover {
+    background-color: #218838;
+}
+
+/* Modal Header */
+.modal-content h2 {
+    font-size: 20px;
+    margin-bottom: 15px;
+    color: #333;
+    text-align: center;
+}
+
+/* Animation for modal */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+
     </style>
 
     <div class="main-content">
@@ -330,6 +431,8 @@
             <div class="upload-section center-text">
                 <h2>Upload Student List</h2>
                 <p>Please ensure the Excel file follows the format: ID Number, First Name, Last Name, Grade/Course</p>
+                <a href="{{ route('admin.download.templates') }}" class="toggle-button">Download Excel Template</a>
+
                 <button id="toggle-upload" class="toggle-button">Hide Upload Section</button>
                 <div id="upload-section">
                     <form id="upload-form" enctype="multipart/form-data">
@@ -426,420 +529,453 @@
                     </table>
                 @endif
             </div>
+            <div id="edit-student-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Edit Student</h2>
+        <form id="edit-student-form">
+            @csrf
+            <input type="hidden" name="id" id="edit-student-id">
+            <label for="edit-id-number">ID Number</label>
+            <input type="text" name="id_number" id="edit-id-number" required>
+            
+            <label for="edit-first-name">First Name</label>
+            <input type="text" name="first_name" id="edit-first-name" required>
+            
+            <label for="edit-last-name">Last Name</label>
+            <input type="text" name="last_name" id="edit-last-name" required>
+            
+            <label for="edit-grade-course">Grade/Course</label>
+            <input type="text" name="grade_or_course" id="edit-grade-course" required>
+            
+            <button type="submit" class="save-button">Save</button>
+        </form>
+    </div>
+</div>
+
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <script>
-            function toggleUploadSection() {
-                const uploadSection = document.getElementById('upload-section');
-                uploadSection.style.display = uploadSection.style.display === 'none' ? 'block' : 'none';
+<script>
+// Function to open the modal and populate it with student data
+function openEditModal(student) {
+    document.getElementById('edit-student-id').value = student.id;
+    document.getElementById('edit-id-number').value = student.id_number;
+    document.getElementById('edit-first-name').value = student.first_name;
+    document.getElementById('edit-last-name').value = student.last_name;
+    document.getElementById('edit-grade-course').value = student.grade_or_course;
+
+    // Display the modal
+    document.getElementById('edit-student-modal').style.display = 'flex';
+}
+
+// Close the modal when clicking the 'X' button
+document.querySelector('.close').addEventListener('click', function() {
+    document.getElementById('edit-student-modal').style.display = 'none';
+});
+
+// Global deleteStudent function to be available on button click
+function deleteStudent(studentId) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/admin/students/${studentId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    _method: 'DELETE'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Deleted!', data.message, 'success');
+                    document.getElementById('student-row-' + studentId).remove();
+                } else {
+                    Swal.fire('Error!', 'There was a problem deleting the student.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error!', 'There was a problem deleting the student.', 'error');
+            });
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle upload section
+    document.getElementById('edit-student-modal').style.display = 'none';
+
+    const toggleUploadSection = () => {
+        const uploadSection = document.getElementById('upload-section');
+        uploadSection.style.display = uploadSection.style.display === 'none' ? 'block' : 'none';
+    };
+
+    // Tab functionality
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById(this.getAttribute('data-tab')).classList.add('active');
+            toggleTableVisibility();
+        });
+    });
+
+    function toggleTableVisibility() {
+        const isLateStudentTabActive = document.querySelector('#late-student-tab').classList.contains('active');
+        document.querySelector('.students-section').style.display = isLateStudentTabActive ? 'none' : 'block';
+    }
+
+    // File selection feedback
+    document.getElementById('file').addEventListener('change', function(event) {
+        const fileName = event.target.files[0].name;
+        document.getElementById('file-name').textContent = fileName;
+    });
+
+    const toggleButton = document.getElementById('toggle-upload');
+    const uploadSection = document.getElementById('upload-section');
+    toggleButton.addEventListener('click', function() {
+        if (uploadSection.classList.contains('hidden')) {
+            uploadSection.classList.remove('hidden');
+            toggleButton.textContent = 'Hide Upload Section';
+        } else {
+            uploadSection.classList.add('hidden');
+            toggleButton.textContent = 'Show Upload Section';
+        }
+    });
+    const searchInput = document.getElementById('student-search');
+    searchInput.addEventListener('input', function() {
+        const searchValue = this.value.toLowerCase();
+        const tableRows = document.querySelectorAll('#students-table tbody tr');
+
+        tableRows.forEach(row => {
+            const id = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+            const firstName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+            const lastName = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+            const gradeOrCourse = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+
+            // Show the row if any of the fields match the search value
+            if (id.includes(searchValue) || firstName.includes(searchValue) || lastName.includes(searchValue) || gradeOrCourse.includes(searchValue)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
             }
+        });
+    });
 
-            document.addEventListener('DOMContentLoaded', function() {
-                document.querySelectorAll('.tab').forEach(tab => {
-                    tab.addEventListener('click', function() {
-                        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-                        this.classList.add('active');
-                        document.getElementById(this.getAttribute('data-tab')).classList.add('active');
-                        toggleTableVisibility();
-                    });
+    // Upload form submission
+    document.getElementById('upload-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        var formData = new FormData(this);
+
+        fetch('{{ route('admin.students.import') }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: data.message,
+                    showConfirmButton: false,
+                    timer: 1500
                 });
-
-                function toggleTableVisibility() {
-                    const isLateStudentTabActive = document.querySelector('#late-student-tab').classList.contains('active');
-                    document.querySelector('.students-section').style.display = isLateStudentTabActive ? 'none' : 'block';
-                }
-
-                document.getElementById('file').addEventListener('change', function(event) {
-                    const fileName = event.target.files[0].name;
-                    document.getElementById('file-name').textContent = fileName;
+                fetchAndUpdateStudentsTable(); // Re-fetch and update the table
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    html: data.errors.join('<br>'),
+                    showConfirmButton: true,
                 });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'There was a problem uploading the file.',
+                showConfirmButton: true,
+            });
+        });
+    });
 
-                const toggleButton = document.getElementById('toggle-upload');
-                const uploadSection = document.getElementById('upload-section');
+    // Add late student form submission
+    document.getElementById('late-student-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        var formData = new FormData(this);
 
-                toggleButton.addEventListener('click', function() {
-                    if (uploadSection.classList.contains('hidden')) {
-                        uploadSection.classList.remove('hidden');
-                        toggleButton.textContent = 'Hide Upload Section';
-                    } else {
-                        uploadSection.classList.add('hidden');
-                        toggleButton.textContent = 'Show Upload Section';
-                    }
+        fetch('{{ route('admin.students.add') }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: data.message,
+                    showConfirmButton: false,
+                    timer: 1500
                 });
-
-                document.getElementById('upload-form').addEventListener('submit', function(event) {
-                    event.preventDefault();
-
-                    var formData = new FormData(this);
-
-                    fetch('{{ route('admin.students.import') }}', {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            return response.text().then(text => { throw new Error(text); });
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: data.message,
-                                showConfirmButton: false,
-                                timer: 1500
-                            });
-                            updateStudentsTable(data.students);
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                html: data.errors.join('<br>'),
-                                showConfirmButton: true,
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'There was a problem uploading the file.',
-                            showConfirmButton: true,
-                        });
-                    });
+                fetchAndUpdateStudentsTable(); // Re-fetch and update the table
+                document.getElementById('late-student-form').reset();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    html: data.errors.join('<br>'),
+                    showConfirmButton: true,
                 });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'There was a problem adding the student.',
+                showConfirmButton: true,
+            });
+        });
+    });
 
-                document.getElementById('late-student-form').addEventListener('submit', function(event) {
-                    event.preventDefault();
+    // Fetch updated students table
+    function fetchAndUpdateStudentsTable() {
+        fetch('{{ route('admin.students.enrolled') }}', {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(students => {
+            updateStudentsTable(students);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
 
-                    var formData = new FormData(this);
+    // Update students table
+    function updateStudentsTable(students) {
+        var tbody = document.getElementById('students-table-body');
+        if (!tbody) {
+            console.error("Element with ID 'students-table-body' not found.");
+            return;
+        }
+        tbody.innerHTML = '';
+        students.forEach(student => {
+            var row = document.createElement('tr');
+            row.id = 'student-row-' + student.id;
 
-                    fetch('{{ route('admin.students.add') }}', {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            return response.text().then(text => { throw new Error(text); });
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: data.message,
-                                showConfirmButton: false,
-                                timer: 1500
-                            });
-                            updateStudentsTable(data.students);
-                            document.getElementById('late-student-form').reset();
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                html: data.errors.join('<br>'),
-                                showConfirmButton: true,
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'There was a problem adding the student.',
-                            showConfirmButton: true,
-                        });
-                    });
-                });
+            row.innerHTML = `
+                <td>${student.id_number}</td>
+                <td>${student.first_name}</td>
+                <td>${student.last_name}</td>
+                <td>${student.grade_or_course}</td>
+                <td>
+                    <button class="preview-button status-button" style="background-color: ${student.approved ? '#28a745' : '#dc3545'};">
+                        ${student.approved ? 'Active' : 'Inactive'}
+                    </button>
+                </td>
+                <td>
+                    <button class="preview-button edit-button" data-student-id="${student.id}">Edit</button>
+                    <button class="delete-button" onclick="deleteStudent(${student.id})">Delete</button>
+                    <label class="switch">
+                        <input type="checkbox" class="toggle-approval" data-student-id="${student.id}" ${student.approved ? 'checked' : ''}>
+                        <span class="slider"></span>
+                    </label>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        attachToggleApprovalEvents();
+        attachEditEvents();
+    }
 
-                document.getElementById('student-search').addEventListener('input', function() {
-                    var searchTerm = this.value.toLowerCase();
-                    var rows = document.querySelectorAll('#students-table tbody tr');
+    // Toggle approval events
+    function attachToggleApprovalEvents() {
+        document.querySelectorAll('.toggle-approval').forEach(input => {
+            var newInput = input.cloneNode(true);
+            input.parentNode.replaceChild(newInput, input);
+        });
 
-                    rows.forEach(function(row) {
-                        var id = row.children[0].textContent.toLowerCase();
-                        var firstName = row.children[1].textContent.toLowerCase();
-                        var lastName = row.children[2].textContent.toLowerCase();
-                        var grade = row.children[3].textContent.toLowerCase();
+        document.querySelectorAll('.toggle-approval').forEach(input => {
+            input.addEventListener('change', function() {
+                var studentId = this.getAttribute('data-student-id');
+                var approved = this.checked ? 1 : 0;
 
-                        if (id.includes(searchTerm) || firstName.includes(searchTerm) || lastName.includes(searchTerm) || grade.includes(searchTerm)) {
-                            row.style.display = '';
-                        } else {
-                            row.style.display = 'none';
-                        }
-                    });
-                });
+                var formData = new FormData();
+                formData.append('approved', approved);
 
-                function updateStudentsTable(students) {
-                    var tbody = document.getElementById('students-table-body');
-                    if (!tbody) {
-                        console.error("Element with ID 'students-table-body' not found.");
-                        return;
-                    }
-                    tbody.innerHTML = '';
-                    students.forEach(student => {
-                        var row = document.createElement('tr');
-                        row.id = 'student-row-' + student.id;
+                var actionUrl = `{{ url('admin/students') }}/${studentId}/toggle-approval`;
 
-                        row.innerHTML = `
-                            <td>${student.id_number}</td>
-                            <td>${student.first_name}</td>
-                            <td>${student.last_name}</td>
-                            <td>${student.grade_or_course}</td>
-                            <td>
-                                <button class="preview-button status-button" style="background-color: ${student.approved ? '#28a745' : '#dc3545'};">
-                                    ${student.approved ? 'Active' : 'Inactive'}
-                                </button>
-                            </td>
-                            <td>
-                                <button class="preview-button edit-button" data-student-id="${student.id}">Edit</button>
-                                <button class="delete-button" onclick="deleteStudent(${student.id})">Delete</button>
-                                <label class="switch">
-                                    <input type="checkbox" class="toggle-approval" data-student-id="${student.id}" ${student.approved ? 'checked' : ''}>
-                                    <span class="slider"></span>
-                                </label>
-                            </td>
-                        `;
-                        tbody.appendChild(row);
-                    });
-                    attachToggleApprovalEvents();
-                    attachEditEvents();
-                }
-
-                function attachToggleApprovalEvents() {
-                    // Remove existing event listeners
-                    document.querySelectorAll('.toggle-approval').forEach(input => {
-                        var newInput = input.cloneNode(true);
-                        input.parentNode.replaceChild(newInput, input);
-                    });
-
-                    // Attach new event listeners
-                    document.querySelectorAll('.toggle-approval').forEach(input => {
-                        input.addEventListener('change', function() {
-                            var studentId = this.getAttribute('data-student-id');
-                            var approved = this.checked ? 1 : 0;
-
-                            var formData = new FormData();
-                            formData.append('approved', approved);
-
-                            var actionUrl = `{{ url('admin/students') }}/${studentId}/toggle-approval`;
-
-                            fetch(actionUrl, {
-                                method: 'POST',
-                                body: formData,
-                                headers: {
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                }
-                            })
-                            .then(response => {
-                                if (!response.ok) {
-                                    return response.text().then(text => { throw new Error(text); });
-                                }
-                                return response.json();
-                            })
-                            .then(data => {
-                                if (data.success) {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Success',
-                                        text: data.message,
-                                        showConfirmButton: false,
-                                        timer: 1500
-                                    });
-                                    updateStudentRow(studentId, data.student);
-                                } else {
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Error',
-                                        text: 'There was a problem updating the student status.',
-                                        showConfirmButton: true,
-                                    });
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error:', error);
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: 'There was a problem updating the student status.',
-                                    showConfirmButton: true,
-                                });
-                            });
-                        });
-                    });
-                }
-
-                function updateStudentRow(studentId, student) {
-                    var row = document.getElementById('student-row-' + studentId);
-                    if (!row) {
-                        console.error(`Row for studentId ${studentId} not found`);
-                        return;
-                    }
-
-                    var button = row.querySelector('.status-button');
-                    var checkbox = row.querySelector(`input[data-student-id="${studentId}"]`);
-
-                    // Update button text and background color
-                    if (student.approved == 1) {
-                        button.textContent = 'Active';
-                        button.style.backgroundColor = '#28a745';
-                    } else {
-                        button.textContent = 'Inactive';
-                        button.style.backgroundColor = '#dc3545';
-                    }
-
-                    // Update checkbox state
-                    checkbox.checked = student.approved == 1;
-                }
-
-                function attachEditEvents() {
-                    document.querySelectorAll('.edit-button').forEach(button => {
-                        button.addEventListener('click', function() {
-                            var studentId = this.getAttribute('data-student-id');
-                            var editFormRow = document.getElementById('edit-form-row-' + studentId);
-                            if (editFormRow) {
-                                editFormRow.style.display = editFormRow.style.display === 'none' ? 'table-row' : 'none';
-                            }
-                        });
-                    });
-
-                    document.querySelectorAll('.edit-form').forEach(form => {
-                        form.addEventListener('submit', function(event) {
-                            event.preventDefault();
-                            var formData = new FormData(this);
-                            var studentId = formData.get('id');
-
-                            fetch(`{{ url('admin/students') }}/${studentId}/edit`, {
-                                method: 'POST',
-                                body: formData,
-                                headers: {
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                }
-                            })
-                            .then(response => {
-                                if (!response.ok) {
-                                    return response.text().then(text => { throw new Error(text); });
-                                }
-                                return response.json();
-                            })
-                            .then(data => {
-                                if (data.success) {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Success',
-                                        text: data.message,
-                                        showConfirmButton: false,
-                                        timer: 1500
-                                    });
-                                    updateStudentRow(studentId, data.student);
-                                    var editFormRow = document.getElementById('edit-form-row-' + studentId);
-                                    if (editFormRow) {
-                                        editFormRow.style.display = 'none';
-                                    }
-                                } else {
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Error',
-                                        html: data.errors.join('<br>'),
-                                        showConfirmButton: true,
-                                    });
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error:', error);
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: 'There was a problem updating the student.',
-                                    showConfirmButton: true,
-                                });
-                            });
-                        });
-                    });
-                }
-
-                function deleteStudent(studentId) {
-                    var formData = new FormData();
-                    formData.append('_method', 'DELETE');
-
-                    fetch(`{{ url('admin/students') }}/${studentId}`, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            return response.text().then(text => { throw new Error(text); });
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: data.message,
-                                showConfirmButton: false,
-                                timer: 1500
-                            });
-                            document.getElementById('student-row-' + studentId).remove();
-                            document.getElementById('edit-form-row-' + studentId).remove();
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: 'There was a problem deleting the student.',
-                                showConfirmButton: true,
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'There was a problem deleting the student.',
-                            showConfirmButton: true,
-                        });
-                    });
-                }
-
-                // Initial load
-                fetch('{{ route('admin.students.enrolled') }}', {
-                    method: 'GET',
+                fetch(actionUrl, {
+                    method: 'POST',
+                    body: formData,
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     }
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.text().then(text => { throw new Error(text); });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: data.message,
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        updateStudentRow(studentId, data.student);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'There was a problem updating the student status.',
+                            showConfirmButton: true,
+                        });
                     }
-                    return response.json();
-                })
-                .then(students => {
-                    updateStudentsTable(students);
                 })
                 .catch(error => {
                     console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'There was a problem updating the student status.',
+                        showConfirmButton: true,
+                    });
                 });
             });
-        </script>
-    </div>
+        });
+    }
+
+    // Update student row
+    function updateStudentRow(studentId, student) {
+        var row = document.getElementById('student-row-' + studentId);
+        if (!row) {
+            console.error(`Row for studentId ${studentId} not found`);
+            return;
+        }
+
+        var button = row.querySelector('.status-button');
+        var checkbox = row.querySelector(`input[data-student-id="${studentId}"]`);
+
+        // Update button text and background color
+        if (student.approved == 1) {
+            button.textContent = 'Active';
+            button.style.backgroundColor = '#28a745';
+        } else {
+            button.textContent = 'Inactive';
+            button.style.backgroundColor = '#dc3545';
+        }
+
+        // Update checkbox state
+        checkbox.checked = student.approved == 1;
+    }
+
+    // Edit button events
+    function attachEditEvents() {
+        document.querySelectorAll('.edit-button').forEach(button => {
+            button.addEventListener('click', function() {
+                var studentId = this.getAttribute('data-student-id');
+
+                // Fetch student data and open the modal
+                fetch(`/admin/students/${studentId}`)
+                .then(response => response.json())
+                    .then(student => {
+                        openEditModal(student); // Open the modal with the student data
+                    })
+                    .catch(error => {
+                        console.error('Error fetching student data:', error);
+                        Swal.fire('Error', 'Unable to fetch student data', 'error');
+                    });
+            });
+        });
+    }
+
+    // Form submission inside the modal
+    document.getElementById('edit-student-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        var formData = new FormData(this);
+        var studentId = document.getElementById('edit-student-id').value;
+
+        fetch(`{{ url('admin/students') }}/${studentId}/edit`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: data.message,
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                fetchAndUpdateStudentsTable(); // Re-fetch and update the table
+                document.getElementById('edit-student-modal').style.display = 'none'; // Close the modal
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    html: data.errors.join('<br>'),
+                    showConfirmButton: true,
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'There was a problem updating the student.',
+                showConfirmButton: true,
+            });
+        });
+    });
+
+    // Fetch enrolled students on page load
+    fetch('{{ route('admin.students.enrolled') }}', {
+        method: 'GET',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(students => {
+        updateStudentsTable(students);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+});
+</script>
 </x-app-layout>

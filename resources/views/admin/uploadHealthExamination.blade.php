@@ -1,7 +1,11 @@
 <x-app-layout>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+    body {
+        background-color: #f5f7fa;
+        font-family: 'Poppins', sans-serif;
+    }
         .container {
             display: flex;
             flex-direction: row;
@@ -9,17 +13,11 @@
         }
 
         .main-content {
-            margin-left: 80px;
-            width: calc(100% - 80px);
-            padding: 20px;
+            margin-top: 30px;
             transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
         }
 
-        .sidebar:hover ~ .main-content {
-            margin-left: 250px;
-            width: calc(100% - 250px);
-        }
-
+        
         .form-container, .table-container {
             margin-top: 20px;
             background-color: #f9f9f9;

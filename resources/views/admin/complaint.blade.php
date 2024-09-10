@@ -6,7 +6,6 @@
             min-height: 100vh;
         }
 
-
         .logo {
             display: flex;
             align-items: center;
@@ -69,8 +68,6 @@
             transition: opacity 0.3s ease-in-out;
         }
 
-     
-
         .main-content {
             margin-left: 80px;
             width: calc(100% - 80px);
@@ -78,25 +75,24 @@
             transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
         }
 
-      
-
-        
-
         .complaints-table {
-            width: 95%;
+            animation: fadeInUp 0.5s ease-in-out;
+            width: 90%;
             border-collapse: collapse;
             margin-top: 20px;
             background-color: white;
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            animation: fadeInUp 0.5s ease-in-out;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: scroll;
         }
 
         .complaints-table th,
         .complaints-table td {
             padding: 10px;
             text-align: left;
+            white-space: nowrap;
         }
 
         .complaints-table th {
@@ -170,7 +166,6 @@
             width: 100%;
             height: 100%;
             overflow: auto;
-            background-color: rgb(0, 0, 0);
             background-color: rgba(0, 0, 0, 0.4);
             animation: fadeIn 0.5s ease-in-out;
         }
@@ -240,23 +235,22 @@
                 {{ session('success') }}
             </div>
         @endif
-        <div class="tabs">
-        <div class="tab active" data-tab="add-complaint-tab">Add Complaint</div>
-        <a href="{{ route('admin.complaint.add') }}" class="tab">Complaint List</a>
-    </div>
 
-        <!-- Complaints Table -->
+        <div class="tabs">
+            <div class="tab active" data-tab="add-complaint-tab"><i class="fas fa-plus-circle"></i> Add Complaint</div>
+            <a href="{{ route('admin.complaint.add') }}" class="tab"><i class="fas fa-list-alt"></i> Complaint List</a>
+        </div>
+
         <div class="complaints-section">
-            <h2>Complaints by Role</h2>
+            <h2><i class="fas fa-exclamation-circle"></i> Complaints by Role</h2>
             <div class="tab-buttons">
-                <button id="student-tab" class="active" onclick="showTab('student')">Student</button>
-                <button id="staff-tab" onclick="showTab('staff')">Staff</button>
-                <button id="parent-tab" onclick="showTab('parent')">Parent</button>
-                <button id="teacher-tab" onclick="showTab('teacher')">Teacher</button>
+                <button id="student-tab" class="active" onclick="showTab('student')"><i class="fas fa-user-graduate"></i> Student</button>
+                <button id="staff-tab" onclick="showTab('staff')"><i class="fas fa-user-tie"></i> Staff</button>
+                <button id="parent-tab" onclick="showTab('parent')"><i class="fas fa-user"></i> Parent</button>
+                <button id="teacher-tab" onclick="showTab('teacher')"><i class="fas fa-chalkboard-teacher"></i> Teacher</button>
             </div>
 
             <div id="student" class="tab-content active">
-                <!-- Student Complaints Table -->
                 <table class="complaints-table">
                     <thead>
                         <tr>
@@ -264,7 +258,7 @@
                             <th>Last Name</th>
                             <th>Description of Sickness</th>
                             <th>Pain Assessment</th>
-                            <th>Status</th>
+                            <th>Medicine Given</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -275,8 +269,8 @@
                                 <td>{{ $complaint->last_name }}</td>
                                 <td>{{ $complaint->sickness_description }}</td>
                                 <td>{{ $complaint->pain_assessment }}</td>
-                                <td>{{ $complaint->status }}</td>
-                                <td><button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button></td>
+                                <td>{{ $complaint->medicine_given }}</td>
+                                <td><button class="preview-button" onclick="openModal({{ $complaint->id }})"><i class="fas fa-eye"></i> Preview</button></td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -284,7 +278,6 @@
             </div>
 
             <div id="staff" class="tab-content">
-                <!-- Staff Complaints Table -->
                 <table class="complaints-table">
                     <thead>
                         <tr>
@@ -292,7 +285,7 @@
                             <th>Last Name</th>
                             <th>Description of Sickness</th>
                             <th>Pain Assessment</th>
-                            <th>Status</th>
+                            <th>Medicine Given</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -303,8 +296,8 @@
                                 <td>{{ $complaint->last_name }}</td>
                                 <td>{{ $complaint->sickness_description }}</td>
                                 <td>{{ $complaint->pain_assessment }}</td>
-                                <td>{{ $complaint->status }}</td>
-                                <td><button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button></td>
+                                <td>{{ $complaint->medicine_given }}</td>
+                                <td><button class="preview-button" onclick="openModal({{ $complaint->id }})"><i class="fas fa-eye"></i> Preview</button></td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -312,7 +305,6 @@
             </div>
 
             <div id="parent" class="tab-content">
-                <!-- Parent Complaints Table -->
                 <table class="complaints-table">
                     <thead>
                         <tr>
@@ -320,7 +312,7 @@
                             <th>Last Name</th>
                             <th>Description of Sickness</th>
                             <th>Pain Assessment</th>
-                            <th>Status</th>
+                            <th>Medicine Given</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -331,8 +323,8 @@
                                 <td>{{ $complaint->last_name }}</td>
                                 <td>{{ $complaint->sickness_description }}</td>
                                 <td>{{ $complaint->pain_assessment }}</td>
-                                <td>{{ $complaint->status }}</td>
-                                <td><button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button></td>
+                                <td>{{ $complaint->medicine_given }}</td>
+                                <td><button class="preview-button" onclick="openModal({{ $complaint->id }})"><i class="fas fa-eye"></i> Preview</button></td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -340,7 +332,6 @@
             </div>
 
             <div id="teacher" class="tab-content">
-                <!-- Teacher Complaints Table -->
                 <table class="complaints-table">
                     <thead>
                         <tr>
@@ -348,7 +339,7 @@
                             <th>Last Name</th>
                             <th>Description of Sickness</th>
                             <th>Pain Assessment</th>
-                            <th>Status</th>
+                            <th>Medicine Given</th>
                             <th>Preview</th>
                         </tr>
                     </thead>
@@ -359,8 +350,8 @@
                                 <td>{{ $complaint->last_name }}</td>
                                 <td>{{ $complaint->sickness_description }}</td>
                                 <td>{{ $complaint->pain_assessment }}</td>
-                                <td>{{ $complaint->status }}</td>
-                                <td><button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button></td>
+                                <td>{{ $complaint->medicine_given }}</td>
+                                <td><button class="preview-button" onclick="openModal({{ $complaint->id }})"><i class="fas fa-eye"></i> Preview</button></td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -418,16 +409,11 @@
                 .then(data => {
                     const modalBody = document.getElementById('modal-body');
                     modalBody.innerHTML = `
-                        <p><strong>Name:</strong> ${data.name}</p>
-                        <p><strong>Age:</strong> ${data.age}</p>
-                        <p><strong>Birthdate:</strong> ${data.birthdate}</p>
-                        <p><strong>Contact Number:</strong> ${data.contact_number}</p>
+                        <p><strong>First Name:</strong> ${data.first_name}</p>
+                        <p><strong>Last Name:</strong> ${data.last_name}</p>
                         <p><strong>Pain Assessment:</strong> ${data.pain_assessment}</p>
                         <p><strong>Description of Sickness:</strong> ${data.sickness_description}</p>
-                        <p><strong>Program:</strong> ${data.program || 'N/A'}</p>
-                        <p><strong>Year:</strong> ${data.year || 'N/A'}</p>
-                        <p><strong>Section:</strong> ${data.section || 'N/A'}</p>
-
+                        <p><strong>Medicine Given:</strong> ${data.medicine_given}</p>
                     `;
                     document.getElementById('complaint-modal').style.display = 'block';
                 })
@@ -438,19 +424,6 @@
             document.getElementById('complaint-modal').style.display = 'none';
         }
 
-        document.getElementById('notification-icon').addEventListener('click', function() {
-            const dropdown = document.getElementById('notification-dropdown');
-            dropdown.classList.toggle('active');
-        });
-
-        document.addEventListener('click', function(event) {
-            const dropdown = document.getElementById('notification-dropdown');
-            const icon = document.getElementById('notification-icon');
-            if (!dropdown.contains(event.target) && !icon.contains(event.target)) {
-                dropdown.classList.remove('active');
-            }
-        });
-    
         showTab('student');
     </script>
 </x-app-layout>

@@ -6,13 +6,10 @@
         }
 
         .main-content {
-            flex-grow: 1;
-            padding: 20px;
+            
             margin-top: 40px;
-            margin-left: 75px;
             transition: margin-left 0.3s ease-in-out;
             overflow-y: auto;
-            max-height: auto;
             
         }
 

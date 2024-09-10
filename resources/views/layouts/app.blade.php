@@ -20,19 +20,31 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
 </head>
 <body class="font-sans antialiased">
-    <div class="container">
+<div class="container">
         @if(Auth::check())
-            @if(Auth::user()->role == 'Admin')
-                <x-adminsidebar />
-            @elseif(Auth::user()->role == 'Student')
-                <x-studentsidebar />
-            @elseif(Auth::user()->role == 'Parent')
-                <x-parentsidebar />
-            @elseif(Auth::user()->role == 'Teacher')
-                <x-teachersidebar />
-            @elseif(Auth::user()->role == 'Staff')
-                <x-staffsidebar />
-            @endif
+            @switch(Auth::user()->role)
+                @case('Admin')
+                    <x-adminsidebar />
+                    @break
+                @case('Student')
+                    <x-studentsidebar />
+                    @break
+                @case('Parent')
+                    <x-parentsidebar />
+                    @break
+                @case('Teacher')
+                    <x-teachersidebar />
+                    @break
+                @case('Staff')
+                    <x-staffsidebar />
+                    @break
+                @case('Nurse')
+                    <x-nursesidebar />
+                    @break
+                @case('Doctor')
+                    <x-doctorsidebar />
+                    @break
+            @endswitch
         @endif
 
         <div class="main-content">

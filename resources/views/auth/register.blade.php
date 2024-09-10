@@ -129,7 +129,6 @@
             color: #00BDD6;
             text-decoration: none;
             cursor: pointer;
-            font-size: 12px;
         }
 
         .signup-link:hover {
@@ -295,6 +294,36 @@
             <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
         </form>
     </div>
+<!-- Terms Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="termsModalLabel">Data Privacy Act of 2012</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <h4>Overview</h4>
+        <p>The Data Privacy Act of 2012, also known as Republic Act No. 10173, is a law in the Philippines that seeks to protect individual personal data in information and communications systems in the government and the private sector.</p>
+        
+        <h4>Data Subject Rights</h4>
+        <p>The act grants individuals certain rights regarding their personal data, including the right to be informed, the right to access, the right to rectify, and the right to erase personal data.</p>
+
+        <h4>Consent</h4>
+        <p>Before collecting and processing personal data, organizations must obtain explicit consent from individuals. This consent must be freely given, specific, and informed.</p>
+
+        <h4>Penalties</h4>
+        <p>Violations of the Data Privacy Act may result in fines, imprisonment, or both, depending on the severity of the offense. Penalties may be applied to both data controllers and processors.</p>
+
+        <h4>Other Important Information</h4>
+        <p>For more detailed information about the law and your rights, you may visit the National Privacy Commission's website or read the full text of the Data Privacy Act of 2012.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -472,5 +501,10 @@
                 });
             }
         }
+        function openTermsModal() {
+    var modal = new bootstrap.Modal(document.getElementById('termsModal'), {});
+    modal.show();
+}
+
     </script>
 </x-guest-layout>

@@ -7,10 +7,7 @@
         }
 
         .main-content {
-            flex-direction: column;
             margin-top: 30px;
-            padding: 20px;
-            align-items: center;
         }
 
         .tabs {
@@ -19,7 +16,6 @@
             border-bottom: 2px solid #ddd;
             margin-bottom: 20px;
             width: 100%;
-            max-width: 1200px;
         }
 
         .tabs .tab {
@@ -46,7 +42,6 @@
         .tab-content {
             display: none;
             width: 100%;
-            max-width: 1200px;
         }
 
         .tab-content.active {
@@ -109,26 +104,34 @@
         }
 
         .appointment-table {
-            width: 100%;
+            animation: fadeInUp 0.5s ease-in-out;
+            width: 90%;
             border-collapse: collapse;
             margin-top: 20px;
-            animation: fadeInUp 0.5s ease-in-out;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: scroll;
         }
 
         .appointment-table th,
         .appointment-table td {
-            border: 1px solid #ddd;
             padding: 10px;
             text-align: left;
+            white-space: nowrap;
         }
 
         .appointment-table th {
-            background-color: #00d1ff;
-            color: white;
+            background-color: #f5f5f5;
+            color: #333;
+            font-weight: 600;
+            border-bottom: 1px solid #ddd;
         }
 
         .appointment-table td {
-            text-align: center;
+            border-bottom: 1px solid #eee;
         }
 
         .action-buttons {
@@ -163,10 +166,9 @@
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             animation: fadeInUp 0.5s ease-in-out;
-            max-width: 700px;
             flex: 1.5;
             margin-left: 20px;
-            width: 100%;
+            width: 90%;
         }
 
         .calendar-controls {
@@ -220,6 +222,7 @@
             background-color: #f0f8ff;
         }
         .appointment-preview {
+            animation: fadeInUp 0.5s ease-in-out;
     background-color: #f8f9fa;
     color: #0056b3;
     font-size: 0.8rem;
@@ -232,6 +235,7 @@
 }
 
         .modal {
+            animation: fadeInUp 0.5s ease-in-out;
             display: none;
             position: fixed;
             z-index: 1000;
