@@ -13,6 +13,11 @@ class Staff extends Model
         'id_number',
         'first_name',
         'last_name',
+        'postion',
         'approved'
     ];
+    public function dentalRecords()
+    {
+        return $this->hasMany(DentalRecord::class, 'id_number', 'id_number');
+    }
 }

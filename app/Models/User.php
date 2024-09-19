@@ -5,6 +5,10 @@ namespace App\Models;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\Models\Student;
+use App\Models\Teacher;
+use App\Models\Staff;
+use App\Models\Information;
 use Illuminate\Notifications\Notifiable;
 use App\Notifications\VerifyEmail;
 
@@ -57,6 +61,15 @@ class User extends Authenticatable implements MustVerifyEmail
     }
     public function healthExaminations()
 {
-    return $this->hasMany(HealthExamination::class);
+    return $this->hasMany(HealthExamination::class, 'id_number', 'id_number');
 }
+
+
+public function information()
+{
+    return $this->hasOne(Information::class, 'id_number', 'id_number');
+}
+// User.php Model
+
+
 }

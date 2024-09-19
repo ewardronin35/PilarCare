@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ParentModel extends Model
+class Parents extends Model
 {
     use HasFactory;
 
@@ -13,6 +13,7 @@ class ParentModel extends Model
         'id_number',
         'first_name',
         'last_name',
-        'approved'
+        'grade_or_course',
+        'approved' // Adjust this field name as needed
     ];
 }

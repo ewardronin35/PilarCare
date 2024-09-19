@@ -1,8 +1,11 @@
 <x-guest-layout>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.nocaptcha.sitekey') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <style>
         body {
             background: url('{{ asset('images/bg.jpg') }}') no-repeat center center fixed;
@@ -20,33 +23,42 @@
 
         .container {
             background-color: #fff;
-            width: 800px;
-            height: 65%;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            display: flex;
-            overflow: hidden;
-            animation: fadeIn 1s ease-in-out;
+            padding: 20px;
+            max-width: 350px;
+            width: 100%;
+            animation: fadeInContainer 1s ease-in-out;
         }
 
-        .form-container {
-            width: 60%;
-            height: 100%;
-            padding: 40px;
-            overflow-y: auto;
-            min-height: 600px;
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .logo {
+            max-width: 40px;
+            margin-right: 8px;
+        }
+
+        .logo-text {
+            color: #003FFF;
+            font-size: 22px;
+            text-align: center;
         }
 
         .center-signup {
             text-align: center;
             color: #171A1F;
-            font-size: 34px;
-            margin-bottom: 20px;
+            font-size: 24px;
+            margin-bottom: 15px;
         }
 
         .input-wrapper {
             position: relative;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
 
         .input-wrapper i {
@@ -55,319 +67,263 @@
             top: 50%;
             transform: translateY(-50%);
             color: black;
-            z-index: 2;
         }
 
-        .form-container input[type="text"],
-        .form-container input[type="email"],
-        .form-container input[type="password"],
-        .form-container select {
+        .login-form input[type="text"],
+        .login-form input[type="password"],
+        .login-form input[type="email"] {
             background-color: #F3F4F6;
             border: 1px solid #ccc;
-            padding: 12px 20px 12px 35px;
+            padding: 8px 15px 8px 35px;
             border-radius: 5px;
             width: 100%;
             box-sizing: border-box;
             color: black;
             transition: all 0.3s ease-in-out;
+            font-size: 14px;
         }
 
-        .form-container .submit-button {
+        .login-form input[type="text"]:focus,
+        .login-form input[type="password"]:focus,
+        .login-form input[type="email"]:focus {
+            border-color: #1CE5FF;
+            box-shadow: 0 0 8px rgba(28, 229, 255, 0.6);
+        }
+
+        .login-form .log-in-button {
+            margin-top: 15px;
             background-color: #1CE5FF;
             border: none;
-            padding: 12px 20px;
+            padding: 10px 18px;
             border-radius: 5px;
             color: #fff;
             cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .form-container .submit-button:hover {
-            background-color: #17B0CC;
-        }
-
-        .button-container {
-            display: flex;
-            justify-content: center;
-        }
-
-        .right-side {
-            width: 40%;
-            height: 100%;
-            padding: 40px;
-            background-color: #003FFF;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            animation: slideIn 1s ease-in-out;
-            overflow: hidden;
-        }
-
-        .logo {
-            max-width: 100%;
-            max-height: 100%;
-        }
-
-        .logo-text {
-            color: white;
-            font-size: 24px;
-            margin-top: 20px;
-            text-align: center;
-        }
-
-        .terms {
-            margin-top: 20px;
-            color: #141B34;
-        }
-
-        .terms a {
-            color: #003FFF;
-            text-decoration: underline;
-            cursor: pointer;
-        }
-
-        .error-message {
-            color: red;
-            display: none;
-            margin-top: 10px;
-            visibility: hidden;
+            transition: background-color 0.3s, transform 0.3s;
             font-size: 14px;
-            max-width: 100%;
-            position: absolute;
         }
 
-        .error-message.visible {
-            visibility: visible;
+        .login-form .log-in-button:hover {
+            background-color: #17B0CC;
+            transform: scale(1.05);
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
+        .login-form .log-in-button:active {
+            transform: scale(0.95);
         }
 
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-            }
-            to {
-                transform: translateX(0);
-            }
+        .forgot-password-link {
+            color: #00BDD6;
+            text-decoration: none;
+            cursor: pointer;
+            display: block;
+            margin-top: 10px;
+            text-align: center;
+            font-size: 12px;
         }
 
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 10;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgb(0,0,0);
-            background-color: rgba(0,0,0,0.4);
-            animation: fadeIn 0.5s;
+        .forgot-password-link:hover {
+            color: #009EB2;
         }
 
-        .modal-content {
-            background-color: #fefefe;
-            margin: 10% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            border-radius: 10px;
-            animation: slideIn 0.5s;
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: black;
+        .signup-link {
+            color: #00BDD6;
             text-decoration: none;
             cursor: pointer;
         }
 
-        .login-link, .terms {
-            text-align: center;
-            margin-top: 10px;
+        .signup-link:hover {
+            color: #009EB2;
         }
 
-        .login-link a {
-            color: #003FFF;
-            text-decoration: underline;
-            cursor: pointer;
-        }
-
-        .hide-icons .fas, .hide-icons .fa {
-            display: none !important;
-        }
-
-        .toast-top-right {
-            right: 12px;
-            top: 12px;
-        }
-
-        .name-container,
-        .id-role-container {
+        .form-row {
             display: flex;
             justify-content: space-between;
         }
 
-        .name-container .input-wrapper,
-        .id-role-container .input-wrapper {
+        .form-col {
             width: 48%;
         }
 
-        .terms-container {
-            margin-top: 20px;
-            display: flex;
-            align-items: center;
+        @keyframes fadeInBackground {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
-        .terms-container input {
-            margin-right: 10px;
+        @keyframes fadeInContainer {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .spinner {
+        /* Spinner overlay */
+        #spinner-overlay {
             display: none;
-            position: fixed;
-            z-index: 9999;
-            height: 2em;
-            width: 2em;
-            overflow: show;
-            margin: auto;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-        }
-
-        .spinner:before {
-            content: '';
-            display: block;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(255, 255, 255, 0.7);
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
         }
 
-        .spinner:not(:required):after {
-            content: '';
-            display: block;
-            font-size: 10px;
-            width: 1em;
-            height: 1em;
-            margin-top: -0.5em;
-            animation: spinner 150ms infinite linear;
-            border-radius: 0.5em;
-            box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) -1.5em 0 0 0, rgba(0, 0, 0, 0.75) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
+        .spinner {
+            border: 8px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 8px solid #3498db;
+            width: 60px;
+            height: 60px;
+            animation: spin 2s linear infinite;
         }
 
-        @keyframes spinner {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 
+    <div id="spinner-overlay">
+        <div class="spinner"></div>
+        <div>Loading...</div>
+    </div>
+
     <div class="container">
-        <div class="form-container">
-            <div class="center-signup">
-                <h2>Sign up</h2>
-            </div>
-            <form method="POST" action="{{ route('register') }}" id="registration-form" enctype="multipart/form-data">
-                @csrf
-                <div class="id-role-container">
-                    <div class="input-wrapper">
-                        <i class="fas fa-id-card"></i>
-                        <x-text-input id="id_number" class="input-field" type="text" name="id_number" :value="old('id_number')" maxlength="7" placeholder="ID Number" pattern="[A-Za-z]{1}[0-9]{6}" title="ID number must start with a letter followed by 6 numbers" required />
-                        <x-input-error :messages="$errors->get('id_number')" class="input-error" />
-                    </div>
-                    <div class="input-wrapper">
-                        <i class="fas fa-user-tag"></i>
-                        <select id="role" class="input-field" name="role" required>
-                            <option value="" disabled selected>Select Role</option>
-                            <option value="Student">Student</option>
-                            <option value="Teacher">Teacher</option>
-                            <option value="Staff">Staff</option>
-                        </select>
-                        <x-input-error :messages="$errors->get('role')" class="input-error" />
-                    </div>
-                </div>
-                <div class="name-container">
-                    <div class="input-wrapper">
-                        <i class="fas fa-user"></i>
-                        <x-text-input id="first_name" class="input-field" type="text" name="first_name" :value="old('first_name')" placeholder="First Name" required />
-                        <x-input-error :messages="$errors->get('first_name')" class="input-error" />
-                    </div>
-                    <div class="input-wrapper">
-                        <i class="fas fa-user"></i>
-                        <x-text-input id="last_name" class="input-field" type="text" name="last_name" :value="old('last_name')" placeholder="Last Name" required />
-                        <x-input-error :messages="$errors->get('last_name')" class="input-error" />
-                    </div>
-                </div>
-                <div class="input-wrapper">
-                    <i class="fas fa-envelope"></i>
-                    <x-text-input id="email" class="input-field" type="email" name="email" :value="old('email')" placeholder="Email" required />
-                    <x-input-error :messages="$errors->get('email')" class="input-error" />
-                </div>
-                <div class="input-wrapper">
-                    <i class="fas fa-lock"></i>
-                    <x-text-input id="password" class="input-field" type="password" name="password" placeholder="Password" required />
-                    <x-input-error :messages="$errors->get('password')" class="input-error" />
-                </div>
-                <div class="input-wrapper">
-                    <i class="fas fa-lock"></i>
-                    <x-text-input id="password_confirmation" class="input-field" type="password" name="password_confirmation" placeholder="Confirm Password" required />
-                    <x-input-error :messages="$errors->get('password_confirmation')" class="input-error" />
-                </div>
-                <div class="terms-container">
-                    <input type="checkbox" id="agreeCheckbox" required>
-                    <label for="agreeCheckbox">I agree to the <a href="#" onclick="openTermsModal()" style="color: #003FFF;">terms and conditions</a></label>
-                </div>
-                <div class="button-container mt-4">
-                    <button type="submit" class="submit-button">
-                        {{ __('Sign up') }}
-                    </button>
-                </div>
-                <div class="login-link">
-                    <p>Already have an account? <a class="underline" href="{{ route('login') }}">Sign In</a></p>
-                </div>
-                <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
-            </form>
-        </div>
-        <div class="right-side">
+        <div class="logo-container">
             <img src="{{ asset('images/pilarLogo.png') }}" alt="Pilar College of Zamboanga City Logo" class="logo">
             <div class="logo-text">PilarCare</div>
         </div>
-    </div>
-
-    <!-- Loading Spinner -->
-    <div class="spinner" id="spinner"></div>
-
-    <!-- Terms Modal -->
-    <div id="termsModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeTermsModal()">&times;</span>
-            <h2>Personal Data Notice</h2>
-            <p>You are informed that by registering, you will need to provide personal data. This data is collected in accordance with the Data Privacy Act of 2012.</p>
+        <div class="center-signup">
+            <h2>Sign up</h2>
         </div>
+        <form method="POST" action="{{ route('register') }}" class="login-form" id="registration-form">
+            @csrf
+            <div class="mb-2 position-relative">
+                <x-input-label for="id_number" :value="__('ID Number')" class="label"/>
+                <div class="input-wrapper">
+                    <i class="fa-regular fa-id-card"></i>
+                    <x-text-input id="id_number" class="form-control ps-5"
+                                  type="text" name="id_number" :value="old('id_number')"
+                                  required autofocus autocomplete="username"
+                                  maxlength="7" pattern="[A-Za-z]{1}[0-9]{6}"
+                                  placeholder="Enter your ID number" />
+                </div>
+                <x-input-error :messages="$errors->get('id_number')" class="mt-1" />
+            </div>
+
+            <div class="form-row mb-2">
+                <div class="form-col position-relative">
+                    <x-input-label for="first_name" :value="__('First Name')" class="label"/>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user"></i>
+                        <x-text-input id="first_name" class="form-control ps-5"
+                                      type="text" name="first_name" :value="old('first_name')"
+                                      required autocomplete="first_name"
+                                      placeholder="Enter your first name" />
+                    </div>
+                    <x-input-error :messages="$errors->get('first_name')" class="mt-1" />
+                </div>
+
+                <div class="form-col position-relative">
+                    <x-input-label for="last_name" :value="__('Last Name')" class="label"/>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user"></i>
+                        <x-text-input id="last_name" class="form-control ps-5"
+                                      type="text" name="last_name" :value="old('last_name')"
+                                      required autocomplete="last_name"
+                                      placeholder="Enter your last name" />
+                    </div>
+                    <x-input-error :messages="$errors->get('last_name')" class="mt-1" />
+                </div>
+            </div>
+
+            <div class="mb-2 position-relative">
+                <x-input-label for="email" :value="__('Email')" class="label"/>
+                <div class="input-wrapper">
+                    <i class="fas fa-envelope"></i>
+                    <x-text-input id="email" class="form-control ps-5"
+                                  type="email" name="email" :value="old('email')"
+                                  required autocomplete="email"
+                                  placeholder="Example: user@gmail.com" />
+                </div>
+                <x-input-error :messages="$errors->get('email')" class="mt-1" />
+            </div>
+
+            <div class="mb-2 position-relative">
+                <x-input-label for="password" :value="__('Password')" class="label"/>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock"></i>
+                    <x-text-input id="password" class="form-control ps-5"
+                                  type="password" name="password"
+                                  required autocomplete="new-password"
+                                  placeholder="Enter your password" />
+                </div>
+                <x-input-error :messages="$errors->get('password')" class="mt-1" />
+            </div>
+
+            <div class="mb-2 position-relative">
+                <x-input-label for="password_confirmation" :value="__('Confirm Password')" class="label"/>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock"></i>
+                    <x-text-input id="password_confirmation" class="form-control ps-5"
+                                  type="password" name="password_confirmation"
+                                  required autocomplete="new-password"
+                                  placeholder="Confirm your password" />
+                </div>
+                <x-input-error :messages="$errors->get('password_confirmation')" class="mt-1" />
+            </div>
+
+            <div class="form-check mb-3">
+                <input type="checkbox" id="agreeCheckbox" class="form-check-input" required>
+                <label for="agreeCheckbox" class="form-check-label">I agree to the <a href="#" onclick="openTermsModal()" style="color: #003FFF;">terms and conditions</a></label>
+            </div>
+
+            <div class="d-grid mt-2">
+                <button type="submit" class="btn btn-primary log-in-button">
+                    {{ __('Sign up') }}
+                </button>
+            </div>
+
+            <div class="text-center mt-2">
+                <p>Already have an account? <a href="{{ route('login') }}" class="signup-link">Sign In</a></p>
+            </div>
+
+            <!-- reCAPTCHA v3 token -->
+            <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
+        </form>
     </div>
+<!-- Terms Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="termsModalLabel">Data Privacy Act of 2012</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <h4>Overview</h4>
+        <p>The Data Privacy Act of 2012, also known as Republic Act No. 10173, is a law in the Philippines that seeks to protect individual personal data in information and communications systems in the government and the private sector.</p>
+        
+        <h4>Data Subject Rights</h4>
+        <p>The act grants individuals certain rights regarding their personal data, including the right to be informed, the right to access, the right to rectify, and the right to erase personal data.</p>
+
+        <h4>Consent</h4>
+        <p>Before collecting and processing personal data, organizations must obtain explicit consent from individuals. This consent must be freely given, specific, and informed.</p>
+
+        <h4>Penalties</h4>
+        <p>Violations of the Data Privacy Act may result in fines, imprisonment, or both, depending on the severity of the offense. Penalties may be applied to both data controllers and processors.</p>
+
+        <h4>Other Important Information</h4>
+        <p>For more detailed information about the law and your rights, you may visit the National Privacy Commission's website or read the full text of the Data Privacy Act of 2012.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -386,6 +342,14 @@
                 });
             });
         });
+
+        function showSpinner() {
+            document.getElementById('spinner-overlay').style.display = 'flex';
+        }
+
+        function hideSpinner() {
+            document.getElementById('spinner-overlay').style.display = 'none';
+        }
 
         function validateForm() {
             const idNumber = document.getElementById('id_number').value;
@@ -437,22 +401,6 @@
             }
 
             return true;
-        }
-
-        function openTermsModal() {
-            document.getElementById('termsModal').style.display = 'block';
-        }
-
-        function closeTermsModal() {
-            document.getElementById('termsModal').style.display = 'none';
-        }
-
-        function showSpinner() {
-            document.getElementById('spinner').style.display = 'block';
-        }
-
-        function hideSpinner() {
-            document.getElementById('spinner').style.display = 'none';
         }
 
         async function submitForm() {
@@ -553,5 +501,10 @@
                 });
             }
         }
+        function openTermsModal() {
+    var modal = new bootstrap.Modal(document.getElementById('termsModal'), {});
+    modal.show();
+}
+
     </script>
 </x-guest-layout>

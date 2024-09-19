@@ -9,11 +9,18 @@ class Teacher extends Model
 {
     use HasFactory;
 
+    
+    protected $table = 'teacher';  // Adjust this to match your actual table name
+
     protected $fillable = [
         'id_number',
         'first_name',
         'last_name',
-        'grade_or_course', // HED/BED
+        'bed_or_hed', // HED/BED
         'approved'
     ];
+    public function dentalRecords()
+    {
+        return $this->hasMany(DentalRecord::class, 'id_number', 'id_number');
+    }
 }

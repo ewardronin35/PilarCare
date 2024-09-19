@@ -6,13 +6,16 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "ext-imagick": "*",
         "anhskohbo/no-captcha": "^3.6",
+        "barryvdh/laravel-dompdf": "^3.0",
         "laravel/breeze": "^2.0",
         "laravel/framework": "^11.0",
         "laravel/tinker": "^2.9",
         "maatwebsite/excel": "^3.1",
         "predis/predis": "^2.2",
-        "pusher/pusher-php-server": "^7.2"
+        "pusher/pusher-php-server": "^7.2",
+        "rap2hpoutre/fast-excel": "^5.5"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

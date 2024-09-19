@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -10,11 +11,12 @@ class CreateDentalRecordsTable extends Migration
     {
         Schema::create('dental_records', function (Blueprint $table) {
             $table->id();
+            $table->string('id_number'); // Reference to id_number from students/teachers/staff
+            $table->string('user_type'); // Store the type (student, teacher, or staff)
             $table->string('patient_name');
-            $table->date('date_of_birth');
-            $table->text('treatment');
-            $table->string('dentist');
-            $table->timestamps();
+            $table->string('grade_section');
+            $table->timestamps(); // Created at and updated at timestamp
+            
         });
     }
 
@@ -23,3 +25,4 @@ class CreateDentalRecordsTable extends Migration
         Schema::dropIfExists('dental_records');
     }
 }
+

@@ -1,5 +1,8 @@
 <div class="sidebar">
     <style>
+        /* Import Poppins Font */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
         .sidebar {
             width: 100px; /* Collapsed width */
             background-color: #00d2ff;
@@ -14,6 +17,7 @@
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
+            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
         }
 
         .sidebar:hover {
@@ -24,7 +28,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 40px; /* Increased margin to lower menu items */
             transition: opacity 0.3s ease-in-out;
         }
 
@@ -38,6 +41,7 @@
             font-size: 1.5rem;
             font-weight: bold;
             opacity: 0;
+            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
         }
 
         .sidebar:hover .logo-text {
@@ -68,11 +72,12 @@
             cursor: pointer;
             flex-direction: column;
             align-items: flex-start;
+            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
         }
 
         .menu > ul > li:hover {
-            background-color: rgba(255, 255, 255, 0.8);
-            color: #000;
+            background-color: #1f1f90;
+            color: white;
             transform: translateX(10px);
         }
 
@@ -83,10 +88,12 @@
             display: flex;
             align-items: center;
             width: 100%;
+            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
+            font-weight: 500; /* Medium weight for better readability */
         }
 
         .menu > ul > li:hover a {
-            color: #000;
+            color: white;
         }
 
         .menu > ul > li a .icon {
@@ -117,7 +124,6 @@
         .menu li.active .submenu {
             display: flex;
             width: 100%;
-            background-color: rgba(255, 255, 255, 0.8);
         }
 
         .submenu li {
@@ -126,11 +132,11 @@
             width: calc(100% - 40px); /* Adjusting width to prevent overflow */
             color: #000;
             transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
+            font-weight: 400; /* Regular weight for submenu items */
         }
 
         .submenu li:hover {
-            background-color: rgba(255, 255, 255, 0.9);
-            color: #000;
             transform: translateX(10px);
         }
 
@@ -185,50 +191,43 @@
     <nav class="menu">
         <ul>
             <li><a href="{{ route('admin.dashboard') }}" id="admin-dashboard-link"><span class="icon"><i class="fas fa-tachometer-alt"></i></span><span class="menu-text">Dashboard</span></a></li>
-            <li class="has-submenu">
-                <a href="#"><span class="icon"><i class="fas fa-comments"></i></span><span class="menu-text">Complaints</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
-                <ul class="submenu">
-                    <li><a href="{{ route('admin.complaint') }}">View Complaints</a></li>
-                    <li><a href="{{ route('admin.complaint.add') }}">Add Complaints</a></li>
-                </ul>
-            </li>
+            <li><a href="{{ route('admin.complaint') }}"><span class="icon"><i class="fas fa-comments"></i></span><span class="menu-text">Complaints</span></a></li>
             <li class="has-submenu">
                 <a href="#"><span class="icon"><i class="fas fa-notes-medical"></i></span><span class="menu-text">Records</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
                 <ul class="submenu">
-                    <li><a href="{{ route('admin.medical-record.index') }}">Health Approval</a></li>
-                    <li><a href="{{ route('admin.medical-records') }}">View Medical Record</a></li>
+                    <li><a href="{{ route('admin.medical-record.index') }}">View Medical Record</a></li>
                     <li><a href="{{ route('admin.dental-record.index') }}">View Dental Record</a></li>
                 </ul>
             </li>
             <li class="has-submenu">
-                <a href="#"><span class="icon"><i class="fas fa-user-check"></i></span><span class="menu-text">Approved Users</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
-                <ul class="submenu">
-                    <li><a href="{{ route('admin.students.upload') }}" id="admin-enrolled-students-link">Enrolled Students</a></li>
+    <a href="#"><span class="icon"><i class="fas fa-check-circle"></i></span><span class="menu-text">Approvals</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
+    <ul class="submenu">
+        <li><a href="{{ route('admin.uploadHealthExamination') }}">Health Approval</a></li>
+        <li><a href="{{ route('admin.uploadMedicalDocu') }}">Medical Approval</a></li>
+        <li><a href="">Dental Approval</a></li>
+    </ul>
+</li>
+            <li class="has-submenu">
+            <a href="#"><span class="icon"><i class="fas fa-users"></i></span><span class="menu-text">Manage Users</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
+            <ul class="submenu">
+                    <li><a href="{{ route('admin.students.upload') }}" id="admin-enrolled-students-link">Students</a></li>
                     <li><a href="{{ route('admin.staff.upload') }}">Staffs</a></li>
                     <li><a href="{{ route('admin.teachers.upload') }}">Teachers</a></li>
+                    <li><a href="{{ route('admin.nurses.upload') }}">Nurse</a></li>
+                    <li><a href="{{ route('admin.doctors.upload') }}">Doctor</a></li>
                 </ul>
             </li>
-            <li><a href="{{ route('admin.appointment') }}" id="admin-appointment-link"><span class="icon"><i class="fas fa-calendar-check"></i></span><span class="menu-text">Appointment</span></a></li>
-            <li class="has-submenu">
-                <a href="#"><span class="icon"><i class="fas fa-boxes"></i></span><span class="menu-text">Inventory</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
-                <ul class="submenu">
-                    <li><a href="{{ route('admin.inventory') }}">Add Item</a></li>
-                    <li><a href="{{ route('admin.inventory') }}">Inventory List</a></li>
-                </ul>
+            <li class=>
+                <a href="{{ route('admin.appointment') }}"><span class="icon"><i class="fas fa-calendar-check"></i></span><span class="menu-text">Appointment</span></a>
             </li>
-            <li class="has-submenu">
-                <a href="#"><span class="icon"><i class="fas fa-chart-line"></i></span><span class="menu-text">Monitoring and Report</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
-                <ul class="submenu">
-                    <li><a href="{{ route('admin.monitoring-report-log') }}">Release Notification</a></li>
-                    <li><a href="{{ route('admin.monitoring-report-log') }}">View Logs and Daily Transactions</a></li>
-                </ul>
+            <li>
+                <a href="{{ route('admin.inventory') }}"><span class="icon"><i class="fas fa-boxes"></i></span><span class="menu-text">Inventory</span></a>
+    
             </li>
-            <li class="has-submenu">
-                <a href="#"><span class="icon"><i class="fas fa-user"></i></span><span class="menu-text">Profile</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
-                <ul class="submenu">
-                    <li><a href="{{ route('admin.monitoring-report-log') }}">View Profile of Student</a></li>
-                </ul>
+            <li>
+                <a href="{{ route('admin.monitoring-report-log') }}"><span class="icon"><i class="fas fa-chart-line"></i></span><span class="menu-text">Reports and logs</i></span></a>
             </li>
+            <li><a href="{{ route('admin.settings.edit') }}"><span class="icon"><i class="fas fa-cogs"></i></span><span class="menu-text">Settings</span></a></li>
         </ul>
     </nav>
 </div>

@@ -16,4 +16,8 @@ class Student extends Model
         'grade_or_course',
         'approved' // Adjust this field name as needed
     ];
+    public function dentalRecords()
+    {
+        return $this->hasMany(DentalRecord::class, 'id_number', 'id_number');
+    }
 }

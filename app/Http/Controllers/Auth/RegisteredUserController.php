@@ -4,6 +4,11 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Student;
+use App\Models\Parents;
+use App\Models\Staff;
+use App\Models\Teacher;
+use App\Models\Nurse;  // Include Nurse model
+use App\Models\Doctor;  // Include Doctor model
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -11,6 +16,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class RegisteredUserController extends Controller
 {
@@ -27,15 +33,12 @@ class RegisteredUserController extends Controller
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'string', 'in:Student,Teacher,Staff'],
             'g-recaptcha-response' => ['required'],
         ]);
     }
 
-    protected function createUser(array $data)
+    protected function createUser(array $data, $role, $approved)
     {
-        $role = $this->determineRole($data['id_number']);
-
         return User::create([
             'id_number' => $data['id_number'],
             'first_name' => $data['first_name'],
@@ -43,20 +46,67 @@ class RegisteredUserController extends Controller
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'role' => $role,
-            'approved' => false,
+            'approved' => $approved,
         ]);
     }
 
-    protected function determineRole($idNumber)
+    protected function determineRoleAndApproval($idNumber, $firstName, $lastName)
     {
-        if (preg_match('/^S[0-9]{6}$/', $idNumber)) {
-            return 'Student';
-        } elseif (preg_match('/^ST[0-9]{6}$/', $idNumber)) {
-            return 'Staff';
-        } elseif (preg_match('/^T[0-9]{6}$/', $idNumber)) {
-            return 'Teacher';
+        // Check if the student's first and last name matches the database record
+        if (Schema::hasColumn('students', 'id_number')) {
+            $student = Student::where('id_number', $idNumber)
+                              ->first();
+            if ($student) {
+                return ['role' => 'Student', 'approved' => $student->approved];
+            }
         }
-        return 'Parent'; // Default role if none of the patterns match
+
+        // Check if the parent's first and last name matches the database record
+        if (Schema::hasColumn('parents', 'id_number')) {
+            $parent = Parents::where('id_number', $idNumber)
+                             ->first();
+            if ($parent) {
+                return ['role' => 'Parent', 'approved' => $parent->approved];
+            }
+        }
+
+        // Check if the staff's first and last name matches the database record
+        if (Schema::hasColumn('staff', 'id_number')) {
+            $staff = Staff::where('id_number', $idNumber)
+                          ->first();
+            if ($staff) {
+                return ['role' => 'Staff', 'approved' => $staff->approved];
+            }
+        }
+
+        // Check if the teacher's first and last name matches the database record
+        if (Schema::hasColumn('teacher', 'id_number')) {
+            $teacher = Teacher::where('id_number', $idNumber)
+                              ->first();
+            if ($teacher) {
+                return ['role' => 'Teacher', 'approved' => $teacher->approved];
+            }
+        }
+
+        // Check if the nurse's first and last name matches the database record
+        if (Schema::hasColumn('nurses', 'id_number')) {
+            $nurse = Nurse::where('id_number', $idNumber)
+                          ->first();
+            if ($nurse) {
+                return ['role' => 'Nurse', 'approved' => $nurse->approved];
+            }
+        }
+
+        // Check if the doctor's first and last name matches the database record
+        if (Schema::hasColumn('doctors', 'id_number')) {
+            $doctor = Doctor::where('id_number', $idNumber)
+                            ->first();
+            if ($doctor) {
+                return ['role' => 'Doctor', 'approved' => $doctor->approved];
+            }
+        }
+
+        return null; // Return null if no matching role is found
     }
 
     public function store(Request $request)
@@ -84,16 +134,21 @@ class RegisteredUserController extends Controller
             ], 422);
         }
 
-        // Check if the user exists in the students table and is approved
-        $student = Student::where('id_number', $request->id_number)->first();
-        if (!$student || !$student->approved) {
+        // Determine the role and approval status based on the ID number, first name, and last name
+        $roleAndApproval = $this->determineRoleAndApproval(
+            $request->id_number, 
+            $request->first_name, 
+            $request->last_name
+        );
+
+        if (!$roleAndApproval) {
             return response()->json([
                 'success' => false,
-                'errors' => ['id_number' => 'You are not authorized to register.']
+                'errors' => ['id_number' => 'The ID number, first name, and last name do not match any records. Please check your information.']
             ], 422);
         }
 
-        $user = $this->createUser($request->all());
+        $user = $this->createUser($request->all(), $roleAndApproval['role'], $roleAndApproval['approved']);
         event(new Registered($user));
         $user->sendEmailVerificationNotification();
         Auth::login($user);

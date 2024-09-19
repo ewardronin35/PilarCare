@@ -9,10 +9,12 @@ class CreateHealthExaminationsTable extends Migration
     {
         Schema::create('health_examinations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('id_number'); // Use id_number instead of user_id
+            $table->foreign('id_number')->references('id_number')->on('users')->onDelete('cascade'); // Foreign key constraint
+            $table->string('school_year');
             $table->string('health_examination_picture');
-            $table->string('xray_picture')->nullable();
-            $table->string('lab_result_picture')->nullable();
+            $table->json('xray_picture')->nullable(); // Storing multiple X-ray pictures as JSON array
+            $table->json('lab_result_picture')->nullable(); // Storing multiple Lab Result pictures as JSON array
             $table->boolean('is_approved')->default(false);
             $table->timestamps();
         });
