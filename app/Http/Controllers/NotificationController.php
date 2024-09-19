@@ -29,13 +29,19 @@ class NotificationController extends Controller
         ]);
     }
     public function markAsOpened($id)
-{
-    $notification = Notification::findOrFail($id);
-    $notification->is_opened = true;
-    $notification->save();
-
-    return response()->json(['message' => 'Notification marked as opened']);
-}
+    {
+        $notification = Notification::find($id);
+    
+        if ($notification) {
+            $notification->is_read = true;
+            $notification->save();
+    
+            return response()->json(['message' => 'Notification marked as read']);
+        }
+    
+        return response()->json(['error' => 'Notification not found'], 404);
+    }
+    
     
     public function store(Request $request)
     {

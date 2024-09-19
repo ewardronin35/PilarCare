@@ -22,6 +22,7 @@ class CreateComplaintsTable extends Migration
             $table->string('status')->default('In progress');
             $table->string('role'); 
             $table->string('medicine_given')->nullable();
+            $table->string('confine_status')->default('not_confined');
             $table->timestamps();
         });
     }

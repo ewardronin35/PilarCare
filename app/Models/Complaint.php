@@ -21,5 +21,6 @@ class Complaint extends Model
         'status',
         'role',
         'medicine_given',
+        'confine_status',
     ];
 }

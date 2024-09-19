@@ -327,7 +327,7 @@
                 confirmButtonText: 'Yes, approve it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    fetch(`/admin/medical-record/${id}/approve`, {
+                    fetch(`/admin/health-examination/${id}/approve`, {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
@@ -371,7 +371,7 @@
                 confirmButtonText: 'Yes, reject it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    fetch(`/admin/medical-record/${id}/reject`, {
+                    fetch(`/admin/health-examination/${id}/reject`, {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')

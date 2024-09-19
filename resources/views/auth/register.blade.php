@@ -246,7 +246,7 @@
                     <x-text-input id="email" class="form-control ps-5"
                                   type="email" name="email" :value="old('email')"
                                   required autocomplete="email"
-                                  placeholder="Enter your email" />
+                                  placeholder="Example: user@gmail.com" />
                 </div>
                 <x-input-error :messages="$errors->get('email')" class="mt-1" />
             </div>

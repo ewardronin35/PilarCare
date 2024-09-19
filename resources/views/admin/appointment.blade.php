@@ -3,8 +3,18 @@
     <style>
         body {
             background-color: #f8f9fa;
-            font-family: 'Arial', sans-serif;
+            font-family: 'Poppins', sans-serif; 
+                
         }
+        .stats-and-table-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 30px;
+    padding: 20px;
+    flex-wrap: wrap; /* Fix overlapping on smaller screens */
+
+}
 
         .main-content {
             margin-top: 30px;
@@ -12,52 +22,53 @@
 
         .tabs {
             display: flex;
-            justify-content: center;
             border-bottom: 2px solid #ddd;
             margin-bottom: 20px;
-            width: 100%;
+            justify-content: space-around;
         }
-
-        .tabs .tab {
+        .tab {
             padding: 10px 20px;
             cursor: pointer;
-            transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
-            background-color: #f8f9fa;
-            color: #333;
-            flex: 1;
-            text-align: center;
-        }
-
-        .tabs .tab:hover {
-            background-color: #e0e0e0;
-            color: #0056b3;
-        }
-
-        .tabs .tab.active {
-            border-bottom: 2px solid #0056b3;
+            transition: background-color 0.3s ease-in-out;
             font-weight: bold;
-            color: #0056b3;
+            font-size: 16px;
+            text-align: center;
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 10px 10px 0 0;
+        }
+
+
+        .tab:hover {
+            background-color: #c9d1d9;
+        }
+
+        .tab.active {
+            background-color: #007bff;
+            color: white;
         }
 
         .tab-content {
             display: none;
-            width: 100%;
         }
 
         .tab-content.active {
             display: block;
         }
 
-        .form-container {
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            animation: fadeInUp 0.5s ease-in-out;
-            width: 100%;
-            max-width: 500px;
-            box-sizing: border-box;
-        }
+
+ /* Remove the comma here */
+.form-container {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    animation: fadeInUp 0.5s ease-in-out;
+    width: 100%;
+    max-width: 500px;
+    box-sizing: border-box;
+}
+
 
         .form-group {
             margin-bottom: 15px;
@@ -87,6 +98,7 @@
             background-color: #00d1ff;
             color: white;
             padding: 10px 20px;
+            margin-left: 10px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
@@ -105,22 +117,17 @@
 
         .appointment-table {
             animation: fadeInUp 0.5s ease-in-out;
-            width: 90%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            overflow-x: auto;
-            max-height: 400px;
-            overflow-y: scroll;
+            width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
         }
 
         .appointment-table th,
         .appointment-table td {
-            padding: 10px;
-            text-align: left;
-            white-space: nowrap;
+            padding: 12px 15px;
+    border: 1px solid #ddd;
+    text-align: left;
+    color: #333;
         }
 
         .appointment-table th {
@@ -148,6 +155,7 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s, transform 0.3s;
+            transform-origin: center; /* Ensures smooth scaling from the center */
             font-size: 1rem;
         }
 
@@ -206,6 +214,8 @@
             padding: 10px;
             text-align: center;
             cursor: pointer;
+            transition: background-color 0.2s ease-in-out; /* Smooth transition */
+
         }
 
         .calendar th {
@@ -221,6 +231,45 @@
         .calendar td:hover {
             background-color: #f0f8ff;
         }
+        .chart-container {
+    flex: 1;
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.chart-container h2 {
+    text-align: center;
+    color: #0056b3;
+    margin-bottom: 20px;
+}
+/* Appointment List container (Table section) */
+.appointment-list-container {
+    flex: 2;
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.appointment-list-container h2 {
+    text-align: center;
+    color: #0056b3;
+    margin-bottom: 20px;
+}
+
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
         .appointment-preview {
             animation: fadeInUp 0.5s ease-in-out;
     background-color: #f8f9fa;
@@ -233,133 +282,256 @@
 .appointment-preview p {
     margin: 0;
 }
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.6); /* Dark background with opacity */
+    animation: fadeIn 0.4s ease-in-out;
+}
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
 
-        .modal {
-            animation: fadeInUp 0.5s ease-in-out;
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgb(0, 0, 0);
-            background-color: rgba(0, 0, 0, 0.4);
-            padding-top: 60px;
-        }
 
-        .modal-content {
-            background-color: #fefefe;
-            margin: 5% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            border-radius: 10px;
-        }
+.modal-content {
+    background-color: white;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 90%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.4s ease-in-out;
+    overflow-y: auto;
+    max-height: 80%;
+}
+@keyframes slideIn {
+    from {
+        transform: translateY(-50px);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
 
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
+.modal h2 {
+    margin-top: 0;
+    font-size: 1.8rem;
+    text-align: center;
+    color: #0056b3;
+}
 
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
+/* Close Button */
+.close {
+    color: #999;
+    float: right;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+}
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+.close:hover, .close:focus {
+    color: #333;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Appointments List Styles */
+.appointments-container {
+    padding: 15px 0;
+}
+
+#appointments-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+#appointments-list li {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 10px;
+    transition: transform 0.2s ease-in-out;
+}
+
+#appointments-list li:hover {
+    background-color: #f0f8ff;
+    transform: scale(1.02);
+}
+
+/* Appointment Text */
+#appointments-list li p {
+    margin: 0;
+    font-size: 1rem;
+    color: #333;
+}
+
+#appointments-list li p span {
+    font-weight: bold;
+    color: #0056b3;
+}
+
+/* Custom Scrollbar for Modal Content */
+.modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 5px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background-color: #888;
+}
+/* Add Appointment Button Styles */
+.add-appointment-btn {
+    background-color: #00d1ff;
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background-color 0.3s, box-shadow 0.3s, transform 0.2s ease-in-out;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.add-appointment-btn:hover {
+    background-color: #00d1ff;
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    transform: scale(1.05);
+}
+
+.add-appointment-btn:active {
+    transform: scale(0.98);
+    box-shadow: 0 3px 4px rgba(0, 0, 0, 0.2);
+}
+
     </style>
 
     <main class="main-content">
-        <div class="tabs">
-            <div class="tab active" onclick="showTab('add-appointment')">Add Appointment</div>
-            <div class="tab" onclick="showTab('appointment-table')">Appointment List</div>
-            <div class="tab" onclick="showTab('doctors')">Doctors</div>
+    <div class="tabs">
+            <div class="tab active" onclick="showTab('doctors-appointment-calendar')">Doctors, Add Appointment & Calendar</div>
+            <div class="tab" onclick="showTab('stats-appointment-list')">Statistics & Appointment List</div>
         </div>
 
-        <!-- Add Appointment Form -->
-        <div id="add-appointment" class="tab-content active">
-            <div style="display: flex; justify-content: space-between; width: 100%;">
-                <div class="form-container">
-                    <h2>Add Appointment</h2>
-                    <form id="add-form">
-                        @csrf
-                        <div class="form-group">
-                            <label for="id-number">ID Number</label>
-                            <div style="display: flex; align-items: center;">
-                                <input type="text" id="id-number" name="id_number" required maxlength="7" oninput="fetchPatientName()">
-                                <button type="button" class="search-btn" onclick="fetchPatientName()">Search</button>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="patient-name">Patient Name</label>
-                            <input type="text" id="patient-name" name="patient_name" required>
-                        </div>
-                        <div class="form-group input-row">
-                            <div>
-                                <label for="appointment-date">Appointment Date</label>
-                                <input type="date" id="appointment-date" name="appointment_date" required>
-                            </div>
-                            <div>
-                                <label for="appointment-time">Appointment Time</label>
-                                <input type="time" id="appointment-time" name="appointment_time" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="appointment-type">Appointment Type</label>
-                            <select id="appointment-type" name="appointment_type" required>
-                                <option value="Dr. Isnani">Dr. Nurmina Isnani</option>
-                                <option value="Dr. Nurmina">Dr. Sarah Uy Gan</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <button type="button" onclick="addAppointment()">Add Appointment</button>
-                        </div>
-                    </form>
-                </div>
-                <div class="calendar-container">
-                    <h2>Appointment Calendar</h2>
-                    <div class="calendar-controls">
-                        <button onclick="changeMonth(-1)">Previous</button>
-                        <span id="calendar-month-year"></span>
-                        <button onclick="changeMonth(1)">Next</button>
+  <!-- Doctors, Add Appointment and Calendar Tab -->
+<div id="doctors-appointment-calendar" class="tab-content active">
+    <div style="display: flex; justify-content: space-between; width: 100%; gap: 20px;">
+        <!-- Form Section -->
+        <div class="form-container" style="flex: 1;">
+            <h2>Add Appointment</h2>
+            <form id="add-form">
+                @csrf
+                <div class="form-group">
+                    <label for="id-number">ID Number</label>
+                    <div style="display: flex; align-items: center;">
+                        <input type="text" id="id-number" name="id_number" required maxlength="7">
+                        <button type="button" class="search-btn" onclick="fetchPatientName()">Search</button>
                     </div>
-                    <table class="calendar">
-                        <thead>
-                            <tr>
-                                <th>Sun</th>
-                                <th>Mon</th>
-                                <th>Tue</th>
-                                <th>Wed</th>
-                                <th>Thu</th>
-                                <th>Fri</th>
-                                <th>Sat</th>
-                            </tr>
-                        </thead>
-                        <tbody id="calendar-body">
-                            <!-- Dynamically generated calendar rows go here -->
-                        </tbody>
-                    </table>
+                </div>
+                <div class="form-group">
+                    <label for="patient-name">Patient Name</label>
+                    <input type="text" id="patient-name" name="patient_name" required>
+                </div>
+                <div class="form-group input-row">
+                    <div>
+                        <label for="appointment-date">Appointment Date</label>
+                        <input type="date" id="appointment-date" name="appointment_date" required>
+                    </div>
+                    <div>
+                        <label for="appointment-time">Appointment Time</label>
+                        <input type="time" id="appointment-time" name="appointment_time" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="appointment-type">Appointment Type</label>
+                    <select id="appointment-type" name="appointment_type" required>
+                        <option value="Dr. Isnani">Dr. Nurmina Isnani</option>
+                        <option value="Dr. Sarah Uy Gan">Dr. Sarah Uy Gan</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="add-appointment-btn" onclick="addAppointment()">Add Appointment</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Calendar Section -->
+        <div class="calendar-container" style="flex: 1.5;">
+            <h2>Appointment Calendar</h2>
+            <div class="calendar-controls">
+                <button onclick="changeMonth(-1)">Previous</button>
+                <span id="calendar-month-year"></span>
+                <button onclick="changeMonth(1)">Next</button>
+            </div>
+            <table class="calendar">
+                <thead>
+                    <tr>
+                        <th>Sun</th>
+                        <th>Mon</th>
+                        <th>Tue</th>
+                        <th>Wed</th>
+                        <th>Thu</th>
+                        <th>Fri</th>
+                        <th>Sat</th>
+                    </tr>
+                </thead>
+                <tbody id="calendar-body">
+                    <!-- Dynamically generated calendar rows go here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Doctors Profile Section -->
+        <div class="form-container" style="flex: 1;">
+        <div id="doctors-section" style="flex: 1;">
+            <h2>Our Doctors</h2>
+            <div class="content-row" style="display: flex; flex-direction: column;">
+                <div class="profile-box">
+                    <img src="https://img.icons8.com/?size=100&id=9570&format=png&color=000000" alt="Dr. Isnani">
+                    <div class="profile-info">
+                        <h2>Dr. Nurmina Isnani</h2>
+                        <p>General Physician</p>
+                    </div>
+                </div>
+                <div class="profile-box">
+                    <img src="https://img.icons8.com/?size=100&id=9570&format=png&color=000000" alt="Dr. Nurmina">
+                    <div class="profile-info">
+                        <h2>Dr. Sarah Uy Gan</h2>
+                        <p>School Dentist</p>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
+</div>
+</div>
 
-        <!-- Appointment Table Content -->
-        <div id="appointment-table" class="tab-content">
+        <!-- Statistics and Appointment List Tab -->
+        <div id="stats-appointment-list" class="tab-content">
+        <div class="stats-and-table-container">
+            <div class="chart-container">
+                <h2>Statistics</h2>
+                <canvas id="appointmentsChart"></canvas>
+            </div>
+            <div class="appointment-list-container">
+            <h2>Appointment List</h2>
             <table class="appointment-table">
                 <thead>
                     <tr>
@@ -390,27 +562,8 @@
                 </tbody>
             </table>
         </div>
-
-        <!-- Doctors Profile -->
-        <div id="doctors" class="tab-content">
-            <div class="content-row">
-                <div class="profile-box">
-                    <img src="https://img.icons8.com/?size=100&id=9570&format=png&color=000000" alt="Dr. Isnani">
-                    <div class="profile-info">
-                        <h2>Dr. Nurmina Isnani</h2>
-                        <p>General Physician</p>
-                    </div>
-                </div>
-                <div class="profile-box">
-                    <img src="https://img.icons8.com/?size=100&id=9570&format=png&color=000000" alt="Dr. Nurmina">
-                    <div class="profile-info">
-                        <h2>Dr. Sarah Uy Gan</h2>
-                        <p>School Dentist</p>
-                    </div>
-                </div>
-            </div>
         </div>
-
+        </div>
         <!-- Edit Appointment Modal -->
         <div id="edit-modal" class="modal">
             <div class="modal-content">
@@ -463,7 +616,10 @@
         </div>
     </main>
 
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
     
     function showTab(tabId) {
@@ -552,6 +708,12 @@
     function closeEditModal() {
         document.getElementById('edit-modal').style.display = 'none';
     }
+
+
+
+function closePreviewModal() {
+    document.getElementById('preview-modal').style.display = 'none';
+}
 
     function addAppointment() {
         const form = document.getElementById('add-form');
@@ -730,8 +892,8 @@
 
 function openPreviewModal(date, month, year) {
     console.log("openPreviewModal called for date:", date, "month:", month + 1, "year:", year);
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
 
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
     if (date > daysInMonth) {
         console.error('Invalid date:', date, 'for month:', month + 1, 'in year:', year);
         return;
@@ -745,14 +907,17 @@ function openPreviewModal(date, month, year) {
         .then(response => response.json())
         .then(data => {
             const appointmentsList = document.getElementById('appointments-list');
-            appointmentsList.innerHTML = '';
-            if (data.appointments.length > 0) {
+            appointmentsList.innerHTML = ''; // Clear previous appointments
+
+            if (data.appointments && data.appointments.length > 0) {
+                // Display each appointment
                 data.appointments.forEach(appointment => {
                     const li = document.createElement('li');
                     li.innerText = `${appointment.patient_name} - ${appointment.appointment_time} (${appointment.appointment_type})`;
                     appointmentsList.appendChild(li);
                 });
             } else {
+                // No appointments found for the selected date
                 const li = document.createElement('li');
                 li.innerText = 'No appointments for this day.';
                 appointmentsList.appendChild(li);
@@ -760,15 +925,20 @@ function openPreviewModal(date, month, year) {
 
             // Ensure the modal is visible
             const modal = document.getElementById('preview-modal');
-            if (modal.style.display !== 'block') {
-                console.log('Opening modal now...');
-                modal.style.display = 'block';
-            }
+            modal.style.display = 'block'; // Show the modal
         })
         .catch(error => {
             console.error('Error fetching appointments for the day:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to load appointments.',
+                timer: 3000,
+                showConfirmButton: false
+            });
         });
 }
+
 
 function closePreviewModal() {
     const modal = document.getElementById('preview-modal');
@@ -790,6 +960,28 @@ function changeMonth(direction) {
         }
         renderCalendar(currentMonth, currentYear);
     }
+     // Chart.js statistics for appointments
+     const ctx = document.getElementById('appointmentsChart').getContext('2d');
+        const appointmentsChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Total', 'Upcoming', 'Completed', 'Dr. Isnani', 'Dr. Gan'],
+                datasets: [{
+                    label: 'Number of Appointments',
+                    data: [{{ $totalAppointments }}, {{ $upcomingAppointments }}, {{ $completedAppointments }}, {{ $drIsnaniAppointments }}, {{ $drGanAppointments }}],
+                    backgroundColor: ['rgba(75, 192, 192, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 206, 86, 0.2)', 'rgba(153, 102, 255, 0.2)', 'rgba(255, 159, 64, 0.2)'],
+                    borderColor: ['rgba(75, 192, 192, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
 </script>
 
 

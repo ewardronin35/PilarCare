@@ -406,35 +406,9 @@
             </div>
         </div>
 
-        <div class="data-table-wrapper no-scroll">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Sl.No</th>
-                        <th>Name</th>
-                        <th>Appointment Type</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($appointments as $appointment)
-                    <tr>
-                        <td>{{ $loop->iteration }}</td>
-                        <td>{{ $appointment->name }}</td>
-                        <td>{{ $appointment->appointment_type }}</td>
-                        <td>{{ $appointment->appointment_date }}</td>
-                        <td>{{ $appointment->appointment_time }}</td>
-                        <td>
-                            <button onclick="openModal({{ $appointment->id }})">Cancel / Reschedule</button>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
+        <div class="calendar-wrapper">
+    <div id="calendar"></div> <!-- FullCalendar will render here -->
+</div>
 
     <!-- The Modal -->
     <div id="welcomeModal" class="modal">
@@ -556,6 +530,8 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const modal = document.getElementById("welcomeModal");
@@ -755,7 +731,36 @@
             input.value = input.value.replace(/[^0-9]/g, '');  // Remove anything that is not a digit
         }, 1);
     }
-        });
+    var calendarEl = document.getElementById('calendar');
+        if (calendarEl) {
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                events: [
+                    @foreach($appointments as $appointment)
+                    {
+                        title: '{{ $appointment->name }} - {{ $appointment->appointment_type }}',
+                        start: '{{ $appointment->appointment_date }}T{{ $appointment->appointment_time }}',
+                        id: '{{ $appointment->id }}'
+                    },
+                    @endforeach
+                ],
+                eventClick: function(info) {
+                    openModal(info.event.id);
+                }
+            });
+
+            calendar.render();
+        }
+
+        function openModal(appointmentId) {
+            console.log('Opening modal for appointment ID:', appointmentId);
+        }
+    });
         
     </script>
 </x-app-layout>

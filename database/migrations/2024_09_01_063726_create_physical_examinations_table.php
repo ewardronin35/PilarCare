@@ -9,17 +9,18 @@ class CreatePhysicalExaminationsTable extends Migration
     {
         Schema::create('physical_examinations', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
+            $table->string('id_number'); // Replacing user_id with id_number
             $table->float('height');
             $table->float('weight');
             $table->string('vision');
-            $table->string('medicine_intake')->nullable();
             $table->text('remarks')->nullable();
             $table->boolean('md_approved')->default(false); // MD approval status
+            $table->string('picture')->nullable(); // Adding the column for picture upload
+
             $table->timestamps();
 
             // Foreign key constraint
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('id_number')->references('id_number')->on('information')->onDelete('cascade');
         });
     }
 

@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Teacher;
 use App\Models\Staff;
 use App\Models\Parents;
+use App\Models\Notification;
 use App\Models\Information;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,10 +19,31 @@ use App\Http\Controllers\InventoryController;
 class ComplaintController extends Controller
 {
     public function index()
-    {
-    
-        $role = strtolower(Auth::user()->role);
-        $complaints = Complaint::where('role', $role)->get();
+{
+    $role = strtolower(Auth::user()->role);
+    $idNumber = Auth::user()->id_number;
+    $complaints = Complaint::where('id_number', $idNumber)->get();
+    // Fetch complaints based on role
+
+    // Fetch the most common complaint and most used medicine
+    $mostCommonComplaint = Complaint::select('sickness_description')
+        ->groupBy('sickness_description')
+        ->orderByRaw('COUNT(*) DESC')
+        ->limit(1)
+        ->value('sickness_description');
+
+        $commonComplaintCount = Complaint::where('sickness_description', $mostCommonComplaint)
+        ->count();
+
+    $mostUsedMedicine = Complaint::select('medicine_given')
+        ->groupBy('medicine_given')
+        ->orderByRaw('COUNT(*) DESC')
+        ->limit(1)
+        ->value('medicine_given');
+
+        $mostUsedMedicineCount = Complaint::where('medicine_given', $mostUsedMedicine)
+        ->count();
+
 
     foreach ($complaints as $complaint) {
         $user = User::where('id_number', $complaint->id_number)->first();
@@ -31,26 +53,35 @@ class ComplaintController extends Controller
         }
     }
     
-        switch ($role) {
-            case 'student':
-                return view('student.complaint', compact('complaints', 'role'));
-            case 'parent':
-                return view('parent.complaint', compact('complaints', 'role'));
-            case 'teacher':
-                return view('teacher.complaint', compact('complaints', 'role'));
-            case 'staff':
-                return view('staff.complaint', compact('complaints', 'role'));
+
+    // Pass the data to the appropriate view based on role
+    switch ($role) {
+        case 'student':
+        case 'parent':
+        case 'teacher':
+        case 'staff':
+            // Ensure you have corresponding views like complaint/student.blade.php, complaint/parent.blade.php, etc.
+            return view("$role.complaint", compact('complaints'));
+
+
             case 'admin':
+                // Fetch complaints per role
                 $studentComplaints = Complaint::where('role', 'student')->get();
                 $staffComplaints = Complaint::where('role', 'staff')->get();
                 $parentComplaints = Complaint::where('role', 'parent')->get();
                 $teacherComplaints = Complaint::where('role', 'teacher')->get();
-                return view('admin.complaint', compact('studentComplaints', 'staffComplaints', 'parentComplaints', 'teacherComplaints'));
-            default:
-                abort(403, 'Unauthorized action.');
-        }
-    }
+            
+                // Pass each role's complaints as separate variables
+                return view('admin.complaint', compact('studentComplaints', 'staffComplaints', 'parentComplaints', 'teacherComplaints', 'mostCommonComplaint', 'commonComplaintCount', 'mostUsedMedicine', 'mostUsedMedicineCount'));
+            
 
+        default:
+            abort(403, 'Unauthorized action.');
+    }
+}
+
+    
+    
     public function addComplaint()
     {
         $role = strtolower(Auth::user()->role);
@@ -73,7 +104,8 @@ class ComplaintController extends Controller
             'pain_assessment' => 'required|integer|min:1|max:10',
             'sickness_description' => 'required|string|max:1000',
             'role' => 'required|string|max:255',
-            'medicine_given' => 'required|string|max:255'
+            'medicine_given' => 'required|string|max:255',
+            'confine_status' => 'required|string|in:confined,not_confined',  // New validation rule for confine_status
         ]);
         
         if ($validator->fails()) {
@@ -93,7 +125,8 @@ class ComplaintController extends Controller
                 'pain_assessment' => $request->pain_assessment,
                 'sickness_description' => $request->sickness_description,
                 'role' => $request->role,
-                'medicine_given' => $request->medicine_given
+                'medicine_given' => $request->medicine_given,
+                'confine_status' => $request->confine_status // New field for confine status
             ]);    
     
             // Check if the medicine exists in the inventory and reduce quantity
@@ -105,64 +138,55 @@ class ComplaintController extends Controller
                 return response()->json(['success' => false, 'message' => 'Medicine not found in inventory'], 404);
             }
     
-            return response()->json(['success' => true, 'message' => 'Complaint successfully saved']);
-            \Log::info('Complaint successfully saved:', $complaint->toArray());  
+            // Send notification to the user
+            $user = User::where('id_number', $request->id_number)->first();
+            if ($user) {
+                // Assuming you have a Notification model
+                Notification::create([
+                    'user_id' => $user->id_number, // Use the 'id_number' field if that's the foreign key
+                    'title' => 'Complaint Received',
+                    'message' => 'You have a new complaint added',
+                    'status' => 'unread'
+                ]);
+            }
+    
+            \Log::info('Complaint and notification successfully saved:', ['complaint' => $complaint->toArray(), 'user_id' => $user->id]);
+    
+            return response()->json(['success' => true, 'message' => 'Complaint and notification successfully saved']);
     
         } catch (\Exception $e) {
+            \Log::error('Error while saving complaint:', ['error' => $e->getMessage()]);
             return response()->json(['success' => false, 'message' => 'An error occurred while saving the complaint. Please try again.', 'error' => $e->getMessage()], 500);
         }
     }
     
     
-
-    public function updateStatus(Request $request, $id)
-    {
-        $validator = Validator::make($request->all(), [
-            'status' => 'required|string|in:Completed,Not yet done',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        try {
-            $complaint = Complaint::findOrFail($id);
-            $complaint->update(['status' => $request->status]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Status updated successfully!',
-                'status' => $complaint->status
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'An error occurred while updating the status. Please try again.',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
+    
     public function show($id)
     {
-        try {
-            $complaint = Complaint::find($id);
-
-            if ($complaint) {
-                return response()->json($complaint);
-            } else {
-                return response()->json(['error' => 'Complaint not found'], 404);
-            }
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'An error occurred. Please try again.',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+        // Fetch the complaint based only on the ID
+        $complaint = Complaint::findOrFail($id);
+    
+        // Return the complaint data as JSON
+        return response()->json($complaint);
+    }
+    
+    public function edit($id)
+    {
+        $complaint = Complaint::findOrFail($id);
+        
+        // Return the complaint data for editing
+        return response()->json($complaint);
+    }
+    
+    public function update(Request $request, $id)
+    {
+        $complaint = Complaint::findOrFail($id);
+        $complaint->notes = $request->input('notes');
+        $complaint->status = $request->input('status');
+        $complaint->save();
+    
+        return redirect()->back()->with('success', 'Complaint updated successfully.');
     }
 
     public function fetchStudentData($id)

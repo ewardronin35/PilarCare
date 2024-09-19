@@ -28,6 +28,14 @@ use App\Http\Controllers\PhysicalExaminationController;
 use App\Http\Controllers\DentalExaminationController;
 use App\Http\Controllers\NurseController;
 use App\Http\Controllers\DoctorController;
+use App\Events\LowStockNotification;
+use App\Http\Controllers\ReportLogsController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\StaffDashboardController;
+use App\Http\Controllers\MedicalHistoryController;
+use App\Http\Controllers\MedicineIntakeController;
+
+
 
 
 Route::get('/', function () {
@@ -60,24 +68,6 @@ Route::get('email-verified', function () {
 })->name('verification.verified');
 
 // Redirect to specific dashboard based on user role
-Route::middleware(['auth', 'verified'])->get('/dashboard', function () {
-    $user = Auth::user();
-    switch ($user->role) {
-        case 'Student':
-            return redirect()->route('student.dashboard');
-        case 'Parent':
-            return redirect()->route('parent.dashboard');
-        case 'Teacher':
-            return redirect()->route('teacher.dashboard');
-        case 'Staff':
-            return redirect()->route('staff.dashboard');
-        case 'Admin':
-            return redirect()->route('admin.dashboard');
-        default:
-            return redirect('/');
-    }
-})->name('dashboard');
-
 // Group parent routes
 Route::middleware(['auth', 'verified'])->prefix('parent')->name('parent.')->group(function () {
     Route::get('/dashboard', function () {
@@ -93,6 +83,11 @@ Route::middleware(['auth', 'verified'])->prefix('parent')->name('parent.')->grou
     Route::post('/appointment/store', [AppointmentController::class, 'store'])->name('appointment.store');
     Route::put('/appointment/update/{id}', [AppointmentController::class, 'update'])->name('appointment.update');
     Route::delete('/appointment/delete/{id}', [AppointmentController::class, 'destroy'])->name('appointment.delete');
+
+    Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::put('/profile-image', [SettingsController::class, 'updateImage'])->name('profile.update.image');
+    Route::delete('/settings/delete', [SettingsController::class, 'destroy'])->name('settings.delete');
+    Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
 });
 
 // Group student routes
@@ -102,7 +97,6 @@ Route::middleware(['auth', 'verified'])->prefix('parent')->name('parent.')->grou
         Route::get('/submit-health-exam', [HealthExaminationController::class, 'create'])->name('submit-health-exam');
         Route::get('/medical-record/index', [MedicalRecordController::class, 'index'])->name('medical-record');
         Route::get('/dental-record/index', [DentalRecordController::class, 'index'])->name('dental-record');
-        Route::post('/medical-record/store', [MedicalRecordController::class, 'store'])->name('medical-record.store');
         Route::post('/health-examination/store', [HealthExaminationController::class, 'store'])->name('health-examination.store');
         Route::get('/health-examination/status', [HealthExaminationController::class, 'checkApprovalStatus'])->name('health-examination.status');
         Route::get('/upload-pictures', [HealthExaminationController::class, 'create'])->name('upload-pictures');
@@ -110,20 +104,27 @@ Route::middleware(['auth', 'verified'])->prefix('parent')->name('parent.')->grou
         Route::post('/notifications', [NotificationController::class, 'store'])->name('notifications.store');
         Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
         Route::get('/dental-record/pdf/{id_number}', [App\Http\Controllers\DentalRecordController::class, 'generatePdf'])->name('dentalRecord.pdf');
-    // Route::get('profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-    // Route::patch('profile/update', [ProfileController::class, 'update'])->name('profile.update');
-    // Route::post('profile/picture', [ProfileController::class, 'storeProfilePicture'])->name('profile.picture');
+        Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+        Route::put('/profile-image', [SettingsController::class, 'updateImage'])->name('profile.update.image');
+        Route::delete('/settings/delete', [SettingsController::class, 'destroy'])->name('settings.delete');
+        Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
     Route::post('profile/store', [StudentDashboardController::class, 'storeProfile'])->name('profile.store');
 
     Route::get('/complaint', [ComplaintController::class, 'index'])->name('complaint');
     Route::post('/complaint/store', [ComplaintController::class, 'store'])->name('complaint.store');
+    Route::get('/complaint/{id}', [ComplaintController::class, 'show'])->name('complaint.show');
+    Route::put('/physical-exam/{id}', [PhysicalExaminationController::class, 'update'])->name('physical-exam.update');
+    Route::post('/physical-exam/store', [PhysicalExaminationController::class, 'store'])->name('physical-exam.store');
+    Route::get('/physical-exam/{id}/edit', [PhysicalExaminationController::class, 'edit'])->name('student.physical-exam.edit');
+    Route::get('medical-records', [StudentController::class, 'showMedicalRecords'])->name('medical-records');
+
+    Route::get('update-records/{id_number}', [StudentController::class, 'showUpdateRecords'])->name('update-records');
+
     Route::post('/complaint/add', [ComplaintController::class, 'add'])->name('complaint.add');
     Route::get('/health-examination/{id}', [HealthExaminationController::class, 'show'])->name('health-examination.show');
     Route::get('/health-examination/{id}/download-pdf', [HealthExaminationController::class, 'downloadPdf'])->name('health-examination.downloadPdf');
-    
-    // Adding the upload-pictures route
-    Route::get('/upload-pictures', [HealthExaminationController::class, 'create'])->name('upload-pictures');
-  
+
+
     // Ensure health examination approval before accessing medical and dental records
     Route::middleware([\App\Http\Middleware\CheckApproval::class])->group(function () {
         Route::get('/medical-record', [MedicalRecordController::class, 'create'])->name('medical-record.create');
@@ -134,12 +135,20 @@ Route::middleware(['auth', 'verified'])->prefix('parent')->name('parent.')->grou
         Route::post('/teeth/store', [DentalRecordController::class, 'storeTooth'])->name('teeth.store');
         Route::get('/get-tooth-status', [DentalRecordController::class, 'getToothStatus'])->name('get-tooth-status');
         Route::get('/medical-record/download/{id}', [MedicalRecordController::class, 'downloadPdf'])->name('medical-record.downloadPdf');
+        Route::post('/physical-exam/store', [MedicalRecordController::class, 'storePhysicalExamination'])->name('physical-exam.store');
+        Route::get('/physical-exam/bmi-data/{id_number}', [MedicalRecordController::class, 'getBMIData'])->name('physical-exam.bmiData');
+        Route::post('/medical-history/store', [MedicalHistoryController::class, 'store'])->name('medical-history.store');
+        Route::get('/medical-record/approval-status', [MedicalRecordController::class, 'checkApprovalStatus'])->name('medical-record.approval-status');
+        Route::get('/medical-history/{id_number}', [MedicalHistoryController::class, 'show'])->name('medical-history.show');
+        Route::post('/medicine-intake/store', [MedicineIntakeController::class, 'store'])->name('medicine-intake.store');
+        Route::get('/medicine-intake/{id_number}', [MedicineIntakeController::class, 'show'])->name('medicine-intake.show');
 
     });
 
     Route::get('/appointment', [AppointmentController::class, 'index'])->name('appointment');
     Route::post('/appointment/add', [AppointmentController::class, 'add'])->name('appointment.add');
     Route::put('/appointment/update/{id}', [AppointmentController::class, 'update'])->name('appointment.update');
+    Route::get('/appointments/by-date', [AppointmentController::class, 'getAppointmentsByDate'])->name('appointments.by-date');
     Route::delete('/appointment/delete/{id}', [AppointmentController::class, 'delete'])->name('appointment.delete');
 });
 
@@ -148,18 +157,42 @@ Route::middleware(['auth', 'verified'])->prefix('teacher')->name('teacher.')->gr
     Route::get('/dashboard', function () {
         return view('teacher.TeacherDashboard');
     })->name('dashboard');
+    Route::get('/dashboard', [StaffDashboardController::class, 'index'])->name('dashboard');
+    Route::post('profile/store', [StaffDashboardController::class, 'storeProfile'])->name('profile.store');
+
     Route::post('/complaint/update-status/{id}', [ComplaintController::class, 'updateStatus'])->name('complaint.update-status');
     Route::post('/complaint/store', [ComplaintController::class, 'store'])->name('complaint.store');
     Route::get('/complaint', [ComplaintController::class, 'index'])->name('complaint');
     Route::post('/complaint/add', [ComplaintController::class, 'add'])->name('complaint.add');
-    Route::get('/medical-record', [MedicalRecordController::class, 'index'])->name('medical-record.index');
+    Route::get('/medical-record/index', [MedicalRecordController::class, 'index'])->name('medical-record');
     Route::get('/dental-record', [DentalRecordController::class, 'index'])->name('dental-record.index');
-    Route::get('/medical-record', [MedicalRecordController::class, 'create'])->name('medical-record');
-    Route::post('/medical-record/store', [MedicalRecordController::class, 'store'])->name('teacher.medical-record.store');
+    Route::post('/medical-record/store', [MedicalRecordController::class, 'store'])->name('medical-record.store');
     Route::get('/appointment', [AppointmentController::class, 'index'])->name('appointment');
     Route::post('/appointment/add', [AppointmentController::class, 'add'])->name('appointment.add');
     Route::put('/appointment/update/{id}', [AppointmentController::class, 'update'])->name('appointment.update');
+    Route::get('/upload-pictures', [HealthExaminationController::class, 'create'])->name('upload-pictures');
+    Route::get('/health-examination/{id}', [HealthExaminationController::class, 'show'])->name('health-examination.show');
+    Route::get('/dental-record/pdf/{id_number}', [App\Http\Controllers\DentalRecordController::class, 'generatePdf'])->name('dentalRecord.pdf');
+
+    Route::get('/health-examination/{id}/download-pdf', [HealthExaminationController::class, 'downloadPdf'])->name('health-examination.downloadPdf');
+
     Route::delete('/appointment/delete/{id}', [AppointmentController::class, 'delete'])->name('appointment.delete');
+     // Ensure health examination approval before accessing medical and dental records
+     Route::middleware([\App\Http\Middleware\CheckApproval::class])->group(function () {
+        Route::get('/medical-record', [MedicalRecordController::class, 'create'])->name('medical-record.create');
+        Route::post('/medical-record/store', [MedicalRecordController::class, 'store'])->name('medical-record.store');
+        Route::get('/dental-record', [DentalRecordController::class, 'create'])->name('dental-record.create');
+        Route::post('/dental-record/store', [DentalRecordController::class, 'store'])->name('dental-record.store');
+        Route::post('/dental-record/store-tooth', [DentalRecordController::class, 'storeTooth'])->name('dental-record.store-tooth');
+        Route::post('/teeth/store', [DentalRecordController::class, 'storeTooth'])->name('teeth.store');
+        Route::get('/get-tooth-status', [DentalRecordController::class, 'getToothStatus'])->name('get-tooth-status');
+        Route::get('/medical-record/download/{id}', [MedicalRecordController::class, 'downloadPdf'])->name('medical-record.downloadPdf');
+        Route::post('/physical-exam/store', [MedicalRecordController::class, 'storePhysicalExamination'])->name('physical-exam.store');
+        Route::get('/physical-exam/bmi-data/{id_number}', [MedicalRecordController::class, 'getBMIData'])->name('physical-exam.bmiData');
+
+    });
+    Route::get('/medical-record/index', [MedicalRecordController::class, 'index'])->name('medical-record');
+    Route::get('/dental-record/index', [DentalRecordController::class, 'index'])->name('dental-record');
 });
 
 // Group staff routes
@@ -167,24 +200,52 @@ Route::middleware(['auth', 'verified'])->prefix('staff')->name('staff.')->group(
     Route::get('/dashboard', function () {
         return view('staff.StaffDashboard');
     })->name('dashboard');
+    Route::get('/dashboard', [StaffDashboardController::class, 'index'])->name('dashboard');
+    Route::post('profile/store', [StaffDashboardController::class, 'storeProfile'])->name('profile.store');
 
     Route::post('/complaint/update-status/{id}', [ComplaintController::class, 'updateStatus'])->name('complaint.update-status');
     Route::post('/complaint/store', [ComplaintController::class, 'store'])->name('complaint.store');
     Route::get('/complaint', [ComplaintController::class, 'index'])->name('complaint');
     Route::post('/complaint/add', [ComplaintController::class, 'add'])->name('complaint.add');
-    Route::get('/medical-record', [MedicalRecordController::class, 'create'])->name('medical-record');
-    Route::get('/medical-record', [MedicalRecordController::class, 'index'])->name('medical-record.index');
+    Route::get('/medical-record/index', [MedicalRecordController::class, 'index'])->name('medical-record');
     Route::get('/dental-record', [DentalRecordController::class, 'index'])->name('dental-record.index');
     Route::post('/medical-record/store', [MedicalRecordController::class, 'store'])->name('medical-record.store');
     Route::get('/appointment', [AppointmentController::class, 'index'])->name('appointment');
     Route::post('/appointment/add', [AppointmentController::class, 'add'])->name('appointment.add');
     Route::put('/appointment/update/{id}', [AppointmentController::class, 'update'])->name('appointment.update');
+    Route::get('/upload-pictures', [HealthExaminationController::class, 'create'])->name('upload-pictures');
+    Route::get('/health-examination/{id}', [HealthExaminationController::class, 'show'])->name('health-examination.show');
+    Route::get('/dental-record/pdf/{id_number}', [App\Http\Controllers\DentalRecordController::class, 'generatePdf'])->name('dentalRecord.pdf');
+
+    Route::get('/health-examination/{id}/download-pdf', [HealthExaminationController::class, 'downloadPdf'])->name('health-examination.downloadPdf');
+
     Route::delete('/appointment/delete/{id}', [AppointmentController::class, 'delete'])->name('appointment.delete');
+     // Ensure health examination approval before accessing medical and dental records
+     Route::middleware([\App\Http\Middleware\CheckApproval::class])->group(function () {
+        Route::get('/medical-record', [MedicalRecordController::class, 'create'])->name('medical-record.create');
+        Route::post('/medical-record/store', [MedicalRecordController::class, 'store'])->name('medical-record.store');
+        Route::get('/dental-record', [DentalRecordController::class, 'create'])->name('dental-record.create');
+        Route::post('/dental-record/store', [DentalRecordController::class, 'store'])->name('dental-record.store');
+        Route::post('/dental-record/store-tooth', [DentalRecordController::class, 'storeTooth'])->name('dental-record.store-tooth');
+        Route::post('/teeth/store', [DentalRecordController::class, 'storeTooth'])->name('teeth.store');
+        Route::get('/get-tooth-status', [DentalRecordController::class, 'getToothStatus'])->name('get-tooth-status');
+        Route::get('/medical-record/download/{id}', [MedicalRecordController::class, 'downloadPdf'])->name('medical-record.downloadPdf');
+        Route::post('/physical-exam/store', [MedicalRecordController::class, 'storePhysicalExamination'])->name('physical-exam.store');
+        Route::get('/physical-exam/bmi-data/{id_number}', [MedicalRecordController::class, 'getBMIData'])->name('physical-exam.bmiData');
+
+    });
+    Route::get('/medical-record/index', [MedicalRecordController::class, 'index'])->name('medical-record');
+    Route::get('/dental-record/index', [DentalRecordController::class, 'index'])->name('dental-record');
 });
 
 // Group admin routes (only accessible to admins)
 Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard Route
+    Route::get('/medical-records/history', [MedicalRecordController::class, 'history'])->name('medical-records.history');
+    Route::post('physical-examination/store', [MedicalRecordController::class, 'storePhysicalExamination'])->name('physical-examination.store');
+    Route::put('/physical-exam/{id}', [PhysicalExaminationController::class, 'update'])->name('physical-exam.update');
+
+
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/export-students', [StudentController::class, 'exportStudents']);
     Route::get('/download-student', [App\Http\Controllers\StudentController::class, 'downloadStudent'])->name('download.templates');
@@ -201,6 +262,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::get('/complaint/{id}', [ComplaintController::class, 'show'])->name('complaint.show');
     Route::get('/complaint/person/{id}', [ComplaintController::class, 'fetchPersonData']);
     Route::get('/upload-health-examination', [HealthExaminationController::class, 'viewAllRecords'])->name('uploadHealthExamination');
+    Route::get('/upload-medical-docu', [MedicalRecordController::class, 'viewAllRecords'])->name('uploadMedicalDocu');
     Route::get('/upload-pictures', [HealthExaminationController::class, 'create'])->name('upload-pictures');
 
     // Student Routes
@@ -280,6 +342,12 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::post('/physical-examinations/store', [PhysicalExaminationController::class, 'store'])->name('physical_examinations.store');
     
     // Profiles View
+    
+    // Update settings route
+    Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::put('/profile-image', [SettingsController::class, 'updateImage'])->name('profile.update.image');
+    Route::delete('/settings/delete', [SettingsController::class, 'destroy'])->name('settings.delete');
+    Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
 
 
     // Medical Record Routes
@@ -288,10 +356,12 @@ Route::get('/search-medical-record', [MedicalRecordController::class, 'search'])
     Route::get('/medical-records', [MedicalRecordController::class, 'index'])->name('medical-record.index');
     Route::get('/pending-examinations', [HealthExaminationController::class, 'medicalRecord'])->name('medical-records.pending');
     Route::post('/medical-record/store', [HealthExaminationController::class, 'store'])->name('medical-record.store');
-    Route::post('/medical-record/{id}/approve', [HealthExaminationController::class, 'approve'])->name('medical-record.approve');
-    Route::post('/medical-record/{id}/reject', [HealthExaminationController::class, 'reject'])->name('medical-record.reject');
+    Route::post('/health-examination/{id}/approve', [HealthExaminationController::class, 'approve'])->name('health-examination.approve');
+    Route::post('/health-examination/{id}/reject', [HealthExaminationController::class, 'reject'])->name('health-examination.reject');
     Route::get('/get-student-info/{id}', [StudentController::class, 'getStudentInfo'])->name('get-student-info');
-
+    Route::post('/medical-record/{id}/approve', [MedicalRecordController::class, 'approve'])->name('medical-record.approve');
+    Route::post('/medical-record/{id}/reject', [MedicalRecordController::class, 'reject'])->name('medical-record.reject');
+    
     // Appointment Routes
     Route::get('/appointment', [AppointmentController::class, 'index'])->name('appointment');
     Route::post('/appointment/add', [AppointmentController::class, 'add'])->name('appointment.add');
@@ -311,9 +381,7 @@ Route::get('/search-medical-record', [MedicalRecordController::class, 'search'])
 
 
     // Monitoring and Report Log
-    Route::get('/monitoring-report-log', function () {
-        return view('admin.monitoring-report-log');
-    })->name('monitoring-report-log');
+    Route::get('/report-logs', [ReportLogsController::class, 'index'])->name('monitoring-report-log');
 
     // Pending Approvals
     Route::get('/pending-approvals', [AdminDashboardController::class, 'pendingApprovals'])->name('pendingApproval');
@@ -343,7 +411,10 @@ Route::middleware(['auth', 'verified'])->prefix('doctor')->name('doctor.')->grou
     // Profile Route
     Route::get('/profiles', [ProfileController::class, 'index'])->name('profiles');
     Route::post('/profiles/store', [UserController::class, 'store'])->name('profiles.store');
-
+    Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::put('/profile-image', [SettingsController::class, 'updateImage'])->name('profile.update.image');
+    Route::delete('/settings/delete', [SettingsController::class, 'destroy'])->name('settings.delete');
+    Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
 
     // Dental Record Routes
     Route::get('/dental-record', [DentalRecordController::class, 'index'])->name('dental-record.index');
@@ -384,9 +455,9 @@ Route::get('/search-medical-record', [MedicalRecordController::class, 'search'])
 
 
     // Monitoring and Report Log
-    Route::get('/monitoring-report-log', function () {
-        return view('admin.monitoring-report-log');
-    })->name('monitoring-report-log');
+    Route::get('/report-logs', [ReportLogsController::class, 'index'])->name('monitoring-report-log');
+    Route::post('/notifications/store', [ReportLogsController::class, 'storeNotification'])->name('notifications.store');
+
 
     // Pending Approvals
     Route::get('/pending-approvals', [AdminDashboardController::class, 'pendingApprovals'])->name('pendingApproval');
@@ -402,7 +473,10 @@ Route::middleware(['auth', 'verified'])->prefix('nurse')->name('nurse.')->group(
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
 
-
+    Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::put('/profile-image', [SettingsController::class, 'updateImage'])->name('profile.update.image');
+    Route::delete('/settings/delete', [SettingsController::class, 'destroy'])->name('settings.delete');
+    Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
     // Complaint Routes
     Route::get('/complaint', [ComplaintController::class, 'index'])->name('complaint');
     Route::get('/complaint/add', [ComplaintController::class, 'addComplaint'])->name('complaint.add');

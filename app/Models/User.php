@@ -69,5 +69,7 @@ public function information()
 {
     return $this->hasOne(Information::class, 'id_number', 'id_number');
 }
+// User.php Model
+
 
 }

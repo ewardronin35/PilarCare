@@ -24,7 +24,7 @@ class StudentDashboardController extends Controller
         // Check if the user's profile information is complete
         $information = Information::where('id_number', $user->id_number)->first();
         $showModal = !$information; // If no information exists, show the modal
-    
+
         return view('student.StudentDashboard', compact('appointments', 'appointmentCount', 'complaints', 'complaintCount', 'showModal', 'notifications'));
     }
     

@@ -31,6 +31,13 @@ body {
     width: 48%;
     margin-right: 10px;
     text-align: center;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    height: 95%;
+    overflow-y: auto;
+    transition: all 0.5s ease-in-out; /* Smooth transition for all properties */
 }
 
 .dental-examination-form {
@@ -72,12 +79,14 @@ body {
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.3s ease-in-out;
+    transition: background-color 0.3s ease-in-out, transform 0.3s ease;
 }
 
 .tab-button:hover,
 .tab-button.active {
     background-color: #0056b3;
+    transform: scale(1.05);
+
 }
 
 .tab-content {
@@ -195,7 +204,7 @@ h2 {
     border-radius: 5px;
     padding: 10px;
     width: 50%;
-    height: 80px;
+    height: 30px;
     resize: none;
     font-size: 14px;
     font-family: 'Poppins', sans-serif;
@@ -306,86 +315,99 @@ h3 {
 .history-table {
     width: 100%;
     border-collapse: collapse;
+    background-color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
     margin-bottom: 20px;
-    font-family: Arial, sans-serif;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
+    overflow: hidden; 
+        }
 
-.history-table thead {
-    background-color: #007bff;
-    color: white;
-}
-
-.history-table th,
-.history-table td {
-    padding: 12px;
-    border: 1px solid #ddd;
+        .history-table th,
+        .history-table td {
+            padding: 12px;
     text-align: left;
+    font-size: 0.95rem;
+    color: #333;
+        }
+
+        .history-table th {
+            background-color: #007bff; /* Blue background for headers */
+    color: white;
+    font-weight: bold;
+    border-right: 2px solid white;
+        }
+        .history-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+.history-table th:last-child {
+    border-right: none; /* Remove border for the last column header */
+}
+.history-table td {
+    border: 1px solid #ddd;
 }
 
-.history-table th[colspan="2"],
-.history-table th[colspan="3"],
-.history-table th[colspan="4"] {
-    text-align: center;
-}
-
-.history-table tbody tr:nth-child(even) {
+.history-table tr:nth-child(even) {
     background-color: #f2f2f2;
 }
 
-.history-table tbody tr:hover {
-    background-color: #e9ecef;
+.history-table tr:hover {
+    background-color: #e9f1ff; /* Highlight row on hover */
 }
-
-.history-table tbody td {
-    font-size: 14px;
-    color: #333;
-}
-
-.history-table th {
-    font-size: 16px;
-    font-weight: bold;
-}
-
-.history-table caption {
-    caption-side: top;
-    font-weight: bold;
-    font-size: 18px;
-    margin-bottom: 10px;
-}
-
-.history-table thead th {
-    font-size: 15px;
-}
-
+   
 .signature {
     text-align: right;
     margin-top: 50px;
     font-weight: bold;
 }
 
+/* Ensure modal overlay covers the entire viewport */
 .modal {
     display: none;
     position: fixed;
     z-index: 1000;
-    padding-top: 60px;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.4);
-    animation: fadeIn 0.5s ease-in-out;
+    background-color: rgba(0, 0, 0, 0.8); /* Dark background overlay */
+    justify-content: center;
+    align-items: center;
+    opacity: 0; /* Start hidden */
+    transition: opacity 0.3s ease-in-out; /* Fade-in transition */
 }
 
-.modal-content {
-    background-color: #fefefe;
-    margin: 5% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    animation: slideIn 0.5s ease-in-out;
+/* Modal visible with animation */
+.modal.active {
+    display: flex;
+    opacity: 1;
 }
+
+/* Modal content styles */
+.modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: left;
+    transform: translateY(-50px); /* Initial position */
+    opacity: 0; /* Start hidden */
+    animation: slideIn 0.3s ease-in-out forwards; /* Slide-in animation */
+}
+
+/* Slide in effect for the modal content */
+@keyframes slideIn {
+    0% {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
 
 .form-group-inline {
     display: flex;
@@ -543,16 +565,16 @@ h3 {
 
 /* Button animation */
 .save-button {
-    background-color: #00d1ff;
+    background-color: #00b8e6;
     color: white;
     padding: 10px;
     border: none;
-    font-family: 'Poppins', sans-serif;
     border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.3s ease-in-out;
+    display: block;
+    margin: 20px auto 0 auto; /* Center the button */
+    width: 100px;
 }
-
 .save-button:hover {
     background-color: #00b8e6;
 }
@@ -571,4 +593,119 @@ h3 {
     100% {
         transform: scale(1);
     }
+}
+.btn {
+    display: inline-block;
+    padding: 12px 20px;
+    font-family: 'Poppins', sans-serif;
+    text-align: center;
+    text-decoration: none;
+    color: white;
+    background-color: #007bff;
+    border-radius: 8px;
+    border: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 123, 255, 0.3);
+}
+
+.btn:hover {
+    background-color: #0056b3;
+    box-shadow: 0 6px 10px rgba(0, 123, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+.btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.4);
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #004085;
+}
+/* CSS */
+#search-bar {
+    width: 90%;
+    max-width: 200px; /* Adjust as needed */
+    padding: 10px 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
+    font-size: 16px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+.image-preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.image-preview {
+    width: 100px;
+    height: 100px;
+    overflow: hidden;
+    position: relative;
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.preview-img {
+    cursor: pointer;
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+}
+
+#preview-img {
+    width: 100%;
+    border-radius: 5px;
+}
+.custom-file-upload {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    max-width: 400px;
+}
+
+.custom-file-upload input[type="file"] {
+    display: none;
+}
+
+.upload-label {
+    display: inline-block;
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.upload-label i {
+    margin-right: 8px;
+}
+
+.upload-label:hover {
+    background-color: #0056b3;
+}
+
+#file-chosen {
+    margin-left: 10px;
+    font-size: 14px;
+    color: #666;
+    display: inline-block;
+    vertical-align: middle;
 }

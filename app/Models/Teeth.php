@@ -14,6 +14,10 @@ class Teeth extends Model
         'status',
         'notes',
         'svg_path',
+        'dental_pictures',
+        'is_current',
+        
+        
     ];
 
     // Relationship to the DentalRecord model

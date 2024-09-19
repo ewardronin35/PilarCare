@@ -15,8 +15,8 @@ class CreateDentalRecordsTable extends Migration
             $table->string('user_type'); // Store the type (student, teacher, or staff)
             $table->string('patient_name');
             $table->string('grade_section');
+            $table->timestamps(); // Created at and updated at timestamp
             
-
         });
     }
 

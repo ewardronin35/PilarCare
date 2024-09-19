@@ -9,7 +9,7 @@ class MedicalRecord extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', // Include user_id in fillable array
+        'id_number', // Include user_id in fillable array
         'name',
         'birthdate',
         'age',
@@ -23,8 +23,13 @@ class MedicalRecord extends Model
         'surgical_history',
         'family_medical_history',
         'allergies',
+        'medical_condition',
         'medicines',
+        'health_documents',
         'profile_picture',
+        'is_current',
+        'is_approved',
+        'record_date',
     ];
 
     protected $casts = [
@@ -32,6 +37,15 @@ class MedicalRecord extends Model
     ];
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'id_number', 'id_number');
+    }
+    public function medicineIntakes()
+    {
+        return $this->hasMany(MedicineIntake::class, 'id_number', 'id_number');
+    }
+    public function medicalHistories()
+    {
+        return $this->hasMany(MedicalHistory::class, 'id_number', 'id_number');
     }
 }
+

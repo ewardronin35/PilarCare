@@ -12,20 +12,57 @@ class AppointmentController extends Controller
     public function index()
     {
         $user = Auth::user();
+    
+        // Fetch all appointments for the logged-in user based on their id_number
         $appointments = Appointment::where('id_number', $user->id_number)->get();
-        $appointmentCount = $appointments->count(); // Count the appointments for the logged-in student
-        $complaintCount = 0; // Replace with actual logic to count complaints if needed
-
-        $role = $user->role;
+    
+        // Count total appointments
+        $totalAppointments = $appointments->count();
+    
+        // Filter and count upcoming appointments (appointments in the future)
+        $upcomingAppointments = $appointments->filter(function ($appointment) {
+            return $appointment->appointment_date >= now();
+        })->count();
+    
+        // Filter and count completed appointments (appointments in the past)
+        $completedAppointments = $appointments->filter(function ($appointment) {
+            return $appointment->appointment_date < now();
+        })->count();
+    
+        // Count appointments for specific doctors
+        $drIsnaniAppointments = $appointments->where('appointment_type', 'Dr. Nurmina Isnani')->count();
+        $drGanAppointments = $appointments->where('appointment_type', 'Dr. Sarah Uy Gan')->count();
+    
+        // Placeholder for complaint count logic (if you plan to add complaints later)
+        $complaintCount = 0;
+    
+        // Determine the role of the logged-in user and make sure it's lowercase for matching the view
+        $role = strtolower($user->role);
+    
+        // Define the view path based on the role
         $viewPath = "{$role}.appointment";
-
+    
+        // Check if the view exists for the given role, otherwise return 404
         if (!view()->exists($viewPath)) {
-            abort(404, "View for role {$role} not found");
+            abort(404, "View for role '{$role}' not found");
         }
-
-        return view($viewPath, compact('appointments', 'appointmentCount', 'complaintCount'));
+    
+        // Pass the calculated values to the view
+        return view($viewPath, compact(
+            'appointments',
+            'totalAppointments',
+            'upcomingAppointments',
+            'completedAppointments',
+            'complaintCount',
+            'drIsnaniAppointments',
+            'drGanAppointments'
+        ));
     }
+    
 
+    
+    
+    
     public function add(Request $request)
     {
     
@@ -121,9 +158,13 @@ public function getAppointmentsByDate(Request $request)
 {
     $date = $request->input('date');
 
+    // Fetch appointments for the logged-in user
     $appointments = Appointment::whereDate('appointment_date', $date)
-        ->where('id_number', Auth::user()->id_number) // Ensure it's specific to the logged-in user
+        ->where('id_number', Auth::user()->id_number)
         ->get();
+
+    // Log the appointments data to ensure it's correct
+    \Log::info($appointments);
 
     return response()->json([
         'appointments' => $appointments

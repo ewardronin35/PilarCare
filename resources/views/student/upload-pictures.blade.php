@@ -218,193 +218,198 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const pendingApprovalMessage = document.getElementById('pending-approval-message');
-            const uploadSection = document.getElementById('upload-section');
+ document.addEventListener("DOMContentLoaded", function () {
+    const pendingApprovalMessage = document.getElementById('pending-approval-message');
+    const uploadSection = document.getElementById('upload-section');
 
-            const fileInputs = document.querySelectorAll('input[type="file"]');
-            const globalUploadedFiles = new Set(); // Global set to track all uploaded files
+    // Check submission status once on page load
+    fetch('{{ route('student.health-examination.status') }}', {
+        method: 'GET',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.exists === false) {
+            // No submission found
+            Swal.fire({
+                icon: 'warning',
+                title: 'No Submission Found',
+                text: 'Your previous submission has been deleted. Please upload your files again.',
+            }).then(() => {
+                // Clear the localStorage flag and reset the form visibility
+                localStorage.removeItem('uploadCompleted');
+                pendingApprovalMessage.style.display = 'none';
+                uploadSection.style.display = 'block';
+            });
+        } else if (data.is_approved) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Approved',
+                text: 'Your submission has been approved. Proceed to the next step.',
+            }).then(() => {
+                window.location.href = '{{ route('student.medical-record.create') }}';
+            });
+        } else if (data.is_declined) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Submission Declined',
+                text: 'Your submission has been declined. Please upload proper pictures and try again.',
+            }).then(() => {
+                // Clear localStorage and reset the form for a new submission
+                localStorage.removeItem('uploadCompleted');
+                pendingApprovalMessage.style.display = 'none';
+                uploadSection.style.display = 'block';
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error checking approval status:', error);
+    });
 
-            const sectionNames = {
-                'lab_result_pictures': 'Lab Picture',
-                'xray_pictures': 'X-ray Picture',
-                'health_examination_picture': 'Health Examination Picture',
-            };
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    const globalUploadedFiles = new Set(); // Global set to track all uploaded files
 
-            const fileCount = {
-                'lab_result_pictures': 1,
-                'xray_pictures': 1,
-                'health_examination_picture': 1,
-            };
+    const sectionNames = {
+        'lab_result_pictures': 'Lab Picture',
+        'xray_pictures': 'X-ray Picture',
+        'health_examination_picture': 'Health Examination Picture',
+    };
 
-            // Check for pending approval status from localStorage
-            if (localStorage.getItem('uploadCompleted') === 'true') {
-                uploadSection.style.display = 'none';
-                pendingApprovalMessage.style.display = 'block';
+    const fileCount = {
+        'lab_result_pictures': 1,
+        'xray_pictures': 1,
+        'health_examination_picture': 1,
+    };
+
+    fileInputs.forEach(input => {
+        input.addEventListener('change', function () {
+            const section = input.name.replace('[]', '');
+            const fileListId = input.id + '-file-list';
+            const fileList = document.getElementById(fileListId);
+
+            if (!fileList) {
+                console.error('File list element not found for input:', input.id);
+                return;
             }
 
-            fileInputs.forEach(input => {
-                input.addEventListener('change', function () {
-                    const section = input.name.replace('[]', '');
-                    const fileListId = input.id + '-file-list';
-                    const fileList = document.getElementById(fileListId);
+            const files = Array.from(this.files);
+            let duplicateFound = false;
 
-                    if (!fileList) {
-                        console.error('File list element not found for input:', input.id);
-                        return;
-                    }
-
-                    const files = Array.from(this.files);
-                    let duplicateFound = false;
-
-                    // Check for duplicates across all modals
-                    files.forEach(file => {
-                        if (globalUploadedFiles.has(file.name)) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Duplicate File',
-                                text: `The file "${file.name}" has already been uploaded. Please choose a different file.`,
-                            });
-                            duplicateFound = true;
-                        }
+            // Check for duplicates across all modals
+            files.forEach(file => {
+                if (globalUploadedFiles.has(file.name)) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Duplicate File',
+                        text: `The file "${file.name}" has already been uploaded. Please choose a different file.`,
                     });
+                    duplicateFound = true;
+                }
+            });
 
-                    if (duplicateFound) {
-                        input.value = ''; // Clear the input to prevent submission of duplicate files
-                        return;
+            if (duplicateFound) {
+                input.value = ''; // Clear the input to prevent submission of duplicate files
+                return;
+            }
+
+            files.forEach(file => {
+                globalUploadedFiles.add(file.name); // Track globally
+
+                const fileItem = document.createElement('div');
+                fileItem.classList.add('file-item');
+
+                const fileName = document.createElement('span');
+                fileName.classList.add('file-name');
+
+                // Use custom file names based on the section and file count
+                if (sectionNames[section]) {
+                    fileName.textContent = `${sectionNames[section]} ${fileCount[section]}`;
+                    fileCount[section]++; // Increment count for the section
+                } else {
+                    fileName.textContent = file.name;
+                }
+
+                const fileRemove = document.createElement('span');
+                fileRemove.innerHTML = '&times;';
+                fileRemove.classList.add('file-remove');
+                fileRemove.addEventListener('click', function () {
+                    globalUploadedFiles.delete(file.name); // Remove from global set
+                    fileList.removeChild(fileItem);
+
+                    // Decrease count when removing the file
+                    if (sectionNames[section]) {
+                        fileCount[section]--;
                     }
+                });
 
-                    files.forEach(file => {
-                        globalUploadedFiles.add(file.name); // Track globally
+                fileItem.appendChild(fileName);
+                fileItem.appendChild(fileRemove);
 
-                        const fileItem = document.createElement('div');
-                        fileItem.classList.add('file-item');
+                fileList.appendChild(fileItem);
+            });
 
-                        const fileName = document.createElement('span');
-                        fileName.classList.add('file-name');
+            Swal.fire({
+                icon: 'success',
+                title: 'Files Uploaded',
+                text: 'Your files have been added to the list successfully.'
+            });
+        });
+    });
 
-                        // Use custom file names based on the section and file count
-                        if (sectionNames[section]) {
-                            fileName.textContent = `${sectionNames[section]} ${fileCount[section]}`;
-                            fileCount[section]++; // Increment count for the section
-                        } else {
-                            fileName.textContent = file.name;
-                        }
+    const uploadForm = document.getElementById('upload-pictures-form');
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', function (event) {
+            event.preventDefault();
 
-                        const fileRemove = document.createElement('span');
-                        fileRemove.innerHTML = '&times;';
-                        fileRemove.classList.add('file-remove');
-                        fileRemove.addEventListener('click', function () {
-                            globalUploadedFiles.delete(file.name); // Remove from global set
-                            fileList.removeChild(fileItem);
+            const formData = new FormData(this);
 
-                            // Decrease count when removing the file
-                            if (sectionNames[section]) {
-                                fileCount[section]--;
-                            }
-                        });
-
-                        fileItem.appendChild(fileName);
-                        fileItem.appendChild(fileRemove);
-
-                        fileList.appendChild(fileItem);
-                    });
+            fetch('{{ route('student.health-examination.store') }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => { throw new Error(text); });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    uploadSection.style.display = 'none';
+                    pendingApprovalMessage.style.display = 'block';
 
                     Swal.fire({
                         icon: 'success',
-                        title: 'Files Uploaded',
-                        text: 'Your files have been added to the list successfully.'
+                        title: 'Pictures Uploaded',
+                        text: 'Your pictures have been uploaded successfully and are now pending approval.',
                     });
+
+                    // Store a flag in localStorage to keep the state after reload
+                    localStorage.setItem('uploadCompleted', 'true');
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Upload Failed',
+                        text: 'There was a problem uploading your pictures. Please try again.',
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Upload Failed',
+                    text: 'An unexpected error occurred. Please try again.',
                 });
+                console.error('Error:', error);
             });
+        });
+    }
 
-            const uploadForm = document.getElementById('upload-pictures-form');
-            if (uploadForm) {
-                uploadForm.addEventListener('submit', function (event) {
-                    event.preventDefault();
-
-                    const formData = new FormData(this);
-
-                    fetch('{{ route('student.health-examination.store') }}', {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        },
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            return response.text().then(text => { throw new Error(text); });
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.success) {
-                            uploadSection.style.display = 'none';
-                            pendingApprovalMessage.style.display = 'block';
-
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Pictures Uploaded',
-                                text: 'Your pictures have been uploaded successfully and are now pending approval.',
-                            });
-
-                            // Store a flag in localStorage to keep the state after reload
-                            localStorage.setItem('uploadCompleted', 'true');
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Upload Failed',
-                                text: 'There was a problem uploading your pictures. Please try again.',
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Upload Failed',
-                            text: 'An unexpected error occurred. Please try again.',
-                        });
-                        console.error('Error:', error);
-                    });
-                });
-            }
-
-            // Set an interval to check the status of the health examination approval
-            setInterval(function () {
-                fetch('{{ route('student.health-examination.status') }}', {
-                    method: 'GET',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    },
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.is_approved) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Approved',
-                            text: 'Your submission has been approved. Proceed to the next step.',
-                        }).then(() => {
-                            window.location.href = '{{ route('student.medical-record.create') }}';
-                        });
-                    } else if (data.is_declined) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Submission Declined',
-                            text: 'Your submission has been declined. Please upload proper pictures and try again.',
-                        }).then(() => {
-                            // Clear localStorage and reset the form for new submission
-                            localStorage.removeItem('uploadCompleted');
-                            window.location.reload();
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error checking approval status:', error);
-                });
-            }, 5000); // Check every 5 seconds
-              // Function to preview image in a modal
     function previewImageInModal(file) {
         const reader = new FileReader();
         reader.onload = function (e) {
@@ -420,7 +425,7 @@
         };
         reader.readAsDataURL(file); // Read the file as a data URL to display in SweetAlert
     }
-        });
+});
     </script>
 </x-app-layout>
 

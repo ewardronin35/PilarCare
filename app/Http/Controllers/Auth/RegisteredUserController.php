@@ -55,8 +55,6 @@ class RegisteredUserController extends Controller
         // Check if the student's first and last name matches the database record
         if (Schema::hasColumn('students', 'id_number')) {
             $student = Student::where('id_number', $idNumber)
-                              ->where('first_name', $firstName)
-                              ->where('last_name', $lastName)
                               ->first();
             if ($student) {
                 return ['role' => 'Student', 'approved' => $student->approved];
@@ -66,8 +64,6 @@ class RegisteredUserController extends Controller
         // Check if the parent's first and last name matches the database record
         if (Schema::hasColumn('parents', 'id_number')) {
             $parent = Parents::where('id_number', $idNumber)
-                             ->where('first_name', $firstName)
-                             ->where('last_name', $lastName)
                              ->first();
             if ($parent) {
                 return ['role' => 'Parent', 'approved' => $parent->approved];
@@ -77,8 +73,6 @@ class RegisteredUserController extends Controller
         // Check if the staff's first and last name matches the database record
         if (Schema::hasColumn('staff', 'id_number')) {
             $staff = Staff::where('id_number', $idNumber)
-                          ->where('first_name', $firstName)
-                          ->where('last_name', $lastName)
                           ->first();
             if ($staff) {
                 return ['role' => 'Staff', 'approved' => $staff->approved];
@@ -86,10 +80,8 @@ class RegisteredUserController extends Controller
         }
 
         // Check if the teacher's first and last name matches the database record
-        if (Schema::hasColumn('teachers', 'id_number')) {
+        if (Schema::hasColumn('teacher', 'id_number')) {
             $teacher = Teacher::where('id_number', $idNumber)
-                              ->where('first_name', $firstName)
-                              ->where('last_name', $lastName)
                               ->first();
             if ($teacher) {
                 return ['role' => 'Teacher', 'approved' => $teacher->approved];
@@ -99,8 +91,6 @@ class RegisteredUserController extends Controller
         // Check if the nurse's first and last name matches the database record
         if (Schema::hasColumn('nurses', 'id_number')) {
             $nurse = Nurse::where('id_number', $idNumber)
-                          ->where('first_name', $firstName)
-                          ->where('last_name', $lastName)
                           ->first();
             if ($nurse) {
                 return ['role' => 'Nurse', 'approved' => $nurse->approved];
@@ -110,8 +100,6 @@ class RegisteredUserController extends Controller
         // Check if the doctor's first and last name matches the database record
         if (Schema::hasColumn('doctors', 'id_number')) {
             $doctor = Doctor::where('id_number', $idNumber)
-                            ->where('first_name', $firstName)
-                            ->where('last_name', $lastName)
                             ->first();
             if ($doctor) {
                 return ['role' => 'Doctor', 'approved' => $doctor->approved];

@@ -764,10 +764,7 @@
     style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"/>
                         </svg>
                     </div>
-      
-                </div>
-            </div>
-            <div class="legend">
+                    <div class="legend">
                 <h3>Legend</h3>
                 <ul>
                     <li><span class="legend-box healthy"></span> Healthy</li>
@@ -775,140 +772,14 @@
                     <li><span class="legend-box missing"></span> Missing</li>
                 </ul>
             </div>
+                </div>
+            </div>
+          
             <div id="history-tab" class="tab-content">
-    <h2>Dental History</h2>
+  
 
     <!-- Patient Information -->
     <table class="history-table">
-        <thead>
-            <tr>
-                <th colspan="2">Patient Information</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><strong>Patient Name:</strong></td>
-                <td>John Doe</td>
-            </tr>
-            <tr>
-                <td><strong>Date of Birth:</strong></td>
-                <td>January 1, 2000</td>
-            </tr>
-            <tr>
-                <td><strong>Last Visit Date:</strong></td>
-                <td>July 15, 2024</td>
-            </tr>
-            <tr>
-                <td><strong>Dentist Name:</strong></td>
-                <td>Dr. Sarah Uy-Gan</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <!-- Previous Examinations -->
-    <table class="history-table">
-        <thead>
-            <tr>
-                <th colspan="3">Previous Examinations</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><strong>Date</strong></td>
-                <td><strong>Dentist Name</strong></td>
-                <td><strong>Findings</strong></td>
-            </tr>
-            <tr>
-                <td>June 10, 2024</td>
-                <td>Dr. Sarah Uy-Gan</td>
-                <td>Good oral hygiene, minor tartar buildup.</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <!-- Treatments Performed -->
-    <table class="history-table">
-        <thead>
-            <tr>
-                <th colspan="4">Treatments Performed</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><strong>Date</strong></td>
-                <td><strong>Type of Treatment</strong></td>
-                <td><strong>Dentist Name</strong></td>
-                <td><strong>Notes</strong></td>
-            </tr>
-            <tr>
-                <td>June 15, 2024</td>
-                <td>Cleaning and polishing</td>
-                <td>Dr. Sarah Uy-Gan</td>
-                <td>Patient advised to brush twice daily.</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <!-- Medications Prescribed -->
-    <table class="history-table">
-        <thead>
-            <tr>
-                <th colspan="4">Medications Prescribed</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><strong>Date</strong></td>
-                <td><strong>Medication Name</strong></td>
-                <td><strong>Dosage</strong></td>
-                <td><strong>Prescribing Dentist</strong></td>
-            </tr>
-            <tr>
-                <td>June 15, 2024</td>
-                <td>Fluoride toothpaste</td>
-                <td>Twice daily</td>
-                <td>Dr. Sarah Uy-Gan</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <!-- Next Scheduled Appointment -->
-    <table class="history-table">
-        <thead>
-            <tr>
-                <th colspan="2">Next Scheduled Appointment</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><strong>Date:</strong></td>
-                <td>August 10, 2024</td>
-            </tr>
-            <tr>
-                <td><strong>Purpose:</strong></td>
-                <td>Routine check-up</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <!-- Additional Notes -->
-    <table class="history-table">
-        <thead>
-            <tr>
-                <th colspan="2">Additional Notes</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td colspan="2">Maintain regular brushing and flossing. Consider using an antibacterial mouthwash.</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-        </div>
-
-        <!-- Right side: Dental Examination Form -->
-        <div class="dental-examination-form">
     <div class="form-section">
         <label for="student-id">Student ID:</label>
         <input type="text" id="student-id" name="student_id" class="form-control" placeholder="Enter Student ID">
@@ -1054,6 +925,135 @@
         </div>
     </form>
     <button class="toggle-form-btn">Hide Form</button>
+</div>
+    </table>
+</div>
+        </div>
+
+        <!-- Right side: Dental Examination Form -->
+        <div class="dental-examination-form">
+    <div class="form-section">
+      <table class="history-table">
+    <thead>
+            <tr>
+                <th colspan="2">Patient Information</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Patient Name:</strong></td>
+                <td>John Doe</td>
+            </tr>
+            <tr>
+                <td><strong>Date of Birth:</strong></td>
+                <td>January 1, 2000</td>
+            </tr>
+            <tr>
+                <td><strong>Last Visit Date:</strong></td>
+                <td>July 15, 2024</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Previous Examinations -->
+    <table class="history-table">
+        <thead>
+            <tr>
+                <th colspan="3">Previous Examinations</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Date</strong></td>
+                <td><strong>Dentist Name</strong></td>
+                <td><strong>Findings</strong></td>
+            </tr>
+            <tr>
+                <td>June 10, 2024</td>
+                <td>Dr. Sarah Uy-Gan</td>
+                <td>Good oral hygiene, minor tartar buildup.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Treatments Performed -->
+    <table class="history-table">
+        <thead>
+            <tr>
+                <th colspan="4">Treatments Performed</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Date</strong></td>
+                <td><strong>Type of Treatment</strong></td>
+                <td><strong>Dentist Name</strong></td>
+                <td><strong>Notes</strong></td>
+            </tr>
+            <tr>
+                <td>June 15, 2024</td>
+                <td>Cleaning and polishing</td>
+                <td>Dr. Sarah Uy-Gan</td>
+                <td>Patient advised to brush twice daily.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Medications Prescribed -->
+    <table class="history-table">
+        <thead>
+            <tr>
+                <th colspan="4">Medications Prescribed</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Date</strong></td>
+                <td><strong>Medication Name</strong></td>
+                <td><strong>Dosage</strong></td>
+                <td><strong>Prescribing Dentist</strong></td>
+            </tr>
+            <tr>
+                <td>June 15, 2024</td>
+                <td>Fluoride toothpaste</td>
+                <td>Twice daily</td>
+                <td>Dr. Sarah Uy-Gan</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Next Scheduled Appointment -->
+    <table class="history-table">
+        <thead>
+            <tr>
+                <th colspan="2">Next Scheduled Appointment</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Date:</strong></td>
+                <td>August 10, 2024</td>
+            </tr>
+            <tr>
+                <td><strong>Purpose:</strong></td>
+                <td>Routine check-up</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Additional Notes -->
+    <table class="history-table">
+        <thead>
+            <tr>
+                <th colspan="2">Additional Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td colspan="2">Maintain regular brushing and flossing. Consider using an antibacterial mouthwash.</td>
+            </tr>
+        </tbody>
+</table>
 </div>
 
 <!-- Preview Modal -->

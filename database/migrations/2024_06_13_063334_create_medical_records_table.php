@@ -9,8 +9,8 @@ class CreateMedicalRecordsTable extends Migration
     {
         Schema::create('medical_records', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // Foreign key to users table
-
+            $table->string('id_number'); // Match this exactly with the `id_number` field in `users`
+            $table->foreign('id_number')->references('id_number')->on('users')->onDelete('cascade'); // Foreign key to users table
             $table->string('name');
             $table->date('birthdate');
             $table->integer('age');
@@ -24,8 +24,13 @@ class CreateMedicalRecordsTable extends Migration
             $table->string('surgical_history');
             $table->string('family_medical_history');
             $table->string('allergies');
+            $table->string('medical_condition');
             $table->json('medicines'); // Store as JSON
-            $table->string('profile_picture')->nullable(); // Store the picture path
+            $table->string('profile_picture');
+            $table->string('health_documents')->nullable();
+            $table->boolean('is_approved')->default(false); // Approval status, default to false
+            $table->boolean('is_current')->default(true); // Indicates if the record is the current one
+            $table->date('record_date')->default(DB::raw('CURRENT_DATE')); // Default to the current date
             $table->timestamps(); // This will include 'created_at' and 'updated_at' fields
         });
     }
@@ -33,5 +38,11 @@ class CreateMedicalRecordsTable extends Migration
     public function down()
     {
         Schema::dropIfExists('medical_records');
+    }
+
+
+    public function medicineIntakes()
+    {
+        return $this->hasMany(MedicineIntake::class, 'id_number', 'id_number');
     }
 }

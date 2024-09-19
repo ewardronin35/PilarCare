@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('dental_examinations', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id'); // Foreign key for the user (student)
+            $table->string('id_number'); // Use id_number instead of user_id
             $table->date('date_of_examination');
             $table->string('grade_section');
             $table->string('lastname');
@@ -45,9 +45,16 @@ return new class extends Migration
     
             $table->timestamps();
     
-            // Foreign key constraint
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            // Foreign key constraint using id_number
+            $table->foreign('id_number')->references('id_number')->on('users')->onDelete('cascade');
         });
     }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down()
+    {
+        Schema::dropIfExists('dental_examinations');
+    }
 };
-    

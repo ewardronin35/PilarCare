@@ -1,20 +1,53 @@
-<defs>
-    <marker refX="0" refY="0" orient="auto" overflow="visible">
-      <circle r="0.8" cy="0" cx="3"/>
-      <circle r="0.8" cy="0" cx="6.5"/>
-      <circle r="0.8" cy="0" cx="10"/>
-    </marker>
-    <marker orient="auto" refY="0" refX="0" overflow="visible">
-      <path d="m5.77 0-8.65 5 0-10 8.65 5z" transform="scale(-0.2,-0.2)" style="fill-rule:evenodd;marker-start:none;stroke-width:1pt;stroke:#000"/>
-    </marker>
-    <marker orient="auto" refY="0" refX="0" overflow="visible">
-      <path d="M0 0 5-5-12.5 0 5 5 0 0z" transform="matrix(0.2,0,0,0.2,1.2,0)" style="fill-rule:evenodd;marker-start:none;stroke-width:1pt;stroke:#000"/>
-    </marker>
-    <marker orient="auto" refY="0" refX="0" overflow="visible">
-      <path d="M0 0 5-5-12.5 0 5 5 0 0z" transform="matrix(0.8,0,0,0.8,10,0)" style="fill-rule:evenodd;marker-start:none;stroke-width:1pt;stroke:#000"/>
-    </marker>
-  </defs>
-  <path
+<x-app-layout>
+    <link rel="stylesheet" href="{{ asset('css/dental.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <div class="main-container">
+    <!-- Left side: Dental Record and Update -->
+    <div class="dental-records">
+
+        <!-- Dental Record Tab Content -->
+        <form id="dental-record-form" action="{{ route('staff.dental-record.store') }}" method="POST">
+            @csrf
+            <div id="record-tab" class="tab-content active">
+                <div class="dental-charting">
+                    <h2>Dental Record</h2>
+                    <div class="form-section-inline">
+                        <!-- ID Number -->
+                        <label for="id_number">ID Number:</label>
+                        <input type="text" id="id_number" name="id_number" value="{{ $personInfo->id_number ?? 'Unknown' }}" class="form-control" readonly>
+
+                        <!-- Patient Name -->
+                        <label for="patient_name">Name:</label>
+                        <input type="text" id="patient_name" name="patient_name" value="{{ $dentalRecord->patient_name ?? $personName }}" class="form-control" readonly>
+
+                        <!-- Role-Specific Information -->
+                        <label for="additional-info">
+                            @if($user->role === 'Student')
+                                Grade & Section:
+                            @elseif($user->role === 'Teacher')
+                                Department:
+                                @elseif($user->role === 'Staff')
+                                Department:
+                                @elseif($user->role === 'parent')
+                                Grade & Section:
+                            @else
+                                Position:
+                            @endif
+                        </label>
+                        <input type="text" id="additional-info" name="additional_info" value="{{ $additionalInfo }}" class="form-control" readonly>
+                    </div>
+
+                    <div class="svg-container">
+                        <div class="labels">
+                            <span class="upper-left-label">Upper Left</span>
+                            <span class="upper-right-label">Upper Right</span>
+                            <span class="lower-left-label">Lower Left</span>
+                            <span class="lower-right-label">Lower Right</span>
+                        </div>
+                        <svg class="diagram" viewBox="0 0 300 400">
+                            <!-- Add SVG path data here for dental chart -->
+                            <path
     class="tooth-11 tooth-11-parent"
     d="m 113.894,31.723601 c 0.0561,0.43476 3.08165,4.91178 3.84449,6.93412 1.03137,2.18327 2.67371,4.15697 7.0469,5.19412 3.57083,-0.36803 7.19248,-0.4467 10.19825,-4.03315 l 7.38989,-9.40518 1.34756,-2.99193 c 0.97308,-2.16029 -1.13419,-4.14679 -3.10702,-4.99829 l -5.34936,-1.19716 c -3.12438,-0.16807 -5.19809,-0.93656 -11.30278,0.59905 l -5.72815,1.04816 c -2.08382,0.77109 -4.86648,0.46927 -4.92056,4.35665 0.10953,1.48595 -0.58405,2.8577 0.58078,4.49361 z"
     style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"/>
@@ -742,124 +775,190 @@
     class="tooth-48"
     d="m 46.842051,219.06796 c 1.174729,-0.0304 2.284947,0.0529 3.643979,-0.304 1.942297,-1.82075 2.638975,-1.82329 3.874331,-2.61197 0.232343,-0.0586 2.680288,-2.19834 0.909097,-5.42624 -0.978091,-1.65176 -1.215436,-2.22236 -0.807156,-3.43336 -0.960239,-2.82396 -0.439585,-3.45978 -0.652953,-5.18009"
     style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"/>
+                        </svg>
+                    </div>
+                </div>
 
-  <text xml:space="preserve" x="120.37785" y="17.284296" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="120.37785" y="17.284296">1</tspan>
-  </text>
-  <text xml:space="preserve" x="85.630409" y="28.142862" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="85.630409" y="28.142862">2</tspan>
-  </text>
-  <text xml:space="preserve" x="56.67421" y="43.344887" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="56.67421" y="43.344887">3</tspan>
-  </text>
-  <text xml:space="preserve" x="42.92001" y="64.338097" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="42.92001" y="64.338097">4</tspan>
-  </text>
-  <text xml:space="preserve" x="32.785339" y="88.226982" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="32.785339" y="88.226982">5</tspan>
-  </text>
-  <text xml:space="preserve" x="19.031139" y="110.66804" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="19.031139" y="110.66804">6</tspan>
-  </text>
-  <text xml:space="preserve" x="12.515995" y="141.07207" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="12.515995" y="141.07207">7</tspan>
-  </text>
-  <text xml:space="preserve" x="8.8964691" y="172.2" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="8.8964691" y="172.2">8</tspan>
-  </text>
-  <text xml:space="preserve" x="155.84921" y="17.284296" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="155.84921" y="17.284296">9</tspan>
-  </text>
-  <text xml:space="preserve" x="192.76837" y="29.590677" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="192.76837" y="29.590677">10</tspan>
-  </text>
-  <text xml:space="preserve" x="220.27673" y="44.068779" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="220.27673" y="44.068779">11</tspan>
-  </text>
-  <text xml:space="preserve" x="236.20268" y="64.338097" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="236.20268" y="64.338097">12</tspan>
-  </text>
-  <text xml:space="preserve" x="247.06125" y="86.779167" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="247.06125" y="86.779167">13</tspan>
-  </text>
-  <text xml:space="preserve" x="258.64374" y="109.22027" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="258.64374" y="109.22027">14</tspan>
-  </text>
-  <text xml:space="preserve" x="264.43497" y="139.62425" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="264.43497" y="139.62425">15</tspan>
-  </text>
-  <text xml:space="preserve" x="268.77841" y="169.3044" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="268.77841" y="169.3044">16</tspan>
-  </text>
-  <text xml:space="preserve" x="151.50578" y="360.41531" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="151.50578" y="360.41531">25</tspan>
-  </text>
-  <text xml:space="preserve" x="176.84245" y="355.34799" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="176.84245" y="355.34799">26</tspan>
-  </text>
-  <text xml:space="preserve" x="202.17912" y="346.6611" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="202.17912" y="346.6611">27</tspan>
-  </text>
-  <text xml:space="preserve" x="222.44849" y="330.01129" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="222.44849" y="330.01129">28</tspan>
-  </text>
-  <text xml:space="preserve" x="240.5461" y="309.01804" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="240.5461" y="309.01804">29</tspan>
-  </text>
-  <text xml:space="preserve" x="257.91986" y="282.95749" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="257.91986" y="282.95749">30</tspan>
-  </text>
-  <text xml:space="preserve" x="265.15891" y="245.31441" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="265.15891" y="245.31441">31</tspan>
-  </text>
-  <text xml:space="preserve" x="265.15891" y="214.18651" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="265.15891" y="214.18651">32</tspan>
-  </text>
-  <text xml:space="preserve" x="128.34082" y="360.41531" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="128.34082" y="360.41531">24</tspan>
-  </text>
-  <text xml:space="preserve" x="100.10851" y="356.79581" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="100.10851" y="356.79581">23</tspan>
-  </text>
-  <text xml:space="preserve" x="76.94355" y="347.38501" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="76.94355" y="347.38501">22</tspan>
-  </text>
-  <text xml:space="preserve" x="55.950298" y="330.01129" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="55.950298" y="330.01129">21</tspan>
-  </text>
-  <text xml:space="preserve" x="38.57658" y="310.46585" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="38.57658" y="310.46585">20</tspan>
-  </text>
-  <text xml:space="preserve" x="20.478951" y="287.30087" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="20.478951" y="287.30087">19</tspan>
-  </text>
-  <text xml:space="preserve" x="12.515995" y="244.5905" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="12.515995" y="244.5905">18</tspan>
-  </text>
-  <text xml:space="preserve" x="12.515995" y="214.18651" style="font-size:10.13467216px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans">
-    <tspan x="12.515995" y="214.18651">17</tspan>
-  </text>
-</svg>
-<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js'></script>
-  <script  src="{{ asset('js/dental.js') }}"></script>
+                <button type="button" id="save-dental-record" class="save-button" 
+                    @if(isset($dentalRecord)) style="display: none;" @endif>
+                    Save Dental Record
+                </button>
 
-  <script>
-        $(document).ready(function() {
-            $('.tooth').click(function() {
-                $(this).toggleClass('active');
-                var toothNumber = $(this).data('tooth-number');
-                $('#modal-content').text('Details about tooth number ' + toothNumber);
-                $('#previewModal').show();
-            });
+                <div class="legend">
+                    <h3>Legend</h3>
+                    <ul>
+                        <li><span class="legend-box healthy"></span> Healthy</li>
+                        <li><span class="legend-box aching"></span> Aching</li>
+                        <li><span class="legend-box missing"></span> Missing</li>
+                    </ul>
+                </div>
+            </div>
 
-            $('.close').click(function() {
-                $('#previewModal').hide();
-            });
+            <!-- Dental Update Tab Content -->
+</div>
 
-            $(window).click(function(event) {
-                if (event.target.id == 'previewModal') {
-                    $('#previewModal').hide();
-                }
-            });
-        });
-    </script>
+        <!-- Right side: Dental History -->
+        <div class="dental-examination-form">
+        <div class="dental-history">
+            <h2>Dental History</h2>
+            @if($dentalRecord)
+    <a href="{{ route('staff.dentalRecord.pdf', $dentalRecord->id_number) }}" class="btn btn-primary">Download Dental Record</a>
+@endif
+    </a>
+
+          <!-- Patient Information -->
+<table class="history-table">
+    <tbody>
+        <tr>
+            <td><strong>Patient Name:</strong></td>
+
+@if($personInfo)
+    <td>{{ $personInfo->first_name }} {{ $personInfo->last_name }}</td>
+@else
+    <td>Unknown</td>
+@endif
+            </tr>
+        <tr>
+            <td><strong>Date of Birth:</strong></td>
+            <td>{{ $patientInfo->birthdate ?? 'Unknown' }}</td>
+        </tr>
+        <tr>
+            <td><strong>Last Visit Date:</strong></td>
+            <td>{{ $lastExamination->date_of_examination ?? 'Unknown' }}</td>
+        </tr>
+        <tr>
+            <td><strong>Dentist Name:</strong></td>
+            <td>Dr. Sarah Uy-Gan</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- Previous Examinations -->
+<table class="history-table">
+    <thead>
+        <tr>
+            <th colspan="3">Previous Examinations</th>
+        </tr>
+    </thead>
+    <tbody>
+    @if($lastExamination && is_countable($lastExamination) && count($lastExamination) > 0)
+        @foreach($lastExamination as $examination)
+        <tr>
+            <td><strong>Date:</strong></td>
+            <td>{{ $examination->date_of_examination }}</td>
+            <td>{{ $examination->findings ?? 'No findings available' }}</td>
+        </tr>
+        @endforeach
+    @else
+        <tr>
+            <td colspan="3">No previous examinations found</td>
+        </tr>
+    @endif
+</tbody>
+
+
+<!-- Treatments Performed -->
+<table class="history-table">
+    <thead>
+        <tr>
+            <th colspan="4">Treatments Performed</th>
+        </tr>
+    </thead>
+ 
+</table>
+
+<!-- Medications Prescribed -->
+<table class="history-table">
+    <thead>
+        <tr>
+            <th colspan="4">Medications Prescribed</th>
+        </tr>
+    </thead>
+   
+</table>
+
+<!-- Next Scheduled Appointment -->
+<table class="history-table">
+    <thead>
+        <tr>
+            <th colspan="2">Next Scheduled Appointment with Dr. Sarah Uy-Gan</th>
+        </tr>
+    </thead>
+    <tbody>
+
+    </tbody>
+</table>
+
+<!-- Additional Notes -->
+<table class="history-table">
+    <thead>
+        <tr>
+            <th colspan="2">Additional Notes</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td colspan="2">{{ $patient->additional_notes ?? 'No additional notes' }}</td>
+        </tr>
+    </tbody>
+</table>
+
+
+            <!-- Dental Update Button -->
+           
+        </div>
+    </div>
+</div>
+
+    <!-- Preview Modal -->
+<!-- Modal to update tooth details, status, and upload images -->
+<!-- Modal to update tooth details, status, and upload images -->
+<div id="previewModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Tooth Details</h2>
+        <form id="tooth-details-form">
+            @csrf
+            <div class="form-group">
+                <label for="modal-tooth">Tooth:</label>
+                <input type="hidden" id="dental-record-id" name="dental_record_id" value="{{ $dentalRecord->id ?? '' }}">
+                <input type="text" id="modal-tooth" name="tooth_number" class="form-control" readonly>
+            </div>
+            <div class="form-group">
+                <label for="modal-status">Status:</label>
+                <select id="modal-status" name="status" class="form-control">
+                    <option value="Healthy">Healthy</option>
+                    <option value="Aching">Aching</option>
+                    <option value="Missing">Missing</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="modal-notes">Notes:</label>
+                <textarea id="modal-notes" name="notes" class="form-control"></textarea>
+            </div>
+
+            <!-- Image Upload Section in the Modal -->
+            <div class="form-group">
+                <label for="modal-upload-images">Upload Dental Pictures:</label>
+                <input type="file" id="modal-upload-images" name="update_images[]" class="form-control" accept="image/*" multiple>
+            </div>
+            <div id="image-preview-container" class="image-preview-container"></div>
+
+            <button type="button" id="save-tooth-details" class="save-button">Save</button>
+        </form>
+    </div>
+</div>
+
+
+    <script>
+var storeToothUrl = "{{ route('staff.teeth.store') }}";
+var storeDentalRecordUrl = "{{ route('staff.dental-record.store') }}";
+var getToothStatusUrl = "{{ route('staff.get-tooth-status') }}"; // Pass the route to JS
+let teethStatuses = @json($teeth->pluck('status', 'tooth_number'));
+console.log('Teeth Statuses:', teethStatuses); 
+
+</script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js'></script>
+    <script src="{{ asset('js/dental.js') }}"></script>
+  
+</x-app-layout>

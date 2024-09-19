@@ -21,7 +21,7 @@ class CheckApproval
         $user = Auth::user();
 
         // Check if the health examination is approved
-        $healthExamination = HealthExamination::where('user_id', $user->id)
+        $healthExamination = HealthExamination::where('id_number', $user->id_number)
                                               ->where('is_approved', true)
                                               ->first();
 

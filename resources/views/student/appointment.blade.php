@@ -2,18 +2,38 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         body {
-            background-color: #f8f9fa;
+            background-color: #f4f6f9;
             font-family: 'Arial', sans-serif;
         }
+        .main-content {
+            margin-top: 80px;   
+        }
+        .form-container {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px;
+            gap: 20px;
+        }
 
-  
-        .appointment-table {
+        .appointment-list {
             width: 45%;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            animation: fadeInUp 0.5s ease-in-out;
+        }
+
+        .appointment-list h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .appointment-table {
+            width: 100%;
             border-collapse: collapse;
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            animation: fadeInUp 0.5s ease-in-out;
         }
 
         .appointment-table th,
@@ -47,6 +67,11 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendar-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
         }
 
         .calendar {
@@ -137,9 +162,9 @@
         }
     </style>
 
-    <div class="main-content">
-        <!-- Appointment Table -->
-        <div>
+    <div class="form-container">
+        <!-- Appointment List -->
+        <div class="appointment-list">
             <h2>Your Appointments</h2>
             <table class="appointment-table">
                 <thead>
@@ -226,28 +251,28 @@
 
         // Fetch and display appointments for the clicked date
         function fetchAppointments(day, month, year) {
-            fetch(`/appointments/by-date?date=${year}-${month}-${day}`)
-                .then(response => response.json())
-                .then(data => {
-                    const appointmentList = document.getElementById('appointment-list');
-                    appointmentList.innerHTML = ''; // Clear previous appointments
+    const formattedDate = `${year}-${month}-${day}`;
+    fetch(`/appointments/by-date?date=${formattedDate}`)
+        .then(response => response.json())
+        .then(data => {
+            const appointmentList = document.getElementById('appointment-list');
+            appointmentList.innerHTML = ''; // Clear previous appointments
 
-                    if (data.appointments.length > 0) {
-                        data.appointments.forEach(appointment => {
-                            const li = document.createElement('li');
-                            li.textContent = `${appointment.appointment_time} - ${appointment.appointment_type}`;
-                            appointmentList.appendChild(li);
-                        });
-                    } else {
-                        appointmentList.innerHTML = '<li>No appointments</li>';
-                    }
+            if (data.appointments.length > 0) {
+                data.appointments.forEach(appointment => {
+                    const li = document.createElement('li');
+                    li.textContent = `${appointment.appointment_time} - ${appointment.appointment_type}`;
+                    appointmentList.appendChild(li);
+                });
+            } else {
+                appointmentList.innerHTML = '<li>No appointments</li>';
+            }
 
-                    document.getElementById('modal-date').textContent = `${year}-${month}-${day}`;
-                    openModal();
-                })
-                .catch(error => console.error('Error fetching appointments:', error));
-        }
-
+            document.getElementById('modal-date').textContent = formattedDate;
+            openModal();
+        })
+        .catch(error => console.error('Error fetching appointments:', error));
+}
         // Add appointment markers on calendar
         function fetchAppointmentMarkers(day, month, year, cell) {
             fetch(`/appointments/by-date?date=${year}-${month}-${day}`)

@@ -191,21 +191,22 @@
     <nav class="menu">
         <ul>
             <li><a href="{{ route('admin.dashboard') }}" id="admin-dashboard-link"><span class="icon"><i class="fas fa-tachometer-alt"></i></span><span class="menu-text">Dashboard</span></a></li>
-            <li class="has-submenu">
-                <a href="#"><span class="icon"><i class="fas fa-comments"></i></span><span class="menu-text">Complaints</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
-                <ul class="submenu">
-                    <li><a href="{{ route('admin.complaint') }}">View Complaints</a></li>
-                    <li><a href="{{ route('admin.complaint.add') }}">Add Complaints</a></li>
-                </ul>
-            </li>
+            <li><a href="{{ route('admin.complaint') }}"><span class="icon"><i class="fas fa-comments"></i></span><span class="menu-text">Complaints</span></a></li>
             <li class="has-submenu">
                 <a href="#"><span class="icon"><i class="fas fa-notes-medical"></i></span><span class="menu-text">Records</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
                 <ul class="submenu">
-                    <li><a href="{{ route('admin.uploadHealthExamination') }}">Health Approval</a></li>
                     <li><a href="{{ route('admin.medical-record.index') }}">View Medical Record</a></li>
                     <li><a href="{{ route('admin.dental-record.index') }}">View Dental Record</a></li>
                 </ul>
             </li>
+            <li class="has-submenu">
+    <a href="#"><span class="icon"><i class="fas fa-check-circle"></i></span><span class="menu-text">Approvals</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
+    <ul class="submenu">
+        <li><a href="{{ route('admin.uploadHealthExamination') }}">Health Approval</a></li>
+        <li><a href="{{ route('admin.uploadMedicalDocu') }}">Medical Approval</a></li>
+        <li><a href="">Dental Approval</a></li>
+    </ul>
+</li>
             <li class="has-submenu">
             <a href="#"><span class="icon"><i class="fas fa-users"></i></span><span class="menu-text">Manage Users</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
             <ul class="submenu">
@@ -219,21 +220,14 @@
             <li class=>
                 <a href="{{ route('admin.appointment') }}"><span class="icon"><i class="fas fa-calendar-check"></i></span><span class="menu-text">Appointment</span></a>
             </li>
-            <li class="has-submenu">
-                <a href="#"><span class="icon"><i class="fas fa-boxes"></i></span><span class="menu-text">Inventory</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
-                <ul class="submenu">
-                    <li><a href="{{ route('admin.inventory') }}">Add Item</a></li>
-                    <li><a href="{{ route('admin.inventory') }}">Inventory List</a></li>
-                </ul>
+            <li>
+                <a href="{{ route('admin.inventory') }}"><span class="icon"><i class="fas fa-boxes"></i></span><span class="menu-text">Inventory</span></a>
+    
             </li>
-            <li class="has-submenu">
-                <a href="#"><span class="icon"><i class="fas fa-chart-line"></i></span><span class="menu-text">Monitoring and Report</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
-                <ul class="submenu">
-                    <li><a href="{{ route('admin.monitoring-report-log') }}">Release Notification</a></li>
-                    <li><a href="{{ route('admin.monitoring-report-log') }}">View Logs and Daily Transactions</a></li>
-                </ul>
+            <li>
+                <a href="{{ route('admin.monitoring-report-log') }}"><span class="icon"><i class="fas fa-chart-line"></i></span><span class="menu-text">Reports and logs</i></span></a>
             </li>
-            <li><a href="#"><span class="icon"><i class="fas fa-cogs"></i></span><span class="menu-text">Settings</span></a></li>
+            <li><a href="{{ route('admin.settings.edit') }}"><span class="icon"><i class="fas fa-cogs"></i></span><span class="menu-text">Settings</span></a></li>
         </ul>
     </nav>
 </div>

@@ -98,10 +98,6 @@
     </div>
 
     <!-- Patient Profile Picture Section -->
-    <div class="profile-picture">
-    <img src="{{ $profilePicture }}" alt="Profile Picture">
-</div>
-    <!-- Patient Details Section -->
     <table class="details-table">
         <thead>
             <tr>
@@ -110,6 +106,16 @@
             </tr>
         </thead>
         <tbody>
+        <tr>
+                <td><strong>Profile Picture:</strong></td>
+                <td>
+                    @if ($profilePictureBase64)
+                        <img src="{{ $profilePictureBase64 }}" alt="Profile Picture" style="border-radius: 50%; width: 80px; height: 80px; object-fit: cover; border: 2px solid #007bff;">
+                    @else
+                        <p>No profile picture available.</p>
+                    @endif
+                </td>
+            </tr>
             <tr>
                 <td><strong>Name:</strong></td>
                 <td>{{ $medicalRecord->name }}</td>
