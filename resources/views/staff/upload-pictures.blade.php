@@ -215,12 +215,60 @@
             Your submission is pending approval. Please wait for further instructions. Thank you!
         </div>
     </div>
+    <div id="image-preview-section" style="margin-top: 20px;">
+    <h4>Image Preview</h4>
+    <div id="preview-container" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
- document.addEventListener("DOMContentLoaded", function () {
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
     const pendingApprovalMessage = document.getElementById('pending-approval-message');
     const uploadSection = document.getElementById('upload-section');
+
+    // Check submission status once on page load
+    fetch('{{ route('staff.health-examination.status') }}', {
+        method: 'GET',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.exists) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Welcome to Health Examination',
+                text: 'Please upload your health examination pictures and lab results.',
+            }).then(() => {
+                localStorage.removeItem('uploadCompleted');
+                pendingApprovalMessage.style.display = 'none';
+                uploadSection.style.display = 'block';
+            });
+        } else if (data.is_approved) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Approved',
+                text: 'Your submission has been approved. Proceed to the next step.',
+            }).then(() => {
+                window.location.href = '{{ route('staff.medical-record.create') }}';
+            });
+        } else if (data.is_declined) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Submission Declined',
+                text: 'Your submission has been declined. Please upload proper pictures and try again.',
+            }).then(() => {
+                localStorage.removeItem('uploadCompleted');
+                pendingApprovalMessage.style.display = 'none';
+                uploadSection.style.display = 'block';
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error checking approval status:', error);
+    });
 
     const fileInputs = document.querySelectorAll('input[type="file"]');
     const globalUploadedFiles = new Set(); // Global set to track all uploaded files
@@ -236,15 +284,6 @@
         'xray_pictures': 1,
         'health_examination_picture': 1,
     };
-
-    // Check for pending approval status from localStorage
-    if (localStorage.getItem('uploadCompleted') === 'true') {
-        uploadSection.style.display = 'none';
-        pendingApprovalMessage.style.display = 'block';
-    } else {
-        uploadSection.style.display = 'block';
-        pendingApprovalMessage.style.display = 'none';
-    }
 
     fileInputs.forEach(input => {
         input.addEventListener('change', function () {
@@ -287,12 +326,8 @@
                 fileName.classList.add('file-name');
 
                 // Use custom file names based on the section and file count
-                if (sectionNames[section]) {
-                    fileName.textContent = `${sectionNames[section]} ${fileCount[section]}`;
-                    fileCount[section]++; // Increment count for the section
-                } else {
-                    fileName.textContent = file.name;
-                }
+                fileName.textContent = sectionNames[section] ? `${sectionNames[section]} ${fileCount[section]}` : file.name;
+                fileCount[section]++; // Increment count for the section
 
                 const fileRemove = document.createElement('span');
                 fileRemove.innerHTML = '&times;';
@@ -309,14 +344,18 @@
 
                 fileItem.appendChild(fileName);
                 fileItem.appendChild(fileRemove);
-
                 fileList.appendChild(fileItem);
+
+                // Attach click event to preview image in modal
+                fileName.addEventListener('click', function () {
+                    previewImageInModal(file); // Trigger image preview
+                });
             });
 
             Swal.fire({
                 icon: 'success',
                 title: 'Files Uploaded',
-                text: 'Your files have been added to the list successfully.'
+                text: 'Your files have been added to the list successfully.',
             });
         });
     });
@@ -373,54 +412,6 @@
         });
     }
 
-    // Set an interval to check the status of the health examination approval
-    setInterval(function () {
-    fetch('{{ route('staff.health-examination.status') }}', {
-        method: 'GET',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-        },
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.exists === false) {
-            // If no record exists, show an alert and reset the form for a new submission
-            Swal.fire({
-                icon: 'warning',
-                title: 'No Submission Found',
-                text: 'Your previous submission has been deleted. Please upload your files again.',
-            }).then(() => {
-                // Clear the localStorage flag and reset the form visibility
-                localStorage.removeItem('uploadCompleted');
-                pendingApprovalMessage.style.display = 'none';
-                uploadSection.style.display = 'block';
-            });
-        } else if (data.is_approved) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Approved',
-                text: 'Your submission has been approved. Proceed to the next step.',
-            }).then(() => {
-                window.location.href = '{{ route('staff.medical-record.create') }}';
-            });
-        } else if (data.is_declined) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Submission Declined',
-                text: 'Your submission has been declined. Please upload proper pictures and try again.',
-            }).then(() => {
-                // Clear localStorage and reset the form for a new submission
-                localStorage.removeItem('uploadCompleted');
-                pendingApprovalMessage.style.display = 'none';
-                uploadSection.style.display = 'block';
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Error checking approval status:', error);
-    });
-}, 5000); // Check every 5 seconds
-
     function previewImageInModal(file) {
         const reader = new FileReader();
         reader.onload = function (e) {
@@ -431,12 +422,11 @@
                 showCloseButton: true,
                 showCancelButton: true,
                 focusConfirm: false,
-                confirmButtonText: 'Close'
+                confirmButtonText: 'Close',
             });
         };
         reader.readAsDataURL(file); // Read the file as a data URL to display in SweetAlert
     }
 });
-    </script>
+</script>
 </x-app-layout>
-

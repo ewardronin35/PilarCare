@@ -7,44 +7,46 @@ use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
 {
+    // Fetch notifications and unread count
     public function index()
     {
         $user = Auth::user();
-    
+        
         // Fetch notifications specific to the user or their role
         $notifications = Notification::where(function($query) use ($user) {
             $query->where('user_id', $user->id_number)
                   ->orWhere('role', $user->role);
         })->orderBy('created_at', 'desc')->get();
-    
-        // Count unread notifications
-        $unreadCount = Notification::where('user_id', $user->id_number)
-                                   ->orWhere('role', $user->role)
-                                   ->where('is_opened', false)
-                                   ->count();
-    
+
+        // Count unread notifications directly
+        $unreadCount = $notifications->where('is_opened', false)->count();
+
         return response()->json([
             'notifications' => $notifications,
             'unreadCount' => $unreadCount
         ]);
     }
+
+    // Mark notification as read
     public function markAsOpened($id)
     {
         $notification = Notification::find($id);
-    
+
         if ($notification) {
-            $notification->is_read = true;
+            // Update the 'is_opened' field
+            $notification->is_opened = true;
             $notification->save();
-    
+
             return response()->json(['message' => 'Notification marked as read']);
         }
-    
+
         return response()->json(['error' => 'Notification not found'], 404);
     }
-    
-    
+
+    // Store a new notification
     public function store(Request $request)
     {
+        // Validate the request
         $request->validate([
             'user_id' => 'required|string|exists:users,id_number',
             'title' => 'required|string|max:255',
@@ -53,6 +55,7 @@ class NotificationController extends Controller
             'role' => 'nullable|string' // Validate the role input
         ]);
 
+        // Create the notification
         Notification::create([
             'user_id' => $request->user_id,
             'title' => $request->title,
@@ -66,6 +69,7 @@ class NotificationController extends Controller
         ]);
     }
 
+    // Delete a notification
     public function destroy($id)
     {
         $notification = Notification::findOrFail($id);

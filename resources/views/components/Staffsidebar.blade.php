@@ -211,7 +211,6 @@
             <a href="#"><span class="icon"><i class="fas fa-user-circle"></i></span><span class="menu-text">Profile</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
             <ul class="submenu">
                 <li><a href="#">Profile Management</a></li>
-                <li><a href="#">Create Parent's Account</a></li>
             </ul>
         </li>
         </ul>

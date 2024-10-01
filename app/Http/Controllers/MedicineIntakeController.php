@@ -6,8 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\MedicineIntake;
 use App\Models\Notification;
 
-class MedicineIntakeController extends Controller
-{public function store(Request $request)
+class MedicineIntakeController extends Controller{
+    public function store(Request $request)
     {
         $request->validate([
             'medicine_name' => 'required|string|max:255',

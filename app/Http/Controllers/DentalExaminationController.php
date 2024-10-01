@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\DentalExamination;
 use App\Models\User;
+use App\Models\DentalRecord;
+use App\Models\Notitfication;
 use App\Models\Teeth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -15,6 +17,7 @@ class DentalExaminationController extends Controller
         Log::info('Incoming request data:', $request->all());
     
         $validatedData = $request->validate([
+            'id_number' => 'required|string',
             'date_of_examination' => 'required|date',
             'grade_section' => 'required|string',
             'name' => 'required|string',
@@ -54,9 +57,16 @@ class DentalExaminationController extends Controller
         if (empty($lastname)) {
             $lastname = 'Unknown'; // Or handle it differently
         }
+        $dentalRecord = DentalRecord::where('id_number', $request->id_number)->first();
+        if (!$dentalRecord) {
+            Log::error('No dental record found for id_number: ' . $request->id_number);
+            return redirect()->back()->with('error', 'No dental record found for the provided ID number.');
+        }
     
         $dentalExamination = new DentalExamination([
+            'id_number' => $request->id_number, // Set id_number
             'user_id' => auth()->id(),
+            'dental_record_id' => $dentalRecord->id, // Link to dental record
             'date_of_examination' => $request->date_of_examination,
             'grade_section' => $request->grade_section,
             'lastname' => $lastname,

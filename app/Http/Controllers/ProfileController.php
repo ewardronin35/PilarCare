@@ -6,6 +6,8 @@ use Illuminate\Http\RedirectResponse;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\Staff;
+use App\Models\Nurse;      // Ensure these models exist
+use App\Models\Doctor;  
 use App\Models\Parents;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -95,27 +97,53 @@ class ProfileController extends Controller
 
         return Redirect::route('profile.edit')->with('status', 'profile-picture-updated');
     }
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         $role = $request->input('role', 'students'); // Default to students
+        $search = $request->input('search', null);
 
+        // Determine the model based on role
         switch ($role) {
             case 'students':
-                $profiles = Student::all();
+                $query = Student::query();
                 break;
             case 'teachers':
-                $profiles = Teacher::all();
+                $query = Teacher::query();
+                break;
+            case 'nurses':
+                $query = Nurse::query();
+                break;
+            case 'doctors':
+                $query = Doctor::query();
                 break;
             case 'staff':
-                $profiles = Staff::all();
+                $query = Staff::query();
                 break;
             case 'parents':
-                $profiles = Parents::all();
+                $query = Parents::query();
                 break;
             default:
-                $profiles = Student::all(); // Default to students
+                $query = Student::query(); // Default to students
                 break;
         }
+
+        // Apply search filters if any
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('first_name', 'LIKE', "%{$search}%")
+                  ->orWhere('last_name', 'LIKE', "%{$search}%")
+                  ->orWhere('id_number', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Handle AJAX requests for dynamic fetching
+        if ($request->ajax()) {
+            $profiles = $query->get(['first_name', 'last_name', 'id_number']);
+            return response()->json($profiles);
+        }
+
+        // For standard page load
+        $profiles = $query->get(['first_name', 'last_name', 'id_number']);
 
         return view('admin.profiles', compact('profiles', 'role'));
     }

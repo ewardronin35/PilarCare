@@ -24,6 +24,16 @@
             grid-template-columns: 1fr 1fr; /* Two columns layout */
 
         }
+        @keyframes fadeInForms {
+    from {
+        opacity: 0;
+        transform: translateY(20px); /* Optional: Slight move-up effect */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0); /* Bring back to the original position */
+    }
+}
 
         .form-container {
     flex: 1;
@@ -34,6 +44,7 @@
     overflow-y: auto;
     max-height: 75vh;
     border: 1px solid #eaeaea;
+    animation: fadeInForms 0.7s ease-in-out; /* Animation lasts 0.7s */
     width: 100%; /* Ensure full width */
 }
 
@@ -45,6 +56,7 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     overflow-y: auto;
     max-height: 75vh;
+    animation: fadeInForms 0.7s ease-in-out; /* Animation lasts 0.7s */
     border: 1px solid #eaeaea;
     width: 100%; /* Ensure full width */
 }
@@ -306,26 +318,29 @@ h1 {
         font-family: 'Poppins', sans-serif;
 
     }
-    .dropdown-menu {
-        position: absolute;
-        background-color: #f9f9f9;
-        min-width: 200px;
-        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-        padding: 12px 16px;
-        z-index: 1;
-        display: none;
-        border-radius: 8px;
-        flex-direction: column;
-    }
-    .dropdown-menu label {
-        display: block;
-        padding: 10px 0;
-        cursor: pointer;
-    }
-    .dropdown-toggle:focus + .dropdown-menu, 
-    .dropdown-toggle:hover + .dropdown-menu {
-        display: flex;
-    }
+    .medicine-dropdown-menu {
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 200px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    padding: 12px 16px;
+    z-index: 1;
+    display: none;
+    border-radius: 8px;
+    flex-direction: column;
+}
+
+.medicine-dropdown-menu label {
+    display: block;
+    padding: 10px 0;
+    cursor: pointer;
+}
+
+.dropdown-toggle:focus + .medicine-dropdown-menu, 
+.dropdown-toggle:hover + .medicine-dropdown-menu {
+    display: flex;
+}
+
 .tab-content {
     opacity: 0;
     transition: opacity 0.5s ease-in-out;
@@ -686,7 +701,7 @@ h1 {
     <h2>Medicines OK to give/apply at the clinic</h2>
     <div class="custom-dropdown">
     <button id="medicineDropdown" class="dropdown-toggle">Select Medicines</button>
-    <div class="dropdown-menu" style="display: none;">
+    <div class="medicine-dropdown-menu" style="display: none;">
         <label>
             <input type="checkbox" name="medicines[]" value="Paracetamol" @if(in_array('Paracetamol', explode(',', $information->medicines ?? ''))) checked @endif> Paracetamol
         </label>
@@ -874,7 +889,7 @@ h1 {
         </tbody>
     </table>
 @else
-    <p>No medicine intake history available or no medical record found.</p>
+    <p>No medicine intake history available</p>
 @endif
 
 </div>
@@ -1028,8 +1043,17 @@ h1 {
 
     const toggleButton = document.getElementById('medicineDropdown');
     const dropdownMenu = toggleButton.nextElementSibling;
-    toggleButton.addEventListener('click', function() {
-        dropdownMenu.style.display = dropdownMenu.style.display === 'none' ? 'block' : 'none';
+
+      toggleButton.addEventListener('click', function(event) {
+        event.preventDefault(); // Prevent default behavior
+        event.stopPropagation(); // Stop the event from propagating to other elements
+
+        // Toggle visibility of dropdown menu
+        if (dropdownMenu.style.display === 'none' || dropdownMenu.style.display === '') {
+            dropdownMenu.style.display = 'flex';
+        } else {
+            dropdownMenu.style.display = 'none';
+        }
     });
 
     // Close the dropdown when clicking outside
@@ -1039,28 +1063,6 @@ h1 {
         }
     });
 
-});
-document.getElementById('medicineDropdown').addEventListener('click', function(event) {
-    event.preventDefault(); // Prevent default behavior
-    event.stopPropagation(); // Stop the event from propagating to other elements
-
-    const dropdownMenu = document.querySelector('.dropdown-menu');
-    
-    // Toggle visibility of dropdown menu
-    if (dropdownMenu.style.display === 'none' || dropdownMenu.style.display === '') {
-        dropdownMenu.style.display = 'block';
-    } else {
-        dropdownMenu.style.display = 'none';
-    }
-});
-
-// Close the dropdown when clicking outside
-document.addEventListener('click', function(event) {
-    const dropdownMenu = document.querySelector('.dropdown-menu');
-    
-    if (!dropdownMenu.contains(event.target)) {
-        dropdownMenu.style.display = 'none';
-    }
 });
     
 function showTab(tabId) {

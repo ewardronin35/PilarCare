@@ -13,7 +13,22 @@ class Parents extends Model
         'id_number',
         'first_name',
         'last_name',
-        'grade_or_course',
+        'Student_ID',
         'approved' // Adjust this field name as needed
     ];
+
+    public function dentalRecords()
+    {
+        return $this->hasMany(DentalRecord::class, 'id_number', 'id_number');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'id_number', 'id_number');
+    }
+    public function students()
+{
+    return $this->hasMany(Student::class, 'id_number', 'id_number');
 }
+}
+

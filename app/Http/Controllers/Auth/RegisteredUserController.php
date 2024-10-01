@@ -34,6 +34,9 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'g-recaptcha-response' => ['required'],
+        ], [
+            'agree_terms.accepted' => 'You must agree to the terms and conditions.',
+            'password.confirmed' => 'The password confirmation does not match.',
         ]);
     }
 

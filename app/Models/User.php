@@ -71,5 +71,36 @@ public function information()
 }
 // User.php Model
 
+public function nurse()
+{
+    return $this->hasOne(Nurse::class, 'id_number', 'id_number');
+}
 
+public function doctor()
+{
+    return $this->hasOne(Doctor::class, 'id_number', 'id_number');
+}
+
+public function teacher()
+{
+    return $this->hasOne(Teacher::class, 'id_number', 'id_number');
+}
+
+public function staffMember()
+{
+    return $this->hasOne(Staff::class, 'id_number', 'id_number');
+}
+
+public function parent()
+{
+    return $this->hasOne(Parents::class, 'id_number', 'id_number');
+}
+public function students()
+{
+    return $this->hasMany(Student::class, 'id_number', 'id_number');
+}
+public function notifications()
+{
+    return $this->hasMany(Notification::class, 'id_number', 'id_number');
+}
 }

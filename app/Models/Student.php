@@ -20,4 +20,9 @@ class Student extends Model
     {
         return $this->hasMany(DentalRecord::class, 'id_number', 'id_number');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'id_number', 'id_number');
+    }
 }

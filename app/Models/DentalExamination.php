@@ -16,6 +16,8 @@ class DentalExamination extends Model
         'firstname', 
         'birthdate', 
         'age', 
+        'dentist_name',
+        'findings',
         'carries_free', 
         'poor_oral_hygiene', 
         'gum_infection', 
@@ -41,6 +43,18 @@ class DentalExamination extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'id_number', 'id_number'); // Link by id_number instead of user_id
+    }
+    public function appointments()
+{
+    return $this->hasMany(Appointment::class);
+}
+    public function notifications()
+{
+    return $this->hasMany(Notification::class);
+    }
+    public function DentalRecord()
+{
+    return $this->belongsTo(DentalRecord::class, 'dental_record_id', 'id');
     }
 }
     

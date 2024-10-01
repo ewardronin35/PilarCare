@@ -2,19 +2,22 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        body {
-            background-color: #f5f7fa;
-            font-family: 'Poppins', sans-serif;
-        }
+    body {
+        background-color: #f5f7fa;
+        font-family: 'Poppins', sans-serif;
+    }
         .container {
             display: flex;
             flex-direction: row;
             min-height: 100vh;
         }
+
         .main-content {
             margin-top: 30px;
             transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
         }
+
+        
         .form-container, .table-container {
             margin-top: 20px;
             background-color: #f9f9f9;
@@ -23,9 +26,11 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             animation: fadeInUp 0.5s ease-in-out;
         }
+
         .tab-buttons {
             margin-bottom: 20px;
         }
+
         .tab-buttons button {
             background-color: #00d2ff;
             color: white;
@@ -38,35 +43,44 @@
             font-size: 16px;
             font-weight: bold;
         }
+
         .tab-buttons button:hover {
             background-color: #00b8e6;
         }
+
         .tab-buttons button:active {
             transform: scale(0.95);
         }
+
         .tab-buttons button.active {
             background-color: #00a8cc;
         }
+
         .tab-content {
             display: none;
         }
+
         .tab-content.active {
             display: block;
             animation: fadeInUp 0.5s ease-in-out;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
         }
+
         table th, table td {
             border: 1px solid #ddd;
             padding: 8px;
             animation: fadeIn 1s ease-in-out;
             text-align: center;
         }
+
         table th {
             background-color: #f2f2f2;
         }
+
         .image-previews img {
             width: 100px;
             height: 100px;
@@ -74,11 +88,13 @@
             border-radius: 5px;
             cursor: pointer;
         }
+
         .image-previews {
             display: flex;
             justify-content: center;
             align-items: center;
         }
+
         .image-container {
             width: 100px;
             height: 100px;
@@ -88,10 +104,12 @@
             align-items: center;
             margin: 0 auto;
         }
+
         .image-container img {
             max-width: 100%;
             max-height: 100%;
         }
+
         .btn {
             display: inline-block;
             padding: 10px 20px;
@@ -103,22 +121,27 @@
             border-radius: 5px;
             transition: background-color 0.3s, transform 0.3s;
         }
+
         .btn-success {
             background-color: #28a745;
             color: white;
         }
+
         .btn-success:hover {
             background-color: #218838;
             transform: scale(1.05);
         }
+
         .btn-danger {
             background-color: #dc3545;
             color: white;
         }
+
         .btn-danger:hover {
             background-color: #c82333;
             transform: scale(1.05);
         }
+
         .modal {
             display: none;
             position: fixed;
@@ -131,6 +154,7 @@
             background-color: rgba(0, 0, 0, 0.6);
             animation: fadeIn 0.5s ease-in-out;
         }
+
         .modal-content {
             background-color: #fefefe;
             margin: 5% auto;
@@ -143,24 +167,28 @@
             overflow: hidden;
             text-align: center;
         }
+
         .modal img {
             max-width: 100%;
-            max-height: 70vh;
-            object-fit: contain;
+            max-height: 70vh; /* Ensures the image doesn't exceed the viewport height */
+            object-fit: contain; /* Maintains aspect ratio */
             border-radius: 10px;
         }
+
         .close {
             color: #aaa;
             float: right;
             font-size: 28px;
             font-weight: bold;
         }
+
         .close:hover,
         .close:focus {
             color: black;
             text-decoration: none;
             cursor: pointer;
         }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -169,6 +197,7 @@
                 opacity: 1;
             }
         }
+
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -184,52 +213,56 @@
     <div class="container">
         <main class="main-content">
             <div class="tab-buttons">
-                <button id="pending-approvals-tab" class="active" onclick="showTab('pending-approvals')">Pending Medical Record Approvals</button>
+                <button id="pending-approvals-tab" class="active" onclick="showTab('pending-approvals')">Pending Approvals</button>
             </div>
 
-            <!-- Pending Medical Records Content -->
+            <!-- Pending Approvals Content -->
             <div id="pending-approvals" class="tab-content active">
-                <h1>Pending Medical Record Approvals</h1>
+                <h1>Pending Approvals</h1>
                 <div class="table-container">
-                    @if(isset($pendingMedicalRecords) && $pendingMedicalRecords->isNotEmpty())
+                    @if(isset($pendingExaminations) && $pendingExaminations->isNotEmpty())
                         <table>
                             <thead>
                                 <tr>
                                     <th>Name</th>
-                                    <th>Birthdate</th>
-                                    <th>Age</th>
-                                    <th>Address</th>
-                                    <th>Contact Number</th>
-                                    <th>Profile Picture</th>
-                                    <th>Medicines</th>
+                                    <th>Health Exam Picture</th>
+                                    <th>X-ray Pictures</th>
+                                    <th>Lab Result Pictures</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($pendingMedicalRecords as $medicalRecord)
+                                @foreach($pendingExaminations as $examination)
                                     <tr>
-                                        <td>{{ $medicalRecord->name }}</td>
-                                        <td>{{ $medicalRecord->birthdate }}</td>
-                                        <td>{{ $medicalRecord->age }}</td>
-                                        <td>{{ $medicalRecord->address }}</td>
-                                        <td>{{ $medicalRecord->personal_contact_number }}</td>
+                                        <td>{{ $examination->user->first_name }} {{ $examination->user->last_name }}</td>
                                         <td>
                                             <div class="image-container">
-                                                <img src="{{ asset('storage/' . $medicalRecord->profile_picture) }}" alt="Profile Picture" onclick="openModal('{{ asset('storage/' . $medicalRecord->profile_picture) }}')">
+                                                <img src="{{ asset('storage/' . $examination->health_examination_picture) }}" alt="Health Examination Picture" onclick="openModal('{{ asset('storage/' . $examination->health_examination_picture) }}')">
                                             </div>
                                         </td>
                                         <td>
                                             <div class="image-previews">
-                                                @foreach(json_decode($medicalRecord->medicines) as $medicine)
-                                                    <p>{{ $medicine }}</p>
+                                                @foreach(json_decode($examination->xray_picture) as $xray)
+                                                    <div class="image-container">
+                                                        <img src="{{ asset('storage/' . $xray) }}" alt="X-ray Picture" onclick="openModal('{{ asset('storage/' . $xray) }}')">
+                                                    </div>
                                                 @endforeach
                                             </div>
                                         </td>
                                         <td>
-                                        <button type="button" class="btn btn-success" onclick="approveRecord({{ $medicalRecord->id }})">
-                                        <img src="https://img.icons8.com/material-rounded/24/ffffff/checkmark--v1.png"/> Approve
+                                            <div class="image-previews">
+                                                @foreach(json_decode($examination->lab_result_picture) as $lab)
+                                                    <div class="image-container">
+                                                        <img src="{{ asset('storage/' . $lab) }}" alt="Lab Result Picture" onclick="openModal('{{ asset('storage/' . $lab) }}')">
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-success" onclick="approveExam({{ $examination->id }})">
+                                                <img src="https://img.icons8.com/material-rounded/24/ffffff/checkmark--v1.png"/> Approve
                                             </button>
-                                            <button type="button" class="btn btn-danger" onclick="rejectRecord({{ $medicalRecord->id }})">
+                                            <button type="button" class="btn btn-danger" onclick="rejectExam({{ $examination->id }})">
                                                 <img src="https://img.icons8.com/material-rounded/24/ffffff/delete-sign.png"/> Reject
                                             </button>
                                         </td>
@@ -238,7 +271,7 @@
                             </tbody>
                         </table>
                     @else
-                        <p>No pending medical records available.</p>
+                        <p>No pending examinations available.</p>
                     @endif
                 </div>
             </div>
@@ -283,10 +316,10 @@
             modal.style.display = 'none';
         }
 
-        function approveRecord(id) {
+        function approveExam(id) {
             Swal.fire({
                 title: 'Are you sure?',
-                text: "You want to approve this medical record!",
+                text: "You want to approve this examination!",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
@@ -294,7 +327,7 @@
                 confirmButtonText: 'Yes, approve it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    fetch(`/admin/medical-record/${id}/approve`, {
+                    fetch(`/nurse/health-examination/${id}/approve`, {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
@@ -303,7 +336,7 @@
                         if (response.ok) {
                             Swal.fire(
                                 'Approved!',
-                                'The medical record has been approved.',
+                                'The examination has been approved.',
                                 'success'
                             ).then(() => {
                                 location.reload();
@@ -311,7 +344,7 @@
                         } else {
                             Swal.fire(
                                 'Error!',
-                                'The medical record could not be approved.',
+                                'The examination could not be approved.',
                                 'error'
                             );
                         }
@@ -327,10 +360,10 @@
             });
         }
 
-        function rejectRecord(id) {
+        function rejectExam(id) {
             Swal.fire({
                 title: 'Are you sure?',
-                text: "You want to reject this medical record!",
+                text: "You want to reject this examination!",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
@@ -338,7 +371,7 @@
                 confirmButtonText: 'Yes, reject it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    fetch(`/admin/medical-record/${id}/reject`, {
+                    fetch(`/nurse/health-examination/${id}/reject`, {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
@@ -347,7 +380,7 @@
                         if (response.ok) {
                             Swal.fire(
                                 'Rejected!',
-                                'The medical record has been rejected.',
+                                'The examination has been rejected.',
                                 'success'
                             ).then(() => {
                                 location.reload();
@@ -355,7 +388,7 @@
                         } else {
                             Swal.fire(
                                 'Error!',
-                                'The medical record could not be rejected.',
+                                'The examination could not be rejected.',
                                 'error'
                             );
                         }

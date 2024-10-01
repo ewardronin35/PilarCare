@@ -15,7 +15,6 @@ class CreatePhysicalExaminationsTable extends Migration
             $table->string('vision');
             $table->text('remarks')->nullable();
             $table->boolean('md_approved')->default(false); // MD approval status
-            $table->string('picture')->nullable(); // Adding the column for picture upload
 
             $table->timestamps();
 

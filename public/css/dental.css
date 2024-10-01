@@ -1,9 +1,7 @@
 body {
     font-family: 'Poppins', sans-serif;
-    background-color: #e0e0e0;
     margin: 0;
     padding: 0;
-    color: #333;
 }
 
 .main-container {
@@ -22,7 +20,7 @@ body {
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-
+    animation: fadeInForms 0.7s ease-in-out; /* Animation lasts 0.7s */
     height: 95%;
     overflow-y: auto;
 }
@@ -31,6 +29,7 @@ body {
     width: 48%;
     margin-right: 10px;
     text-align: center;
+    animation: fadeInForms 0.7s ease-in-out; /* Animation lasts 0.7s */
     background-color: #fff;
     padding: 20px;
     border-radius: 10px;
@@ -55,6 +54,7 @@ body {
     background-color: #007bff;
     color: white;
     border: none;
+    font-family: Poppins, sans-serif;
     padding: 10px 15px;
     border-radius: 5px;
     cursor: pointer;
@@ -67,7 +67,7 @@ body {
 
 .tabs {
     text-align: center;
-    margin-bottom: 20px;
+    margin-top: 10px;
 }
 
 .tab-button {
@@ -90,12 +90,16 @@ body {
 }
 
 .tab-content {
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
     display: none;
 }
 
 .tab-content.active {
+    opacity: 1;
     display: block;
 }
+
 
 .dental-charting {
     display: flex;
@@ -314,12 +318,15 @@ h3 {
 
 .history-table {
     width: 100%;
+    margin-top: 10px;
     border-collapse: collapse;
     background-color: white;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     border-radius: 10px;
     margin-bottom: 20px;
     overflow: hidden; 
+    animation: fadeInContainer 1s ease-in-out;
+
         }
 
         .history-table th,
@@ -502,7 +509,7 @@ h3 {
 }
 
 .legend {
-    margin-top: 20px;
+    margin-top: -15px;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 10px;
@@ -560,6 +567,16 @@ h3 {
     }
     to {
         opacity: 1;
+    }
+}
+@keyframes fadeInForms {
+    from {
+        opacity: 0;
+        transform: translateY(20px); /* Optional: Slight move-up effect */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0); /* Bring back to the original position */
     }
 }
 
@@ -708,4 +725,74 @@ h3 {
     color: #666;
     display: inline-block;
     vertical-align: middle;
+}.logout-dropdown-menu {
+    position: absolute;
+    top: 60px; /* Adjust based on your header height */
+    right: 20px;
+    background-color: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    width: 200px; /* Default width */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+    z-index: 1000;
+}
+
+.logout-dropdown-menu.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.logout-dropdown-menu .dropdown-item {
+    padding: 10px 20px;
+    color: #333;
+    text-decoration: none;
+    display: block;
+    transition: background-color 0.3s, transform 0.2s ease-in-out;
+}
+
+.logout-dropdown-menu .dropdown-item:hover {
+    background-color: #f1f1f1;
+    transform: translateX(5px);
+}
+
+/* Responsive Design for Mobile */
+@media (max-width: 768px) {
+    .logout-dropdown-menu {
+        right: 10px;
+        width: 150px; /* Adjust width for smaller screens */
+        top: 50px; /* Adjust top position if needed */
+    }
+
+    .logout-dropdown-menu .dropdown-item {
+        padding: 8px 15px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .logout-dropdown-menu,
+    .notification-dropdown {
+        right: 5px;
+        left: 5px;
+        width: auto;
+    }
+
+    .logout-dropdown-menu {
+        top: 45px;
+    }
+
+    .notification-dropdown {
+        top: 45px;
+    }
+
+    .logout-dropdown-menu .dropdown-item,
+    .notification-dropdown .dropdown-item {
+        padding: 12px 15px;
+        font-size: 16px;
+    }
 }

@@ -12,13 +12,10 @@ class CreateInformationTable extends Migration
             $table->string('id_number')->unique();
             $table->string('parent_name_father')->nullable();
             $table->string('parent_name_mother')->nullable();
+            $table->string('guardian_name')->nullable();
+            $table->string('guardian_relationship')->nullable();
             $table->string('emergency_contact_number')->nullable();
             $table->string('personal_contact_number')->nullable();
-            $table->string('medical_history');
-            $table->string('allergies');
-            $table->string('medicines');
-            $table->string('surgical_history');
-            $table->string('chronic_conditions');
             $table->string('address');
             $table->date('birthdate');
             $table->string('profile_picture');

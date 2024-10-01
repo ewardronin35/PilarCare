@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\InventoryController;
 
+use PDF; // Import the PDF facade
 
 class ComplaintController extends Controller
 {
@@ -164,11 +165,18 @@ class ComplaintController extends Controller
     
     public function show($id)
     {
-        // Fetch the complaint based only on the ID
         $complaint = Complaint::findOrFail($id);
-    
-        // Return the complaint data as JSON
-        return response()->json($complaint);
+        $formattedConfineStatus = ucwords(str_replace('_', ' ', $complaint->confine_status));
+
+        return response()->json([
+            'first_name' => $complaint->first_name,
+            'last_name' => $complaint->last_name,
+            'sickness_description' => $complaint->sickness_description,
+            'pain_assessment' => $complaint->pain_assessment,
+            'confine_status' => $formattedConfineStatus, // Use formatted value
+            'medicine_given' => $complaint->medicine_given,
+            'status' => $complaint->status,
+        ]);
     }
     
     public function edit($id)
@@ -303,6 +311,73 @@ class ComplaintController extends Controller
                 'message' => 'An error occurred. Please try again.',
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+    public function generatePdfReport(Request $request, $role)
+    {
+        // Validate the role
+        $validRoles = ['student', 'staff', 'parent', 'teacher'];
+        if (!in_array(strtolower($role), $validRoles)) {
+            return response()->json(['success' => false, 'message' => 'Invalid role specified.'], 400);
+        }
+
+        try {
+            // Fetch complaints based on role
+            $complaints = Complaint::where('role', strtolower($role))->get();
+
+            if ($complaints->isEmpty()) {
+                return response()->json(['success' => false, 'message' => 'No complaints found for this role.'], 404);
+            }
+
+            // Fetch the most common complaint and most used medicine
+            $mostCommonComplaint = Complaint::select('sickness_description')
+                ->groupBy('sickness_description')
+                ->orderByRaw('COUNT(*) DESC')
+                ->limit(1)
+                ->value('sickness_description');
+
+            $commonComplaintCount = Complaint::where('sickness_description', $mostCommonComplaint)
+                ->count();
+
+            $mostUsedMedicine = Complaint::select('medicine_given')
+                ->groupBy('medicine_given')
+                ->orderByRaw('COUNT(*) DESC')
+                ->limit(1)
+                ->value('medicine_given');
+
+            $mostUsedMedicineCount = Complaint::where('medicine_given', $mostUsedMedicine)
+                ->count();
+
+            // Prepare data for the PDF
+            $data = [
+                'role' => ucfirst($role),
+                'complaints' => $complaints,
+                'mostCommonComplaint' => $mostCommonComplaint,
+                'commonComplaintCount' => $commonComplaintCount,
+                'mostUsedMedicine' => $mostUsedMedicine,
+                'mostUsedMedicineCount' => $mostUsedMedicineCount,
+                'logoBase64' => base64_encode(file_get_contents(public_path('images/logo.png'))), // Adjust the path to your logo
+            ];
+
+            // Load the Blade view and pass the data
+            $pdf = PDF::loadView('pdf.complaint_report', $data);
+
+            // Define the file name
+            $fileName = 'complaint_report_' . strtolower($role) . '_' . now()->timestamp . '.pdf';
+
+            // Return the generated PDF as a download
+            return $pdf->download($fileName);
+
+            // Alternatively, to store the PDF and provide a link:
+            /*
+            $pdf->save(storage_path('app/public/reports/' . $fileName));
+            $reportUrl = asset('storage/reports/' . $fileName);
+            return response()->json(['success' => true, 'report_url' => $reportUrl]);
+            */
+
+        } catch (\Exception $e) {
+            \Log::error('Error generating PDF report:', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'An error occurred while generating the report.'], 500);
         }
     }
 }

@@ -14,7 +14,7 @@ class ParentController extends Controller
 {
     public function showUploadForm()
     {
-        $parents = Parent::all();
+        $parents = Parents::all();
         Log::info('Parents:', $parents->toArray());
         return view('admin.enrolledparents', compact('parents'));
     }
@@ -29,7 +29,7 @@ class ParentController extends Controller
             $import = new ParentImport;
             Excel::import($import, $request->file('file'));
 
-            $parents = Parent::all();
+            $parents = Parents::all();
             $duplicates = $import->getDuplicates();
 
             if (count($duplicates) > 0) {
@@ -56,7 +56,7 @@ class ParentController extends Controller
 
     public function toggleApproval(Request $request, $id)
     {
-        $parent = Parent::findOrFail($id);
+        $parent = Parents::findOrFail($id);
         $parent->approved = $request->input('approved');
         $parent->save();
 
@@ -71,7 +71,30 @@ class ParentController extends Controller
 
     public function enrolledParents()
     {
-        $parents = Parent::all();
+        $parents = Parents::all();
         return response()->json($parents);
+    }
+    public function downloadParents()
+    {
+        $filePath = 'templates/parents_template.xlsx';
+
+        if (Storage::exists($filePath)) {
+            try {
+                $fileSize = Storage::size($filePath);
+                Log::info('File size: ' . $fileSize);
+            } catch (\Exception $e) {
+                Log::error('Error retrieving file size: ' . $e->getMessage());
+            }
+        } else {
+            Log::error('File not found: ' . $filePath);
+        }
+        
+        // If file exists, proceed with download
+        return Storage::download($filePath, 'parents_template.xlsx');
+    }
+    
+    public function getDuplicates()
+    {
+        return $this->duplicates;
     }
 }

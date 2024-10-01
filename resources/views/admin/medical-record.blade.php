@@ -15,7 +15,7 @@
 
         .main-content {
             margin-left: 80px;
-            margin-top: 20px;
+            margin-top: 30px;
             width: calc(100% - 80px);
             padding: 20px;
         }
@@ -305,6 +305,159 @@
         .search-bar button:hover {
             background-color: #0056b3;
         }
+        .file-input-container {
+    position: relative;
+    width: 100%;
+    max-width: 300px;
+    margin: 20px 0;
+}
+
+#medical_pictures {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.file-input-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #007bff;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.file-input-label:hover {
+    background-color: #0056b3;
+}
+
+.file-input-label i {
+    margin-right: 8px;
+}
+
+.custom-picture-previews {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.custom-picture-previews img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.custom-picture-previews img:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 10px rgba(0, 123, 255, 0.3);
+}
+
+.custom-picture-previews .image-wrapper {
+    position: relative;
+}
+
+.custom-picture-previews .image-label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 5px;
+    font-size: 0.75rem;
+    border-bottom-right-radius: 8px;
+}
+.alert {
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 1rem;
+    text-align: center;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+/* Styling for the label */
+.input-label {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 8px;
+    display: block;
+    color: #333;
+}
+
+/* Styling for the textarea */
+.styled-textarea {
+    padding: 12px 15px;
+    width: 90%;
+    height: 100px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-size: 16px;
+    margin-left: -30px;
+    color: #333;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    resize: vertical;
+}
+
+/* On focus, change border color and box-shadow for emphasis */
+.styled-textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 3px 6px rgba(0, 123, 255, 0.2);
+    background-color: #fff;
+}
+
+/* Styling for placeholder text */
+.styled-textarea::placeholder {
+    color: #aaa;
+    font-size: 14px;
+}
+.history-scrollable::-webkit-scrollbar {
+    width: 8px;
+}
+
+.history-scrollable::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 8px;
+}
+
+.history-scrollable::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 8px;
+}
+
+.history-scrollable::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+.history-scrollable {
+    max-height: 400px; /* Adjust the height as needed */
+    overflow-y: auto;
+}
+
     </style>
 
     <div class="main-content">
@@ -329,8 +482,7 @@
                     <h2>Patient Information</h2>
                 </div>
 
-                <form method="POST" action="{{ route('student.medical-record.store') }}" enctype="multipart/form-data" id="medical-record-form">
-                    @csrf
+                 
                     <div class="form-group-inline">
                         <div class="form-group profile-picture">
                             <label for="profile_picture">Profile Picture</label>
@@ -436,63 +588,94 @@
                             <label><input type="checkbox" name="medicines[]" value="Antacid" @if(in_array('Antacid', json_decode($record->medicines ?? '[]'))) checked @endif> Antacid</label>
                         </div>
                     </div>
-
+                    
                     <div class="form-group">
-                        <button type="button" class="button" onclick="clearForm()">Clear</button>
+                    <button type="button" class="button" onclick="clearForm(this)">Clear</button>
                     </div>
                 </form>
             </div>
 
             <!-- Physical Examination -->
-            <div class="form-container">
-                <div class="form-header">
-                    <h2>Physical Examination</h2>
-                </div>
+       <div class="form-container">
+    <div class="form-header">
+        <h2>Physical Examination</h2>
+    </div>
 
-                <form method="POST" action="{{ route('admin.physical-examination.store') }}" id="physical-examination-form">
-                    @csrf
-                    <div class="form-group-inline">
-                        <div class="form-group">
-                            <label for="height">Height (cm)</label>
-                            <input type="text" id="height" name="height" required oninput="calculateBMI()">
-                        </div>
-                        <div class="form-group">
-                            <label for="weight">Weight (kg)</label>
-                            <input type="text" id="weight" name="weight" required oninput="calculateBMI()">
-                        </div>
-                    </div>
+    <form method="POST" action="{{ route('admin.physical-examinations.store') }}" id="physical-examination-form">
+        @csrf
+        <input type="hidden" id="physical-exam-id_number" name="id_number" value="{{ old('id_number') }}">
+        <input type="hidden" id="md-approved" name="md_approved" value="1">
 
-                    <div class="form-group">
-                        <p class="bmi-result">BMI: <span id="bmi-value">N/A</span></p>
-                    </div>
-
-                    <div class="form-group-inline">
-                        <div class="form-group">
-                            <label for="vision">Vision</label>
-                            <input type="text" id="vision" name="vision" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="medicine-intake">Medicine Intake</label>
-                            <input type="text" id="medicine-intake" name="medicine-intake" required>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="remarks">Remarks</label>
-                        <textarea id="remarks" name="remarks" rows="5"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <button type="submit" class="button">Save</button>
-                    </div>
-                </form>
+        <div class="form-group-inline">
+            <div class="form-group">
+                <label for="height">Height (cm)</label>
+                <!-- Changed type to number, added min and step attributes -->
+                <input
+                    type="number"
+                    id="height"
+                    name="height"
+                    required
+                    min="0"
+                    step="0.1"
+                    oninput="calculateBMI()"
+                    placeholder="e.g., 175.5"
+                >
+            </div>
+            <div class="form-group">
+                <label for="weight">Weight (kg)</label>
+                <!-- Changed type to number, added min and step attributes -->
+                <input
+                    type="number"
+                    id="weight"
+                    name="weight"
+                    required
+                    min="0"
+                    step="0.1"
+                    oninput="calculateBMI()"
+                    placeholder="e.g., 70.2"
+                >
             </div>
         </div>
+
+        <div class="form-group">
+            <p class="bmi-result">BMI: <span id="bmi-value">N/A</span></p>
+        </div>
+
+        <div class="form-group-inline">
+            <div class="form-group">
+                <label for="vision">Vision</label>
+                <!-- Changed type to number, added min and step attributes -->
+                <input
+                    type="number"
+                    id="vision"
+                    name="vision"
+                    required
+                    min="0"
+                    step="0.01"
+                    placeholder="e.g., 20.00"
+                >
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="remarks">Remarks</label>
+            <!-- Remarks remain as textarea without restrictions -->
+            <textarea id="remarks" name="remarks" rows="5" placeholder="Enter any additional remarks here..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <button type="submit" class="button" id="save-button" disabled>Save</button>
+        </div>
+    </form>
+</div>
+</div>
 
         <div id="history" class="tab forms-container hidden">
             <!-- Medical Record History -->
             <div class="form-container">
                 <h2>Medical Record History</h2>
+                <div class="history-scrollable">
+
                 <table class="history-table">
                     <thead>
                         <tr>
@@ -511,17 +694,19 @@
                     </tbody>
                 </table>
             </div>
+</div>
 
             <!-- Physical Examination History -->
             <div class="form-container">
                 <h2>Physical Examination History</h2>
+                <div class="history-scrollable">
                 <table class="history-table">
                     <thead>
                         <tr>
-                            <th>Height</th>
-                            <th>Weight</th>
+                            <th>Height in CM</th>
+                            <th>Weight in KG</th>
+                            <th>BMI</th> <!-- New BMI Column -->
                             <th>Vision</th>
-                            <th>Medicine Intake</th>
                             <th>Remarks</th>
                         </tr>
                     </thead>
@@ -530,10 +715,12 @@
                     </tbody>
                 </table>
             </div>
+            </div>
 
             <!-- Health Examination Uploads -->
             <div class="form-container">
                 <h2>Health Examination Uploads</h2>
+                <div class="history-scrollable">
                 <table class="history-table">
                     <thead>
                         <tr>
@@ -546,12 +733,15 @@
                     </tbody>
                 </table>
             </div>
+            </div>
+
 
         </div>
         <div class="form-container">
-    <div class="form-header">
-        <h2>Medicine Intake History</h2>
-    </div>
+            <div class="form-header">
+             <h2>Medicine Intake History</h2>
+             <div class="history-scrollable">
+
     <table class="history-table">
         <thead>
             <tr>
@@ -567,6 +757,29 @@
         </tbody>
     </table>
 </div>
+@if(session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    <!-- Error Message -->
+    @if(session('error'))
+        <div class="alert alert-error">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    <!-- Validation Errors -->
+    @if ($errors->any())
+        <div class="alert alert-warning">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
     </div>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -602,7 +815,6 @@ function showTab(tabId) {
 // Initialize tab on page load
 document.addEventListener('DOMContentLoaded', function () {
     showTab('medical');
-    fetchMedicalHistory(false); // Fetch data without alerts
 });
 
 // Fetch medical history and show alerts based on success or failure
@@ -669,6 +881,8 @@ function populateFields(data) {
         document.getElementById('surgical-history').value = data.medicalRecord.surgical_history || '';
         document.getElementById('family-medical-history').value = data.medicalRecord.family_medical_history || '';
         document.getElementById('allergies').value = data.medicalRecord.allergies || '';
+        document.getElementById('physical-exam-id_number').value = data.medicalRecord.id_number || '';
+        console.log('Set physical-exam-id_number to:', data.medicalRecord.id_number || '');
 
         // Medicines (assuming they are checkboxes)
         let medicines = JSON.parse(data.medicalRecord.medicines || '[]');
@@ -682,6 +896,12 @@ function populateFields(data) {
     // Populate Medical Record History
     if (data.medicalRecords) {
         populateMedicalRecordHistory(data.medicalRecords);
+        console.log('Setting id_number to:', data.medicalRecord.id_number);
+        document.getElementById('physical-exam-id_number').value = data.medicalRecord.id_number || '';
+        document.getElementById('save-button').disabled = false; // Enable the button
+
+    }  else {
+        document.getElementById('save-button').disabled = true; // Keep the button disabled
     }
 
     // Populate Physical Examination History
@@ -701,6 +921,15 @@ function populateFields(data) {
     if (data.information && data.information.profile_picture) {
         document.getElementById('profile-picture-preview').src = `/storage/${data.information.profile_picture}`;
     }
+    if (data.medicineIntakes && data.medicineIntakes.length > 0) {
+        populateMedicineIntakeHistory(data.medicineIntakes);
+    } else {
+        // If no records found, clear the table
+        const medicineIntakeBody = document.getElementById('medicine-intake-history-body');
+        medicineIntakeBody.innerHTML = '<tr><td colspan="4">No medicine intake records found.</td></tr>';
+    }
+    document.getElementById('physical-exam-id_number').value = data.medicalRecord.id_number || '';
+
 }
 
 // Populate Medical Record History Table
@@ -719,13 +948,14 @@ function populateMedicalRecordHistory(records) {
         // Check if health documents exist
         let healthDocumentsHtml = '';
         if (record.health_documents) {
-            const healthDocuments = JSON.parse(record.health_documents); // Assuming health documents are stored as a JSON array
-            healthDocumentsHtml = healthDocuments.map(document => `
-                <a href="/path/to/health/documents/${document}" target="_blank">View Document</a>
-            `).join('<br>'); // Links to view each document
-        } else {
-            healthDocumentsHtml = 'No documents';
-        }
+    const healthDocuments = JSON.parse(record.health_documents); // Assuming health documents are stored as a JSON array
+    healthDocumentsHtml = healthDocuments.map(document => `
+        <a href="/storage/${document}" target="_blank">View Document</a>
+    `).join('<br>');
+} else {
+    healthDocumentsHtml = 'No documents';
+}
+
 
         const row = `
             <tr>
@@ -766,22 +996,37 @@ function populateHealthDocuments(documents) {
     });
 }
 
-// Populate Physical Examination History Table
+/// Populate Physical Examination History Table with BMI
 function populatePhysicalExaminationHistory(exams) {
     const physicalExaminationBody = document.getElementById('physical-examination-history-body');
     physicalExaminationBody.innerHTML = ''; // Clear existing rows
+
     exams.forEach(exam => {
+        // Parse height and weight as floats
+        const heightCm = parseFloat(exam.height);
+        const weightKg = parseFloat(exam.weight);
+
+        // Initialize BMI as 'N/A'
+        let bmi = 'N/A';
+
+        // Calculate BMI if height and weight are valid numbers
+        if (!isNaN(heightCm) && !isNaN(weightKg) && heightCm > 0) {
+            const heightM = heightCm / 100; // Convert cm to meters
+            bmi = (weightKg / (heightM * heightM)).toFixed(2); // BMI formula
+        }
+
         const row = `
             <tr>
-                <td>${exam.height || 'N/A'}</td>
-                <td>${exam.weight || 'N/A'}</td>
+                <td>${!isNaN(heightCm) && heightCm > 0 ? heightCm : 'N/A'}</td>
+                <td>${!isNaN(weightKg) && weightKg > 0 ? weightKg : 'N/A'}</td>
+                <td>${bmi}</td> <!-- Display BMI -->
                 <td>${exam.vision || 'N/A'}</td>
-                <td>${exam.medicine_intake || 'N/A'}</td>
                 <td>${exam.remarks || 'N/A'}</td>
             </tr>`;
         physicalExaminationBody.insertAdjacentHTML('beforeend', row);
     });
 }
+
 
 // Populate Health Examination Uploads Table and Add Preview Modal for Images
 function populateHealthExaminationHistory(healthExamination) {
@@ -878,6 +1123,7 @@ document.getElementById('search-button').addEventListener('click', function (eve
             console.log('Search response:', data); // Log search response for debugging
             if (data.success) {
                 populateFields(data);
+                const idNumber = document.getElementById('physical-exam-id_number').value;
                 Swal.fire({
                     icon: 'success',
                     title: 'Success',
@@ -899,6 +1145,7 @@ document.getElementById('search-button').addEventListener('click', function (eve
         });
 });
 
+
 // Function to calculate BMI and auto-update it
 function calculateBMI() {
     const height = parseFloat(document.getElementById('height').value) / 100; // Convert cm to meters
@@ -911,11 +1158,173 @@ function calculateBMI() {
         document.getElementById('bmi-value').textContent = 'N/A';
     }
 }
+function populateMedicineIntakeHistory(medicineIntakes) {
+    console.log('Medicine Intakes:', medicineIntakes); // Debugging
+    const medicineIntakeBody = document.getElementById('medicine-intake-history-body');
+    medicineIntakeBody.innerHTML = ''; // Clear existing rows
+
+    if (medicineIntakes.length === 0) {
+        const row = `<tr><td colspan="4">No medicine intake records found.</td></tr>`;
+        medicineIntakeBody.insertAdjacentHTML('beforeend', row);
+        return;
+    }
+
+    medicineIntakes.forEach(intake => {
+        // Medicine Name
+        const medicine = intake.medicine_name || 'N/A';
+
+        // Date Handling
+        let formattedDate = 'N/A';
+        if (intake.created_at) { // Assuming 'created_at' exists
+            const parsedDate = new Date(intake.created_at);
+            if (!isNaN(parsedDate)) {
+                formattedDate = parsedDate.toLocaleDateString();
+            }
+        } else if (intake.date) { // If there's a 'date' field
+            const parsedDate = new Date(intake.date);
+            if (!isNaN(parsedDate)) {
+                formattedDate = parsedDate.toLocaleDateString();
+            }
+        }
+
+        // Dosage
+        const dosage = intake.dosage || 'N/A';
+
+        // Reason
+        const reason = intake.reason || 'N/A'; // Ensure 'reason' exists
+
+        const row = `
+            <tr>
+                <td>${medicine}</td>
+                <td>${formattedDate}</td>
+                <td>${dosage}</td>
+                <td>${reason}</td>
+            </tr>`;
+        medicineIntakeBody.insertAdjacentHTML('beforeend', row);
+    });
+}
 
 // Auto-calculate BMI when height and weight are input
 document.getElementById('height').addEventListener('input', calculateBMI);
 document.getElementById('weight').addEventListener('input', calculateBMI);
+document.getElementById('physical-examination-form').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent the default form submission
 
+    const form = event.target;
+    const formData = new FormData(form);
+    const idNumber = document.getElementById('physical-exam-id_number').value;
+
+
+    // Debug: Log formData entries
+    for (let [key, value] of formData.entries()) {
+        console.log(`${key}: ${value}`);
+    }
+
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+            'Accept': 'application/json',
+        },
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Physical Examination data saved successfully!',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            
+            // Reset specific fields without affecting id_number
+            form.querySelectorAll('input[type="text"], textarea').forEach(input => {
+                input.value = '';
+            });
+            document.getElementById('bmi-value').textContent = 'N/A';
+            // Reset other fields as necessary
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message || 'There was an error saving the data.',
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error submitting form:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An unexpected error occurred.',
+        });
+    });
+});
+
+
+   
+function clearForm(button) {
+        if (!button) {
+            console.error('No button element provided to clearForm.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Unable to identify the button element.',
+            });
+            return;
+        }
+
+        // Find the closest parent form of the clicked button
+        const form = button.closest('form');
+
+        if (form) {
+            // Clear all input fields of type text, number, date
+            form.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]').forEach(input => {
+                input.value = '';
+            });
+
+            // Uncheck all checkboxes and radio buttons
+            form.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(input => {
+                input.checked = false;
+            });
+
+            // Clear all textarea fields
+            form.querySelectorAll('textarea').forEach(textarea => {
+                textarea.value = '';
+            });
+
+            // Reset BMI display if it exists within the form
+            const bmiValue = form.querySelector('#bmi-value');
+            if (bmiValue) {
+                bmiValue.textContent = 'N/A';
+            }
+
+            // Optionally, disable the Save button if necessary
+            const saveButton = form.querySelector('#save-button');
+            if (saveButton) {
+                saveButton.disabled = true;
+            }
+
+            // Display SweetAlert notification
+            Swal.fire({
+                icon: 'info',
+                title: 'Form Cleared',
+                text: 'All fields have been cleared successfully.',
+                timer: 2000, // Auto-close after 2 seconds
+                showConfirmButton: false
+            });
+        } else {
+            // If no parent form is found, display an error alert
+            console.error('No parent form found for the Clear button.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Unable to locate the form to clear.',
+            });
+        }
+    }
 </script>
 
 

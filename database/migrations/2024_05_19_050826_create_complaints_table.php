@@ -19,7 +19,7 @@ class CreateComplaintsTable extends Migration
             $table->string('personal_contact_number');
             $table->integer('pain_assessment');
             $table->text('sickness_description');
-            $table->string('status')->default('In progress');
+            $table->string('status')->default('Done and Resolved');
             $table->string('role'); 
             $table->string('medicine_given')->nullable();
             $table->string('confine_status')->default('not_confined');

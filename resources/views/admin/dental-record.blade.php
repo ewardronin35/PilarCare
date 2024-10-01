@@ -4,12 +4,12 @@
     <div class="main-container">
         <!-- Left side: Dental Record -->
         <div class="dental-records">
-        <input type="text" id="search-bar" class="form-control" placeholder="Search by Student ID...">
-        <button class="search-btn">Search</button>
+        <input type="text" id="search-bar" class="form-control" placeholder="Search by Student ID..." maxlength="7">
+    <button class="search-btn">Search</button>
 
             <div class="tabs">
                 <button class="tab-button active" data-tab="record-tab">Dental Record</button>
-                <button class="tab-button" data-tab="history-tab">Dental History</button>
+                <button class="tab-button" data-tab="history-tab">Dental Examination</button>
             </div>
 
          
@@ -19,11 +19,12 @@
                     <div class="form-section-inline">
                       
                     <label for="id_number">ID Number:</label>
-                    <input type="text" id="id_number" name="id_number" class="form-control" readonly>
+                    <input type="text" id="record-id_number" name="record_id_number" class="form-control" readonly>
                     <label for="student-name">Patient Name:</label>
                     <input type="text" id="student-name" class="form-control" readonly>
-                    <label for="grade-sections">Grade & Section:</label>
-                    <input type="text" id="grade-sections" class="form-control" readonly>
+                      <label for="grade-sections">Grade & Section:</label>
+                      <input type="text" id="grade-sections" class="form-control" readonly>
+
                     </div>
 
                     <div class="svg-container">
@@ -780,55 +781,62 @@
 
     <!-- Patient Information -->
     <table class="history-table">
-    <div class="form-section">
-        <label for="student-id">Student ID:</label>
-        <input type="text" id="student-id" name="student_id" class="form-control" placeholder="Enter Student ID">
-        <button type="button" id="search-student" class="search-btn">Search</button>
-    </div>
-    <form action="{{ route('admin.dental-examination.store') }}" method="POST">
-        @csrf
+    <form id="dental-exam-form" action="{{ route('admin.dental-examination.store') }}" method="POST">
+    @csrf
         <h2 class="form-title">Dental Examination Findings and Recommendations</h2>
 
-        <!-- Date of Examination and Grade & Section in one line -->
-        <div class="form-section-inline">
-            <label for="date">Date of Examination:</label>
-            <input type="date" id="date" name="date_of_examination" class="form-control">
-            <label for="grade-section">Grade & Section:</label>
-            <input type="text" id="grade-section" name="grade_section" class="form-control">
-        </div>
+        <!-- Date of Examination and Grade & Section -->
+<div class="form-section-inline">
+    <label for="date">Date of Examination:</label>
+    <input type="date" id="date" name="date_of_examination" class="form-control" readonly>
+<!-- Hidden input field for the student ID number -->
+<input type="hidden" name="id_number" id="form-id_number" value="">
+    <label for="grade-section">Grade & Section:</label>
+    <input type="text" id="grade-section" name="grade_section" class="form-control">
+</div>
 
-        <!-- Name -->
-        <div class="form-section">
-            <label for="name">Name:</label>
-            <input type="text" id="name" name="name" placeholder="Full Name" class="form-control full-width">
-        </div>
+<!-- Name -->
+<div class="form-section">
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" placeholder="Full Name" class="form-control full-width" readonly>
+</div>
 
-        <!-- Birthdate and Age in one line -->
-        <div class="form-section-inline">
-            <label for="birthdate">Birthdate:</label>
-            <input type="date" id="birthdate" name="birthdate" class="form-control">
-            <label for="age">Age:</label>
-            <input type="text" id="age" name="age" class="form-control">
-        </div>
+<!-- Birthdate and Age -->
+<div class="form-section-inline">
+    <label for="birthdate">Birthdate:</label>
+    <input type="date" id="birthdate" name="birthdate" class="form-control">
+    <label for="age">Age:</label>
+    <input type="text" id="age" name="age" class="form-control">
+</div>
 
         <h3>Oral Examination Revealed the Following Condition/s</h3>
 
         <div class="form-group">
-            <input type="checkbox" id="carries-free" name="carries_free">
-            <label for="carries-free">Carries-Free</label>
-        </div>
-        <div class="form-group">
-            <input type="checkbox" id="poor-oral-hygiene" name="poor_oral_hygiene">
-            <label for="poor-oral-hygiene">Poor Oral Hygiene (Materia, Alba, Calculus, Stain)</label>
-        </div>
-        <div class="form-group">
-            <input type="checkbox" id="gum-infection" name="gum_infection">
-            <label for="gum-infection">Gum Infection (Gingivitis, Periodontal Pockets)</label>
-        </div>
-        <div class="form-group">
-            <input type="checkbox" id="restorable-caries" name="restorable_caries">
-            <label for="restorable-caries">Restorable Carious Tooth/Teeth</label>
-        </div>
+    <input type="hidden" name="carries_free" value="0">
+    <input type="checkbox" id="carries-free" name="carries_free" value="1">
+    <label for="carries-free">Carries-Free</label>
+</div>
+
+<!-- Poor Oral Hygiene -->
+<div class="form-group">
+    <input type="hidden" name="poor_oral_hygiene" value="0">
+    <input type="checkbox" id="poor-oral-hygiene" name="poor_oral_hygiene" value="1">
+    <label for="poor-oral-hygiene">Poor Oral Hygiene (Materia, Alba, Calculus, Stain)</label>
+</div>
+
+<!-- Gum Infection -->
+<div class="form-group">
+    <input type="hidden" name="gum_infection" value="0">
+    <input type="checkbox" id="gum-infection" name="gum_infection" value="1">
+    <label for="gum-infection">Gum Infection (Gingivitis, Periodontal Pockets)</label>
+</div>
+
+<!-- Restorable Caries -->
+<div class="form-group">
+    <input type="hidden" name="restorable_caries" value="0">
+    <input type="checkbox" id="restorable-caries" name="restorable_caries" value="1">
+    <label for="restorable-caries">Restorable Carious Tooth/Teeth</label>
+</div>
         <div class="form-group">
             <input type="checkbox" id="others" name="others">
             <label for="others">Others, Specify:</label>
@@ -837,78 +845,94 @@
 
         <h3>Remarks and Recommendations</h3>
 
-        <div class="form-group-inline">
-            <div class="checkbox-group">
-                <input type="checkbox" id="personal-attention" name="personal_attention">
-                <label for="personal-attention">Need personal attention in tooth brushing</label>
-            </div>
-            <div class="checkbox-group">
-                <input type="checkbox" id="oral-prophylaxis" name="oral_prophylaxis">
-                <label for="oral-prophylaxis">For oral prophylaxis</label>
-            </div>
-        </div>
+        <div class="checkbox-group">
+    <input type="hidden" name="personal_attention" value="0">
+    <input type="checkbox" id="personal-attention" name="personal_attention" value="1">
+    <label for="personal-attention">Need personal attention in tooth brushing</label>
+</div>
 
-        <div class="form-group-inline">
-            <div class="checkbox-group">
-                <input type="checkbox" id="fluoride-application" name="fluoride_application">
-                <label for="fluoride-application">For Fluoride application</label>
-            </div>
-            <div class="checkbox-group">
-                <input type="checkbox" id="gum-treatment" name="gum_treatment">
-                <label for="gum-treatment">For Gum/Periodontal treatment</label>
-            </div>
-        </div>
+<!-- Oral Prophylaxis -->
+<div class="checkbox-group">
+    <input type="hidden" name="oral_prophylaxis" value="0">
+    <input type="checkbox" id="oral-prophylaxis" name="oral_prophylaxis" value="1">
+    <label for="oral-prophylaxis">For oral prophylaxis</label>
+</div>
 
-        <div class="form-group-inline">
-            <div class="checkbox-group">
-                <input type="checkbox" id="ortho-consultation" name="ortho_consultation">
-                <label for="ortho-consultation">For Orthodontic Consultation</label>
-            </div>
-            <div class="checkbox-group">
-                <input type="checkbox" id="pits-fissure-sealant" name="pits_fissure_sealant">
-                <label for="pits-fissure-sealant">For Pits and Fissure Sealant: Tooth #</label>
-                <input type="text" id="sealant-tooth" name="sealant_tooth" class="form-control">
-            </div>
-        </div>
+<!-- Fluoride Application -->
+<div class="checkbox-group">
+    <input type="hidden" name="fluoride_application" value="0">
+    <input type="checkbox" id="fluoride-application" name="fluoride_application" value="1">
+    <label for="fluoride-application">For Fluoride application</label>
+</div>
 
-        <div class="form-group-inline">
-            <div class="checkbox-group">
-                <input type="checkbox" id="filling" name="filling">
-                <label for="filling">For Filling: Tooth #</label>
-                <input type="text" id="filling-tooth" name="filling_tooth" class="form-control">
-            </div>
-            <div class="checkbox-group">
-                <input type="checkbox" id="extraction" name="extraction">
-                <label for="extraction">For Extraction: Tooth #</label>
-                <input type="text" id="extraction-tooth" name="extraction_tooth" class="form-control">
-            </div>
-        </div>
+<!-- Gum Treatment -->
+<div class="checkbox-group">
+    <input type="hidden" name="gum_treatment" value="0">
+    <input type="checkbox" id="gum-treatment" name="gum_treatment" value="1">
+    <label for="gum-treatment">For Gum/Periodontal treatment</label>
+</div>
 
-        <div class="form-group-inline">
-            <div class="checkbox-group">
-                <input type="checkbox" id="endodontic" name="endodontic">
-                <label for="endodontic">For Endodontic Tx/RCT: Tooth #</label>
-                <input type="text" id="endodontic-tooth" name="endodontic_tooth" class="form-control">
-            </div>
-            <div class="checkbox-group">
-                <input type="checkbox" id="radiograph" name="radiograph">
-                <label for="radiograph">For Radiograph/X-ray: Tooth #</label>
-                <input type="text" id="radiograph-tooth" name="radiograph_tooth" class="form-control">
-            </div>
-        </div>
+<!-- Orthodontic Consultation -->
+<div class="checkbox-group">
+    <input type="hidden" name="ortho_consultation" value="0">
+    <input type="checkbox" id="ortho-consultation" name="ortho_consultation" value="1">
+    <label for="ortho-consultation">For Orthodontic Consultation</label>
+</div>
 
-        <div class="form-group-inline">
-            <div class="checkbox-group">
-                <input type="checkbox" id="prosthesis" name="prosthesis">
-                <label for="prosthesis">Needs Prosthesis/Denture: Tooth #</label>
-                <input type="text" id="prosthesis-tooth" name="prosthesis_tooth" class="form-control">
-            </div>
-            <div class="checkbox-group">
-                <input type="checkbox" id="medical-clearance" name="medical_clearance">
-                <label for="medical-clearance">Medical Clearance</label>
-            </div>
-        </div>
+<!-- Filling -->
+<div class="checkbox-group">
+    <input type="hidden" name="filling" value="0">
+    <input type="checkbox" id="filling" name="filling" value="1">
+    <label for="filling">For Filling: Tooth #</label>
+    <input type="text" id="filling-tooth" name="filling_tooth" class="form-control">
+</div>
 
+<!-- Extraction -->
+<div class="checkbox-group">
+    <input type="hidden" name="extraction" value="0">
+    <input type="checkbox" id="extraction" name="extraction" value="1">
+    <label for="extraction">For Extraction: Tooth #</label>
+    <input type="text" id="extraction-tooth" name="extraction_tooth" class="form-control">
+</div>
+
+<!-- Endodontic -->
+<div class="checkbox-group">
+    <input type="hidden" name="endodontic" value="0">
+    <input type="checkbox" id="endodontic" name="endodontic" value="1">
+    <label for="endodontic">For Endodontic Tx/RCT: Tooth #</label>
+    <input type="text" id="endodontic-tooth" name="endodontic_tooth" class="form-control">
+</div>
+
+<!-- Radiograph -->
+<div class="checkbox-group">
+    <input type="hidden" name="radiograph" value="0">
+    <input type="checkbox" id="radiograph" name="radiograph" value="1">
+    <label for="radiograph">For Radiograph/X-ray: Tooth #</label>
+    <input type="text" id="radiograph-tooth" name="radiograph_tooth" class="form-control">
+</div>
+
+<!-- Prosthesis -->
+<div class="checkbox-group">
+    <input type="hidden" name="prosthesis" value="0">
+    <input type="checkbox" id="prosthesis" name="prosthesis" value="1">
+    <label for="prosthesis">Needs Prosthesis/Denture: Tooth #</label>
+    <input type="text" id="prosthesis-tooth" name="prosthesis_tooth" class="form-control">
+</div>
+
+<!-- Medical Clearance -->
+<div class="checkbox-group">
+    <input type="hidden" name="medical_clearance" value="0">
+    <input type="checkbox" id="medical-clearance" name="medical_clearance" value="1">
+    <label for="medical-clearance">Medical Clearance</label>
+</div>
+
+<!-- Others, Specify -->
+<div class="checkbox-group full-width">
+    <input type="hidden" name="others_specify" value="0">
+    <input type="checkbox" id="others-specify" name="others_specify" value="1">
+    <label for="others-specify">Others, Specify:</label>
+    <input type="text" id="other-recommendation" name="other_recommendation" class="form-control">
+</div>
         <div class="form-group-inline">
             <div class="checkbox-group full-width">
                 <input type="checkbox" id="others-specify" name="others_specify">
@@ -924,7 +948,6 @@
             <button type="submit" class="submit-button">Submit</button>
         </div>
     </form>
-    <button class="toggle-form-btn">Hide Form</button>
 </div>
     </table>
 </div>
@@ -933,162 +956,75 @@
         <!-- Right side: Dental Examination Form -->
         <div class="dental-examination-form">
     <div class="form-section">
-      <table class="history-table">
-    <thead>
-            <tr>
-                <th colspan="2">Patient Information</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><strong>Patient Name:</strong></td>
-                <td>John Doe</td>
-            </tr>
-            <tr>
-                <td><strong>Date of Birth:</strong></td>
-                <td>January 1, 2000</td>
-            </tr>
-            <tr>
-                <td><strong>Last Visit Date:</strong></td>
-                <td>July 15, 2024</td>
-            </tr>
-        </tbody>
-    </table>
+    <h2 class="form-title">Dental History</h2>
 
-    <!-- Previous Examinations -->
     <table class="history-table">
-        <thead>
-            <tr>
-                <th colspan="3">Previous Examinations</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><strong>Date</strong></td>
-                <td><strong>Dentist Name</strong></td>
-                <td><strong>Findings</strong></td>
-            </tr>
-            <tr>
-                <td>June 10, 2024</td>
-                <td>Dr. Sarah Uy-Gan</td>
-                <td>Good oral hygiene, minor tartar buildup.</td>
-            </tr>
-        </tbody>
-    </table>
+            <thead>
+                <tr>
+                    <th colspan="3">Patient Information</th>
+                </tr>
+            </thead>
+            <tbody id="patient-info-body">
+                <tr>
+                    <td><strong>Patient Name:</strong></td>
+                    <td>{{ $personInfo ? $personInfo->first_name . ' ' . $personInfo->last_name : 'Unknown' }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Date of Birth:</strong></td>
+                    <td>{{ $patientInfo->birthdate ?? 'Unknown' }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Last Visit Date:</strong></td>
+                    <td>{{ $lastExamination->date_of_examination ?? 'Unknown' }}</td>
+                </tr>
+            </tbody>
+        </table>
 
-    <!-- Treatments Performed -->
-    <table class="history-table">
-        <thead>
-            <tr>
-                <th colspan="4">Treatments Performed</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><strong>Date</strong></td>
-                <td><strong>Type of Treatment</strong></td>
-                <td><strong>Dentist Name</strong></td>
-                <td><strong>Notes</strong></td>
-            </tr>
-            <tr>
-                <td>June 15, 2024</td>
-                <td>Cleaning and polishing</td>
-                <td>Dr. Sarah Uy-Gan</td>
-                <td>Patient advised to brush twice daily.</td>
-            </tr>
-        </tbody>
-    </table>
+        <!-- Previous Examinations -->
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th colspan="3">Dental Examinations History</th>
+                </tr>
+            </thead>
+            <tbody id="dental-examination-history-body">
+                <!-- Populated via JavaScript -->
+            </tbody>
+        </table>
 
-    <!-- Medications Prescribed -->
-    <table class="history-table">
-        <thead>
-            <tr>
-                <th colspan="4">Medications Prescribed</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><strong>Date</strong></td>
-                <td><strong>Medication Name</strong></td>
-                <td><strong>Dosage</strong></td>
-                <td><strong>Prescribing Dentist</strong></td>
-            </tr>
-            <tr>
-                <td>June 15, 2024</td>
-                <td>Fluoride toothpaste</td>
-                <td>Twice daily</td>
-                <td>Dr. Sarah Uy-Gan</td>
-            </tr>
-        </tbody>
-    </table>
+        <!-- Tooth History Table -->
+        <table class="history-table">
+            <caption>Tooth History</caption>
+            <thead>
+                <tr>
+                    <th>Tooth Number</th>
+                    <th>Status</th>
+                    <th>Notes</th>
+                    <th>Dental Pictures</th>
+                    <th>Last Updated</th>
+                </tr>
+            </thead>
+            <tbody id="tooth-history-body">
+                <!-- Populated via JavaScript -->
+            </tbody>
+        </table>
 
-    <!-- Next Scheduled Appointment -->
-    <table class="history-table">
-        <thead>
-            <tr>
-                <th colspan="2">Next Scheduled Appointment</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><strong>Date:</strong></td>
-                <td>August 10, 2024</td>
-            </tr>
-            <tr>
-                <td><strong>Purpose:</strong></td>
-                <td>Routine check-up</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <!-- Additional Notes -->
-    <table class="history-table">
-        <thead>
-            <tr>
-                <th colspan="2">Additional Notes</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td colspan="2">Maintain regular brushing and flossing. Consider using an antibacterial mouthwash.</td>
-            </tr>
-        </tbody>
-</table>
+        <!-- Next Scheduled Appointment -->
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th colspan="2">Next Scheduled Appointment with Dr. Sarah Uy-Gan</th>
+                </tr>
+            </thead>
+            <tbody id="next-appointment-body">
+             
+            </tbody>
+        </table>
+</div>
 </div>
 
-<!-- Preview Modal -->
-<div id="previewModal" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Tooth Details</h2>
-        <form id="tooth-details-form">
-            @csrf
-            <div class="form-group">
-                <label for="modal-tooth">Tooth:</label>
-                <input type="hidden" id="dental-record-id" name="dental_record_id">
-                <input type="text" id="modal-tooth" name="tooth_number" class="form-control" readonly>
-            </div>
-            <div class="form-group">
-                <label for="modal-status">Status:</label>
-                <select id="modal-status" name="status" class="form-control">
-                    <option value="Healthy">Healthy</option>
-                    <option value="Aching">Aching</option>
-                    <option value="Missing">Missing</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="modal-notes">Notes:</label>
-                <textarea id="modal-notes" name="notes" class="form-control" disabled></textarea>
-            </div>
-            <button type="button" id="save-tooth-details" class="save-button">Save</button>
-        </form>
-    </div>
-</div>
-
-
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js'></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="{{ asset('js/admindental.js') }}"></script>
-    <script src="{{ asset('js/dentalexam.js') }}"></script>
     <script>
     window.dentalExamStoreUrl = "{{ route('admin.dental-examination.store') }}";
     window.getToothStatusUrl = "{{ route('admin.getToothStatus') }}";

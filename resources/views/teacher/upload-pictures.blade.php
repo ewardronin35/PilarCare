@@ -1,18 +1,18 @@
 <x-app-layout>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background-color: #f5f7fa;
+            font-family: 'Poppins', sans-serif;
         }
         .modal-container-wrapper {
             display: flex;
             justify-content: space-between;
             width: 100%;
-            margin-top: 20px; /* Add space between the top of the wrapper and any preceding content */
-            gap: 50px; /* Ensures there is space between each modal */
-
+            margin-top: 20px;
+            gap: 50px;
         }
         .main-content {
             margin-top: 100px;
@@ -25,7 +25,7 @@
         }
         .modal-container {
             flex: 1;
-            max-width: calc(33.33% - 30px); /* To ensure equal spacing between modals */
+            max-width: calc(33.33% - 30px);
         }
         .modal-card {
             background-color: #fff;
@@ -35,7 +35,6 @@
             text-align: center;
             padding: 20px;
             margin-bottom: 30px;
-            
         }
         .modal-card h3 {
             margin: 15px 0 5px 0;
@@ -75,6 +74,11 @@
             justify-content: space-between;
             margin-bottom: 10px;
         }
+        .file-item .file-name {
+            cursor: pointer;
+            color: #007bff;
+            text-decoration: underline;
+        }
         .file-item .progress-bar {
             width: 70%;
             height: 5px;
@@ -97,9 +101,10 @@
             font-size: 18px;
         }
         .submit-btn {
-            background-color: #28a745;
+            background-color: #007bff;
             color: white;
-            padding: 15px 30px; /* Increased padding for a larger button */
+            font-family: 'Poppins', sans-serif;
+            padding: 15px 30px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
@@ -116,7 +121,7 @@
             z-index: 1000;
         }
         .submit-btn:hover {
-            background-color: #218838;
+            background-color: #0056b3;
             transform: scale(1.05);
         }
         .submit-btn:active {
@@ -140,19 +145,11 @@
         }
         .school-year-container select {
             padding: 10px;
+            font-family: 'Poppins', sans-serif;
+
             font-size: 16px;
             border-radius: 5px;
             border: 1px solid #007bff;
-        }
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
     </style>
 
@@ -170,7 +167,7 @@
         </div>
 
         <div id="upload-section">
-            <form id="upload-pictures-form" method="POST" action="{{ route('student.health-examination.store') }}" enctype="multipart/form-data">
+            <form id="upload-pictures-form" method="POST" action="{{ route('teacher.health-examination.store') }}" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-container-wrapper">
                     <!-- Lab Exam Modal -->
@@ -218,14 +215,75 @@
             Your submission is pending approval. Please wait for further instructions. Thank you!
         </div>
     </div>
+    <div id="image-preview-section" style="margin-top: 20px;">
+    <h4>Image Preview</h4>
+    <div id="preview-container" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-     document.addEventListener("DOMContentLoaded", function () {
-    localStorage.removeItem('uploadCompleted');
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const pendingApprovalMessage = document.getElementById('pending-approval-message');
+    const uploadSection = document.getElementById('upload-section');
+
+    // Check submission status once on page load
+    fetch('{{ route('teacher.health-examination.status') }}', {
+        method: 'GET',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.exists) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Welcome to Health Examination',
+                text: 'Please upload your health examination pictures and lab results.',
+            }).then(() => {
+                localStorage.removeItem('uploadCompleted');
+                pendingApprovalMessage.style.display = 'none';
+                uploadSection.style.display = 'block';
+            });
+        } else if (data.is_approved) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Approved',
+                text: 'Your submission has been approved. Proceed to the next step.',
+            }).then(() => {
+                window.location.href = '{{ route('teacher.medical-record.create') }}';
+            });
+        } else if (data.is_declined) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Submission Declined',
+                text: 'Your submission has been declined. Please upload proper pictures and try again.',
+            }).then(() => {
+                localStorage.removeItem('uploadCompleted');
+                pendingApprovalMessage.style.display = 'none';
+                uploadSection.style.display = 'block';
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error checking approval status:', error);
+    });
 
     const fileInputs = document.querySelectorAll('input[type="file"]');
     const globalUploadedFiles = new Set(); // Global set to track all uploaded files
+
+    const sectionNames = {
+        'lab_result_pictures': 'Lab Picture',
+        'xray_pictures': 'X-ray Picture',
+        'health_examination_picture': 'Health Examination Picture',
+    };
+
+    const fileCount = {
+        'lab_result_pictures': 1,
+        'xray_pictures': 1,
+        'health_examination_picture': 1,
+    };
 
     fileInputs.forEach(input => {
         input.addEventListener('change', function () {
@@ -258,7 +316,6 @@
                 return;
             }
 
-            // Append new files to the global uploaded files set and update the displayed list
             files.forEach(file => {
                 globalUploadedFiles.add(file.name); // Track globally
 
@@ -266,15 +323,11 @@
                 fileItem.classList.add('file-item');
 
                 const fileName = document.createElement('span');
-                fileName.textContent = file.name;
+                fileName.classList.add('file-name');
 
-                const progressBarContainer = document.createElement('div');
-                progressBarContainer.classList.add('progress-bar');
-
-                const progressBar = document.createElement('span');
-                progressBar.style.width = '0%';
-
-                progressBarContainer.appendChild(progressBar);
+                // Use custom file names based on the section and file count
+                fileName.textContent = sectionNames[section] ? `${sectionNames[section]} ${fileCount[section]}` : file.name;
+                fileCount[section]++; // Increment count for the section
 
                 const fileRemove = document.createElement('span');
                 fileRemove.innerHTML = '&times;';
@@ -282,25 +335,27 @@
                 fileRemove.addEventListener('click', function () {
                     globalUploadedFiles.delete(file.name); // Remove from global set
                     fileList.removeChild(fileItem);
+
+                    // Decrease count when removing the file
+                    if (sectionNames[section]) {
+                        fileCount[section]--;
+                    }
                 });
 
                 fileItem.appendChild(fileName);
-                fileItem.appendChild(progressBarContainer);
                 fileItem.appendChild(fileRemove);
-
                 fileList.appendChild(fileItem);
 
-                // Simulate progress bar
-                setTimeout(() => {
-                    progressBar.style.width = '100%';
-                }, 1000);
+                // Attach click event to preview image in modal
+                fileName.addEventListener('click', function () {
+                    previewImageInModal(file); // Trigger image preview
+                });
             });
 
-            // Show SweetAlert after files are added
             Swal.fire({
                 icon: 'success',
                 title: 'Files Uploaded',
-                text: 'Your files have been added to the list successfully.'
+                text: 'Your files have been added to the list successfully.',
             });
         });
     });
@@ -312,7 +367,7 @@
 
             const formData = new FormData(this);
 
-            fetch('{{ route('student.health-examination.store') }}', {
+            fetch('{{ route('teacher.health-examination.store') }}', {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -327,17 +382,13 @@
             })
             .then(data => {
                 if (data.success) {
-                    // Hide the upload section and show the pending approval message
-                    const uploadSection = document.getElementById('upload-section');
-                    if (uploadSection) uploadSection.style.display = 'none';
-
-                    const pendingApprovalMessage = document.getElementById('pending-approval-message');
-                    if (pendingApprovalMessage) pendingApprovalMessage.style.display = 'block';
+                    uploadSection.style.display = 'none';
+                    pendingApprovalMessage.style.display = 'block';
 
                     Swal.fire({
                         icon: 'success',
                         title: 'Pictures Uploaded',
-                        text: 'Your pictures have been uploaded successfully and are now pending approval. Please wait for further instructions.',
+                        text: 'Your pictures have been uploaded successfully and are now pending approval.',
                     });
 
                     // Store a flag in localStorage to keep the state after reload
@@ -361,29 +412,21 @@
         });
     }
 
-    // Check localStorage for the uploadCompleted flag
-    if (localStorage.getItem('uploadCompleted') === 'true') {
-        document.getElementById('upload-section').style.display = 'none';
-        document.getElementById('pending-approval-message').style.display = 'block';
+    function previewImageInModal(file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            Swal.fire({
+                title: 'Preview',
+                imageUrl: e.target.result,
+                imageAlt: 'Uploaded Image',
+                showCloseButton: true,
+                showCancelButton: true,
+                focusConfirm: false,
+                confirmButtonText: 'Close',
+            });
+        };
+        reader.readAsDataURL(file); // Read the file as a data URL to display in SweetAlert
     }
-
-    setInterval(function () {
-        fetch('{{ route('student.health-examination.status') }}', {
-            method: 'GET',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.is_approved) {
-                window.location.href = '{{ route('student.medical-record.create') }}';
-            }
-        })
-        .catch(error => {
-            console.error('Error checking approval status:', error);
-        });
-    }, 5000);
 });
-    </script>
+</script>
 </x-app-layout>

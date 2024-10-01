@@ -276,8 +276,10 @@
             </div>
 
             <div class="form-check mb-3">
-                <input type="checkbox" id="agreeCheckbox" class="form-check-input" required>
-                <label for="agreeCheckbox" class="form-check-label">I agree to the <a href="#" onclick="openTermsModal()" style="color: #003FFF;">terms and conditions</a></label>
+            <input type="checkbox" id="agreeCheckbox" name="agree_terms" class="form-check-input" required>
+<label for="agreeCheckbox" class="form-check-label">
+    I agree to the <a href="#" onclick="openTermsModal()" style="color: #003FFF;">terms and conditions</a>
+</label>
             </div>
 
             <div class="d-grid mt-2">
@@ -352,56 +354,71 @@
         }
 
         function validateForm() {
-            const idNumber = document.getElementById('id_number').value;
-            const idNumberPattern = /^[A-Za-z]{1}[0-9]{6}$/;
-            const password = document.getElementById('password').value;
-            const passwordConfirmation = document.getElementById('password_confirmation').value;
-            const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    const idNumber = document.getElementById('id_number').value;
+    const idNumberPattern = /^[A-Za-z]{1}[0-9]{6}$/;
+    const password = document.getElementById('password').value;
+    const passwordConfirmation = document.getElementById('password_confirmation').value;
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
 
-            if (!idNumberPattern.test(idNumber)) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'ID number must start with a letter followed by 6 numbers.',
-                    toast: true,
-                    position: 'top-end',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                });
-                return false;
-            }
+    if (!idNumberPattern.test(idNumber)) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'ID number must start with a letter followed by 6 numbers.',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+        });
+        return false;
+    }
 
-            if (password !== passwordConfirmation || !passwordRegex.test(password)) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Passwords must match and contain at least 8 characters, including letters and numbers.',
-                    toast: true,
-                    position: 'top-end',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                });
-                return false;
-            }
+    if (password !== passwordConfirmation) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Passwords do not match.',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+        });
+        return false;
+    }
 
-            if (!document.getElementById('agreeCheckbox').checked) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'You must agree to the terms and conditions to proceed.',
-                    toast: true,
-                    position: 'top-end',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                });
-                return false;
-            }
+    if (!passwordRegex.test(password)) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Password must be at least 8 characters long and contain both letters and numbers.',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+        });
+        return false;
+    }
 
-            return true;
-        }
+    if (!document.getElementById('agreeCheckbox').checked) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'You must agree to the terms and conditions to proceed.',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+        });
+        return false;
+    }
+
+    return true;
+}
+
 
         async function submitForm() {
             const form = document.getElementById('registration-form');

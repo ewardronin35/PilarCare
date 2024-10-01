@@ -16,6 +16,7 @@ class Teeth extends Model
         'svg_path',
         'dental_pictures',
         'is_current',
+        'is_approved',
         
         
     ];
@@ -23,6 +24,6 @@ class Teeth extends Model
     // Relationship to the DentalRecord model
     public function dentalRecord()
     {
-        return $this->belongsTo(DentalRecord::class, 'dental_record_id');
+        return $this->belongsTo(DentalRecord::class, 'dental_record_id', 'dental_record_id'); // Relate to dental_records.id_number
     }
 }

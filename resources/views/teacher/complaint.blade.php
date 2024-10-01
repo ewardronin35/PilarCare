@@ -1,319 +1,308 @@
 <x-app-layout>
-    <style>
-        body {
-            background: url('{{ asset('images/bg.jpg') }}') no-repeat center center fixed;
-            background-size: cover;
-            margin: 0;
-            padding: 0;
-            font-family: 'Arial', sans-serif;
-            animation: fadeInBackground 1s ease-in-out;
-        }
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Arial', sans-serif;
+        animation: fadeInBackground 1s ease-in-out;
+    }
 
-        .form-container {
-            margin-top: 20px;
-            background-color: #f9f9f9;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            animation: fadeInUp 0.5s ease-in-out;
-            width: 100%;
-            box-sizing: border-box;
-        }
+    .main-content {
+        margin-top: 40px;
+    }
 
-        .form-group {
-            margin-bottom: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-        }
+    .complaints-section {
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 10px;
+        /* Add animation */
+        animation: fadeIn 0.5s ease-in-out;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 10px;
-            width: 100%;
-            font-size: 18px;
-        }
+    .complaints-section h2 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 20px;
+        /* Add animation */
+        animation: slideDown 0.5s ease-in-out;
+    }
 
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: calc(50% - 10px);
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
+    .complaints-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        background-color: white;
+        border-radius: 10px;
+        overflow: hidden;
+        /* Add animation */
+        animation: fadeInUp 0.5s ease-in-out;
+    }
 
-        .form-group textarea {
-            width: 100%;
-            padding-left: 15px;
-        }
+    .complaints-table th,
+    .complaints-table td {
+        padding: 15px;
+        text-align: left;
+    }
 
-        .form-group button {
-            background-color: #00d1ff;
-            color: white;
-            padding: 15px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 20px;
-            font-size: 18px;
-        }
+    .complaints-table th {
+        background-color: #f5f5f5;
+        color: #333;
+        font-weight: 600;
+        border-bottom: 1px solid #ddd;
+    }
 
-        .form-group button:hover {
-            background-color: #00b8e6;
-        }
+    .complaints-table td {
+        border-bottom: 1px solid #eee;
+    }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+    .complaints-table td:last-child {
+        text-align: center;
+    }
 
-        .input-wrapper {
-            position: relative;
-            width: calc(50% - 10px);
-            margin-bottom: 20px;
-        }
+    /* Add hover effect to table rows */
+    .complaints-table tbody tr:hover {
+        background-color: #f9f9f9;
+        cursor: pointer;
+    }
 
-        .input-wrapper::before {
-            content: attr(data-icon);
-            position: absolute;
-            left: 10px;
-            top: 60%;
-            transform: translateY(-50%);
-            font-family: "Font Awesome 5 Free";
-            font-weight: 900;
-            color: black;
-            z-index: 2;
-            font-size: 20px;
-        }
+    /* Action buttons */
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+    }
 
-        .input-wrapper input,
-        .input-wrapper select {
-            width: 100%;
-            padding-left: 45px;
-        }
+    .preview-button,
+    .edit-button {
+        background-color: #00d1ff;
+        color: white;
+        padding: 5px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease-in-out;
+    }
 
-        .textarea-wrapper {
-            position: relative;
-            width: 100%;
-        }
+    .preview-button:hover,
+    .edit-button:hover {
+        background-color: #00b8e6;
+    }
 
-        .textarea-wrapper label {
-            display: flex;
-            align-items: center;
-        }
+    /* Modal Styling */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.4);
+        animation: fadeIn 0.5s ease-in-out;
+    }
 
-        .textarea-wrapper label::before {
-            content: "\f0f9";
-            font-family: "Font Awesome 5 Free";
-            font-weight: 900;
-            color: black;
-            margin-right: 10px;
-            font-size: 20px;
-        }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 500px;
+        max-width: 90%;
+        border-radius: 10px;
+        animation: slideIn 0.5s ease-in-out;
+    }
 
-        .textarea-wrapper textarea {
-            width: 100%;
-            padding-left: 15px;
-        }
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
-        .complaint-status {
-            display: none;
-            margin-top: 20px;
-            text-align: center;
-        }
+    .modal-header h2 {
+        margin: 0;
+    }
 
-        .complaint-status.active {
-            display: block;
-        }
+    .close {
+        color: #aaa;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
 
-        .status {
-            display: block;
-            margin-bottom: 10px;
-            font-size: 18px;
-        }
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
 
-        .status-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
+    .modal-body {
+        margin-top: 10px;
+    }
 
-        .status-buttons button {
-            padding: 10px 20px;
-            font-size: 16px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+    @keyframes slideIn {
+        from {
+            transform: translateY(-50px);
+            opacity: 0;
         }
-
-        #mark-completed {
-            background-color: #28a745;
-            color: white;
+        to {
+            transform: translateY(0);
+            opacity: 1;
         }
+    }
 
-        #mark-not-completed {
-            background-color: #dc3545;
-            color: white;
+    @keyframes slideDown {
+        from {
+            transform: translateY(-20px);
+            opacity: 0;
         }
-    </style>
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
 
-    <div class="form-container" id="complaint-form-container">
-        <h2>{{ ucfirst($role) }} Health Complaint</h2>
-        <form id="complaint-form">
-            @csrf
-            <input type="hidden" name="role" value="{{ strtolower(Auth::user()->role) }}">
-            <div class="form-group">
-                <div class="input-wrapper" data-icon="&#xf007;">
-                    <label for="name">Name</label>
-                    <input type="text" id="name" name="name" required>
-                </div>
-                <div class="input-wrapper" data-icon="&#xf254;">
-                    <label for="age">Age</label>
-                    <input type="number" id="age" name="age" required>
-                </div>
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+</style>
+
+    <div class="main-content">
+        @if(session('success'))
+            <div class="alert alert-success">
+                {{ session('success') }}
             </div>
-            <div class="form-group">
-                <div class="input-wrapper" data-icon="&#xf133;">
-                    <label for="birthdate">Birthdate</label>
-                    <input type="date" id="birthdate" name="birthdate" required>
+        @endif
+
+        <!-- Complaints Section -->
+        <div class="complaints-section">
+            <h2>Student Complaint History</h2>
+
+            <!-- Complaints Table -->
+            <table class="complaints-table">
+            <thead>
+    <tr>
+        <th>Name</th>
+        <th>Health History</th>
+        <th>Description of Sickness</th>
+        <th>Pain Assessment</th>
+        <th>Confine Status</th>
+        <th>Medicine Given</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+</thead>
+
+<tbody>
+    @foreach ($complaints as $complaint)
+        <tr>
+            <td>{{ $complaint->first_name }} {{ $complaint->last_name }}</td>
+            <td>{{ $complaint->health_history }}</td>
+            <td>{{ $complaint->sickness_description }}</td>
+            <td>{{ $complaint->pain_assessment }}</td>
+            <td>{{ ucwords(str_replace('_', ' ', $complaint->confine_status)) }}</td>
+            <td>{{ $complaint->medicine_given }}</td>
+            <td>{{ ucfirst($complaint->status) }}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="preview-button" onclick="openPreviewModal({{ $complaint->id }})">Preview</button>
+                    <!-- Add edit button if needed -->
+                    <!-- <button class="edit-button" onclick="openEditModal({{ $complaint->id }})">Edit</button> -->
                 </div>
-                <div class="input-wrapper" data-icon="&#xf095;">
-                    <label for="contact_number">Contact Number</label>
-                    <input type="text" id="contact_number" name="contact_number" required>
-                </div>
-            </div>
-            <div class="form-group">
-                <div class="input-wrapper" data-icon="&#xf0f1;">
-                    <label for="health_history">Health History</label>
-                    <input type="text" id="health_history" name="health_history" required>
-                </div>
-                <div class="input-wrapper" data-icon="&#xf0f0;">
-                    <label for="pain_assessment">Pain Assessment (1 to 10)</label>
-                    <select id="pain_assessment" name="pain_assessment" required>
-                        @for ($i = 1; $i <= 10; $i++)
-                            <option value="{{ $i }}">{{ $i }}</option>
-                        @endfor
-                    </select>
-                </div>
-            </div>
-            <div class="form-group">
-                <div class="textarea-wrapper">
-                    <label for="sickness_description">Description of Sickness</label>
-                    <textarea id="sickness_description" name="sickness_description" rows="4" required></textarea>
-                </div>
-            </div>
-            <div class="form-group">
-                <div class="input-wrapper" data-icon="&#xf19d;">
-                    <label for="teacher_type">Teacher Type</label>
-                    <select id="teacher_type" name="teacher_type" required>
-                        <option value="">Select Teacher Type</option>
-                        <option value="Permanent">Permanent</option>
-                        <option value="Contractual">Contractual</option>
-                        <option value="Substitute">Substitute</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-group">
-                <button type="submit">Submit</button>
-            </div>
-        </form>
+            </td>
+        </tr>
+    @endforeach
+</tbody>
+
+            </table>
+        </div>
     </div>
 
-    <div class="complaint-status" id="complaint-status-container">
-        <span class="status">Status: <span id="complaint-status">Not Yet Done</span></span>
-        <div class="status-buttons">
-            <button id="mark-completed" onclick="updateStatus('Completed')">Completed</button>
-            <button id="mark-not-completed" onclick="updateStatus('Not yet done')">Not Yet Done</button>
+    <!-- Preview Modal -->
+    <div id="preview-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Complaint Details</h2>
+                <span class="close" onclick="closeModal('preview-modal')">&times;</span>
+            </div>
+            <div class="modal-body" id="preview-modal-body">
+                <!-- Complaint details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Complaint</h2>
+                <span class="close" onclick="closeModal('edit-modal')">&times;</span>
+            </div>
+            <form id="edit-complaint-form" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body" id="edit-modal-body">
+                    <!-- Editable complaint details will be loaded here -->
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="save-button">Save Changes</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        document.getElementById('complaint-form').addEventListener('submit', function (event) {
-            event.preventDefault();
-            const formData = new FormData(this);
-
-            fetch('{{ route("teacher.complaint.store") }}', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(errorData => {
-                        throw new Error(JSON.stringify(errorData));
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: data.message,
-                }).then(() => {
-                    document.getElementById('complaint-form-container').style.display = 'none';
-                    document.getElementById('complaint-status-container').classList.add('active');
-                });
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'An error occurred. Please try again. ' + error.message
-                });
-            });
+        // Open modal for previewing complaint details
+        function openPreviewModal(complaintId) {
+    fetch(`/teacher/complaint/${complaintId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const modalBody = document.getElementById('preview-modal-body');
+            modalBody.innerHTML = `
+                <p><strong>Name:</strong> ${data.first_name} ${data.last_name}</p>
+                <p><strong>Description of Sickness:</strong> ${data.sickness_description}</p>
+                <p><strong>Pain Assessment:</strong> ${data.pain_assessment}</p>
+                <p><strong>Confine Status:</strong> ${data.confine_status}</p>
+                <p><strong>Medicine Given:</strong> ${data.medicine_given}</p>
+                <p><strong>Status:</strong> ${data.status}</p>
+            `;
+            document.getElementById('preview-modal').style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Error fetching complaint details:', error);
         });
+}
 
-        function updateStatus(status) {
-            fetch('{{ route("teacher.complaint.update-status", ["id" => 1]) }}', { // Replace 1 with the actual complaint ID
-                method: 'POST',
-                body: JSON.stringify({ status: status }),
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('complaint-status').innerText = status;
-                    if (status === 'Completed') {
-                        document.getElementById('complaint-form').reset();
-                        document.getElementById('complaint-form-container').style.display = 'block';
-                        document.getElementById('complaint-status-container').classList.remove('active');
-                    }
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Could not update status. Please try again.'
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'An unexpected error occurred. Please try again later.'
-                });
-            });
+
+        
+        // Close modal function
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
         }
     </script>
 </x-app-layout>

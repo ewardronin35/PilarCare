@@ -4,21 +4,23 @@
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
         .sidebar {
-            width: 100px; /* Collapsed width */
-            background-color: #00d2ff;
-            color: white;
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            padding-top: 20px;
-            transition: width 0.3s ease-in-out;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
-        }
+    width: 100px; /* Collapsed width */
+    background-color: #00d2ff;
+    color: white;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding-top: 20px;
+    transition: width 0.3s ease-in-out;
+    overflow-y: auto; /* Enable vertical scrolling */
+    overflow-x: hidden; /* Hide horizontal scroll */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    font-family: 'Poppins', sans-serif; /* Apply Poppins font */
+}
+
 
         .sidebar:hover {
             width: 270px; /* Expanded width */
@@ -204,7 +206,7 @@
     <ul class="submenu">
         <li><a href="{{ route('admin.uploadHealthExamination') }}">Health Approval</a></li>
         <li><a href="{{ route('admin.uploadMedicalDocu') }}">Medical Approval</a></li>
-        <li><a href="">Dental Approval</a></li>
+        <li><a href="{{ route('admin.uploadDentalDocu') }}">Dental Approval</a></li>
     </ul>
 </li>
             <li class="has-submenu">
@@ -213,6 +215,7 @@
                     <li><a href="{{ route('admin.students.upload') }}" id="admin-enrolled-students-link">Students</a></li>
                     <li><a href="{{ route('admin.staff.upload') }}">Staffs</a></li>
                     <li><a href="{{ route('admin.teachers.upload') }}">Teachers</a></li>
+                    <li><a href="{{ route('admin.parents.upload') }}">Parents</a></li>
                     <li><a href="{{ route('admin.nurses.upload') }}">Nurse</a></li>
                     <li><a href="{{ route('admin.doctors.upload') }}">Doctor</a></li>
                 </ul>
@@ -227,7 +230,15 @@
             <li>
                 <a href="{{ route('admin.monitoring-report-log') }}"><span class="icon"><i class="fas fa-chart-line"></i></span><span class="menu-text">Reports and logs</i></span></a>
             </li>
+            <li>
+    <a href="{{ route('admin.profiles') }}">
+        <span class="icon"><i class="fas fa-users"></i></span> <!-- Updated Icon -->
+        <span class="menu-text">View All Profiles</span> <!-- Updated Text -->
+    </a>
+</li>
             <li><a href="{{ route('admin.settings.edit') }}"><span class="icon"><i class="fas fa-cogs"></i></span><span class="menu-text">Settings</span></a></li>
+        
+
         </ul>
     </nav>
 </div>
