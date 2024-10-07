@@ -759,6 +759,16 @@ h3 {
     background-color: #f1f1f1;
     transform: translateX(5px);
 }
+.dental-picture-preview {
+    max-width: 50px;
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+.dental-pictures {
+    display: flex;
+    flex-wrap: wrap;
+}
 
 /* Responsive Design for Mobile */
 @media (max-width: 768px) {
@@ -795,4 +805,7 @@ h3 {
         padding: 12px 15px;
         font-size: 16px;
     }
+}
+.svg-container .tooth {
+    transition: fill 0.5s ease-in-out; /* Smooth transition for fill color changes */
 }

@@ -44,5 +44,14 @@ class Appointment extends Model
     {
         return $query->where('appointment_date', '<', now());
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'id_number', 'id_number');
+    }
+    public function patient()
+{
+    return $this->belongsTo(User::class, 'id_number', 'id_number');
+}
 }
 

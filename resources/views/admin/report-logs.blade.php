@@ -165,12 +165,14 @@
                 transform: translateY(0);
             }
         }
+
         /* Additional styles for sub-tabs */
         .sub-tabs {
             display: flex;
             border-bottom: 2px solid #ddd;
             margin-bottom: 20px;
             justify-content: space-around;
+            flex-wrap: wrap;
         }
 
         .sub-tab {
@@ -180,14 +182,11 @@
             font-weight: bold;
             font-size: 14px;
             text-align: center;
-            width: 100%;
             background-color: #e0e0e0;
             border-radius: 8px 8px 0 0;
             margin-right: 5px;
-        }
-
-        .sub-tab:last-child {
-            margin-right: 0;
+            flex: 1;
+            margin-bottom: 5px;
         }
 
         .sub-tab:hover {
@@ -321,8 +320,9 @@
                             @foreach($appointmentLogs as $log)
                                 <tr>
                                     <td>Appointments</td>
+                                    <td>Appointment with {{ $log->user->first_name }} {{ $log->user->last_name }}</td>
                                     <td>{{ $log->created_at->format('M d, Y h:i A') }}</td>
-                                    <td>Completed</td>
+                                    <td>{{ $log->status }}</td>
                                 </tr>
                             @endforeach
                             @if($appointmentLogs->isEmpty())
@@ -351,8 +351,9 @@
                             @foreach($complaintLogs as $log)
                                 <tr>
                                     <td>Complaints</td>
+                                    <td>{{ $log->description }}</td>
                                     <td>{{ $log->created_at->format('M d, Y h:i A') }}</td>
-                                    <td>Resolved</td>
+                                    <td>{{ $log->status }}</td>
                                 </tr>
                             @endforeach
                             @if($complaintLogs->isEmpty())
@@ -364,9 +365,34 @@
                     </table>
                 </div>
             </div>
-
-        
-
+            <div id="registration-log" class="sub-tab-content">
+    <h3>Registration Logs</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Module</th>
+                    <th>Details</th>
+                    <th>Date & Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($registrationLogs as $user)
+                    <tr>
+                        <td>Registrations</td>
+                        <td>{{ $user->first_name }} {{ $user->last_name }} registered</td>
+                        <td>{{ $user->created_at->format('M d, Y h:i A') }}</td>
+                    </tr>
+                @endforeach
+                @if($registrationLogs->isEmpty())
+                    <tr>
+                        <td colspan="3" class="text-center">No Registration Logs Found.</td>
+                    </tr>
+                @endif
+            </tbody>
+        </table>
+    </div>
+</div>
             <div id="login-log" class="sub-tab-content">
                 <h3>Login Logs</h3>
                 <div class="table-container">
@@ -374,7 +400,7 @@
                         <thead>
                             <tr>
                                 <th>Module</th>
-                                <th>Details</th>
+                                <th>User</th>
                                 <th>Date & Time</th>
                                 <th>Status</th>
                             </tr>
@@ -383,6 +409,7 @@
                             @foreach($loginLogs as $log)
                                 <tr>
                                     <td>Login</td>
+                                    <td>{{ $log->user->first_name }} {{ $log->user->last_name }}</td>
                                     <td>{{ $log->created_at->format('M d, Y h:i A') }}</td>
                                     <td>Success</td>
                                 </tr>
@@ -413,6 +440,8 @@
                             @foreach($dentalRecordLogs as $log)
                                 <tr>
                                     <td>Dental Records</td>
+                                    <td>Dental Record updated for {{ $log->user->first_name }} {{ $log->user->last_name }}</td>
+                                    <td>{{ $log->updated_at->format('M d, Y h:i A') }}</td>
                                     <td>{{ $log->is_approved ? 'Approved' : 'Pending' }}</td>
                                 </tr>
                             @endforeach
@@ -426,7 +455,38 @@
                 </div>
             </div>
 
-            
+            <div id="physical-dental-exam-log" class="sub-tab-content">
+                <h3>Physical Exam Logs</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Module</th>
+                                <th>Details</th>
+                                <th>Date & Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($physicalDentalExamLogs as $log)
+                                <tr>
+                                    <td>Physical & Dental Exams</td>
+                                    <td>Exam conducted for {{ $log->user->first_name }} {{ $log->user->last_name }}</td>
+                                    <td>{{ $log->created_at->format('M d, Y h:i A') }}</td>
+                                    <td>{{ $log->status }}</td>
+                                </tr>
+                            @endforeach
+                            @if($physicalDentalExamLogs->isEmpty())
+                                <tr>
+                                    <td colspan="4" class="text-center">No Physical & Dental Exam Logs Found.</td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- Statistics Tab Content -->
         <div id="statistics" class="tab-content">
             <h2><i class="fas fa-chart-bar"></i> Statistics</h2>
@@ -438,6 +498,7 @@
         </div>
     </main>
 
+    <!-- Include Chart.js Library -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // Function to handle main tab switching
@@ -477,51 +538,64 @@
         }
 
         // Statistics chart for logs
+        const chartData = {
+            labels: {!! json_encode([
+                'Accounts',
+                'Registrations',
+                'Logins',
+                'Appointments',
+                'Complaints',
+                'Dental Records',
+                'Medical Records',
+                'Physical & Dental Exams',
+            ]) !!},
+            datasets: [{
+                label: 'Number of Logs',
+                data: {!! json_encode([
+                    $accountLogsCount ?? 0,
+                    $registrationLogsCount ?? 0,
+                    $loginLogsCount ?? 0,
+                    $appointmentLogsCount ?? 0,
+                    $complaintLogsCount ?? 0,
+                    $dentalRecordLogsCount ?? 0,
+                    $medicalRecordLogsCount ?? 0,
+                    $physicalDentalExamLogsCount ?? 0,
+                ]) !!},
+                backgroundColor: [
+                    'rgba(75, 192, 192, 0.2)',    // Accounts
+                    'rgba(54, 162, 235, 0.2)',    // Registrations
+                    'rgba(255, 206, 86, 0.2)',    // Logins
+                    'rgba(153, 102, 255, 0.2)',   // Appointments
+                    'rgba(255, 99, 132, 0.2)',    // Complaints
+                    'rgba(255, 159, 64, 0.2)',    // Dental Records
+                    'rgba(255, 205, 86, 0.2)',    // Medical Records
+                    'rgba(201, 203, 207, 0.2)'    // Physical & Dental Exams
+                ],
+                borderColor: [
+                    'rgba(75, 192, 192, 1)',      // Accounts
+                    'rgba(54, 162, 235, 1)',      // Registrations
+                    'rgba(255, 206, 86, 1)',      // Logins
+                    'rgba(153, 102, 255, 1)',     // Appointments
+                    'rgba(255, 99, 132, 1)',      // Complaints
+                    'rgba(255, 159, 64, 1)',      // Dental Records
+                    'rgba(255, 205, 86, 1)',      // Medical Records
+                    'rgba(201, 203, 207, 1)'      // Physical & Dental Exams
+                ],
+                borderWidth: 1
+            }]
+        };
+
         const ctx = document.getElementById('logStatisticsChart').getContext('2d');
         const logStatisticsChart = new Chart(ctx, {
             type: 'bar',
-            data: {
-                labels: ['Accounts', 'Registrations', 'Logins', 'Appointments', 'Complaints', 'Dental Records', 'Medical Records', 'Physical & Dental Exams'],
-                datasets: [{
-                    label: 'Number of Logs',
-                    data: [
-                        {{ $accountLogsCount }},
-                        {{ $loginLogs }},
-                        {{ $appointmentLogsCount }},
-                        {{ $complaintLogsCount }},
-                        {{ $dentalRecordLogsCount }},
-                        {{ $medicalRecordLogsCount }},
-                    ],
-                    backgroundColor: [
-                        'rgba(75, 192, 192, 0.2)',    // Accounts
-                        'rgba(54, 162, 235, 0.2)',    // Registrations
-                        'rgba(255, 206, 86, 0.2)',    // Logins
-                        'rgba(75, 192, 192, 0.2)',    // Appointments
-                        'rgba(255, 99, 132, 0.2)',    // Complaints
-                        'rgba(153, 102, 255, 0.2)',   // Dental Records
-                        'rgba(255, 159, 64, 0.2)',    // Medical Records
-                        'rgba(255, 99, 132, 0.2)'     // Physical & Dental Exams
-                    ],
-                    borderColor: [
-                        'rgba(75, 192, 192, 1)',      // Accounts
-                        'rgba(54, 162, 235, 1)',      // Registrations
-                        'rgba(255, 206, 86, 1)',      // Logins
-                        'rgba(75, 192, 192, 1)',      // Appointments
-                        'rgba(255, 99, 132, 1)',      // Complaints
-                        'rgba(153, 102, 255, 1)',     // Dental Records
-                        'rgba(255, 159, 64, 1)',      // Medical Records
-                        'rgba(255, 99, 132, 1)'       // Physical & Dental Exams
-                    ],
-                    borderWidth: 1
-                }]
-            },
+            data: chartData,
             options: {
                 responsive: true,
                 scales: {
                     y: {
                         beginAtZero: true,
                         ticks: {
-                            precision:0
+                            precision: 0
                         }
                     }
                 }

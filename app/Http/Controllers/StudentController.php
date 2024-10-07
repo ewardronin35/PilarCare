@@ -31,6 +31,7 @@ class StudentController extends Controller
 
     public function import(Request $request)
     {
+        // Validate the uploaded file to ensure it has the correct format.
         $request->validate([
             'file' => 'required|mimes:xlsx,csv',
         ]);
@@ -39,31 +40,39 @@ class StudentController extends Controller
             $import = new StudentsImport;
             Excel::import($import, $request->file('file'));
     
+            // Retrieve all students after the import operation.
             $students = Student::all();
             Log::info('Students after import:', $students->toArray());
     
+            // Check for duplicate entries detected during the import process.
             $duplicates = $import->getDuplicates();
             if (count($duplicates) > 0) {
                 $duplicateMessages = [];
                 foreach ($duplicates as $duplicate) {
-                    $duplicateMessages[] = "Duplicate entry for ID Number: {$duplicate->id_number}";
+                    $duplicateMessages[] = "Duplicate entry for ID Number: {$duplicate['id_number']}";
                 }
-                return response()->json(['success' => false, 'errors' => $duplicateMessages]);
+                return response()->json(['success' => false, 'errors' => $duplicateMessages], 422);
             }
     
             return response()->json(['success' => true, 'message' => 'Students imported successfully.', 'students' => $students]);
         } catch (ValidationException $e) {
+            // Extract and clean up validation errors without row numbers.
             $failures = $e->failures();
             $errorMessages = [];
             foreach ($failures as $failure) {
-                $errorMessages[] = 'Row ' . $failure->row() . ': ' . implode(', ', $failure->errors());
+                foreach ($failure->errors() as $error) {
+                    // Remove the row number from the error message.
+                    $cleanError = preg_replace('/^Row \d+: /', '', $error);
+                    $errorMessages[] = $cleanError;
+                }
             }
-            return response()->json(['success' => false, 'errors' => $errorMessages]);
+            return response()->json(['success' => false, 'errors' => $errorMessages], 422);
         } catch (\Exception $e) {
             Log::error('Error importing students: ' . $e->getMessage());
-            return response()->json(['success' => false, 'errors' => ['There was a problem importing the students.']]);
+            return response()->json(['success' => false, 'errors' => ['There was a problem importing the students.']], 500);
         }
     }
+    
     public function delete($id)
     {
         try {

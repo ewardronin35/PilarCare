@@ -1,13 +1,21 @@
 <x-app-layout>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <!-- Include Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      integrity="sha512-pVbXbXh1BwG4yX9l75p8e5cWZg3JcE0cG/9UKyJBrKkD7GqY1Z7QzpHz3PzCzBuUgYIWYNR4uCzU9bZ7Wg/6Mg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
     <style>
- 
         /* Tab Navigation Styling */
         .tabs {
             display: flex;
             justify-content: center;
             margin-bottom: 30px;
             border-bottom: 2px solid #ddd;
+            flex-wrap: wrap;
         }
 
         .tab-btn {
@@ -19,6 +27,9 @@
             font-weight: 600;
             color: #555;
             transition: color 0.3s, border-bottom 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .tab-btn:hover {
@@ -214,13 +225,15 @@
             display: flex;
             justify-content: center;
             margin-bottom: 20px;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         .search-bar input {
             width: 300px;
             padding: 10px 15px;
             border: 1px solid #ddd;
-            border-radius: 5px 0 0 5px;
+            border-radius: 5px;
             outline: none;
             font-size: 1rem;
         }
@@ -230,7 +243,7 @@
             border: none;
             background-color: #007bff;
             color: white;
-            border-radius: 0 5px 5px 0;
+            border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s;
             font-size: 1rem;
@@ -239,7 +252,36 @@
         .search-bar button:hover {
             background-color: #0056b3;
         }
+
+        /* Spinner Overlay */
+        #spinner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #007bff;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
+
 
     <div class="main-content">
         <h1 class="text-3xl font-bold text-center mb-6">Profile View of {{ ucfirst(Auth::user()->role) }}</h1>
@@ -250,14 +292,26 @@
             <button onclick="searchProfiles()">Search</button>
         </div>
 
-        <!-- Tab Navigation -->
+        <!-- Tab Navigation with Icons -->
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('students')">Students</button>
-            <button class="tab-btn" onclick="switchTab('teachers')">Teachers</button>
-            <button class="tab-btn" onclick="switchTab('nurses')">Nurses</button>
-            <button class="tab-btn" onclick="switchTab('doctors')">Doctors</button>
-            <button class="tab-btn" onclick="switchTab('staff')">Staff</button>
-            <button class="tab-btn" onclick="switchTab('parents')">Parents</button>
+            <button class="tab-btn active" onclick="switchTab(event, 'students')" data-role="students">
+                <i class="fas fa-user-graduate"></i> Students
+            </button>
+            <button class="tab-btn" onclick="switchTab(event, 'teachers')" data-role="teachers">
+                <i class="fas fa-chalkboard-teacher"></i> Teachers
+            </button>
+            <button class="tab-btn" onclick="switchTab(event, 'nurses')" data-role="nurses">
+                <i class="fas fa-stethoscope"></i> Nurses
+            </button>
+            <button class="tab-btn" onclick="switchTab(event, 'doctors')" data-role="doctors">
+                <i class="fas fa-user-md"></i> Doctors
+            </button>
+            <button class="tab-btn" onclick="switchTab(event, 'staff')" data-role="staff">
+                <i class="fas fa-users-cog"></i> Staff
+            </button>
+            <button class="tab-btn" onclick="switchTab(event, 'parents')" data-role="parents">
+                <i class="fas fa-user-friends"></i> Parents
+            </button>
         </div>
 
         <!-- Profile Cards -->
@@ -265,7 +319,7 @@
             @forelse($profiles as $profile)
                 <div class="profile-card" onclick="openModal('{{ addslashes($profile->first_name) }} {{ addslashes($profile->last_name) }}', '{{ addslashes($profile->role) }}', '{{ addslashes($profile->birthdate) }}', '{{ addslashes($profile->description) }}', '{{ addslashes($profile->id_number) }}')">
                     <img src="{{ $profile->profile_picture 
-                        ? asset('images/profiles/' . $profile->profile_picture) 
+                        ? asset('storage/profiles/' . $profile->profile_picture) 
                         : asset('images/pilarLogo.png') }}" 
                         alt="{{ $profile->first_name }} {{ $profile->last_name }} Profile Image" 
                         loading="lazy">
@@ -293,126 +347,190 @@
         </div>
     </div>
 
+    <!-- Spinner Overlay -->
+    <div id="spinner-overlay">
+        <div class="spinner"></div>
+    </div>
+
     <script>
-        // Open Modal Function
-        function openModal(name, role, birthdate, description, id_number) {
-            document.getElementById('modal-title').innerText = name;
-            document.getElementById('modal-body').innerHTML = `
-                <p><strong>Role:</strong> ${capitalizeFirstLetter(role)}</p>
-                <p><strong>Birthdate:</strong> ${formatDate(birthdate)}</p>
-                <p><strong>ID Number:</strong> ${id_number}</p>
-                <p><strong>Description:</strong> ${description}</p>
-            `;
-            document.getElementById('profile-modal').style.display = 'block';
+      // Open Modal Function
+function openModal(name, role, birthdate, description, id_number) {
+    document.getElementById('modal-title').innerText = name;
+    document.getElementById('modal-body').innerHTML = `
+        <p><strong>Role:</strong> ${capitalizeFirstLetter(role)}</p>
+        <p><strong>Birthdate:</strong> ${formatDate(birthdate)}</p>
+        <p><strong>ID Number:</strong> ${escapeHtml(id_number)}</p>
+        <p><strong>Description:</strong> ${escapeHtml(description)}</p>
+    `;
+    document.getElementById('profile-modal').style.display = 'block';
+}
+
+// Close Modal Function
+function closeModal() {
+    document.getElementById('profile-modal').style.display = 'none';
+}
+
+// Close modal when clicking outside of the modal content
+window.onclick = function(event) {
+    const modal = document.getElementById('profile-modal');
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Function to switch tabs and filter profiles
+function switchTab(event, role) {
+    event.preventDefault();
+
+    // Remove 'active' class from all buttons
+    const tabs = document.querySelectorAll('.tab-btn');
+    tabs.forEach(tab => tab.classList.remove('active'));
+
+    // Add 'active' class to the clicked button
+    event.currentTarget.classList.add('active');
+
+    // Show loading spinner
+    showSpinner();
+
+    // Fade out existing profiles
+    const profileCards = document.getElementById('profile-cards');
+    profileCards.classList.add('fade-out');
+
+    // After fade-out transition, fetch and display new profiles
+    setTimeout(() => {
+        fetchProfiles(role, document.getElementById('search-input').value);
+    }, 300);
+}
+
+// Function to fetch profiles based on role and search query
+function fetchProfiles(role, searchQuery = '') {
+    console.log(`Fetching profiles for role: ${role}, search: ${searchQuery}`);
+    showSpinner();
+
+    fetch(`/admin/fetch-profiles?role=${role}&search=${encodeURIComponent(searchQuery)}`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        method: 'GET',
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        console.log('Response Status:', response.status);
+        if (!response.ok) {
+            throw new Error(`Server responded with status ${response.status}`);
         }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Profiles Data:', data);
+        const profileCards = document.getElementById('profile-cards');
+        profileCards.classList.remove('fade-out');
+        profileCards.innerHTML = '';
 
-        // Close Modal Function
-        function closeModal() {
-            document.getElementById('profile-modal').style.display = 'none';
-        }
+        if(data.length > 0){
+            data.forEach(profile => {
+                // Create profile card elements
+                const card = document.createElement('div');
+                card.classList.add('profile-card');
 
-        // Close modal when clicking outside of the modal content
-        window.onclick = function(event) {
-            const modal = document.getElementById('profile-modal');
-            if (event.target == modal) {
-                modal.style.display = 'none';
-            }
-        }
+                // Attach click event listener
+                card.addEventListener('click', () => {
+                    openModal(
+                        `${profile.first_name} ${profile.last_name}`,
+                        profile.role,
+                        profile.birthdate,
+                        profile.description,
+                        profile.id_number
+                    );
+                });
 
-        // Function to switch tabs and filter profiles
-        function switchTab(role) {
-            // Remove 'active' class from all buttons
-            const tabs = document.querySelectorAll('.tab-btn');
-            tabs.forEach(tab => tab.classList.remove('active'));
+                // Create and append image
+                const img = document.createElement('img');
+                img.src = profile.profile_picture_url || '{{ asset('images/pilarLogo.png') }}';
+                img.alt = `${profile.first_name} ${profile.last_name} Profile Image`;
+                img.loading = 'lazy';
+                card.appendChild(img);
 
-            // Add 'active' class to the clicked button
-            event.currentTarget.classList.add('active');
+                // Create and append content div
+                const contentDiv = document.createElement('div');
+                contentDiv.classList.add('profile-card-content');
 
-            // Show loading indicator or fade out existing profiles
-            const profileCards = document.getElementById('profile-cards');
-            profileCards.classList.add('fade-out');
+                const h3 = document.createElement('h3');
+                h3.textContent = `${profile.first_name} ${profile.last_name}`;
+                contentDiv.appendChild(h3);
 
-            // After fade-out transition, fetch and display new profiles
-            setTimeout(() => {
-                fetchProfiles(role, document.getElementById('search-input').value);
-            }, 300);
-        }
+                const p = document.createElement('p');
+                p.textContent = `${capitalizeFirstLetter(profile.role)} | ID: ${profile.id_number}`;
+                contentDiv.appendChild(p);
 
-        // Function to fetch profiles based on role and search query
-        function fetchProfiles(role, searchQuery = '') {
-            fetch(`/admin/profiles?role=${role}&search=${encodeURIComponent(searchQuery)}`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                const profileCards = document.getElementById('profile-cards');
-                profileCards.classList.remove('fade-out');
-                profileCards.innerHTML = '';
+                card.appendChild(contentDiv);
 
-                if(data.length > 0){
-                    data.forEach(profile => {
-                        profileCards.innerHTML += `
-                            <div class="profile-card" onclick="openModal('${escapeHtml(profile.first_name)} ${escapeHtml(profile.last_name)}', '${escapeHtml(profile.role)}', '${escapeHtml(profile.birthdate)}', '${escapeHtml(profile.description)}', '${escapeHtml(profile.id_number)}')">
-                                <img src="${profile.profile_picture 
-                                    ? '${'{{ asset('images/profiles') }}/' + profile.profile_picture}' 
-                                    : '{{ asset('images/pilarLogo.png') }}'}" 
-                                    alt="${escapeHtml(profile.first_name)} ${escapeHtml(profile.last_name)} Profile Image" 
-                                    loading="lazy">
-                                <div class="profile-card-content">
-                                    <h3>${escapeHtml(profile.first_name)} ${escapeHtml(profile.last_name)}</h3>
-                                    <p>${capitalizeFirstLetter(profile.role)} | ID: ${profile.id_number}</p>
-                                </div>
-                            </div>
-                        `;
-                    });
-                } else {
-                    profileCards.innerHTML = `<p class="text-center text-gray-500">No profiles available for this category.</p>`;
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching profiles:', error);
-                const profileCards = document.getElementById('profile-cards');
-                profileCards.classList.remove('fade-out');
-                profileCards.innerHTML = `<p class="text-center text-red-500">Failed to load profiles. Please try again later.</p>`;
+                // Append the card to the profile cards container
+                profileCards.appendChild(card);
             });
+        } else {
+            profileCards.innerHTML = `<p class="text-center text-gray-500">No profiles available for this category.</p>`;
         }
 
-        // Function to handle search
-        function searchProfiles() {
-            const searchQuery = document.getElementById('search-input').value;
-            const activeTab = document.querySelector('.tab-btn.active');
-            const role = activeTab ? activeTab.textContent.toLowerCase() : 'students';
-            fetchProfiles(role, searchQuery);
-        }
+        // Hide spinner
+        hideSpinner();
+    })
+    .catch(error => {
+        console.error('Error fetching profiles:', error);
+        const profileCards = document.getElementById('profile-cards');
+        profileCards.classList.remove('fade-out');
+        profileCards.innerHTML = `<p class="text-center text-red-500">Failed to load profiles. Please try again later.</p>`;
 
-        // Helper function to format date
-        function formatDate(dateString) {
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            return new Date(dateString).toLocaleDateString(undefined, options);
-        }
+        // Hide spinner
+        hideSpinner();
+    });
+}
 
-        // Helper function to capitalize the first letter
-        function capitalizeFirstLetter(string) {
-            return string.charAt(0).toUpperCase() + string.slice(1);
-        }
+// Function to handle search
+function searchProfiles() {
+    const searchQuery = document.getElementById('search-input').value;
+    const activeTab = document.querySelector('.tab-btn.active');
+    const role = activeTab ? activeTab.getAttribute('data-role') : 'students';
+    fetchProfiles(role, searchQuery);
+}
 
-        // Helper function to escape HTML to prevent XSS
-        function escapeHtml(text) {
-            var map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            };
-            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
-        }
+// Helper function to format date
+function formatDate(dateString) {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+}
 
-        // Initialize with default tab (Students)
-        document.addEventListener('DOMContentLoaded', function () {
-            fetchProfiles('students');
-        });
+// Helper function to capitalize the first letter
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+// Helper function to escape HTML to prevent XSS
+function escapeHtml(text) {
+    var map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
+// Spinner Functions
+function showSpinner() {
+    document.getElementById('spinner-overlay').style.display = 'flex';
+}
+
+function hideSpinner() {
+    document.getElementById('spinner-overlay').style.display = 'none';
+}
+
+// Initialize with default tab (Students)
+document.addEventListener('DOMContentLoaded', function () {
+    fetchProfiles('students');
+});
+
     </script>
 </x-app-layout>

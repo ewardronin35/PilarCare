@@ -5,6 +5,8 @@ use App\Models\Appointment;
 use App\Models\User;  // Add this line
 use App\Models\Doctor;
 use Illuminate\Http\Request;
+use App\Models\Notification;
+
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -91,35 +93,25 @@ class AppointmentController extends Controller
     {
         $user = Auth::user();
     
-        // Log user details
-        Log::info('User ID Number: ' . $user->id_number);
-        
         $date = $request->input('date');
     
-     
-        Log::info('Fetching appointments for date: ' . $date . ' and user: ' . $user->id_number);
-    
         // Fetch all appointments for the logged-in user based on their id_number
-        $appointments = Appointment::where('id_number', $user->id_number)
-            ->whereDate('appointment_date', $date) // Ensure you're using just the date part
+        $appointments = Appointment::with('doctor')
+            ->where('id_number', $user->id_number)
+            ->whereDate('appointment_date', $date)
             ->get();
-        
-        // Log and fetch upcoming and completed appointments
-        Log::info('Appointments: ', $appointments->toArray());
     
         // Filter upcoming appointments (appointments in the future)
-        $upcomingAppointments = Appointment::where('id_number', $user->id_number)
+        $upcomingAppointments = Appointment::with('doctor')
+            ->where('id_number', $user->id_number)
             ->where('appointment_date', '>=', now())
             ->get();
     
-        Log::info('Upcoming Appointments: ', $upcomingAppointments->toArray());
-    
         // Filter completed appointments (appointments in the past)
-        $completedAppointments = Appointment::where('id_number', $user->id_number)
+        $completedAppointments = Appointment::with('doctor')
+            ->where('id_number', $user->id_number)
             ->where('appointment_date', '<', now())
             ->get();
-    
-        Log::info('Completed Appointments: ', $completedAppointments->toArray());
     
         // Determine the role of the logged-in user and make sure it's lowercase for matching the view
         $role = strtolower($user->role);
@@ -139,37 +131,72 @@ class AppointmentController extends Controller
             'completedAppointments'
         ));
     }
+    
     public function add(Request $request)
     {
-        // Ensure that the appointment_date is validated in 'Y-m-d' format
+        // Validate the incoming request data
         $request->validate([
-            'id_number' => 'required|string|max:7', // Add this line
+            'id_number' => 'required|string|max:7',
             'appointment_date' => 'required|date_format:Y-m-d',
             'appointment_time' => 'required|date_format:H:i',
             'appointment_type' => 'required|string|max:255',
-            'doctor_id' => 'required|exists:doctors,id', // Added validation for doctor_id
+            'doctor_id' => 'required|exists:doctors,id',
             'patient_name' => 'required|string|max:255',
         ]);
     
         $user = Auth::user();
     
         $data = [
-            'id_number' => $request ->id_number,
+            'id_number' => $request->id_number,
             'patient_name' => $request->patient_name,
-            'appointment_date' => $request->appointment_date, // Use the incoming date format
+            'appointment_date' => $request->appointment_date,
             'appointment_time' => $request->appointment_time,
             'role' => $user->role,
-            'doctor_id' => $request->doctor_id, // Include doctor_id
+            'doctor_id' => $request->doctor_id,
             'appointment_type' => $request->appointment_type,
-            'status' => 'pending', // Set default status
-
+            'status' => 'pending',
         ];
     
         Log::info('Appointment Data: ', $data);
     
         try {
+            // Create the appointment
             $appointment = Appointment::create($data);
             Log::info('Appointment Created: ', $appointment->toArray());
+    
+            // Fetch the doctor with the associated user
+            $doctor = Doctor::with('user')->find($request->doctor_id);
+            if (!$doctor || !$doctor->user) {
+                Log::error('Doctor or associated user not found.');
+                return response()->json(['error' => 'Doctor information is incomplete.'], 500);
+            }
+    
+            // Fetch the patient user
+            $patient = User::where('id_number', $request->id_number)->first();
+            if (!$patient) {
+                Log::error('Patient not found.');
+                return response()->json(['error' => 'Patient not found.'], 404);
+            }
+    
+            // Create a notification for the doctor
+     // Notification for the doctor
+Notification::create([
+    'user_id' => $doctor->user->id_number, // Correct: Reference 'id'
+    'title' => 'New Appointment Scheduled',
+    'message' => "You have a new appointment scheduled by {$user->first_name} {$user->last_name} on {$appointment->appointment_date} at {$appointment->appointment_time}.",
+    'scheduled_time' => now(),
+    'role' => $doctor->user->role,
+]);
+
+// Notification for the patient
+Notification::create([
+    'user_id' => $patient->id_number, // Correct: Reference 'id'
+    'title' => 'Appointment Pending Approval',
+    'message' => "Your appointment on {$appointment->appointment_date} at {$appointment->appointment_time} with Dr. {$doctor->user->first_name} {$doctor->user->last_name} is pending approval.",
+    'scheduled_time' => now(),
+    'role' => $patient->role,
+]);
+
     
             return response()->json(['success' => 'Appointment scheduled successfully!']);
         } catch (\Exception $e) {
@@ -181,10 +208,12 @@ class AppointmentController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'appointment_date' => 'required|date',
+            'id_number' => 'required|string|max:7',
+            'appointment_date' => 'required|date_format:Y-m-d',
             'appointment_time' => 'required|date_format:H:i',
             'appointment_type' => 'required|string|max:255',
-            'doctor_id' => 'required|exists:doctors,id', // Added validation for doctor_id
+            'doctor_id' => 'required|exists:doctors,id',
+            'patient_name' => 'required|string|max:255',
         ]);
 
         try {
@@ -246,54 +275,107 @@ class AppointmentController extends Controller
     
     
     public function getAppointmentsByDate(Request $request)
-    {
-        $user = Auth::user();
-    
-        // Validate date format to ensure it is YYYY-MM-DD
-        $validated = $request->validate([
-            'date' => 'required|date_format:Y-m-d'
-        ]);
-    
-        $date = $validated['date'];
-    
-        Log::info('Fetching appointments for date: ' . $date . ' and user: ' . $user->id_number);
-    
-        $role = strtolower($user->role);
-    
-        if ($role == 'admin') {
-            // For admin, fetch all appointments on that date
-            $appointments = Appointment::where('appointment_date', $date)->get();
-        } else {
-            // For other users, fetch only their appointments
-            $appointments = Appointment::where('id_number', $user->id_number)
-                ->where('appointment_date', $date)
-                ->get();
-        }
-    
-        if ($appointments->isEmpty()) {
-            Log::info('No appointments found for this user on this date.');
-        } else {
-            Log::info('Appointments Fetched:', $appointments->toArray());
-        }
-    
-        return response()->json([
-            'appointments' => $appointments
-        ]);
+{
+    $user = Auth::user();
+
+    // Validate date format to ensure it is YYYY-MM-DD
+    $validated = $request->validate([
+        'date' => 'required|date_format:Y-m-d'
+    ]);
+
+    $date = $validated['date'];
+
+    Log::info('Fetching appointments for date: ' . $date . ' and user: ' . $user->id_number);
+
+    $role = strtolower($user->role);
+
+    if ($role == 'admin') {
+        // For admin, fetch all appointments on that date
+        $appointments = Appointment::with('doctor')
+            ->whereDate('appointment_date', $date)
+            ->get();
+    } else {
+        // For other users, fetch only their appointments
+        $appointments = Appointment::with('doctor')
+            ->where('id_number', $user->id_number)
+            ->whereDate('appointment_date', $date)
+            ->get();
     }
+
+    if ($appointments->isEmpty()) {
+        Log::info('No appointments found for this user on this date.');
+    } else {
+        Log::info('Appointments Fetched:', $appointments->toArray());
+    }
+
+    // Map appointments to include doctor_name
+    $appointments = $appointments->map(function($appointment) {
+        $doctorName = 'N/A';
+        if ($appointment->doctor) {
+            $doctorFirstName = $appointment->doctor->first_name ?? '';
+            $doctorLastName = $appointment->doctor->last_name ?? '';
+            $doctorName = trim($doctorFirstName . ' ' . $doctorLastName);
+        }
+
+        return [
+            'appointment_time' => $appointment->appointment_time,
+            'appointment_type' => $appointment->appointment_type,
+            'status' => $appointment->status,
+            'doctor_name' => $doctorName,
+            'appointment_date' => $appointment->appointment_date,
+            // Include other fields as needed
+        ];
+    });
+
+    return response()->json([
+        'appointments' => $appointments
+    ]);
+}
+
     
     public function confirm($id)
-{
-    $appointment = Appointment::find($id);
-
-    if ($appointment) {
-        $appointment->status = 'confirmed';
-        $appointment->save();
-
-        return response()->json(['success' => true, 'message' => 'Appointment confirmed successfully']);
-    } else {
-        return response()->json(['success' => false, 'message' => 'Appointment not found']);
+    {
+        $appointment = Appointment::find($id);
+    
+        if ($appointment) {
+            $appointment->status = 'confirmed';
+            $appointment->save();
+    
+            // Fetch the doctor and patient
+            $doctor = $appointment->doctor()->with('user')->first();
+            $patient = User::where('id_number', $appointment->id_number)->first();
+    
+            if ($doctor && $doctor->user && $patient) {
+                // Notify the patient that the appointment has been confirmed
+                Notification::create([
+                    'user_id' => $patient->id_number, // Use 'id' instead of 'id_number'
+                    'title' => 'Appointment Confirmed',
+                    'message' => "Your appointment on {$appointment->appointment_date} at {$appointment->appointment_time} has been confirmed by Dr. {$doctor->user->first_name} {$doctor->user->last_name}.",
+                    'scheduled_time' => now(),
+                    'role' => $patient->role,
+                ]);
+    
+                // Optionally, notify the admin or nurse about the confirmation
+                // Assuming you have roles like 'admin' or 'nurse'
+                // Fetch users with 'admin' or 'nurse' roles and notify them
+                $admins = User::whereIn('role', ['admin', 'nurse'])->get();
+                foreach ($admins as $admin) {
+                    Notification::create([
+                        'user_id' => $admin->id_number,
+                        'title' => 'Appointment Confirmed',
+                        'message' => "Appointment ID {$appointment->id} has been confirmed by Dr. {$doctor->user->first_name} {$doctor->user->last_name}.",
+                        'scheduled_time' => now(),
+                        'role' => $admin->role,
+                    ]);
+                }
+            }
+    
+            return response()->json(['success' => true, 'message' => 'Appointment confirmed successfully']);
+        } else {
+            return response()->json(['success' => false, 'message' => 'Appointment not found']);
+        }
     }
-}
+    
 public function getApprovedDoctors()
 {
     $doctors = Doctor::where('approved', true)
@@ -317,11 +399,11 @@ public function generateStatisticsReport(Request $request)
 
     // Determine the start and end date based on the period (week or month)
     if ($period === 'week') {
-        $startDate = $date->startOfWeek();
-        $endDate = $date->endOfWeek();
+        $startDate = $date->copy()->startOfWeek();
+        $endDate = $date->copy()->endOfWeek();
     } elseif ($period === 'month') {
-        $startDate = $date->startOfMonth();
-        $endDate = $date->endOfMonth();
+        $startDate = $date->copy()->startOfMonth();
+        $endDate = $date->copy()->endOfMonth();
     }
 
     // Fetch appointments within the date range
@@ -368,6 +450,7 @@ public function generateStatisticsReport(Request $request)
         'pdf_url' => asset("storage/{$pdfFileName}"),
     ]);
 }
+
 
 
     

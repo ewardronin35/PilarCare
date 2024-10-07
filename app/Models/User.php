@@ -101,6 +101,6 @@ public function students()
 }
 public function notifications()
 {
-    return $this->hasMany(Notification::class, 'id_number', 'id_number');
+    return $this->hasMany(Notification::class, 'user_id', 'id_number');
 }
 }

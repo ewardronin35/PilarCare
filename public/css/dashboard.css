@@ -147,9 +147,10 @@ body, html {
     right: -5px;
     width: 10px;
     height: 10px;
-    background-color: #dc3545;
+    background-color: red; /* Red color */
     border-radius: 50%;
     transition: transform 0.3s ease;
+    display: none; /* Hidden by default */
 }
 
 .notification-icon i {
@@ -169,7 +170,6 @@ body, html {
     animation: pulse 1.5s infinite;
 }
 .notification-dropdown {
-    display: none;
     position: absolute;
     top: 45px;
     right: 0;
@@ -178,9 +178,11 @@ body, html {
     border-radius: 10px;
     overflow: hidden;
     width: 300px; /* Adjust width as needed */
+    max-height: 400px; /* Maximum height before scrolling */
+    overflow-y: auto;   /* Enable vertical scrolling */
     visibility: hidden;
-    transform: translateY(-20px); /* Start with dropdown slightly above */
-    transition: all 0.3s ease; /* Smooth animation for all properties */
+    transform: translateY(-20px);
+    transition: all 0.3s ease;
     z-index: 1000;
 }
 
@@ -188,7 +190,7 @@ body, html {
     display: block;
     opacity: 1;
     visibility: visible;
-    transform: translateY(0); /* Move dropdown to its final position */
+    transform: translateY(0);
 }
 
 .notification-dropdown .dropdown-item {

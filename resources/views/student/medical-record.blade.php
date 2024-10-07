@@ -797,11 +797,11 @@ h1 {
     <div class="form-header">
     <h1>Health Documents</h1>
     @if(isset($medicalRecord))
-    <a href="{{ route('student.medical-record.downloadPdf', $medicalRecord->id) }}" class="btn btn-primary">
+    <a href="{{ route('student.medical-record.downloadPdf', $medicalRecord->id) }}" class="btn btn-primary no-spinner">
         Download Medical Record PDF
     </a>
 @endif
-        <a href="{{ route('student.health-examination.downloadPdf', $healthExamination->id) }}" class="btn btn-primary"> Download PDF </a>
+        <a href="{{ route('student.health-examination.downloadPdf', $healthExamination->id) }}" class="btn btn-primary no-spinner "> Download Examination Pictures PDF </a>
         <div class="table-container">
     <table class="history-table">
     <thead>

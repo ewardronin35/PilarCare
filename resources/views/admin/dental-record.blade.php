@@ -1,5 +1,6 @@
 <x-app-layout>
     <link rel="stylesheet" href="{{ asset('css/dental.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
 
     <div class="main-container">
         <!-- Left side: Dental Record -->
@@ -7,11 +8,14 @@
         <input type="text" id="search-bar" class="form-control" placeholder="Search by Student ID..." maxlength="7">
     <button class="search-btn">Search</button>
 
-            <div class="tabs">
-                <button class="tab-button active" data-tab="record-tab">Dental Record</button>
-                <button class="tab-button" data-tab="history-tab">Dental Examination</button>
-            </div>
-
+    <div class="tabs">
+    <button class="tab-button active" data-tab="record-tab">
+        <i class="fas fa-file-medical"></i> Dental Record
+    </button>
+    <button class="tab-button" data-tab="history-tab">
+        <i class="fas fa-history"></i> Dental Examination
+    </button>
+</div>
          
             <div id="record-tab" class="tab-content active">
                 <div class="dental-charting">
@@ -784,6 +788,10 @@
     <form id="dental-exam-form" action="{{ route('admin.dental-examination.store') }}" method="POST">
     @csrf
         <h2 class="form-title">Dental Examination Findings and Recommendations</h2>
+        <div class="form-section">
+    <label for="dentist-name">Dentist Name:</label>
+    <input type="text" id="dentist-name" class="form-control" readonly value="{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}">
+</div>
 
         <!-- Date of Examination and Grade & Section -->
 <div class="form-section-inline">
@@ -879,68 +887,105 @@
     <label for="ortho-consultation">For Orthodontic Consultation</label>
 </div>
 
-<!-- Filling -->
 <div class="checkbox-group">
     <input type="hidden" name="filling" value="0">
     <input type="checkbox" id="filling" name="filling" value="1">
     <label for="filling">For Filling: Tooth #</label>
-    <input type="text" id="filling-tooth" name="filling_tooth" class="form-control">
+    <select id="filling-tooth" name="filling_tooth[]" class="form-control tooth-select" multiple disabled>
+        <option></option> <!-- Placeholder for Select2 -->
+        @foreach($teethData as $number => $name)
+            <option value="{{ $number }}">{{ $number }}: {{ $name }}</option>
+        @endforeach
+    </select>
+    @error('filling_tooth')
+        <small class="text-danger">{{ $message }}</small>
+    @enderror
 </div>
 
-<!-- Extraction -->
-<div class="checkbox-group">
-    <input type="hidden" name="extraction" value="0">
-    <input type="checkbox" id="extraction" name="extraction" value="1">
-    <label for="extraction">For Extraction: Tooth #</label>
-    <input type="text" id="extraction-tooth" name="extraction_tooth" class="form-control">
-</div>
-
-<!-- Endodontic -->
-<div class="checkbox-group">
-    <input type="hidden" name="endodontic" value="0">
-    <input type="checkbox" id="endodontic" name="endodontic" value="1">
-    <label for="endodontic">For Endodontic Tx/RCT: Tooth #</label>
-    <input type="text" id="endodontic-tooth" name="endodontic_tooth" class="form-control">
-</div>
-
-<!-- Radiograph -->
-<div class="checkbox-group">
-    <input type="hidden" name="radiograph" value="0">
-    <input type="checkbox" id="radiograph" name="radiograph" value="1">
-    <label for="radiograph">For Radiograph/X-ray: Tooth #</label>
-    <input type="text" id="radiograph-tooth" name="radiograph_tooth" class="form-control">
-</div>
-
-<!-- Prosthesis -->
-<div class="checkbox-group">
-    <input type="hidden" name="prosthesis" value="0">
-    <input type="checkbox" id="prosthesis" name="prosthesis" value="1">
-    <label for="prosthesis">Needs Prosthesis/Denture: Tooth #</label>
-    <input type="text" id="prosthesis-tooth" name="prosthesis_tooth" class="form-control">
-</div>
-
-<!-- Medical Clearance -->
-<div class="checkbox-group">
-    <input type="hidden" name="medical_clearance" value="0">
-    <input type="checkbox" id="medical-clearance" name="medical_clearance" value="1">
-    <label for="medical-clearance">Medical Clearance</label>
-</div>
-
-<!-- Others, Specify -->
-<div class="checkbox-group full-width">
-    <input type="hidden" name="others_specify" value="0">
-    <input type="checkbox" id="others-specify" name="others_specify" value="1">
-    <label for="others-specify">Others, Specify:</label>
-    <input type="text" id="other-recommendation" name="other_recommendation" class="form-control">
-</div>
-        <div class="form-group-inline">
-            <div class="checkbox-group full-width">
-                <input type="checkbox" id="others-specify" name="others_specify">
-                <label for="others-specify">Others, Specify:</label>
-                <input type="text" id="other-recommendation" name="other_recommendation" class="form-control">
-            </div>
+        <!-- Extraction -->
+        <div class="checkbox-group">
+            <input type="hidden" name="extraction" value="0">
+            <input type="checkbox" id="extraction" name="extraction" value="1">
+            <label for="extraction">For Extraction: Tooth #</label>
+            <select id="extraction-tooth" name="extraction_tooth[]" class="form-control" multiple disabled>
+                <option value="">Select Tooth</option>
+                @foreach($teethData as $number => $name)
+                    <option value="{{ $number }}">{{ $number }}: {{ $name }}</option>
+                @endforeach
+            </select>
+            @error('extraction_tooth')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
         </div>
 
+        <!-- Endodontic -->
+        <div class="checkbox-group">
+            <input type="hidden" name="endodontic" value="0">
+            <input type="checkbox" id="endodontic" name="endodontic" value="1">
+            <label for="endodontic">For Endodontic Tx/RCT: Tooth #</label>
+            <select id="endodontic-tooth" name="endodontic_tooth[]" class="form-control" multiple disabled>
+                <option value="">Select Tooth</option>
+                @foreach($teethData as $number => $name)
+                    <option value="{{ $number }}">{{ $number }}: {{ $name }}</option>
+                @endforeach
+            </select>
+            @error('endodontic_tooth')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
+        </div>
+
+        <!-- Radiograph -->
+        <div class="checkbox-group">
+            <input type="hidden" name="radiograph" value="0">
+            <input type="checkbox" id="radiograph" name="radiograph" value="1">
+            <label for="radiograph">For Radiograph/X-ray: Tooth #</label>
+            <select id="radiograph-tooth" name="radiograph_tooth[]" class="form-control" multiple disabled>
+                <option value="">Select Tooth</option>
+                @foreach($teethData as $number => $name)
+                    <option value="{{ $number }}">{{ $number }}: {{ $name }}</option>
+                @endforeach
+            </select>
+            @error('radiograph_tooth')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
+        </div>
+
+        <!-- Prosthesis -->
+        <div class="checkbox-group">
+            <input type="hidden" name="prosthesis" value="0">
+            <input type="checkbox" id="prosthesis" name="prosthesis" value="1">
+            <label for="prosthesis">Needs Prosthesis/Denture: Tooth #</label>
+            <select id="prosthesis-tooth" name="prosthesis_tooth[]" class="form-control" multiple disabled>
+                <option value="">Select Tooth</option>
+                @foreach($teethData as $number => $name)
+                    <option value="{{ $number }}">{{ $number }}: {{ $name }}</option>
+                @endforeach
+            </select>
+            @error('prosthesis_tooth')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
+        </div>
+
+        <!-- Medical Clearance -->
+        <div class="checkbox-group">
+            <input type="hidden" name="medical_clearance" value="0">
+            <input type="checkbox" id="medical-clearance" name="medical_clearance" value="1">
+            <label for="medical-clearance">Medical Clearance</label>
+        </div>
+
+        <!-- Others, Specify -->
+        <div class="checkbox-group full-width">
+            <input type="hidden" name="others_specify" value="0">
+            <input type="checkbox" id="others-specify" name="others_specify" value="1">
+            <label for="others-specify">Others, Specify:</label>
+            <input type="text" id="other-recommendation" name="other_recommendation" class="form-control">
+            @error('other_recommendation')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
+        </div>
+
+
+    
         <p class="note">Our student's dental health is our major concern. Kindly give this matter prompt attention and have an appointment with your family dentist. Thank you.</p>
 
         <p class="signature">DR. SARAH UY-GAN, DMD (PRCH 40051)<br>SCHOOL DENTIST</p>
@@ -1022,7 +1067,7 @@
         </table>
 </div>
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="{{ asset('js/admindental.js') }}"></script>
     <script>

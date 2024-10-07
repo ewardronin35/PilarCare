@@ -25,8 +25,6 @@ class Information extends Model
         'guardian_name',
         'guardian_relationship',
         'address',
-        'birthdate',
-        'profile_picture',
     ];
 
     /**

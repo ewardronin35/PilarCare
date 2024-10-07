@@ -10,7 +10,7 @@ use App\Models\DentalRecord;
 use App\Models\MedicalRecord;
 use App\Models\User;
 use App\Models\LoginLog;
-use App\Models\PhysicalDentalExamination; // Add this
+use App\Models\PhysicalExamination;
 
 class ReportLogsController extends Controller
 {
@@ -24,15 +24,19 @@ class ReportLogsController extends Controller
         $medicalRecordLogsCount = MedicalRecord::count();
         $accountLogsCount = User::count();  // Define the account logs count
         $loginLogsCount = LoginLog::count();
+        $registrationLogsCount = User::count(); // Total number of registrations (users)
+        $physicalDentalExamLogsCount = PhysicalExamination::count(); // Add this
 
         // Fetch all logs for display in the logs table
-        $appointmentLogs = Appointment::latest()->take(10)->get();
+        $appointmentLogs = Appointment::with('user')->latest()->take(10)->get();
         $inventoryLogs = Inventory::latest()->take(10)->get();
-        $complaintLogs = Complaint::latest()->take(10)->get();
-        $dentalRecordLogs = DentalRecord::latest()->take(10)->get();
-        $medicalRecordLogs = MedicalRecord::latest()->take(10)->get();
+        $complaintLogs = Complaint::with('user')->latest()->take(10)->get();
+        $dentalRecordLogs = DentalRecord::with('user')->latest()->take(10)->get();
+        $medicalRecordLogs = MedicalRecord::with('user')->latest()->take(10)->get();
         $accountLogs = User::latest()->take(10)->get();
-        $loginLogs = LoginLog::latest()->take(10)->get(); // New
+        $loginLogs = LoginLog::with('user')->latest()->take(10)->get(); // New
+        $registrationLogs = User::orderBy('created_at', 'desc')->take(10)->get();
+        $physicalDentalExamLogs = PhysicalExamination::with('user')->latest()->take(10)->get(); // Add this
 
         // Pass all the necessary data to the view
         return view('admin.report-logs', [
@@ -42,6 +46,9 @@ class ReportLogsController extends Controller
             'dentalRecordLogsCount' => $dentalRecordLogsCount,
             'medicalRecordLogsCount' => $medicalRecordLogsCount,
             'accountLogsCount' => $accountLogsCount,
+            'loginLogsCount' => $loginLogsCount,
+            'registrationLogsCount' => $registrationLogsCount,
+            'physicalDentalExamLogsCount' => $physicalDentalExamLogsCount, // Add this
             'appointmentLogs' => $appointmentLogs,
             'inventoryLogs' => $inventoryLogs,
             'complaintLogs' => $complaintLogs,
@@ -49,9 +56,10 @@ class ReportLogsController extends Controller
             'medicalRecordLogs' => $medicalRecordLogs,
             'accountLogs' => $accountLogs,
             'loginLogs' => $loginLogs, // Pass the login logs
+            'registrationLogs' => $registrationLogs, // Pass registration logs
+            'physicalDentalExamLogs' => $physicalDentalExamLogs, // Add this
         ]);
     }
-
     // Handle notification storage
     public function storeNotification(Request $request)
     {

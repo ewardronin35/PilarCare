@@ -626,32 +626,88 @@ $(document).ready(function () {
             }
         });
     }
-
     function populateDentalExaminationHistory(data) {
         if (!data || !Array.isArray(data)) {
             console.error('Dental examination history data is undefined, null, or not an array:', data);
             return;
         }
-
+    
         const tableBody = $('#dental-examination-history-body');
         tableBody.empty();
-
+    
         if (data.length === 0) {
             tableBody.append('<tr><td colspan="3">No previous examinations found.</td></tr>');
             return;
         }
-
+    
         data.forEach(exam => {
-            tableBody.append(`
+            let examHtml = `
                 <tr>
-                    <td>${exam.date_of_examination ? new Date(exam.date_of_examination).toLocaleDateString() : 'N/A'}</td>
-                    <td>${exam.dentist_name || 'N/A'}</td>
-                    <td>${exam.findings || 'N/A'}</td>
+                    <td colspan="2"><strong>Date of Examination:</strong> ${exam.date_of_examination ? new Date(exam.date_of_examination).toLocaleDateString() : 'N/A'}</td>
+                    <td><strong>Dentist Name:</strong> ${exam.dentist_name || 'N/A'}</td>
                 </tr>
-            `);
+            `;
+    
+            // Define the fields to display
+            const fields = [
+                { key: 'findings', label: 'Findings' },
+                { key: 'carries_free', label: 'Carries Free' },
+                { key: 'poor_oral_hygiene', label: 'Poor Oral Hygiene' },
+                { key: 'gum_infection', label: 'Gum Infection' },
+                { key: 'restorable_caries', label: 'Restorable Caries' },
+                { key: 'other_condition', label: 'Other Condition' },
+                { key: 'personal_attention', label: 'Personal Attention' },
+                { key: 'oral_prophylaxis', label: 'Oral Prophylaxis' },
+                { key: 'fluoride_application', label: 'Fluoride Application' },
+                { key: 'gum_treatment', label: 'Gum Treatment' },
+                { key: 'ortho_consultation', label: 'Ortho Consultation' },
+                { key: 'sealant_tooth', label: 'Sealant Tooth' },
+                { key: 'filling_tooth', label: 'Filling Tooth' },
+                { key: 'extraction_tooth', label: 'Extraction Tooth' },
+                { key: 'endodontic_tooth', label: 'Endodontic Tooth' },
+                { key: 'radiograph_tooth', label: 'Radiograph Tooth' },
+                { key: 'prosthesis_tooth', label: 'Prosthesis Tooth' },
+                { key: 'medical_clearance', label: 'Medical Clearance' },
+                { key: 'other_recommendation', label: 'Other Recommendation' },
+            ];
+    
+            let fieldCount = 0; // To check if any fields are displayed
+    
+            fields.forEach(field => {
+                let value = exam[field.key];
+                if (value !== null && value !== '' && value !== 0) {
+                    fieldCount++;
+                    // For boolean fields (tinyint), convert 1 to 'Yes', 0 to 'No'
+                    if (typeof value === 'number' && (value === 0 || value === 1)) {
+                        value = value === 1 ? 'Yes' : 'No';
+                    }
+                    examHtml += `
+                        <tr>
+                            <td colspan="3"><strong>${field.label}:</strong> ${value}</td>
+                        </tr>
+                    `;
+                }
+            });
+    
+            if (fieldCount === 0) {
+                examHtml += `
+                    <tr>
+                        <td colspan="3">No details available.</td>
+                    </tr>
+                `;
+            }
+    
+            // Add a separator row
+            examHtml += `
+                <tr>
+                    <td colspan="3"><hr></td>
+                </tr>
+            `;
+    
+            tableBody.append(examHtml);
         });
     }
-
+    
     // -------------------------------------------------
     // 15. Function: Fetch and Populate Tooth History
     // -------------------------------------------------
@@ -681,30 +737,60 @@ $(document).ready(function () {
             console.error('Tooth history data is undefined, null, or not an array:', data);
             return;
         }
-
+    
         const tableBody = $('#tooth-history-body');
         tableBody.empty();
-
+    
         if (data.length === 0) {
-            tableBody.append('<tr><td colspan="4">No tooth history found.</td></tr>');
+            tableBody.append('<tr><td colspan="5">No tooth history found.</td></tr>');
             return;
         }
-
+    
         data.forEach(tooth => {
             console.log('Processing tooth:', tooth); // Debugging
             const toothNumber = tooth.tooth_number ? tooth.tooth_number : 'N/A';
             const status = tooth.status ? tooth.status : 'N/A';
             const notes = tooth.notes ? tooth.notes : 'N/A';
             const updatedAt = tooth.updated_at ? new Date(tooth.updated_at).toLocaleDateString() : 'N/A';
-
+    
+            let dentalPicturesHtml = '';
+    
+            if (tooth.dental_pictures && tooth.dental_pictures.length > 0) {
+                dentalPicturesHtml = '<div class="dental-pictures">';
+    
+                tooth.dental_pictures.forEach(picturePath => {
+                    const pictureUrl = `/storage/${picturePath}`; // Ensure this path is correct
+                    dentalPicturesHtml += `
+                        <img src="${pictureUrl}" alt="Dental Picture" class="dental-picture-preview">
+                    `;
+                });
+    
+                dentalPicturesHtml += '</div>';
+            } else {
+                dentalPicturesHtml = 'None';
+            }
+    
             tableBody.append(`
                 <tr>
                     <td>Tooth ${toothNumber}</td>
                     <td>${status}</td>
                     <td>${notes}</td>
+                    <td>${dentalPicturesHtml}</td>
                     <td>${updatedAt}</td>
                 </tr>
             `);
+        });
+    
+        // Attach click event to dental picture previews
+        $('.dental-picture-preview').off('click').on('click', function () {
+            const src = $(this).attr('src');
+            Swal.fire({
+                title: 'Dental Picture Preview',
+                imageUrl: src,
+                imageAlt: 'Dental Picture',
+                showConfirmButton: false,
+                showCloseButton: true,
+            });
         });
     }
 

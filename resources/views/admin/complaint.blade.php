@@ -112,11 +112,10 @@
             padding: 8px 15px;
             border: none;
             border-radius: 50px;
-            margin-right: 250px;
+            margin-right: 300px;
             margin-bottom: 20px;
             cursor: pointer;
             font-size: 14px;
-            position: absolute;
             right: 0;
             top: 0;
             height: 100%;
@@ -128,14 +127,15 @@
 
         .table-container {
             width: 100%;
+            max-height: 400px; /* Adjust the height as needed */
             overflow-x: auto;
             overflow-y: auto;
             background-color: #fff;
             border-radius: 10px;
             border: 1px solid #ddd;
             padding: 20px;
-            margin-top: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+            margin-bottom: 20px;
         }
 
         .complaints-table {
@@ -240,10 +240,11 @@
 
         .main-tab-content,
         .inner-tab-content {
+            display: none;
+
             opacity: 0;
             transform: translateX(-20px);
             transition: opacity 0.5s ease, transform 0.5s ease;
-            position: absolute;
             width: 100%;
             top: 0;
             left: 0;
@@ -429,6 +430,11 @@
                 width: 100%;
             }
         }
+        .complaint-list-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
 
 
     </style>
@@ -436,10 +442,10 @@
     <main class="main-content">
         <!-- Main Tabs for Add Complaint and Complaint List -->
         <div class="tabs main-tabs">
-            <div class="tab main-tab active" onclick="showTab('add-complaint')">
+            <div class="tab main-tab active" onclick="showTab('add-complaint', this)">
                 <i class="fas fa-plus-circle"></i> Add Complaint
             </div>
-            <div class="tab main-tab" onclick="showTab('complaint-table')">
+            <div class="tab main-tab" onclick="showTab('complaint-table', this)">
                 <i class="fas fa-list-alt"></i> Complaint List
             </div>
         </div>
@@ -540,6 +546,18 @@
                                 </div>
                             </div>
                         </div>
+<!-- Go Home Status -->
+<div class="form-group">
+    <label for="go_home"><i class="fas fa-home"></i> Go Home Status</label>
+    <div class="radio-group">
+        <label>
+            <input type="radio" name="go_home" value="yes" required> Yes
+        </label>
+        <label>
+            <input type="radio" name="go_home" value="no" required> No
+        </label>
+    </div>
+</div>
 
                         <!-- Submit button -->
                         <div class="form-group">
@@ -564,41 +582,45 @@
                             </div>
                         </div>
                     </div>
+                     <!-- Generate Report -->
+                     <div class="generate-report-container">
+                                <h2>Generate Appointment Statistics Report</h2>
+                                <form id="report-form" method="GET" action="{{ route('admin.appointments.statisticsReport') }}">
+                                    @csrf
+                                    <div class="form-group">
+                                        <label for="report-period">Select Report Period</label>
+                                        <select id="report-period" name="report_period" required>
+                                            <option value="week">Weekly</option>
+                                            <option value="month">Monthly</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="report-date">Select Date</label>
+                                        <input type="date" id="report-date" name="report_date" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <button type="button" class="generate-report-btn" onclick="generateStatisticsReport()">Generate Report</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+           
 
         <!-- Main Complaint List Tab Content -->
         <div id="complaint-table" class="main-tab-content">
-            <div class="container">
-                <!-- Generate Appointment Statistics Report Form -->
-                <div class="form-container">
-                    <h2>Generate Appointment Statistics Report</h2>
-                    <form id="report-form" method="GET" action="{{ route('admin.appointments.statisticsReport') }}">
-                        @csrf
-                        <div class="form-group">
-                            <label for="report-period">Select Report Period</label>
-                            <select id="report-period" name="report_period" required>
-                                <option value="week">Weekly</option>
-                                <option value="month">Monthly</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="report-date">Select Date</label>
-                            <input type="date" id="report-date" name="report_date" required>
-                        </div>
-                        <div class="form-group">
-                            <button type="button" class="generate-report-btn" onclick="generateStatisticsReport()">Generate Report</button>
-                        </div>
-                    </form>
-                </div>
+        <div class="complaint-list-container">
+           
 
             <!-- Inner Tabs for Complaint Roles -->
             <div class="tabs inner-tabs">
-                <div class="tab inner-tab active" onclick="showInnerTab('student-complaints')">Student Complaints</div>
-                <div class="tab inner-tab" onclick="showInnerTab('staff-complaints')">Staff Complaints</div>
-                <div class="tab inner-tab" onclick="showInnerTab('parent-complaints')">Parent Complaints</div>
-                <div class="tab inner-tab" onclick="showInnerTab('teacher-complaints')">Teacher Complaints</div>
+            <div class="tab inner-tab active" onclick="showInnerTab('student-complaints', this)">Student Complaints</div>
+<div class="tab inner-tab" onclick="showInnerTab('staff-complaints', this)">Staff Complaints</div>
+<div class="tab inner-tab" onclick="showInnerTab('parent-complaints', this)">Parent Complaints</div>
+<div class="tab inner-tab" onclick="showInnerTab('teacher-complaints', this)">Teacher Complaints</div>
+
             </div>
 
             <!-- Inner Tab Contents -->
@@ -730,6 +752,7 @@
                     </table>
                 </div>
             </div>
+        </div>
         </div>
     </main>
 
@@ -941,74 +964,92 @@
         }
 
         // Handle complaint form submission with SweetAlert
-        document.getElementById('complaint-form').addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevent the default form submission
+      // Handle complaint form submission with SweetAlert
+document.getElementById('complaint-form').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent the default form submission
 
-            const form = event.target;
-            const formData = new FormData(form); // Collect form data
+    const form = event.target;
+    const formData = new FormData(form); // Collect form data
 
+    Swal.fire({
+        title: 'Submit Complaint',
+        text: "Are you sure you want to submit this complaint?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#00d1ff',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, submit it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading spinner
             Swal.fire({
-                title: 'Submit Complaint',
-                text: "Are you sure you want to submit this complaint?",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#00d1ff',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, submit it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Show loading spinner
-                    Swal.fire({
-                        title: 'Submitting...',
-                        allowOutsideClick: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-
-                    fetch("{{ route('admin.complaint.store') }}", { // Use the admin route here
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        },
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        Swal.close(); // Close the loading spinner
-
-                        if (data.success) {
-                            // SweetAlert success message
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success!',
-                                text: 'Complaint submitted successfully.'
-                            });
-
-                            // Clear all form fields
-                            form.reset();
-                        } else {
-                            // SweetAlert error message
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error!',
-                                text: data.message || 'An error occurred while submitting the form.'
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-
-                        // SweetAlert error message for any network issues
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Oops...',
-                            text: 'Something went wrong. Please try again later.'
-                        });
-                    });
+                title: 'Submitting...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
                 }
             });
-        });
+
+            fetch("{{ route('admin.complaint.store') }}", { // Use the admin route here
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.close(); // Close the loading spinner
+
+                if (data.success) {
+                    // Clear all form fields
+                    form.reset();
+
+                    if (data.report_url) {
+                        // SweetAlert success message with option to view the PDF
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: 'Complaint submitted successfully.',
+                            showCancelButton: true,
+                            confirmButtonText: 'View Report',
+                            cancelButtonText: 'Close',
+                            reverseButtons: true
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.open(data.report_url, '_blank');
+                            }
+                        });
+                    } else {
+                        // SweetAlert success message
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: 'Complaint submitted successfully.'
+                        });
+                    }
+                } else {
+                    // SweetAlert error message
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: data.message || 'An error occurred while submitting the form.'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+
+                // SweetAlert error message for any network issues
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Something went wrong. Please try again later.'
+                });
+            });
+        }
+    });
+});
 
         // Search function for tables
         function searchTable(inputId, tableId) {

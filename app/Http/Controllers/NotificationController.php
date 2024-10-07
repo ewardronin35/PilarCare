@@ -8,40 +8,78 @@ use Illuminate\Support\Facades\Auth;
 class NotificationController extends Controller
 {
     // Fetch notifications and unread count
+    
     public function index()
     {
         $user = Auth::user();
         
-        // Fetch notifications specific to the user or their role
+        // Fetch notifications specific to the user via id_number or their role
         $notifications = Notification::where(function($query) use ($user) {
             $query->where('user_id', $user->id_number)
                   ->orWhere('role', $user->role);
         })->orderBy('created_at', 'desc')->get();
-
+    
         // Count unread notifications directly
         $unreadCount = $notifications->where('is_opened', false)->count();
-
+    
         return response()->json([
             'notifications' => $notifications,
             'unreadCount' => $unreadCount
         ]);
     }
-
-    // Mark notification as read
-    public function markAsOpened($id)
+    
+    public function markAsOpened(Request $request, $id)
     {
-        $notification = Notification::find($id);
-
-        if ($notification) {
-            // Update the 'is_opened' field
-            $notification->is_opened = true;
-            $notification->save();
-
-            return response()->json(['message' => 'Notification marked as read']);
+        try {
+            $user = Auth::user();
+    
+            if (!$user) {
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
+    
+            $notification = $user->notifications()->where('id', $id)->first();
+    
+            if ($notification) {
+                $notification->is_opened = true; // Use boolean
+                $notification->save();
+    
+                return response()->json(['message' => 'Notification marked as read.'], 200);
+            }
+    
+            return response()->json(['message' => 'Notification not found.'], 404);
+        } catch (\Exception $e) {
+            \Log::error('Error in markAsOpened: ' . $e->getMessage());
+    
+            return response()->json(['message' => 'Failed to mark notification as read.'], 500);
         }
-
-        return response()->json(['error' => 'Notification not found'], 404);
     }
+    
+    public function markAllAsRead(Request $request)
+    {
+        try {
+            $user = Auth::user();
+    
+            if (!$user) {
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
+    
+            $updated = Notification::where('user_id', $user->id_number)
+                ->where('is_opened', false)
+                ->update(['is_opened' => true]);
+    
+            return response()->json([
+                'message' => 'All notifications marked as read.',
+                'updated_count' => $updated
+            ], 200);
+        } catch (\Exception $e) {
+            \Log::error('Error in markAllAsRead: ' . $e->getMessage());
+    
+            return response()->json(['message' => 'Failed to mark notifications as read.'], 500);
+        }
+    }
+    
+    
+    
 
     // Store a new notification
     public function store(Request $request)
@@ -69,14 +107,26 @@ class NotificationController extends Controller
         ]);
     }
 
-    // Delete a notification
     public function destroy($id)
     {
-        $notification = Notification::findOrFail($id);
-        $notification->delete();
-
+        $user = Auth::user();
+    
+        // Find the notification belonging to the user via id_number
+        $notification = Notification::where('id', $id)
+            ->where('user_id', $user->id_number)
+            ->first();
+    
+        if ($notification) {
+            $notification->delete();
+    
+            return response()->json([
+                'message' => 'Notification deleted successfully'
+            ]);
+        }
+    
         return response()->json([
-            'message' => 'Notification deleted successfully'
-        ]);
+            'message' => 'Notification not found or unauthorized.'
+        ], 404);
     }
+    
 }

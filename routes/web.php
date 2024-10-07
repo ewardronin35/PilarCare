@@ -42,6 +42,7 @@ use App\Http\Controllers\ParentDashboardController;
 
 
 
+
 Route::get('/', function () {
     return view('auth.login');
 })->name('home');
@@ -144,7 +145,7 @@ Route::middleware(['auth', 'verified'])->prefix('parent')->name('parent.')->grou
         Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
         Route::put('/profile-image', [SettingsController::class, 'updateImage'])->name('profile.update.image');
         Route::delete('/settings/delete', [SettingsController::class, 'destroy'])->name('settings.delete');
-        Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
+        Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::post('profile/store', [StudentDashboardController::class, 'storeProfile'])->name('profile.store');
     Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
     Route::put('/settings/update', [SettingsController::class, 'update'])->name('settings.update');
@@ -348,6 +349,10 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::put('/physical-exam/{id}', [PhysicalExaminationController::class, 'update'])->name('physical-exam.update');
     Route::post('/inventory/report/generate', [InventoryController::class, 'generateStatisticsReport'])->name('inventory.generateReport');
     Route::get('/complaint/report/{role}', [ComplaintController::class, 'generatePdfReport'])->name('complaint.report');
+    Route::get('/fetch-profiles', [ProfileController::class, 'fetchProfiles'])->name('profiles.fetch');
+    Route::get('/profiles', [ProfileController::class, 'index'])->name('profiles.index');
+    Route::post('/profiles/store', [UserController::class, 'store'])->name('profiles.store');
+
 
 
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
@@ -385,8 +390,6 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::get('students/{id}', [App\Http\Controllers\StudentController::class, 'show'])->name('students.show');
 
     // Profile Route
-    Route::get('/profiles', [ProfileController::class, 'index'])->name('profiles');
-    Route::post('/profiles/store', [UserController::class, 'store'])->name('profiles.store');
 
     // Staff Routes
     Route::get('staff/enrolled', [StaffController::class, 'enrolledStaff'])->name('staff.enrolled');
@@ -451,7 +454,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::get('/search-dental-record', [DentalRecordController::class, 'searchRecords'])->name('searchRecords');
     Route::get('/appointments/statisticsReport', [AppointmentController::class, 'generateStatisticsReport'])->name('appointments.statisticsReport');
 
-    Route::patch('physical_examinations/{physicalExamination}/approve', [PhysicalExaminationController::class, 'approve'])->name('physical_examinations.approve');
+    Route::patch('/physical_examinations/{physicalExamination}/approve', [PhysicalExaminationController::class, 'approve'])->name('physical_examinations.approve');
     Route::get('/physical-examinations', [PhysicalExaminationController::class, 'index'])->name('physical_examinations.index');
     Route::get('/physical-examinations/create', [PhysicalExaminationController::class, 'create'])->name('physical-examinations.create');
     Route::post('/physical-examinations/store', [PhysicalExaminationController::class, 'store'])->name('physical-examinations.store');
@@ -475,6 +478,9 @@ Route::get('/search-medical-record', [MedicalRecordController::class, 'search'])
     Route::get('/pending-examinations', [HealthExaminationController::class, 'medicalRecord'])->name('medical-records.pending');
     Route::post('/medical-record/store', [HealthExaminationController::class, 'store'])->name('medical-record.store');
     Route::post('/health-examination/{id}/approve', [HealthExaminationController::class, 'approve'])->name('health-examination.approve');
+    Route::get('/health-examinations/pending', [HealthExaminationController::class, 'viewAllRecords'])->name('health-examinations.pending.view');
+    Route::get('/health-examinations/pending-data', [HealthExaminationController::class, 'getPendingExaminations'])->name('health-examinations.pending.data');
+
     Route::post('/health-examination/{id}/reject', [HealthExaminationController::class, 'reject'])->name('health-examination.reject');
     Route::get('/get-student-info/{id}', [StudentController::class, 'getStudentInfo'])->name('get-student-info');
     Route::post('/medical-record/{id}/approve', [MedicalRecordController::class, 'approve'])->name('medical-record.approve');
@@ -743,14 +749,27 @@ Route::get('/search-medical-record', [MedicalRecordController::class, 'search'])
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 });
 // Routes for password reset
-Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
-Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
-Route::get('reset-password/{token}', [PasswordController::class, 'create'])->name('password.reset');
-Route::post('reset-password', [PasswordController::class, 'store'])->name('password.update');
-Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-Route::post('/notifications', [NotificationController::class, 'store'])->name('notifications.store');
-Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
-Route::post('/notifications/{id}/mark-as-opened', [NotificationController::class, 'markAsOpened']);
+// Password Reset Routes
+
+// Password Reset Routes
+Route::prefix('password')->name('password.')->group(function () {
+    Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('request');
+    Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])->name('email');
+    Route::get('reset-password/{token}', [PasswordController::class, 'create'])->name('reset');
+    Route::post('reset-password', [PasswordController::class, 'store'])->name('update');
+
+    // Catch-all GET route for /password/reset-password without token
+    Route::get('reset-password', function () {
+        return redirect()->route('password.request')->with('error', 'Invalid password reset link.');
+    })->name('reset.invalid');
+});
+Route::prefix('notifications')->name('notifications.')->middleware(['auth'])->group(function () {
+    Route::get('/', [NotificationController::class, 'index'])->name('index');
+    Route::post('/', [NotificationController::class, 'store'])->name('store');
+    Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
+    Route::post('/{id}/mark-as-opened', [NotificationController::class, 'markAsOpened'])->name('markAsOpened');
+    Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('markAllAsRead');
+});
 
 // Grouped routes for profile with middleware for auth
 Route::middleware('auth')->group(function () {

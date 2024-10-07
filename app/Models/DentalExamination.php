@@ -10,6 +10,7 @@ class DentalExamination extends Model
 
     protected $fillable = [
         'id_number', // Replace 'user_id' with 'id_number'
+        'dental_record_id', // Ensure this is included
         'date_of_examination', 
         'grade_section', 
         'lastname', 
@@ -38,7 +39,24 @@ class DentalExamination extends Model
         'other_recommendation'
     ];
     
-
+    protected $casts = [
+        'sealant_tooth' => 'array',
+        'filling_tooth' => 'array',
+        'extraction_tooth' => 'array',
+        'endodontic_tooth' => 'array',
+        'radiograph_tooth' => 'array',
+        'prosthesis_tooth' => 'array',
+        'carries_free' => 'boolean',
+        'poor_oral_hygiene' => 'boolean',
+        'gum_infection' => 'boolean',
+        'restorable_caries' => 'boolean',
+        'personal_attention' => 'boolean',
+        'oral_prophylaxis' => 'boolean',
+        'fluoride_application' => 'boolean',
+        'gum_treatment' => 'boolean',
+        'ortho_consultation' => 'boolean',
+        'medical_clearance' => 'boolean',
+    ];
     // Relationship with User based on id_number
     public function user()
     {

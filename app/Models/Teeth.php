@@ -20,6 +20,9 @@ class Teeth extends Model
         
         
     ];
+    protected $casts = [
+        'dental_pictures' => 'array',
+    ];
 
     // Relationship to the DentalRecord model
     public function dentalRecord()

@@ -808,7 +808,7 @@
                 <div class="dental-history">
                     <h2>Dental History</h2>
                     @if($dentalRecord)
-                        <a href="{{ route('student.dentalRecord.pdf', $dentalRecord->id_number) }}" class="btn btn-primary">Download Dental Record</a>
+                        <a href="{{ route('student.dentalRecord.pdf', $dentalRecord->id_number) }}" class="btn btn-primary no-spinner">Download Dental Record</a>
                     @endif
 
                     <!-- Patient Information -->
@@ -859,6 +859,7 @@
             <th>Tooth Number</th>
             <th>Status</th>
             <th>Notes</th>
+            <th> Dental Pictures </th>
             <th>Last Updated</th>
         </tr>
     </thead>

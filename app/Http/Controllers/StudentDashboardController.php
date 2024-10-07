@@ -12,6 +12,8 @@ use App\Models\Notification;
 use App\Models\HealthExamination;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
+
 
 class StudentDashboardController extends Controller
 {
@@ -54,6 +56,7 @@ class StudentDashboardController extends Controller
     public function storeProfile(Request $request)
     {
         try {
+            // Validate incoming request data
             $request->validate([
                 'parent_name_father' => ['nullable', 'regex:/^[A-Za-z\s]+$/'],
                 'parent_name_mother' => ['nullable', 'regex:/^[A-Za-z\s]+$/'],
@@ -64,12 +67,17 @@ class StudentDashboardController extends Controller
                 'personal_contact_number' => ['required', 'digits:11'],
                 'birthdate' => 'required|date',
                 'address' => 'required|string|max:255',
-                'profile_picture' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                'profile_picture' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:10048',
             ]);
-    
+
             // Process the uploaded profile picture
-            $profilePicture = $request->file('profile_picture')->store('profile_pictures', 'public');
-    
+            if ($request->hasFile('profile_picture')) {
+                $profilePicture = $request->file('profile_picture')->store('profile_pictures', 'public');
+            } else {
+                // This block should not be reached due to validation, but added for safety
+                throw new \Exception('Profile picture is missing.');
+            }
+
             // Save student's information
             Information::create([
                 'id_number' => $request->id_number,
@@ -83,13 +91,13 @@ class StudentDashboardController extends Controller
                 'address' => $request->address,
                 'profile_picture' => $profilePicture,
             ]);
-    
+
             // Create parent account
             $studentIdNumber = $request->id_number;
-    
+
             // Generate parent id_number by replacing the first character with 'P'
             $parentIdNumber = 'P' . substr($studentIdNumber, 1);
-    
+
             // Create the parent account
             $parent = Parents::create([
                 'id_number' => $parentIdNumber,
@@ -98,22 +106,27 @@ class StudentDashboardController extends Controller
                 'Student_ID' => $studentIdNumber,
                 'approved' => 1, // Automatically approved
             ]);
-    
+
             // Return response including parent account details
             return response()->json([
                 'success' => true,
                 'parent_id_number' => $parentIdNumber
             ]);
-    
+
+        } catch (ValidationException $e) {
+            // Handle validation errors
+            return response()->json([
+                'success' => false,
+                'errors' => $e->errors(), // Return detailed validation errors
+            ], 422);
         } catch (\Exception $e) {
             // Log the detailed error message
             \Log::error('Profile Update Error: ' . $e->getMessage());
-    
+
             return response()->json([
                 'success' => false,
                 'message' => 'An unexpected error occurred. Please try again later.',
             ], 500);
         }
     }
-    
 }  

@@ -14,8 +14,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\InventoryController;
-
-use PDF; // Import the PDF facade
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\View;
+use PDF; // Assuming you're using barryvdh/laravel-dompdf or similar
 
 class ComplaintController extends Controller
 {
@@ -75,7 +76,25 @@ class ComplaintController extends Controller
                 // Pass each role's complaints as separate variables
                 return view('admin.complaint', compact('studentComplaints', 'staffComplaints', 'parentComplaints', 'teacherComplaints', 'mostCommonComplaint', 'commonComplaintCount', 'mostUsedMedicine', 'mostUsedMedicineCount'));
             
+                case 'nurse':
+                    // Fetch complaints per role
+                    $studentComplaints = Complaint::where('role', 'student')->get();
+                    $staffComplaints = Complaint::where('role', 'staff')->get();
+                    $parentComplaints = Complaint::where('role', 'parent')->get();
+                    $teacherComplaints = Complaint::where('role', 'teacher')->get();
+                
+                    // Pass each role's complaints as separate variables
+                    return view('nurse.complaint', compact('studentComplaints', 'staffComplaints', 'parentComplaints', 'teacherComplaints', 'mostCommonComplaint', 'commonComplaintCount', 'mostUsedMedicine', 'mostUsedMedicineCount'));
 
+                    case 'doctor':
+                        // Fetch complaints per role
+                        $studentComplaints = Complaint::where('role', 'student')->get();
+                        $staffComplaints = Complaint::where('role', 'staff')->get();
+                        $parentComplaints = Complaint::where('role', 'parent')->get();
+                        $teacherComplaints = Complaint::where('role', 'teacher')->get();
+                    
+                        // Pass each role's complaints as separate variables
+                        return view('doctor.complaint', compact('studentComplaints', 'staffComplaints', 'parentComplaints', 'teacherComplaints', 'mostCommonComplaint', 'commonComplaintCount', 'mostUsedMedicine', 'mostUsedMedicineCount'));
         default:
             abort(403, 'Unauthorized action.');
     }
@@ -83,11 +102,11 @@ class ComplaintController extends Controller
 
     
     
-    public function addComplaint()
-    {
-        $role = strtolower(Auth::user()->role);
-        return view('admin.addcomplaint', compact('role'));
-    }
+    // public function addComplaint()
+    // {
+    //     $role = strtolower(Auth::user()->role);
+    //     return view('admin.addcomplaint', compact('role'));
+    // }
 
     public function store(Request $request)
     {
@@ -106,9 +125,10 @@ class ComplaintController extends Controller
             'sickness_description' => 'required|string|max:1000',
             'role' => 'required|string|max:255',
             'medicine_given' => 'required|string|max:255',
-            'confine_status' => 'required|string|in:confined,not_confined',  // New validation rule for confine_status
+            'confine_status' => 'required|string|in:confined,not_confined',
+            'go_home' => 'required|string|in:yes,no', // Added this line
         ]);
-        
+    
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
@@ -127,10 +147,11 @@ class ComplaintController extends Controller
                 'sickness_description' => $request->sickness_description,
                 'role' => $request->role,
                 'medicine_given' => $request->medicine_given,
-                'confine_status' => $request->confine_status // New field for confine status
-            ]);    
+                'confine_status' => $request->confine_status,
+                'go_home' => $request->go_home, // Added this line
+            ]);
     
-            // Check if the medicine exists in the inventory and reduce quantity
+            // Reduce inventory quantity
             $inventory = Inventory::where('item_name', $request->medicine_given)->first();
             if ($inventory) {
                 $inventory->quantity -= 1;
@@ -142,9 +163,8 @@ class ComplaintController extends Controller
             // Send notification to the user
             $user = User::where('id_number', $request->id_number)->first();
             if ($user) {
-                // Assuming you have a Notification model
                 Notification::create([
-                    'user_id' => $user->id_number, // Use the 'id_number' field if that's the foreign key
+                    'user_id' => $user->id_number,
                     'title' => 'Complaint Received',
                     'message' => 'You have a new complaint added',
                     'status' => 'unread'
@@ -153,13 +173,61 @@ class ComplaintController extends Controller
     
             \Log::info('Complaint and notification successfully saved:', ['complaint' => $complaint->toArray(), 'user_id' => $user->id]);
     
-            return response()->json(['success' => true, 'message' => 'Complaint and notification successfully saved']);
+            $response = ['success' => true, 'message' => 'Complaint and notification successfully saved'];
+    
+            // Generate PDF if go_home is "yes"
+            if ($complaint->go_home == 'yes') {
+                $data = [
+                    'date' => now()->format('Y-m-d'),
+                    'name' => $complaint->first_name . ' ' . $complaint->last_name,
+                    'sickness_description' => $complaint->sickness_description,
+                    'medicine_given' => $complaint->medicine_given,
+                    'logoBase64' => base64_encode(file_get_contents(public_path('images/pilarLogo.png'))),
+                    'complaint' => $complaint,
+                    'role' => $complaint->role, // Include the role in data
+                ];
+            
+                // Fetch additional data based on role
+                if ($complaint->role == 'student') {
+                    $student = Student::where('id_number', $complaint->id_number)->first();
+                    if ($student) {
+                        $data['grade'] = $student->grade;
+                        $data['section'] = $student->section;
+                    }
+                } elseif ($complaint->role == 'staff') {
+                    $staff = Staff::where('id_number', $complaint->id_number)->first();
+                    if ($staff) {
+                        $data['position'] = $staff->position; // Corrected 'postion' to 'position'
+                    }
+                } elseif ($complaint->role == 'teacher') {
+                    $teacher = Teacher::where('id_number', $complaint->id_number)->first();
+                    if ($teacher) {
+                        $data['bed_or_hed'] = $teacher->bed_or_hed;
+                    }
+                }
+            
+                // Load the Blade view and pass the data
+                $pdf = PDF::loadView('pdf.single_complaint_report', $data);
+            
+                // Define the file name
+                $fileName = 'go_home_' . $complaint->id_number . '_' . now()->format('Ymd') . '.pdf';
+            
+                // Save the PDF to storage
+                $pdf->save(storage_path('app/public/reports/' . $fileName));
+                $reportUrl = asset('storage/reports/' . $fileName);
+            
+                // Include the report URL in the response
+                $response['report_url'] = $reportUrl;
+            }
+    
+            return response()->json($response);
     
         } catch (\Exception $e) {
             \Log::error('Error while saving complaint:', ['error' => $e->getMessage()]);
             return response()->json(['success' => false, 'message' => 'An error occurred while saving the complaint. Please try again.', 'error' => $e->getMessage()], 500);
         }
     }
+    
     
     
     
@@ -380,4 +448,32 @@ class ComplaintController extends Controller
             return response()->json(['success' => false, 'message' => 'An error occurred while generating the report.'], 500);
         }
     }
+    public function generateComplaintReport($complaintId)
+{
+    try {
+        $complaint = Complaint::findOrFail($complaintId);
+
+        // Get the logo and encode it
+        $logoPath = public_path('images/logo.png');
+        if (!File::exists($logoPath)) {
+            throw new \Exception('Logo file not found.');
+        }
+        $logoData = base64_encode(File::get($logoPath));
+        $logoBase64 = 'data:image/png;base64,' . $logoData;
+
+        // Pass data to the view
+        $pdf = PDF::loadView('pdf.complaint_report', [
+            'complaint' => $complaint,
+            'logoBase64' => $logoBase64,
+            // Add other necessary data
+        ]);
+
+        // Save or return the PDF as needed
+        return $pdf->download('complaint_report.pdf');
+
+    } catch (\Exception $e) {
+        \Log::error('Error while saving complaint: ' . $e->getMessage());
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
 }

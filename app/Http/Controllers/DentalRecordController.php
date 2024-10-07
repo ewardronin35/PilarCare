@@ -25,7 +25,6 @@ class DentalRecordController extends Controller
         31, 32, 33, 34, 35, 36, 37, 38,
         41, 42, 43, 44, 45, 46, 47, 48
     ];
-
     public function index()
     {
         $user = auth()->user();
@@ -64,8 +63,8 @@ class DentalRecordController extends Controller
             ->orderBy('date_of_examination', 'desc')
             ->first();
     
-            $teeth = $dentalRecord ? Teeth::where('dental_record_id', $dentalRecord->dental_record_id)->get() : collect();
-            if (!$dentalRecord) {
+        $teeth = $dentalRecord ? Teeth::where('dental_record_id', $dentalRecord->dental_record_id)->get() : collect();
+        if (!$dentalRecord) {
             Log::error('No dental record found for id_number: ' . $user->id_number);
         }
     
@@ -76,13 +75,48 @@ class DentalRecordController extends Controller
             ->orderBy('appointment_date', 'asc')
             ->first();
     
+        // Define teethData array
+        $teethData = [
+            11 => 'Upper Right Central Incisor',
+            12 => 'Upper Right Lateral Incisor',
+            13 => 'Upper Right Canine',
+            14 => 'Upper Right First Premolar',
+            15 => 'Upper Right Second Premolar',
+            16 => 'Upper Right First Molar',
+            17 => 'Upper Right Second Molar',
+            18 => 'Upper Right Third Molar',
+            21 => 'Upper Left Central Incisor',
+            22 => 'Upper Left Lateral Incisor',
+            23 => 'Upper Left Canine',
+            24 => 'Upper Left First Premolar',
+            25 => 'Upper Left Second Premolar',
+            26 => 'Upper Left First Molar',
+            27 => 'Upper Left Second Molar',
+            28 => 'Upper Left Third Molar',
+            31 => 'Lower Left Central Incisor',
+            32 => 'Lower Left Lateral Incisor',
+            33 => 'Lower Left Canine',
+            34 => 'Lower Left First Premolar',
+            35 => 'Lower Left Second Premolar',
+            36 => 'Lower Left First Molar',
+            37 => 'Lower Left Second Molar',
+            38 => 'Lower Left Third Molar',
+            41 => 'Lower Right Central Incisor',
+            42 => 'Lower Right Lateral Incisor',
+            43 => 'Lower Right Canine',
+            44 => 'Lower Right First Premolar',
+            45 => 'Lower Right Second Premolar',
+            46 => 'Lower Right First Molar',
+            47 => 'Lower Right Second Molar',
+            48 => 'Lower Right Third Molar'
+        ];
+    
+        // Check if view exists
         if (!view()->exists($viewName)) {
-            abort(404, "View for role {$user->role} not found.");
+            abort(404, "View for role '{$role}' not found");
         }
     
-        Log::info('Person Info:', (array) $personInfo);
-        Log::info('Additional Info:', [$additionalInfo]);
-    
+        // Pass teethData to the view
         return view($viewName, [
             'personInfo' => $personInfo,
             'dentalRecord' => $dentalRecord,
@@ -93,14 +127,17 @@ class DentalRecordController extends Controller
             'teeth' => $teeth,
             'user' => $user,  
             'role' => $user->role,
-            'nextAppointment' => $nextAppointment, // Added variable
+            'nextAppointment' => $nextAppointment,
+            'teethData' => $teethData, // Added
         ]);
-    }  
+    }
     
     public function viewAllRecords()
     {
+        $role = strtolower(auth()->user()->role); // Ensure role is in lowercase
+
         $records = DentalRecord::with('user')->get();
-        return view('admin.dental-records', compact('records'));
+        return view("{$role}.dental-record", compact('records'));
     }
 
     public function create()
@@ -377,17 +414,24 @@ public function searchRecords(Request $request)
 
     $teeth = $dentalRecord->teeth;
 
-    // Fetch last examination date if available
-    $lastExamination = DB::table('dental_examinations')
+    // Fetch all previous examinations
+    $previousExaminations = DB::table('dental_examinations')
         ->where('id_number', $user->id_number)
         ->orderBy('date_of_examination', 'desc')
-        ->first();
+        ->get();
 
+    // Fetch tooth history with 'dental_pictures'
     $toothHistory = Teeth::where('dental_record_id', $dentalRecord->dental_record_id)
         ->orderBy('tooth_number')
-        ->get(['tooth_number', 'status', 'notes', 'updated_at']);
+        ->get(['tooth_number', 'status', 'notes', 'updated_at', 'dental_pictures']); // Include 'dental_pictures'
 
-    // Fetch next scheduled appointment if available for Dr. Sarah Uy-Gan (D023342)
+    // Decode 'dental_pictures' JSON to array if necessary
+    $toothHistory->transform(function ($tooth) {
+        $tooth->dental_pictures = is_string($tooth->dental_pictures) ? json_decode($tooth->dental_pictures, true) : $tooth->dental_pictures;
+        return $tooth;
+    });
+
+    // Fetch next scheduled appointment if available for Dr. Sarah Uy-Gan
     $nextAppointment = DB::table('appointments')
         ->where('id_number', $user->id_number) // Use id_number for appointment search
         ->where('appointment_date', '>=', Carbon::now()->toDateString()) // Only future appointments
@@ -397,7 +441,14 @@ public function searchRecords(Request $request)
     // Initialize teeth data with default status 'Healthy'
     $completeTeeth = [];
 
-    foreach ($this->allToothNumbers as $toothNumber) {
+    $allToothNumbers = [
+        11, 12, 13, 14, 15, 16, 17, 18,
+        21, 22, 23, 24, 25, 26, 27, 28,
+        31, 32, 33, 34, 35, 36, 37, 38,
+        41, 42, 43, 44, 45, 46, 47, 48
+    ];
+
+    foreach ($allToothNumbers as $toothNumber) {
         $tooth = $teeth->firstWhere('tooth_number', $toothNumber);
         if ($tooth) {
             // Ensure status is properly capitalized
@@ -407,14 +458,16 @@ public function searchRecords(Request $request)
                 'status' => $status,
                 'notes' => $tooth->notes,
                 'updated_at' => $tooth->updated_at,
+                'dental_pictures' => $tooth->dental_pictures, // Ensure this field is included
             ];
         } else {
             // If no record exists, assume 'Healthy'
             $completeTeeth[] = [
-                    'tooth_number' => $toothNumber,
-                    'status' => 'Healthy',
-                    'notes' => null,
-                    'updated_at' => null,
+                'tooth_number' => $toothNumber,
+                'status' => 'Healthy',
+                'notes' => null,
+                'updated_at' => null,
+                'dental_pictures' => null, // No pictures
             ];
         }
     }
@@ -427,15 +480,15 @@ public function searchRecords(Request $request)
         'birthdate' => $birthdate,
         'age' => $age,
         'grade_section' => $grade_section,
-        'previousExaminations' => $lastExamination ? [$lastExamination] : [],
+        'previousExaminations' => $previousExaminations, // Send all examinations
         'toothHistory' => $toothHistory,
-
         'nextAppointment' => $nextAppointment,
-        'role' => $role, // **Include the role**
+        'role' => $role, // Include the role
     ];
 
     return response()->json($response);
 }
+
 
 
     public function generatePdf($id_number)
@@ -497,9 +550,13 @@ public function viewAllDentalRecords()
     
     Log::info('Fetched all pending dental records.');
     
+    // Get the user's role
+    $role = strtolower(auth()->user()->role); // Ensure role is in lowercase
+    
     // Return the view with the pending dental records
-    return view('admin.uploadDentalDocu', compact('pendingDentalRecords'));
+    return view("{$role}.uploadDentalDocu", compact('pendingDentalRecords'));
 }
+
 // In your controller, e.g., DentalController.php
 public function showDentalHistory($patientId)
 {
@@ -575,12 +632,13 @@ public function history(Request $request)
 
     $dentalExaminations = DentalExamination::where('dental_record_id', $dentalRecordId)
         ->orderBy('date_of_examination', 'desc')
-        ->get(['date_of_examination', 'dentist_name', 'findings']);
+        ->get(); // Get all fields
 
     Log::info('Dental Examinations for Record ID ' . $dentalRecordId . ':', $dentalExaminations->toArray());
 
     return response()->json($dentalExaminations);
 }
+
 
 // Method to fetch Tooth History
 public function toothHistory(Request $request)
@@ -592,7 +650,7 @@ public function toothHistory(Request $request)
 
     $toothHistory = Teeth::where('dental_record_id', $dentalRecordId)
         ->orderBy('tooth_number')
-        ->get(['tooth_number', 'status', 'notes', 'updated_at']);
+        ->get(['tooth_number', 'status', 'notes', 'updated_at', 'dental_pictures']); // Include 'dental_pictures'
 
     Log::info('Tooth History for Record ID ' . $dentalRecordId . ':', $toothHistory->toArray());
 

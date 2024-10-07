@@ -22,5 +22,11 @@ class Complaint extends Model
         'role',
         'medicine_given',
         'confine_status',
+        'go_home', // Added this line
+
     ];
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'id_number', 'id_number');
+    }
 }

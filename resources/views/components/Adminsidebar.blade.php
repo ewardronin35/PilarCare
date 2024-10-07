@@ -231,8 +231,8 @@
                 <a href="{{ route('admin.monitoring-report-log') }}"><span class="icon"><i class="fas fa-chart-line"></i></span><span class="menu-text">Reports and logs</i></span></a>
             </li>
             <li>
-    <a href="{{ route('admin.profiles') }}">
-        <span class="icon"><i class="fas fa-users"></i></span> <!-- Updated Icon -->
+            <a href="{{ route('admin.profiles.index') }}">
+            <span class="icon"><i class="fas fa-users"></i></span> <!-- Updated Icon -->
         <span class="menu-text">View All Profiles</span> <!-- Updated Text -->
     </a>
 </li>

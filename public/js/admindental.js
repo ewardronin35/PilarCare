@@ -57,6 +57,58 @@ $(document).ready(function () {
         $('#' + tab).fadeIn(200).addClass('active');
     });
 
+    // Function to toggle the select dropdown based on checkbox state
+    function toggleToothSelect(checkboxId, selectId) {
+        $(checkboxId).change(function () {
+            if ($(this).is(':checked')) {
+                $(selectId).prop('disabled', false);
+                $(selectId).focus();
+            } else {
+                // Re-enable the tooth in other selects
+                const selectedTooth = $(selectId).val();
+                if (selectedTooth) {
+                    $('select[name$="_tooth[]"]').not(`#${selectId}`).find(`option[value="${selectedTooth}"]`).prop('disabled', false);
+                }
+                $(selectId).prop('disabled', true).val('');
+            }
+        });
+
+        // Handle change event on the select to disable selected tooth in other selects
+        $(selectId).change(function () {
+            enableAllTeeth(); // Reset all teeth options
+            const selectedTeeth = $(this).val();
+            if (selectedTeeth) {
+                selectedTeeth.forEach(function(tooth) {
+                    disableSelectedTeeth(tooth, selectId);
+                });
+            }
+        });
+
+        // Initialize the state based on the current checkbox state
+        if ($(checkboxId).is(':checked')) {
+            $(selectId).prop('disabled', false);
+        } else {
+            $(selectId).prop('disabled', true).val('');
+        }
+    }
+
+    // Function to disable selected teeth in other selects
+    function disableSelectedTeeth(selectedTooth, currentSelectId) {
+        $('select[name$="_tooth[]"]').not(`#${currentSelectId}`).find(`option[value="${selectedTooth}"]`).prop('disabled', true);
+    }
+
+    // Function to enable all teeth (to reset)
+    function enableAllTeeth() {
+        $('select[name$="_tooth[]"] option').prop('disabled', false);
+    }
+
+    // Initialize toggle functions for each procedure
+    toggleToothSelect('#filling', '#filling-tooth');
+    toggleToothSelect('#extraction', '#extraction-tooth');
+    toggleToothSelect('#endodontic', '#endodontic-tooth');
+    toggleToothSelect('#radiograph', '#radiograph-tooth');
+    toggleToothSelect('#prosthesis', '#prosthesis-tooth');
+
     // Function to determine the fill color based on the tooth status
     function getColorBasedOnStatus(status) {
         if (!status) {
@@ -101,6 +153,16 @@ $(document).ready(function () {
         });
     }
 
+    const booleanMapping = {
+        0: 'No',
+        1: 'Yes'
+    };
+    
+    // Function to map boolean values
+    function mapBoolean(value) {
+        return booleanMapping[value] || 'N/A';
+    }
+
     function populateDentalHistory(data) {
         if (!data) {
             console.error('Dental history data is undefined or null:', data);
@@ -141,12 +203,52 @@ $(document).ready(function () {
             data.previousExaminations.forEach(exam => {
                 const formattedDate = exam.date_of_examination ? new Date(exam.date_of_examination).toLocaleDateString() : 'N/A';
                 const dentistName = exam.dentist_name || 'N/A';
-                const findings = exam.findings || 'N/A';
+        
+                // Collect additional findings based on fields with value 1
+                const additionalFindings = [];
+                const examinationFields = {
+                    carries_free: 'Carries Free',
+                    poor_oral_hygiene: 'Poor Oral Hygiene',
+                    gum_infection: 'Gum Infection',
+                    restorable_caries: 'Restorable Caries',
+                    other_condition: 'Other Condition',
+                    personal_attention: 'Personal Attention',
+                    oral_prophylaxis: 'Oral Prophylaxis',
+                    fluoride_application: 'Fluoride Application',
+                    gum_treatment: 'Gum Treatment',
+                    ortho_consultation: 'Ortho Consultation',
+                    sealant_tooth: 'Sealant Tooth',
+                    filling_tooth: 'Filling Tooth',
+                    extraction_tooth: 'Extraction Tooth',
+                    endodontic_tooth: 'Endodontic Tooth',
+                    radiograph_tooth: 'Radiograph Tooth',
+                    prosthesis_tooth: 'Prosthesis Tooth',
+                    medical_clearance: 'Medical Clearance',
+                    other_recommendation: 'Other Recommendation'
+                };
+        
+                Object.keys(examinationFields).forEach(field => {
+                    if (exam[field] === 1) {
+                        additionalFindings.push(examinationFields[field]);
+                    }
+                });
+        
+                // Prepare HTML for additional findings
+                let findingsHtml = 'N/A'; // Default value
+                if (additionalFindings.length > 0) {
+                    findingsHtml = '<ul>';
+                    additionalFindings.forEach(item => {
+                        findingsHtml += `<li>${item}</li>`;
+                    });
+                    findingsHtml += '</ul>';
+                }
+        
+                // Updated row without the main findings
                 const row = `
                     <tr>
                         <td>${formattedDate}</td>
                         <td>${dentistName}</td>
-                        <td>${findings}</td>
+                        <td>${findingsHtml}</td>
                     </tr>
                 `;
                 prevExamBody.append(row);
@@ -154,23 +256,38 @@ $(document).ready(function () {
         } else {
             prevExamBody.append('<tr><td colspan="3">No previous examinations found.</td></tr>');
         }
-
+        
         // Populate Tooth History
         const toothHistoryBody = $('#tooth-history-body');
         toothHistoryBody.empty();
         if (data.toothHistory && data.toothHistory.length > 0) {
             data.toothHistory.forEach(tooth => {
+                const toothNumber = tooth.tooth_number || 'N/A';
+                const status = tooth.status || 'N/A';
+                const notes = tooth.notes || 'N/A';
                 const formattedDate = tooth.updated_at ? new Date(tooth.updated_at).toLocaleDateString() : 'N/A';
-                const dentalPictures = tooth.dental_pictures ? JSON.parse(tooth.dental_pictures) : [];
-                let picturesHtml = 'N/A';
-                if (dentalPictures.length > 0) {
-                    picturesHtml = dentalPictures.map(pic => `<img src="/storage/${pic}" alt="Dental Picture" style="max-width: 100px; margin-right: 5px;">`).join('');
+
+                // Handle 'dental_pictures' which should be an array
+                let dentalPictures = tooth.dental_pictures || [];
+                if (typeof dentalPictures === 'string') {
+                    try {
+                        dentalPictures = JSON.parse(dentalPictures);
+                    } catch (e) {
+                        console.error('Error parsing dental_pictures:', e);
+                        dentalPictures = [];
+                    }
                 }
+
+                let picturesHtml = 'N/A';
+                if (Array.isArray(dentalPictures) && dentalPictures.length > 0) {
+                    picturesHtml = dentalPictures.map(pic => `<img src="/storage/${pic}" alt="Dental Picture" style="max-width: 100px; margin-right: 5px; cursor: pointer;" class="dental-picture-preview">`).join('');
+                }
+
                 const row = `
                     <tr>
-                        <td>${tooth.tooth_number}</td>
-                        <td>${tooth.status}</td>
-                        <td>${tooth.notes || 'N/A'}</td>
+                        <td>Tooth ${toothNumber}</td>
+                        <td>${status}</td>
+                        <td>${notes}</td>
                         <td>${picturesHtml}</td>
                         <td>${formattedDate}</td>
                     </tr>
@@ -288,23 +405,21 @@ $(document).ready(function () {
                     }
 
                     // Update labels and inputs
-           // Update labels and inputs
-$('label[for="grade-sections"]').text(gradeSectionLabel);
-$('label[for="grade-section"]').text(gradeSectionLabel);
-$('#record-id_number').val(response.dentalRecord.id_number || '');
-$('#form-id_number').val(response.dentalRecord.id_number || '');
-$('#student-name').val(response.name || '');
+                    $('label[for="grade-sections"]').text(gradeSectionLabel);
+                    $('label[for="grade-section"]').text(gradeSectionLabel);
+                    $('#record-id_number').val(response.dentalRecord.id_number || '');
+                    $('#form-id_number').val(response.dentalRecord.id_number || '');
+                    $('#student-name').val(response.name || '');
 
-// Add these lines to update the Dental Examination form
-$('#name').val(response.name || ''); // Update Name in Dental Examination form
-$('#grade-section').val(gradeSectionValue); // Update Grade & Section in Dental Examination form
+                    // Update the Dental Examination form
+                    $('#name').val(response.name || ''); // Update Name in Dental Examination form
+                    $('#grade-section').val(gradeSectionValue); // Update Grade & Section in Dental Examination form
 
-$('#grade-sections').val(gradeSectionValue);
-$('#birthdate').val(response.birthdate || '');
-$('#age').val(response.age || '');
-$('#date').val(today);
-$('#dental-record-id').val(response.dentalRecord.dental_record_id || '');
-
+                    $('#grade-sections').val(gradeSectionValue);
+                    $('#birthdate').val(response.birthdate || '');
+                    $('#age').val(response.age || '');
+                    $('#date').val(today);
+                    $('#dental-record-id').val(response.dentalRecord.dental_record_id || '');
 
                     // Populate Teeth Details and Dental History
                     populateTeeth(response.teeth);
@@ -349,7 +464,7 @@ $('#dental-record-id').val(response.dentalRecord.dental_record_id || '');
             reader.onload = function (e) {
                 const previewHtml = `
                     <div class="image-preview">
-                        <img src="${e.target.result}" alt="Dental Image Preview" class="preview-img img-thumbnail" style="max-width: 100px; margin-right: 10px;">
+                        <img src="${e.target.result}" alt="Dental Image Preview" class="preview-img img-thumbnail" style="max-width: 100px; margin-right: 10px; cursor: pointer;">
                     </div>`;
                 $('#image-preview-container').append(previewHtml);
             };
@@ -418,4 +533,24 @@ $('#dental-record-id').val(response.dentalRecord.dental_record_id || '');
             }
         });
     });
+
+    // Function to disable selected teeth in other selects
+    function disableSelectedTeeth(selectedTooth, currentSelectId) {
+        $('select[name$="_tooth[]"]').not(`#${currentSelectId}`).find(`option[value="${selectedTooth}"]`).prop('disabled', true);
+    }
+
+    // Function to enable all teeth (to reset)
+    function enableAllTeeth() {
+        $('select[name$="_tooth[]"] option').prop('disabled', false);
+    }
+    $('.form-control').select2({
+        placeholder: "Select Teeth",
+        allowClear: true,
+        width: '100%'
+    });
+    $('.tooth-select').select2({
+        placeholder: "Select Teeth",
+        allowClear: true,
+        width: '100%'
+    });    
 });

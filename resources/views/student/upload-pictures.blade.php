@@ -212,8 +212,9 @@
         </div>
 
         <div id="pending-approval-message" class="pending-approval" style="display: none;">
-            Your submission is pending approval. Please wait for further instructions. Thank you!
-        </div>
+    Your submission is pending approval. Please wait for further instructions. Thank you!
+</div>
+
     </div>
     <div id="image-preview-section" style="margin-top: 20px;">
     <h4>Image Preview</h4>
@@ -237,16 +238,11 @@ document.addEventListener("DOMContentLoaded", function () {
     .then(response => response.json())
     .then(data => {
         if (!data.exists) {
-            Swal.fire({
-                icon: 'info',
-                title: 'Welcome to Health Examination',
-                text: 'Please upload your health examination pictures and lab results.',
-            }).then(() => {
-                localStorage.removeItem('uploadCompleted');
-                pendingApprovalMessage.style.display = 'none';
-                uploadSection.style.display = 'block';
-            });
+            // No submission exists, show upload section
+            pendingApprovalMessage.style.display = 'none';
+            uploadSection.style.display = 'block';
         } else if (data.is_approved) {
+            // Submission is approved, redirect to next step
             Swal.fire({
                 icon: 'success',
                 title: 'Approved',
@@ -254,21 +250,16 @@ document.addEventListener("DOMContentLoaded", function () {
             }).then(() => {
                 window.location.href = '{{ route('student.medical-record.create') }}';
             });
-        } else if (data.is_declined) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Submission Declined',
-                text: 'Your submission has been declined. Please upload proper pictures and try again.',
-            }).then(() => {
-                localStorage.removeItem('uploadCompleted');
-                pendingApprovalMessage.style.display = 'none';
-                uploadSection.style.display = 'block';
-            });
+        } else {
+            // Submission exists and is pending approval
+            pendingApprovalMessage.style.display = 'block';
+            uploadSection.style.display = 'none';
         }
     })
     .catch(error => {
         console.error('Error checking approval status:', error);
     });
+
 
     const fileInputs = document.querySelectorAll('input[type="file"]');
     const globalUploadedFiles = new Set(); // Global set to track all uploaded files
