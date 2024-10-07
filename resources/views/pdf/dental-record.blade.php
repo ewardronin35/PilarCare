@@ -39,6 +39,7 @@
         }
 
         .details-table {
+            font-family: 'Poppins', sans-serif;
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;

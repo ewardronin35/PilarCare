@@ -4,21 +4,23 @@
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
         .sidebar {
-            width: 100px; /* Collapsed width */
-            background-color: #00d2ff;
-            color: white;
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            padding-top: 20px;
-            transition: width 0.3s ease-in-out;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
-        }
+    width: 100px; /* Collapsed width */
+    background-color: #00d2ff;
+    color: white;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding-top: 20px;
+    transition: width 0.3s ease-in-out;
+    overflow-y: auto; /* Enable vertical scrolling */
+    overflow-x: hidden; /* Hide horizontal scroll */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    font-family: 'Poppins', sans-serif; /* Apply Poppins font */
+}
+
 
         .sidebar:hover {
             width: 270px; /* Expanded width */
@@ -190,31 +192,36 @@
     </div>
     <nav class="menu">
         <ul>
-            <li><a href="{{ route('nurse.dashboard') }}" id="nurse-dashboard-link"><span class="icon"><i class="fas fa-tachometer-alt"></i></span><span class="menu-text">Dashboard</span></a></li>
+            <li><a href="{{ route('nurse.dashboard') }}" id="admin-dashboard-link"><span class="icon"><i class="fas fa-tachometer-alt"></i></span><span class="menu-text">Dashboard</span></a></li>
+            <li><a href="{{ route('nurse.complaint') }}"><span class="icon"><i class="fas fa-comments"></i></span><span class="menu-text">Complaints</span></a></li>
             <li class="has-submenu">
                 <a href="#"><span class="icon"><i class="fas fa-notes-medical"></i></span><span class="menu-text">Records</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
                 <ul class="submenu">
-                    <li><a href="{{ route('nurse.uploadHealthExamination') }}">Upload Health Examination</a></li>
-                    <li><a href="{{ route('nurse.medical-record.index') }}">Medical Records</a></li>
-                    <li><a href="{{ route('nurse.dental-record.index') }}">Dental Records</a></li>
-                </ul>
-            </li>
-            <li><a href="{{ route('nurse.appointment') }}"><span class="icon"><i class="fas fa-calendar-check"></i></span><span class="menu-text">Appointments</span></a></li>
-            <li class="has-submenu">
-                <a href="#"><span class="icon"><i class="fas fa-boxes"></i></span><span class="menu-text">Inventory</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
-                <ul class="submenu">
-                    <li><a href="{{ route('nurse.inventory.add') }}">Add Item</a></li>
-                    <li><a href="{{ route('nurse.inventory') }}">Inventory List</a></li>
+                    <li><a href="{{ route('nurse.medical-record.index') }}">View Medical Record</a></li>
+                    <li><a href="{{ route('nurse.dental-record.index') }}">View Dental Record</a></li>
                 </ul>
             </li>
             <li class="has-submenu">
-                <a href="#"><span class="icon"><i class="fas fa-chart-line"></i></span><span class="menu-text">Reports</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
-                <ul class="submenu">
-                    <li><a href="#">Daily Reports</a></li>
-                    <li><a href="#">Transaction Logs</a></li>
-                </ul>
+    <a href="#"><span class="icon"><i class="fas fa-check-circle"></i></span><span class="menu-text">Approvals</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
+    <ul class="submenu">
+        <li><a href="{{ route('nurse.uploadHealthExamination') }}">Health Approval</a></li>
+        <li><a href="{{ route('nurse.uploadMedicalDocu') }}">Medical Approval</a></li>
+        <li><a href="{{ route('nurse.uploadDentalDocu') }}">Dental Approval</a></li>
+    </ul>
+</li>
+           
+            <li class=>
+                <a href="{{ route('nurse.appointment') }}"><span class="icon"><i class="fas fa-calendar-check"></i></span><span class="menu-text">Appointment</span></a>
             </li>
-            <li><a href="#"><span class="icon"><i class="fas fa-cogs"></i></span><span class="menu-text">Settings</span></a></li>
+            <li>
+                <a href="{{ route('nurse.inventory') }}"><span class="icon"><i class="fas fa-boxes"></i></span><span class="menu-text">Inventory</span></a>
+    
+            </li>
+            <li>
+                <a href="{{ route('nurse.monitoring-report-log') }}"><span class="icon"><i class="fas fa-chart-line"></i></span><span class="menu-text">Reports and logs</i></span></a>
+            </li>
+            <li><a href="{{ route('nurse.settings.edit') }}"><span class="icon"><i class="fas fa-cogs"></i></span><span class="menu-text">Settings</span></a></li>
+
         </ul>
     </nav>
 </div>

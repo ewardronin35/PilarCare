@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf; // <-- Correct namespace
+use Illuminate\Support\Facades\Route;
+
 
 class HealthExaminationController extends Controller
 {
@@ -52,7 +54,11 @@ class HealthExaminationController extends Controller
     public function medicalRecord()
     {
         $pendingExaminations = HealthExamination::where('is_approved', false)->with('user')->get();
-        return view('admin.medical-record', compact('pendingExaminations'));
+        $role = strtolower(auth()->user()->role); // Ensure role is in lowercase
+    
+        // Return the view with the pending dental records
+        return view("{$role}.medical-record", compact('pendingExaminations'));
+       
     }
     
     public function store(Request $request)
@@ -130,81 +136,127 @@ class HealthExaminationController extends Controller
     }
 
     public function approve($id)
-{
-    try {
-        // Begin a transaction
-        DB::beginTransaction();
+    {
+        try {
+            // Determine the role based on the current route prefix
+            $routePrefix = request()->route()->getPrefix(); // e.g., 'admin', 'nurse', 'doctor'
+            $role = strtolower(str_replace('/', '', $routePrefix));
 
-        // Find the HealthExamination record, throw a 404 error if not found
-        $examination = HealthExamination::findOrFail($id);
-        
-        // Check if it's already approved to avoid redundant operations
-        if ($examination->is_approved) {
-            return redirect()->route('admin.uploadHealthExamination')
-                             ->with('warning', 'Health Examination is already approved.');
-        }
+            // Begin a transaction
+            DB::beginTransaction();
 
-        // Approve the examination
-        $examination->is_approved = true;
-        $examination->save();
+            // Find the HealthExamination record, throw a 404 error if not found
+            $examination = HealthExamination::findOrFail($id);
 
-        // Find the user associated with the health examination
-        $user = User::where('id_number', $examination->id_number)->first();
+            // Check if it's already approved to avoid redundant operations
+            if ($examination->is_approved) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Health Examination is already approved.'
+                ], 400);
+            }
 
-        // Ensure the user exists before creating a notification
-        if ($user) {
-            Notification::create([
-                'user_id' => $user->id_number, // Use the 'id_number' field if that's the foreign key
-                'title' => 'Health Examination Approved',
-                'message' => 'Your health examination has been approved. You can now proceed with your medical record.',
-                'scheduled_time' => now(),
+            // Approve the examination
+            $examination->is_approved = true;
+            $examination->save();
+
+            // Find the user associated with the health examination
+            $user = User::where('id_number', $examination->id_number)->first();
+
+            // Ensure the user exists before creating a notification
+            if ($user) {
+                Notification::create([
+                    'user_id' => $user->id_number, // Use the 'id_number' field as foreign key
+                    'title' => 'Health Examination Approved',
+                    'message' => 'Your health examination has been approved. You can now proceed with your medical record.',
+                    'scheduled_time' => now(),
+                ]);
+            } else {
+                // Log the issue if the user isn't found
+                Log::error('User not found for id_number: ' . $examination->id_number);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found. Notification was not sent.'
+                ], 404);
+            }
+
+            // Commit the transaction
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Health Examination approved successfully.'
             ]);
-        } else {
-            // Log the issue if the user isn't found
-            Log::error('User not found for id_number: ' . $examination->id_number);
-            return redirect()->route('admin.uploadHealthExamination')->with('error', 'User not found. Notification was not sent.');
+        } catch (\Exception $e) {
+            // Rollback the transaction if something went wrong
+            DB::rollBack();
+
+            // Log the error for debugging purposes
+            Log::error('Error approving health examination: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error approving the health examination.'
+            ], 500);
         }
-
-        // Commit the transaction
-        DB::commit();
-
-        return redirect()->route('admin.uploadHealthExamination')->with('success', 'Health Examination approved successfully.');
-    } catch (\Exception $e) {
-        // Rollback the transaction if something went wrong
-        DB::rollBack();
-
-        // Log the error for debugging purposes
-        Log::error('Error approving health examination: ' . $e->getMessage());
-
-        return redirect()->route('admin.uploadHealthExamination')->with('error', 'Error approving the health examination.');
     }
-}
+    
+    public function reject($id)
+    {
+        try {
+            // Determine the role based on the current route prefix
+            $routePrefix = request()->route()->getPrefix(); // e.g., 'admin', 'nurse', 'doctor'
+            $role = strtolower(str_replace('/', '', $routePrefix));
 
+            // Begin a transaction
+            DB::beginTransaction();
 
-public function reject($id)
-{
-    try {
-        // Begin a transaction
-        DB::beginTransaction();
+            // Find the HealthExamination record
+            $examination = HealthExamination::findOrFail($id);
 
-        // Find and delete the HealthExamination record
-        $examination = HealthExamination::findOrFail($id);
-        $examination->delete();
+            // Find the user associated with the health examination
+            $user = User::where('id_number', $examination->id_number)->first();
 
-        // Commit the transaction
-        DB::commit();
+            // Ensure the user exists before creating a notification
+            if ($user) {
+                Notification::create([
+                    'user_id' => $user->id_number, // Use the 'id_number' field as foreign key
+                    'title' => 'Health Examination Rejected',
+                    'message' => 'Your health examination has been rejected. Please upload proper pictures and try again.',
+                    'scheduled_time' => now(),
+                ]);
+            } else {
+                // Log the issue if the user isn't found
+                Log::error('User not found for id_number: ' . $examination->id_number);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found. Notification was not sent.'
+                ], 404);
+            }
 
-        return redirect()->route('admin.uploadHealthExamination')->with('success', 'Health Examination rejected and deleted successfully.');
-    } catch (\Exception $e) {
-        // Rollback the transaction if something went wrong
-        DB::rollBack();
+            // Delete the HealthExamination record
+            $examination->delete();
 
-        // Log the error for debugging purposes
-        Log::error('Error rejecting health examination: ' . $e->getMessage());
+            // Commit the transaction
+            DB::commit();
 
-        return redirect()->route('admin.uploadHealthExamination')->with('error', 'Error rejecting the health examination.');
+            return response()->json([
+                'success' => true,
+                'message' => 'Health Examination rejected and deleted successfully.'
+            ]);
+        } catch (\Exception $e) {
+            // Rollback the transaction if something went wrong
+            DB::rollBack();
+
+            // Log the error for debugging purposes
+            Log::error('Error rejecting health examination: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error rejecting the health examination.'
+            ], 500);
+        }
     }
-}
 
 
     public function update(Request $request)
@@ -243,33 +295,35 @@ public function reject($id)
     {
         $pendingExaminations = HealthExamination::where('is_approved', false)->with('user')->get();
         Log::info('Fetched all health examinations records.');
-        return view('admin.uploadHealthExamination', compact('pendingExaminations'));
+        $role = strtolower(auth()->user()->role); // Ensure role is in lowercase
+    
+    // Return the view with the pending dental records
+    return view("{$role}.uploadHealthExamination", compact('pendingExaminations'));
     }
 
     public function checkApprovalStatus()
-{
-    try {
-        $user = Auth::user();
-        $healthExamination = HealthExamination::where('id_number', $user->id_number)->first();
-
-        if (!$healthExamination) {
-            // If no submission exists, return exists: false
-            return response()->json(['exists' => false]);
+    {
+        try {
+            $user = Auth::user();
+            $healthExamination = HealthExamination::where('id_number', $user->id_number)->first();
+    
+            if (!$healthExamination) {
+                // If no submission exists, return exists: false
+                return response()->json(['exists' => false]);
+            }
+    
+            // If submission exists, check if it's approved
+            return response()->json([
+                'exists' => true,
+                'is_approved' => $healthExamination->is_approved,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error checking approval status: ' . $e->getMessage());
+    
+            return response()->json(['error' => 'An error occurred while checking approval status.'], 500);
         }
-
-        // If submission exists, return approval or decline status
-        return response()->json([
-            'is_approved' => $healthExamination->is_approved,
-            'is_declined' => !$healthExamination->is_approved && isset($healthExamination->declined_reason),
-            'exists' => true, // Indicate that a submission exists
-        ]);
-    } catch (\Exception $e) {
-        \Log::error('Error checking approval status: ' . $e->getMessage());
-
-        return response()->json(['error' => 'An error occurred while checking approval status.'], 500);
     }
-}
-
+    
     public function downloadPdf($id)
     {
         // Fetch the health examination record
@@ -345,4 +399,64 @@ public function reject($id)
         // Return the view and pass the health examination data
         return view('student.medical-record', compact('healthExamination'));
     }
+    public function getPendingExaminations(Request $request)
+    {
+        // The role is determined by the route prefix (admin, nurse, doctor)
+        $routePrefix = $request->route()->getPrefix(); // e.g., 'admin', 'nurse', 'doctor'
+        $role = strtolower(str_replace('/', '', $routePrefix)); // Remove '/' if present
+
+        // Optional: Customize data based on role
+        // For example, admins might see all pending examinations,
+        // while nurses/doctors see only specific ones.
+
+        // Fetch user and role-based logic if necessary
+        // Currently, fetching all pending examinations
+        $search = $request->input('search', '');
+
+        // Query pending examinations
+        $query = HealthExamination::where('is_approved', false)
+            ->with('user');
+
+        // Apply search filters if any
+        if (!empty($search)) {
+            $query->whereHas('user', function($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('id_number', 'like', "%{$search}%");
+            });
+        }
+
+
+
+        
+        if ($role === 'nurse') {
+            $query->where('id_number', $user->id_number);
+        } elseif ($role === 'doctor') {
+            $query->where('id_number', $user->id_number);
+        }
+        
+
+        // Fetch the examinations
+        $pendingExaminations = $query->orderBy('created_at', 'desc')->get();
+
+        // Transform data for JSON response
+        $transformed = $pendingExaminations->map(function($exam) {
+            return [
+                'id' => $exam->id,
+                'user_name' => $exam->user->first_name . ' ' . $exam->user->last_name,
+                'id_number' => $exam->user->id_number,
+                'health_examination_picture' => asset('storage/' . $exam->health_examination_picture),
+                'xray_pictures' => array_map(function($xray) {
+                    return asset('storage/' . $xray);
+                }, json_decode($exam->xray_picture, true) ?? []),
+                'lab_result_pictures' => array_map(function($lab) {
+                    return asset('storage/' . $lab);
+                }, json_decode($exam->lab_result_picture, true) ?? []),
+            ];
+        });
+
+        return response()->json($transformed);
+    }
+
+
 }

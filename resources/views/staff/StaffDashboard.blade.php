@@ -1,6 +1,8 @@
 <x-app-layout>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.css">
+
     <style>
     body {
         background-color: #f5f7fa;
@@ -10,7 +12,7 @@
     .main-content {
         flex-grow: 1;
         padding: 20px;
-        margin-top: 30px;
+        margin-top: 28px;
         margin-left: 80px;
         transition: margin-left 0.3s ease-in-out;
         overflow-y: auto;
@@ -371,6 +373,181 @@
         width: 100%; /* Stack fields on smaller screens */
     } 
 }
+.calendar-container {
+            width: 90%;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        .calendar-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .calendar-controls button {
+            background-color: #007bff;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+            font-size: 1rem;
+        }
+
+        .calendar-controls button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        .calendar {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .calendar th {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .calendar td {
+            width: 14.28%;
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out; /* Smooth transition */
+        }
+
+        .calendar td.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .calendar td:hover {
+            background-color: #f0f8ff;
+        }
+
+        /* Legend Styles */
+        .legend {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+        }
+
+        .legend-color.free {
+            background-color: #66ff66;
+        }
+
+        .legend-color.appointed {
+            background-color: #ff4d4d;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        /* Close Button */
+        .close {
+            color: #999;
+            float: right;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover, .close:focus {
+            color: #333;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Appointments List Styles */
+        .appointments-container {
+            padding: 15px 0;
+        }
+
+        #appointments-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #appointments-list li {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        #appointments-list li:hover {
+            background-color: #f0f8ff;
+            transform: scale(1.02);
+        }
+
+        /* Appointment Text */
+        #appointments-list li p {
+            margin: 0;
+            font-size: 1rem;
+            color: #333;
+        }
+
+        #appointments-list li p span {
+            font-weight: bold;
+            color: #0056b3;
+        }
+
+        /* Custom Scrollbar for Modal Content */
+        .modal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb {
+            background-color: #ccc;
+            border-radius: 5px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb:hover {
+            background-color: #888;
+        }
 </style>
 
 
@@ -392,10 +569,37 @@
                     <p>Appointments</p>
                 </a>
             </div>
+        <div class="stat-box">
+    <img src="https://img.icons8.com/ios-filled/50/000000/medical-doctor.png" alt="Health Record Icon">
+    @if($hasHealthExamination)
+        <h2>Yes</h2>
+        <p>Health Record Submitted</p>
+    @else
+        <h2>No</h2>
+        <p>No Health Record Submitted</p>
+    @endif
+</div>
+<div class="stat-box">
+                <img src="https://img.icons8.com/ios-filled/50/000000/dental-braces.png" alt="Dental Record Icon">
+                @if($hasDentalRecord)
+                    <h2>Yes</h2>
+                    <p>Dental Record Submitted</p>
+                @else
+                    <h2>No</h2>
+                    <p>No Dental Record Submitted</p>
+                @endif
+            </div>
+
+            <!-- Medical Record Stat Box -->
             <div class="stat-box">
-                <img src="https://img.icons8.com/ios-filled/50/000000/medical-doctor.png" alt="Health Record Icon">
-                <h2>No</h2>
-                <p>Health Record Submitted</p>
+                <img src="https://img.icons8.com/ios-filled/50/000000/medical-history.png" alt="Medical Record Icon">
+                @if($hasMedicalRecord)
+                    <h2>Yes</h2>
+                    <p>Medical Record Submitted</p>
+                @else
+                    <h2>No</h2>
+                    <p>No Medical Record Submitted</p>
+                @endif
             </div>
             <div class="stat-box">
                 <a href="{{ route('staff.complaint') }}">
@@ -406,36 +610,54 @@
             </div>
         </div>
 
-        <div class="data-table-wrapper no-scroll">
-            <table class="data-table">
+        <div class="calendar-container">
+            <h2>Appointment Calendar</h2>
+            <div class="calendar-controls">
+                <button onclick="changeMonth(-1)">Previous</button>
+                <span id="calendar-month-year"></span>
+                <button onclick="changeMonth(1)">Next</button>
+            </div>
+            <table class="calendar">
                 <thead>
                     <tr>
-                        <th>Sl.No</th>
-                        <th>Name</th>
-                        <th>Appointment Type</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Action</th>
+                        <th>Sun</th>
+                        <th>Mon</th>
+                        <th>Tue</th>
+                        <th>Wed</th>
+                        <th>Thu</th>
+                        <th>Fri</th>
+                        <th>Sat</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @foreach($appointments as $appointment)
-                    <tr>
-                        <td>{{ $loop->iteration }}</td>
-                        <td>{{ $appointment->name }}</td>
-                        <td>{{ $appointment->appointment_type }}</td>
-                        <td>{{ $appointment->appointment_date }}</td>
-                        <td>{{ $appointment->appointment_time }}</td>
-                        <td>
-                            <button onclick="openModal({{ $appointment->id }})">Cancel / Reschedule</button>
-                        </td>
-                    </tr>
-                    @endforeach
+                <tbody id="calendar-body">
+                    <!-- Dynamically generated calendar rows go here -->
                 </tbody>
             </table>
+            <!-- Legend Section -->
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color free"></div>
+                    <span>Free</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color appointed"></div>
+                    <span>Appointed</span>
+                </div>
+            </div>
         </div>
-    </div>
 
+        <!-- Appointment Modal -->
+        <div id="preview-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closePreviewModal()">&times;</span>
+                <h2>Appointments on <span id="preview-date"></span></h2>
+                <div class="appointments-container">
+                    <ul id="appointments-list">
+                        <!-- Appointments will be dynamically inserted here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
     <!-- The Modal -->
     <div id="welcomeModal" class="modal">
         <div class="modal-content">
@@ -504,42 +726,24 @@
     </div>
                 </div>
                 <div class="row">
-                <div class="form-group">
-                    <label for="medical_history"><i class="fas fa-notes-medical"></i> Medical History</label>
-                    <textarea id="medical_history" name="medical_history" rows="3" required></textarea>
-                </div>
-                <div class="form-group">
-                        <label for="allergies"><i class="fas fa-allergies"></i> Allergies</label>
-                        <textarea id="allergies" name="allergies" rows="2" required></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="chronic_conditions"><i class="fas fa-heartbeat"></i> Chronic Conditions</label>
-                        <textarea id="chronic_conditions" name="chronic_conditions" rows="2" required></textarea>
-                    </div>
-                    
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-pills"></i> Medicines (select all that apply)</label>
-                    <div class="medicines-group">
-                        <label><input type="checkbox" name="medicines[]" value="Paracetamol"> Paracetamol</label>
-                        <label><input type="checkbox" name="medicines[]" value="Ibuprofen"> Ibuprofen</label>
-                        <label><input type="checkbox" name="medicines[]" value="Mefenamic Acid"> Mefenamic Acid</label>
-                        <label><input type="checkbox" name="medicines[]" value="Citirizine/Loratadine"> Citirizine/Loratadine</label>
-                        <label><input type="checkbox" name="medicines[]" value="Camphor + Menthol Liniment"> Camphor + Menthol Liniment</label>
-                        <label><input type="checkbox" name="medicines[]" value="PPA"> PPA</label>
-                        <label><input type="checkbox" name="medicines[]" value="Phenylephrine"> Phenylephrine</label>
-                        <label><input type="checkbox" name="medicines[]" value="Antacid"> Antacid</label>
-                    </div>
-                </div>
-                <div class="row">
-                <div class="form-group">
-                    <label for="surgical_history"><i class="fas fa-scalpel"></i> Surgical History</label>
-                    <textarea id="surgical_history" name="surgical_history" rows="3" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="medical_history"><i class="fas fa-notes-medical"></i> Medical History</label>
-                    <textarea id="medical_history" name="medical_history" rows="3" required></textarea>
-                </div>
+    <div class="form-group">
+        <label for="guardian_first_name"><i class="fas fa-user"></i> Guardian First Name</label>
+        <input type="text" id="guardian_first_name" name="guardian_first_name" required
+        oninput="validateLetters(this)" pattern="[A-Za-z\s]+">
+    </div>
+    <div class="form-group">
+        <label for="guardian_last_name"><i class="fas fa-user"></i> Guardian Last Name</label>
+        <input type="text" id="guardian_last_name" name="guardian_last_name" required
+        oninput="validateLetters(this)" pattern="[A-Za-z\s]+">
+    </div>
+</div>
+<div class="row">
+
+<div class="form-group">
+    <label for="guardian_relationship"><i class="fas fa-users"></i> Guardian Relationship</label>
+    <input type="text" id="guardian_relationship" name="guardian_relationship" required>
+</div>
+
     </div>
                 <div class="form-group">
                     <label>
@@ -556,206 +760,384 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const modal = document.getElementById("welcomeModal");
-            const nextButton = document.getElementById("nextButton");
-            const submitButton = document.getElementById("submitButton");
-            const welcomeForm = document.getElementById("welcomeForm");
-            const welcomeMessage = document.getElementById('welcomeMessage');
-            const agreeDisclaimer = document.getElementById("agree_disclaimer");
-            const agreeTerms = document.getElementById("agree_terms");
-            const profilePreview = document.getElementById('profile_preview');
-            const disclaimerSection = document.getElementById('disclaimerSection');
-            const csrfToken = document.querySelector('meta[name="csrf-token"]');
+       // Global variables and functions
+let currentMonth;
+let currentYear;
+const csrfToken = document.querySelector('meta[name="csrf-token"]');
 
-            let formInteraction = false;
+// Validation for letters only in names
+function validateLetters(input) {
+    setTimeout(() => {
+        input.value = input.value.replace(/[^A-Za-z\s]/g, '');
+    }, 1);
+}
 
-            if (!csrfToken) {
-                console.error('CSRF token not found in meta tags');
-                return;
+// Validation for numbers only in contact numbers
+function validateNumbers(input) {
+    setTimeout(() => {
+        input.value = input.value.replace(/[^0-9]/g, '');
+    }, 1);
+}
+
+// Function to enable the beforeunload prompt
+function enableBeforeUnload() {
+    window.addEventListener('beforeunload', preventFormClose);
+}
+
+// Function to remove the beforeunload prompt
+function disableBeforeUnload() {
+    window.removeEventListener('beforeunload', preventFormClose);
+}
+
+// Function to show a warning when trying to leave the page
+function preventFormClose(event) {
+    event.preventDefault();
+    event.returnValue = ''; // Standard way to trigger a warning dialog
+}
+
+// Function to format time to 12-hour AM/PM
+function formatTimeTo12Hour(timeString) {
+    // Assume timeString is in "HH:mm:ss" or "HH:mm" format
+    const [hoursStr, minutesStr] = timeString.split(':');
+    let hours = parseInt(hoursStr, 10);
+    const minutes = minutesStr;
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+
+    hours = hours % 12 || 12; // Convert '0' to '12' for 12 AM
+    return `${hours}:${minutes} ${ampm}`;
+}
+
+// Function to close the preview modal
+function closePreviewModal() {
+    const modal = document.getElementById('preview-modal');
+    modal.style.display = 'none';
+}
+
+// Function to change the month in the calendar
+function changeMonth(direction) {
+    currentMonth += direction;
+    if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+    } else if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+    }
+    renderCalendar(currentMonth, currentYear);
+}
+
+// Function to validate date
+function isValidDate(year, month, day) {
+    const date = new Date(year, month - 1, day); // JS months are 0-indexed
+    return date.getFullYear() === year && date.getMonth() + 1 === month && date.getDate() === day;
+}
+
+// Function to render the calendar
+function renderCalendar(month, year) {
+    const calendarBody = document.getElementById('calendar-body');
+    calendarBody.innerHTML = ''; // Clear previous calendar
+
+    const firstDay = new Date(year, month).getDay(); // Get the first day of the month
+    const daysInMonth = new Date(year, month + 1, 0).getDate(); // Number of days in the month
+
+    const monthYearText = document.getElementById('calendar-month-year');
+    const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+    monthYearText.textContent = `${monthNames[month]} ${year}`;
+
+    let date = 1;
+    for (let i = 0; i < 6; i++) { // 6 rows (weeks)
+        const row = document.createElement('tr');
+        for (let j = 0; j < 7; j++) { // 7 columns (days)
+            const cell = document.createElement('td');
+            if (i === 0 && j < firstDay) {
+                cell.innerHTML = ''; // Empty cells before the first day
+            } else if (date > daysInMonth) {
+                break; // Exit when exceeding days in the month
+            } else {
+                let day = date; // Capture the current date
+                cell.innerHTML = day;
+                const currentDate = new Date(year, month, day);
+
+                // Only add click event for valid dates
+                if (isValidDate(year, month + 1, day)) {
+                    cell.onclick = function () {
+                        openPreviewModal(day, month + 1, year); // Pass adjusted month
+                    };
+
+                    // Add appointment markers
+                    fetchAppointmentMarkers(day, month + 1, year, cell);
+                }
+
+                // Highlight today's date
+                const today = new Date();
+                if (day === today.getDate() && year === today.getFullYear() && month === today.getMonth()) {
+                    cell.classList.add('active');
+                }
+
+                row.appendChild(cell);
+                date++;
             }
+        }
+        calendarBody.appendChild(row);
+    }
+}
 
-            // Function to enable the beforeunload prompt
-            function enableBeforeUnload() {
-                window.addEventListener('beforeunload', preventFormClose);
+// Fetch and mark appointments
+function fetchAppointmentMarkers(day, month, year, cell) {
+    const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+    fetch(`/staff/appointments/by-date?date=${formattedDate}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken.getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.appointments && data.appointments.length > 0) {
+            // If there are appointments, mark the cell as red
+            cell.style.backgroundColor = '#ff4d4d'; // Red for appointments
+            cell.style.color = '#fff';
+        } else {
+            // If no appointments, mark the cell as green
+            cell.style.backgroundColor = '#66ff66'; // Green for free
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching appointment markers:', error);
+    });
+}
+
+const getAppointmentsByDateUrl = `{{ route('staff.appointments.by-date') }}`;
+
+// Function to open the preview modal
+function openPreviewModal(day, month, year) {
+    const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+    document.getElementById('preview-date').innerText = formattedDate;
+
+    fetch(`${getAppointmentsByDateUrl}?date=${formattedDate}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken.getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const appointmentsList = document.getElementById('appointments-list');
+        appointmentsList.innerHTML = ''; // Clear previous appointments
+
+        if (data.appointments && data.appointments.length > 0) {
+            data.appointments.forEach(appointment => {
+                // Convert appointment_time to 12-hour AM/PM format
+                const timeString = appointment.appointment_time;
+                const timeFormatted = formatTimeTo12Hour(timeString);
+
+                const li = document.createElement('li');
+                li.innerHTML = `<p><span>${timeFormatted}</span> - ${appointment.appointment_type}</p>`;
+                appointmentsList.appendChild(li);
+            });
+        } else {
+            const li = document.createElement('li');
+            li.innerText = 'No appointments for this day.';
+            appointmentsList.appendChild(li);
+        }
+
+        const modal = document.getElementById('preview-modal');
+        modal.style.display = 'flex'; // Show the modal
+    })
+    .catch(error => {
+        console.error('Error fetching appointments:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to load appointments.',
+            timer: 3000,
+            showConfirmButton: false
+        });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById("welcomeModal");
+    const nextButton = document.getElementById("nextButton");
+    const submitButton = document.getElementById("submitButton");
+    const welcomeForm = document.getElementById("welcomeForm");
+    const welcomeMessage = document.getElementById('welcomeMessage');
+    const agreeDisclaimer = document.getElementById("agree_disclaimer");
+    const agreeTerms = document.getElementById("agree_terms");
+    const profilePreview = document.getElementById('profile_preview');
+    const disclaimerSection = document.getElementById('disclaimerSection');
+
+    let formInteraction = false;
+
+    if (!csrfToken) {
+        console.error('CSRF token not found in meta tags');
+        return;
+    }
+
+    // Initialize the calendar
+    const today = new Date();
+    currentMonth = today.getMonth();
+    currentYear = today.getFullYear();
+    renderCalendar(currentMonth, currentYear);
+
+    // Agree to disclaimer
+    agreeDisclaimer.addEventListener('change', function() {
+        nextButton.disabled = !this.checked;
+    });
+
+    // Countdown before enabling the next button and showing the form
+    nextButton.addEventListener('click', function() {
+        let countdown = 10;
+        nextButton.disabled = true;
+        nextButton.innerHTML = `Please wait ${countdown}s`;
+
+        const countdownInterval = setInterval(() => {
+            countdown--;
+            nextButton.innerHTML = `Please wait ${countdown}s`;
+
+            if (countdown === 0) {
+                clearInterval(countdownInterval);
+                nextButton.innerHTML = `Next <span class="arrow">&rarr;</span>`;
+                nextButton.disabled = false;
+
+                // Hide welcome message and show form
+                welcomeMessage.style.display = 'none';
+                disclaimerSection.style.display = 'none';
+                welcomeForm.style.display = 'block';
+
+                // Animate the form coming into view
+                welcomeForm.style.opacity = 0;
+                welcomeForm.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    welcomeForm.style.transition = 'opacity 0.5s, transform 0.5s';
+                    welcomeForm.style.opacity = 1;
+                    welcomeForm.style.transform = 'translateY(0)';
+                }, 100);
             }
+        }, 1000);
+    });
 
-            // Validation for letters only in father's and mother's names
-            function validateLetters(input) {
-                input.value = input.value.replace(/[^A-Za-z\s]/g, '');
+    // Attach event listeners to form inputs to detect interaction
+    if (welcomeForm) {
+        const inputs = welcomeForm.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => {
+            input.addEventListener('input', () => {
+                formInteraction = true;
+                enableBeforeUnload(); // Enable the prompt after user interaction
+            });
+        });
+
+        // Form submission with AJAX
+        welcomeForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            // Disable the beforeunload prompt before form submission
+            disableBeforeUnload();
+
+            const formData = new FormData(welcomeForm);
+
+            fetch('{{ route('staff.profile.store') }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken.getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        html: 'Profile information updated successfully!<br><br>Your parent account ID is: <strong>' + data.parent_id_number + '</strong>',
+                    }).then(() => {
+                        modal.style.display = 'none';
+                        location.reload(); // Reload the page after successful submission
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'There was an error updating your profile. Please try again.',
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error submitting form:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An unexpected error occurred. Please try again later.',
+                });
+            });
+        });
+    }
+
+    // Profile Picture Preview
+    function previewImage(event) {
+        const input = event.target; // Access the input element
+        const reader = new FileReader();
+        reader.onload = function() {
+            profilePreview.src = reader.result;
+            profilePreview.style.display = 'block';
+        }
+        if (input.files && input.files[0]) {
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    }
+    const profilePictureInput = document.getElementById('profile_picture');
+    if (profilePictureInput) {
+        profilePictureInput.addEventListener('change', previewImage);
+    }
+
+    // Show modal if $showModal is true
+    if (modal) {
+        if ({{ json_encode($showModal) }}) {
+            modal.style.display = 'flex';
+        }
+
+        const closeModal = document.querySelector('#welcomeModal .close');
+        if (closeModal) {
+            closeModal.addEventListener('click', function() {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Incomplete Form',
+                    text: 'You need to complete the form before proceeding.',
+                });
+            });
+        }
+
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                event.preventDefault();
             }
+        });
 
-            // Validation for numbers only in contact numbers
-            function validateNumbers(input) {
-                input.value = input.value.replace(/[^0-9]/g, '');
-            }
-
+        if (agreeDisclaimer && nextButton) {
             agreeDisclaimer.addEventListener('change', function() {
                 nextButton.disabled = !this.checked;
             });
-
-            // Countdown before enabling the next button and showing the form
-            nextButton.addEventListener('click', function() {
-                let countdown = 10;
-                nextButton.disabled = true;
-                nextButton.innerHTML = `Please wait ${countdown}s`;
-
-                const countdownInterval = setInterval(() => {
-                    countdown--;
-                    nextButton.innerHTML = `Please wait ${countdown}s`;
-
-                    if (countdown === 0) {
-                        clearInterval(countdownInterval);
-                        nextButton.innerHTML = `Next <span class="arrow">&rarr;</span>`;
-                        nextButton.disabled = false;
-
-                        // Hide welcome message and show form
-                        welcomeMessage.style.display = 'none';
-                        disclaimerSection.style.display = 'none';
-                        welcomeForm.style.display = 'block';
-
-                        // Animate the form coming into view
-                        welcomeForm.style.opacity = 0;
-                        welcomeForm.style.transform = 'translateY(20px)';
-                        setTimeout(() => {
-                            welcomeForm.style.transition = 'opacity 0.5s, transform 0.5s';
-                            welcomeForm.style.opacity = 1;
-                            welcomeForm.style.transform = 'translateY(0)';
-                        }, 100);
-                    }
-                }, 1000);
-            });
-
-            // Function to remove the beforeunload prompt
-            function disableBeforeUnload() {
-                window.removeEventListener('beforeunload', preventFormClose);
-            }
-
-            // Function to show a warning when trying to leave the page
-            function preventFormClose(event) {
-                event.preventDefault();
-                event.returnValue = ''; // Standard way to trigger a warning dialog
-            }
-
-            // Attach event listeners to form inputs to detect interaction
-            if (welcomeForm) {
-                const inputs = welcomeForm.querySelectorAll('input, textarea, select');
-                inputs.forEach(input => {
-                    input.addEventListener('input', () => {
-                        formInteraction = true;
-                        enableBeforeUnload(); // Enable the prompt after user interaction
-                    });
-                });
-
-                // Form submission with AJAX
-                welcomeForm.addEventListener('submit', function(event) {
-                    event.preventDefault();
-
-                    // Disable the beforeunload prompt before form submission
-                    disableBeforeUnload();
-
-                    const formData = new FormData(welcomeForm);
-
-                    fetch('{{ route('student.profile.store') }}', {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRF-TOKEN': csrfToken.getAttribute('content')
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: 'Profile information updated successfully!',
-                            }).then(() => {
-                                modal.style.display = 'none';
-                                location.reload(); // Reload the page after successful submission
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: 'There was an error updating your profile. Please try again.',
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'An unexpected error occurred. Please try again later.',
-                        });
-                    });
-                });
-            }
-
-            // Profile Picture Preview
-            function previewImage(event) {
-                const input = event.target; // Access the input element
-                const reader = new FileReader();
-                reader.onload = function() {
-                    const profilePreview = document.getElementById('profile_preview');
-                    profilePreview.src = reader.result;
-                    profilePreview.style.display = 'block';
-                }
-                if (input.files && input.files[0]) {
-                    reader.readAsDataURL(event.target.files[0]);
-            }
         }
-        document.getElementById('profile_picture').addEventListener('change', previewImage);
-
-            // Show modal if $showModal is true
-            if (modal) {
-                if (@json($showModal)) {
-                    modal.style.display = 'flex';
-                }
-
-                const closeModal = document.querySelector('.close');
-                if (closeModal) {
-                    closeModal.addEventListener('click', function() {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Incomplete Form',
-                            text: 'You need to complete the form before proceeding.',
-                        });
-                    });
-                }
-
-                window.addEventListener('click', function(event) {
-                    if (event.target === modal) {
-                        event.preventDefault();
-                    }
-                });
-
-                if (agreeDisclaimer && nextButton) {
-                    agreeDisclaimer.addEventListener('change', function() {
-                        nextButton.disabled = !this.checked;
-                    });
-                }
-            }
-
-            // Terms and conditions agreement before enabling the submit button
-            if (agreeTerms && submitButton) {
-                agreeTerms.addEventListener('change', function() {
-                    submitButton.disabled = !this.checked;
-                });
-            }
-            function validateLetters(input) {
-        setTimeout(() => {
-            input.value = input.value.replace(/[^A-Za-z\s]/g, '');  // Remove anything that is not a letter or space
-        }, 1);
     }
-    // Allow only numbers in the input
-    function validateNumbers(input) {
-        setTimeout(() => {
-            input.value = input.value.replace(/[^0-9]/g, '');  // Remove anything that is not a digit
-        }, 1);
-    }
+
+    // Terms and conditions agreement before enabling the submit button
+    if (agreeTerms && submitButton) {
+        agreeTerms.addEventListener('change', function() {
+            submitButton.disabled = !this.checked;
         });
-        
+    }
+});
+
+   
     </script>
 </x-app-layout>

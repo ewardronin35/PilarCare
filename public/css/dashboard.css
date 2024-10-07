@@ -147,9 +147,10 @@ body, html {
     right: -5px;
     width: 10px;
     height: 10px;
-    background-color: #dc3545;
+    background-color: red; /* Red color */
     border-radius: 50%;
     transition: transform 0.3s ease;
+    display: none; /* Hidden by default */
 }
 
 .notification-icon i {
@@ -165,36 +166,90 @@ body, html {
 
 /* Blow up and down animation for red dot */
 .notification-dot.blowing {
-    animation: blowUp 0.5s ease-in-out;
+    display: block;
+    animation: pulse 1.5s infinite;
 }
-
 .notification-dropdown {
-    display: none;
     position: absolute;
     top: 45px;
     right: 0;
     background-color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border-radius: 5px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
     overflow: hidden;
+    width: 300px; /* Adjust width as needed */
+    max-height: 400px; /* Maximum height before scrolling */
+    overflow-y: auto;   /* Enable vertical scrolling */
+    visibility: hidden;
+    transform: translateY(-20px);
+    transition: all 0.3s ease;
     z-index: 1000;
 }
 
 .notification-dropdown.active {
     display: block;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
 }
 
 .notification-dropdown .dropdown-item {
-    padding: 10px 20px;
-    color: #333;
-    text-decoration: none;
-    display: block;
+    padding: 15px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f1f1;
     transition: background-color 0.3s;
 }
 
-.notification-dropdown .dropdown-item:hover {
-    background-color: #f1f1f1;
+.notification-dropdown .dropdown-item:last-child {
+    border-bottom: none;
 }
+
+.notification-dropdown .dropdown-item:hover {
+    background-color: #f9f9f9;
+}
+
+.notification-dropdown .dropdown-item .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+    object-fit: cover;
+}
+
+.notification-dropdown .dropdown-item .message {
+    flex-grow: 1;
+    color: #333;
+}
+
+.notification-dropdown .dropdown-item .timestamp {
+    font-size: 12px;
+    color: #999;
+}
+
+/* For the "View All" button */
+.notification-dropdown .view-all {
+    padding: 10px;
+    background-color: #28a745;
+    color: white;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 0 0 5px 5px;
+}
+.notification-dropdown .dropdown-item.unread {
+    background-color: #f8f9fa; /* Light grey background for unread */
+    font-weight: bold; /* Bold text for unread */
+}
+
+.notification-dropdown .dropdown-item:hover {
+    background-color: #f1f1f1; /* Hover effect for notifications */
+}
+.notification-dropdown .view-all:hover {
+    background-color: #218838;
+}
+
 
 .breadcrumb {
     display: flex;
@@ -297,4 +352,188 @@ body, html {
 }
 .dropdown-item.opened {
     background-color: #f0f0f0; /* Example for opened notifications */
+}
+
+/* Keyframe for the notification dot animation */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+/* Existing styles ... */
+
+/* Logout Dropdown Styling */
+.logout-dropdown-menu {
+    position: absolute;
+    top: 60px; /* Adjust based on your header height */
+    right: 20px;
+    background-color: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    width: 200px; /* Default width */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+    z-index: 1000;
+}
+
+.logout-dropdown-menu.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.logout-dropdown-menu .dropdown-item {
+    padding: 10px 20px;
+    color: #333;
+    text-decoration: none;
+    display: block;
+    transition: background-color 0.3s, transform 0.2s ease-in-out;
+}
+
+.logout-dropdown-menu .dropdown-item:hover {
+    background-color: #f1f1f1;
+    transform: translateX(5px);
+}
+
+/* Responsive Design for Mobile */
+@media (max-width: 768px) {
+    .logout-dropdown-menu {
+        right: 10px;
+        width: 150px; /* Adjust width for smaller screens */
+        top: 50px; /* Adjust top position if needed */
+    }
+
+    .logout-dropdown-menu .dropdown-item {
+        padding: 8px 15px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .logout-dropdown-menu,
+    .notification-dropdown {
+        right: 5px;
+        left: 5px;
+        width: auto;
+    }
+
+    .logout-dropdown-menu {
+        top: 45px;
+    }
+
+    .notification-dropdown {
+        top: 45px;
+    }
+
+    .logout-dropdown-menu .dropdown-item,
+    .notification-dropdown .dropdown-item {
+        padding: 12px 15px;
+        font-size: 16px;
+    }
+}
+/* Spinner Overlay */
+#spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background */
+    display: none; /* Hidden by default */
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* Ensure it's on top of all other elements */
+}
+
+/* Spinner Animation */
+.spinner {
+    border: 8px solid #f3f3f3; /* Light grey */
+    border-top: 8px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+}
+
+/* Spin Keyframes */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Adjust Spinner Size on Smaller Screens */
+
+/* Responsive Sidebar */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .fixed-user-info {
+        width: 100%;
+        justify-content: space-between;
+        padding: 10px 0;
+    }
+    .notification-icon, .user-avatar {
+        margin-bottom: 10px;
+    }
+    .breadcrumb {
+        margin-bottom: 10px;
+    }
+    #spinner-overlay .spinner {
+        width: 40px;
+        height: 40px;
+        border-width: 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .logout-dropdown-menu,
+    .notification-dropdown {
+        right: 5px;
+        left: 5px;
+        width: auto;
+    }
+
+    .logout-dropdown-menu {
+        top: 45px;
+    }
+
+    .notification-dropdown {
+        top: 45px;
+    }
+
+    .logout-dropdown-menu .dropdown-item,
+    .notification-dropdown .dropdown-item {
+        padding: 12px 15px;
+        font-size: 16px;
+    }
+
+    /* Adjust Spinner Size on Smaller Screens */
+    #spinner-overlay .spinner {
+        width: 40px;
+        height: 40px;
+        border-width: 6px;
+    }
 }

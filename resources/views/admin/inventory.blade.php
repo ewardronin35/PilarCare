@@ -332,7 +332,29 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="form-container" style="width: 100%; max-width: 450px; margin-top: 30px;">
+    <h2>Generate Inventory Statistics Report</h2>
+    <form id="inventory-report-form">
+        @csrf
+        <div class="form-group">
+            <label for="report-period">Select Report Period</label>
+            <select id="report-period" name="report_period" required>
+                <option value="week">Weekly</option>
+                <option value="month">Monthly</option>
+                <option value="year">Yearly</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="report-date">Select Date</label>
+            <input type="date" id="report-date" name="report_date" required>
+        </div>
+        <div class="form-group">
+            <button type="button" class="add-appointment-btn" onclick="generateInventoryReport()">Generate Report</button>
+        </div>
+    </form>
+</div>
             </div>
+            
         </div>
 
         <!-- Edit Modal HTML Structure -->
@@ -383,6 +405,7 @@
                 <canvas id="inventory-chart" style="max-width: 100%;"></canvas>
             </div>
         </div>
+        
     </main>
 
     <!-- Script Section -->
@@ -589,6 +612,67 @@
                     }
                 }
             }
+            
         });
+        function generateInventoryReport() {
+            const form = document.getElementById('inventory-report-form');
+            const formData = new FormData(form);
+
+            // Show SweetAlert loading spinner
+            Swal.fire({
+                title: 'Generating Report...',
+                text: 'Please wait while we generate your report.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            fetch('{{ route("admin.inventory.generateReport") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.close(); // Close the loading spinner
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Report Generated',
+                        text: 'Your inventory statistics report has been generated.',
+                        showCancelButton: true,
+                        confirmButtonText: 'Download',
+                        cancelButtonText: 'Close',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.open(data.pdf_url, '_blank');
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error || 'Failed to generate the report.',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An unexpected error occurred while generating the report.',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            });
+        }
     </script>
 </x-app-layout>

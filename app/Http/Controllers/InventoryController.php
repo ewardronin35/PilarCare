@@ -7,6 +7,10 @@ use App\Models\Notification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Events\LowStockNotification;
+use PDF; // If you added the PDF facade
+use Illuminate\Support\Facades\View;
+use Carbon\Carbon;
+use Storage;
 
 class InventoryController extends Controller
 {
@@ -170,6 +174,64 @@ public function add(Request $request)
         \Log::error('Error adding inventory item:', ['error' => $e->getMessage()]);
         return response()->json(['success' => false, 'message' => 'Failed to add item.'], 500);
     }
+}
+public function generateStatisticsReport(Request $request)
+{
+    // Validate incoming request
+    $request->validate([
+        'report_period' => 'required|string|in:week,month,year',
+        'report_date' => 'required|date',
+    ]);
+
+    $reportPeriod = $request->input('report_period');
+    $reportDate = $request->input('report_date');
+
+    // Process data based on report period
+    switch ($reportPeriod) {
+        case 'week':
+            $startDate = Carbon::parse($reportDate)->startOfWeek();
+            $endDate = Carbon::parse($reportDate)->endOfWeek();
+            break;
+        case 'month':
+            $startDate = Carbon::parse($reportDate)->startOfMonth();
+            $endDate = Carbon::parse($reportDate)->endOfMonth();
+            break;
+        case 'year':
+            $startDate = Carbon::parse($reportDate)->startOfYear();
+            $endDate = Carbon::parse($reportDate)->endOfYear();
+            break;
+        default:
+            return response()->json(['error' => 'Invalid report period.'], 400);
+    }
+
+    // Fetch inventory data within the specified period
+    $inventoryData = Inventory::whereBetween('date_acquired', [$startDate, $endDate])->get();
+
+    // Fetch additional statistics as needed
+    $totalItems = Inventory::count();
+    $totalQuantity = Inventory::sum('quantity');
+
+    // Prepare data for the report
+    $data = [
+        'report_period' => ucfirst($reportPeriod),
+        'report_date' => Carbon::parse($reportDate)->toFormattedDateString(),
+        'inventoryData' => $inventoryData,
+        'totalItems' => $totalItems,
+        'totalQuantity' => $totalQuantity,
+    ];
+
+    // Generate PDF using Blade view
+    $pdf = PDF::loadView('pdf.inventory_report', $data); // Updated view path
+
+    // Save the PDF to storage (optional)
+    $fileName = 'Inventory_Report_' . now()->timestamp . '.pdf';
+    $pdfPath = 'reports/' . $fileName;
+    Storage::disk('public')->put($pdfPath, $pdf->output());
+
+    // Return the URL to download the report
+    $pdfUrl = asset('storage/' . $pdfPath);
+
+    return response()->json(['success' => true, 'pdf_url' => $pdfUrl]);
 }
 
 }

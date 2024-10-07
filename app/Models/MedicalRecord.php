@@ -47,5 +47,18 @@ class MedicalRecord extends Model
     {
         return $this->hasMany(MedicalHistory::class, 'id_number', 'id_number');
     }
+    public function nurse()
+    {
+        return $this->belongsTo(Nurse::class);
+    }
+
+    /**
+     * Get the doctor associated with the medical record.
+     */
+    public function doctor()
+    {
+        return $this->belongsTo(Doctor::class);
+    }
 }
+
 

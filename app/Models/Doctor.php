@@ -17,5 +17,14 @@ class Doctor extends Model
         'approved',
     ];
 
-    // Optionally, you can add relationships or additional methods here
+
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'id_number', 'id_number');
+    }
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class);
+    }
 }

@@ -17,7 +17,7 @@ class CreateParentsTable extends Migration
             $table->string('id_number')->unique();
             $table->string('first_name');
             $table->string('last_name');
-            $table->string('grade_or_course');
+            $table->string('Student_ID');
             $table->boolean('approved')->default(0);
             $table->timestamps();
         });

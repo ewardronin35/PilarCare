@@ -22,14 +22,9 @@ class Information extends Model
         'parent_name_mother',
         'emergency_contact_number',
         'personal_contact_number',
+        'guardian_name',
+        'guardian_relationship',
         'address',
-        'birthdate',
-        'profile_picture',
-        'medical_history',
-        'allergies',    
-        'medicines',
-        'surgical_history',
-        'chronic_conditions',
     ];
 
     /**

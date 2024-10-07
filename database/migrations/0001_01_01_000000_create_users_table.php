@@ -19,6 +19,8 @@ class CreateUsersTable extends Migration
             $table->string('role');
             $table->boolean('approved')->default(0);
             $table->timestamps();
+            $table->rememberToken();
+
         });
     }
 

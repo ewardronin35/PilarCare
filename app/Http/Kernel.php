@@ -31,7 +31,12 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
+    protected $commands = [
+        Commands\FixNullToothNumbers::class,
+        Commands\PopulateMissingTeeth::class,
 
+    ];
+    
     protected $routeMiddleware = [
         
         'auth' => \App\Http\Middleware\Authenticate::class,

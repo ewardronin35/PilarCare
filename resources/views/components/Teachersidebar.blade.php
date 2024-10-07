@@ -1,8 +1,10 @@
-<!-- resources/views/components/students/sidebar.blade.php -->
 <div class="sidebar">
     <style>
+        /* Import Poppins Font */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
         .sidebar {
-            width: 80px; /* Collapsed width */
+            width: 100px; /* Collapsed width */
             background-color: #00d2ff;
             color: white;
             height: 100vh;
@@ -12,66 +14,94 @@
             padding-top: 20px;
             transition: width 0.3s ease-in-out;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
         }
 
         .sidebar:hover {
-            width: 250px; /* Expanded width */
+            width: 270px; /* Expanded width */
         }
 
         .logo {
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 20px;
+            margin-bottom: 40px; /* Increased margin to lower menu items */
             transition: opacity 0.3s ease-in-out;
         }
 
         .logo-img {
             width: 40px;
             height: 40px;
-            margin-right: 32px;
+            margin-right: 30px;
         }
 
         .logo-text {
-            font-size: 1.25rem;
+            font-size: 1.5rem;
             font-weight: bold;
             opacity: 0;
+            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
         }
 
         .sidebar:hover .logo-text {
             opacity: 1;
         }
 
+        .menu {
+            flex-grow: 1;
+            padding: 0;
+            padding-top: 20px; /* Added padding to top to lower the menu items */
+        }
+
         .menu ul {
             list-style: none;
             padding: 0;
+            margin: 0;
         }
 
         .menu li {
-            display: flex;
-            align-items: center;
-            margin: 10px 0;
-            padding: 10px 20px;
-            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+            position: relative;
         }
 
-        .menu li:hover {
-            background-color: #009ec3;
+        .menu > ul > li {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+            cursor: pointer;
+            flex-direction: column;
+            align-items: flex-start;
+            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
+        }
+
+        .menu > ul > li:hover {
+            background-color: #1f1f90;
+            color: white;
             transform: translateX(10px);
         }
 
-        .menu li a {
+        .menu > ul > li a {
             color: white;
             text-decoration: none;
-            font-size: 1rem;
+            font-size: 1.2rem; /* Adjusted font size */
             display: flex;
             align-items: center;
+            width: 100%;
+            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
+            font-weight: 500; /* Medium weight for better readability */
         }
 
-        .menu li a .icon {
-            min-width: 20px;
+        .menu > ul > li:hover a {
+            color: white;
+        }
+
+        .menu > ul > li a .icon {
+            min-width: 30px; /* Adjusted icon size */
             margin-right: 10px;
             text-align: center;
+            font-size: 1.5rem; /* Increased icon size */
         }
 
         .menu-text {
@@ -83,36 +113,75 @@
             opacity: 1;
         }
 
-        .sidebar-footer ul {
-            list-style: none;
-            padding: 0;
+        .submenu {
+            display: none;
+            flex-direction: column;
+            margin-left: 0;
+            padding-left: 0;
+            width: 100%;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
         }
 
-        .sidebar-footer li {
+        .menu li.active .submenu {
             display: flex;
-            align-items: center;
-            margin: 10px 0;
-            padding: 10px 20px;
-            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+            width: 100%;
         }
 
-        .sidebar-footer li:hover {
-            background-color: #009ec3;
+        .submenu li {
+            padding: 10px 20px;
+            margin: 0;
+            width: calc(100% - 40px); /* Adjusting width to prevent overflow */
+            color: #000;
+            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
+            font-weight: 400; /* Regular weight for submenu items */
+        }
+
+        .submenu li:hover {
             transform: translateX(10px);
         }
 
-        .sidebar-footer li a {
-            color: white;
+        .submenu li a {
+            color: #000;
             text-decoration: none;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
+            display: block;
+            width: 100%;
         }
 
-        .sidebar-footer li a .icon {
-            min-width: 20px;
-            margin-right: 10px;
-            text-align: center;
+        .submenu-toggle {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .menu li.active > a > .submenu-toggle {
+            transform: rotate(90deg);
+        }
+
+        /* Media Queries */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px; /* Smaller sidebar for mobile */
+            }
+
+            .sidebar:hover {
+                width: 200px; /* Expanded width for mobile */
+            }
+
+            .logo-text {
+                font-size: 1rem; /* Smaller logo text for mobile */
+            }
+
+            .menu > ul > li {
+                padding: 5px 10px; /* Smaller padding for menu items */
+            }
+
+            .menu > ul > li a {
+                font-size: 1rem; /* Smaller font size for menu items */
+            }
+
+            .menu > ul > li a .icon {
+                font-size: 1.2rem; /* Smaller icon size */
+            }
         }
     </style>
 
@@ -122,19 +191,57 @@
     </div>
     <nav class="menu">
         <ul>
-            <li><a href="{{ route('teacher.dashboard') }}"><span class="icon"><i class="fas fa-tachometer-alt"></i></span><span class="menu-text">Dashboard</span></a></li>
-            <li><a href="{{ route('teacher.complaint') }}"><span class="icon"><i class="fas fa-comments"></i></span><span class="menu-text">Complaint</span></a></li>
-            <li><a href="{{ route('teacher.medical-record') }}"><span class="icon"><i class="fas fa-notes-medical"></i></span><span class="menu-text">Records</span></a></li>
-            <li><a href="{{ route('teacher.appointment') }}"><span class="icon"><i class="fas fa-calendar-check"></i></span><span class="menu-text">Appointment</span></a></li>
+            <li><a href="{{ route('teacher.dashboard') }}" id="student-dashboard-link"><span class="icon"><i class="fas fa-tachometer-alt"></i></span><span class="menu-text">Dashboard</span></a></li>
+            <li><a href="{{ route('teacher.complaint') }}"><span class="icon"><i class="fas fa-comments"></i></span><span class="menu-text">Complaints</span><span class="submenu-toggle"></span></a>
+            <li><a href="{{ route('teacher.appointment') }}" id="admin-appointment-link"><span class="icon"><i class="fas fa-calendar-check"></i></span><span class="menu-text">Appointment</span></a></li>
+
+    
+            </li>
+            <li class="has-submenu">
+                <a href="#"><span class="icon"><i class="fas fa-notes-medical"></i></span><span class="menu-text">Records</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
+                <ul class="submenu">
+                @if (!$healthExamination)
+            <li><a href="{{ route('teacher.upload-pictures') }}">Health Approval</a></li>
+        @endif
+        @if ($healthExamination)
+
+                            <li><a href="{{ route('teacher.medical-record') }}">View Medical Record</a></li>
+                    <li><a href="{{ route('teacher.dental-record') }}">View Dental Record</a></li>
+                    @endif
+
+                </ul>
+    </li>  
+    <li class="has-submenu">
+            <a href="#"><span class="icon"><i class="fas fa-user-circle"></i></span><span class="menu-text">Profile</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
+            <ul class="submenu">
+                <li><a href="{{ route('teacher.settings.edit') }}">Profile Management</a></li>
+            </ul>
+        </li>
         </ul>
     </nav>
-    <div class="sidebar-footer">
-        <ul>
-            <li><a href="#"><span class="icon"><i class="fas fa-cogs"></i></span><span class="menu-text">Settings</span></a></li>
-            <li><a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><span class="icon"><i class="fas fa-sign-out-alt"></i></span><span class="menu-text">Logout</span></a></li>
-            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                @csrf
-            </form>
-        </ul>
-    </div>
 </div>
+
+<script>
+    document.querySelectorAll('.has-submenu > a').forEach(menuItem => {
+        menuItem.addEventListener('click', function(e) {
+            e.preventDefault();
+            var parentLi = this.parentElement;
+            parentLi.classList.toggle('active');
+            document.querySelectorAll('.has-submenu').forEach(item => {
+                if (item !== parentLi) {
+                    item.classList.remove('active');
+                }
+            });
+        });
+    });
+
+    document.addEventListener('mouseover', function(e) {
+        var targetElement = e.target;
+        var isHoverInside = targetElement.closest('.sidebar');
+        if (!isHoverInside) {
+            document.querySelectorAll('.has-submenu').forEach(item => {
+                item.classList.remove('active');
+            });
+        }
+    });
+</script>

@@ -6,17 +6,31 @@ use Illuminate\Support\Facades\Auth;
 
 class RoleMiddleware
 {
-    public function handle($request, Closure $next, $role)
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @param  mixed  ...$roles
+     * @return mixed
+     */
+    public function handle($request, Closure $next, ...$roles)
     {
         if (!Auth::check()) {
             return redirect('login');
         }
 
         $user = Auth::user();
-        if ($user->role !== $role) {
-            return redirect('/'); // Or another page
+
+        // Convert roles to lowercase for case-insensitive comparison
+        $roles = array_map('strtolower', $roles);
+        $userRole = strtolower($user->role);
+
+        if (in_array($userRole, $roles)) {
+            return $next($request);
         }
 
-        return $next($request);
+        // Optionally, you can redirect or abort with a 403 error
+        abort(403, 'Unauthorized action.');
     }
 }

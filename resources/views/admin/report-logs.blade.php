@@ -1,5 +1,6 @@
 <x-app-layout>
     <style>
+        /* Existing styles remain unchanged */
         body {
             font-family: 'Poppins', sans-serif;
             background-color: #f7f8fc;
@@ -164,6 +165,51 @@
                 transform: translateY(0);
             }
         }
+
+        /* Additional styles for sub-tabs */
+        .sub-tabs {
+            display: flex;
+            border-bottom: 2px solid #ddd;
+            margin-bottom: 20px;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+
+        .sub-tab {
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            background-color: #e0e0e0;
+            border-radius: 8px 8px 0 0;
+            margin-right: 5px;
+            flex: 1;
+            margin-bottom: 5px;
+        }
+
+        .sub-tab:hover {
+            background-color: #c9d1d9;
+        }
+
+        .sub-tab.active {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .sub-tab-content {
+            display: none;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .sub-tab-content.active {
+            display: block;
+        }
     </style>
 
     <main class="main-content">
@@ -196,7 +242,7 @@
                     <div class="form-group">
                         <label><i class="fas fa-bell"></i> Notification for:</label>
                         <div>
-                            <input type="radio" id="student" name="notification_for" value="student">
+                            <input type="radio" id="student" name="notification_for" value="student" required>
                             <label for="student" class="inline">Student</label>
                             <input type="radio" id="parent" name="notification_for" value="parent">
                             <label for="parent" class="inline">Parent</label>
@@ -211,43 +257,233 @@
             </div>
         </div>
 
-        <!-- Logs Tab Content -->
+        <!-- All Logs Tab Content with Sub-Tabs -->
         <div id="logs" class="tab-content">
-            <h2><i class="fas fa-clipboard-list"></i> Logs</h2>
+            <h2><i class="fas fa-clipboard-list"></i> All Logs</h2>
 
-            <!-- Logs Table -->
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Module</th>
-                            <th>Details</th>
-                            <th>Date & Time</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Appointments</td>
-                            <td>Appointment created for John Doe</td>
-                            <td>May 20, 2024 10:00 AM</td>
-                            <td>Completed</td>
-                        </tr>
-                        <tr>
-                            <td>Inventory</td>
-                            <td>Stethoscope added to inventory</td>
-                            <td>May 10, 2024 09:00 AM</td>
-                            <td>Available</td>
-                        </tr>
-                        <tr>
-                            <td>Complaints</td>
-                            <td>Complaint filed by Jane Doe</td>
-                            <td>May 15, 2024 11:30 AM</td>
-                            <td>Resolved</td>
-                        </tr>
-                        <!-- Add more log rows as needed -->
-                    </tbody>
-                </table>
+            <!-- Sub-Tabs for different log modules -->
+            <div class="sub-tabs">
+                <div class="sub-tab active" onclick="showSubTab('medical-record-log')">Medical Record Log</div>
+                <div class="sub-tab" onclick="showSubTab('appointment-log')">Appointment Log</div>
+                <div class="sub-tab" onclick="showSubTab('complaint-log')">Complaint Log</div>
+                <div class="sub-tab" onclick="showSubTab('registration-log')">Registration Log</div>
+                <div class="sub-tab" onclick="showSubTab('login-log')">Login Log</div>
+                <div class="sub-tab" onclick="showSubTab('dental-record-log')">Dental Record Log</div>
+                <div class="sub-tab" onclick="showSubTab('physical-dental-exam-log')">Physical & Dental Exam Log</div>
+            </div>
+
+            <!-- Sub-Tab Content Sections -->
+            <div id="medical-record-log" class="sub-tab-content active">
+                <h3>Medical Record Logs</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Module</th>
+                                <th>Details</th>
+                                <th>Date & Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($medicalRecordLogs as $log)
+                                <tr>
+                                    <td>Medical Records</td>
+                                    <td>Medical Record updated for {{ $log->user->first_name }} {{ $log->user->last_name }}</td>
+                                    <td>{{ $log->updated_at->format('M d, Y h:i A') }}</td>
+                                    <td>{{ $log->is_approved ? 'Approved' : 'Pending' }}</td>
+                                </tr>
+                            @endforeach
+                            @if($medicalRecordLogs->isEmpty())
+                                <tr>
+                                    <td colspan="4" class="text-center">No Medical Record Logs Found.</td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="appointment-log" class="sub-tab-content">
+                <h3>Appointment Logs</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Module</th>
+                                <th>Details</th>
+                                <th>Date & Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($appointmentLogs as $log)
+                                <tr>
+                                    <td>Appointments</td>
+                                    <td>Appointment with {{ $log->user->first_name }} {{ $log->user->last_name }}</td>
+                                    <td>{{ $log->created_at->format('M d, Y h:i A') }}</td>
+                                    <td>{{ $log->status }}</td>
+                                </tr>
+                            @endforeach
+                            @if($appointmentLogs->isEmpty())
+                                <tr>
+                                    <td colspan="4" class="text-center">No Appointment Logs Found.</td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="complaint-log" class="sub-tab-content">
+                <h3>Complaint Logs</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Module</th>
+                                <th>Details</th>
+                                <th>Date & Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($complaintLogs as $log)
+                                <tr>
+                                    <td>Complaints</td>
+                                    <td>{{ $log->description }}</td>
+                                    <td>{{ $log->created_at->format('M d, Y h:i A') }}</td>
+                                    <td>{{ $log->status }}</td>
+                                </tr>
+                            @endforeach
+                            @if($complaintLogs->isEmpty())
+                                <tr>
+                                    <td colspan="4" class="text-center">No Complaint Logs Found.</td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="registration-log" class="sub-tab-content">
+    <h3>Registration Logs</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Module</th>
+                    <th>Details</th>
+                    <th>Date & Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($registrationLogs as $user)
+                    <tr>
+                        <td>Registrations</td>
+                        <td>{{ $user->first_name }} {{ $user->last_name }} registered</td>
+                        <td>{{ $user->created_at->format('M d, Y h:i A') }}</td>
+                    </tr>
+                @endforeach
+                @if($registrationLogs->isEmpty())
+                    <tr>
+                        <td colspan="3" class="text-center">No Registration Logs Found.</td>
+                    </tr>
+                @endif
+            </tbody>
+        </table>
+    </div>
+</div>
+            <div id="login-log" class="sub-tab-content">
+                <h3>Login Logs</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Module</th>
+                                <th>User</th>
+                                <th>Date & Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($loginLogs as $log)
+                                <tr>
+                                    <td>Login</td>
+                                    <td>{{ $log->user->first_name }} {{ $log->user->last_name }}</td>
+                                    <td>{{ $log->created_at->format('M d, Y h:i A') }}</td>
+                                    <td>Success</td>
+                                </tr>
+                            @endforeach
+                            @if($loginLogs->isEmpty())
+                                <tr>
+                                    <td colspan="4" class="text-center">No Login Logs Found.</td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="dental-record-log" class="sub-tab-content">
+                <h3>Dental Record Logs</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Module</th>
+                                <th>Details</th>
+                                <th>Date & Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($dentalRecordLogs as $log)
+                                <tr>
+                                    <td>Dental Records</td>
+                                    <td>Dental Record updated for {{ $log->user->first_name }} {{ $log->user->last_name }}</td>
+                                    <td>{{ $log->updated_at->format('M d, Y h:i A') }}</td>
+                                    <td>{{ $log->is_approved ? 'Approved' : 'Pending' }}</td>
+                                </tr>
+                            @endforeach
+                            @if($dentalRecordLogs->isEmpty())
+                                <tr>
+                                    <td colspan="4" class="text-center">No Dental Record Logs Found.</td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="physical-dental-exam-log" class="sub-tab-content">
+                <h3>Physical Exam Logs</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Module</th>
+                                <th>Details</th>
+                                <th>Date & Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($physicalDentalExamLogs as $log)
+                                <tr>
+                                    <td>Physical & Dental Exams</td>
+                                    <td>Exam conducted for {{ $log->user->first_name }} {{ $log->user->last_name }}</td>
+                                    <td>{{ $log->created_at->format('M d, Y h:i A') }}</td>
+                                    <td>{{ $log->status }}</td>
+                                </tr>
+                            @endforeach
+                            @if($physicalDentalExamLogs->isEmpty())
+                                <tr>
+                                    <td colspan="4" class="text-center">No Physical & Dental Exam Logs Found.</td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -262,8 +498,10 @@
         </div>
     </main>
 
+    <!-- Include Chart.js Library -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        // Function to handle main tab switching
         function showTab(tabId) {
             const tabContents = document.querySelectorAll('.tab-content');
             tabContents.forEach(tabContent => {
@@ -281,36 +519,84 @@
             document.querySelector(`.tab[onclick="showTab('${tabId}')"]`).classList.add('active');
         }
 
+        // Function to handle sub-tab switching within All Logs
+        function showSubTab(subTabId) {
+            const subTabContents = document.querySelectorAll('.sub-tab-content');
+            subTabContents.forEach(subTabContent => {
+                subTabContent.classList.remove('active');
+            });
+
+            const selectedSubTabContent = document.getElementById(subTabId);
+            selectedSubTabContent.classList.add('active');
+
+            const subTabs = document.querySelectorAll('.sub-tab');
+            subTabs.forEach(subTab => {
+                subTab.classList.remove('active');
+            });
+
+            document.querySelector(`.sub-tab[onclick="showSubTab('${subTabId}')"]`).classList.add('active');
+        }
+
         // Statistics chart for logs
+        const chartData = {
+            labels: {!! json_encode([
+                'Accounts',
+                'Registrations',
+                'Logins',
+                'Appointments',
+                'Complaints',
+                'Dental Records',
+                'Medical Records',
+                'Physical & Dental Exams',
+            ]) !!},
+            datasets: [{
+                label: 'Number of Logs',
+                data: {!! json_encode([
+                    $accountLogsCount ?? 0,
+                    $registrationLogsCount ?? 0,
+                    $loginLogsCount ?? 0,
+                    $appointmentLogsCount ?? 0,
+                    $complaintLogsCount ?? 0,
+                    $dentalRecordLogsCount ?? 0,
+                    $medicalRecordLogsCount ?? 0,
+                    $physicalDentalExamLogsCount ?? 0,
+                ]) !!},
+                backgroundColor: [
+                    'rgba(75, 192, 192, 0.2)',    // Accounts
+                    'rgba(54, 162, 235, 0.2)',    // Registrations
+                    'rgba(255, 206, 86, 0.2)',    // Logins
+                    'rgba(153, 102, 255, 0.2)',   // Appointments
+                    'rgba(255, 99, 132, 0.2)',    // Complaints
+                    'rgba(255, 159, 64, 0.2)',    // Dental Records
+                    'rgba(255, 205, 86, 0.2)',    // Medical Records
+                    'rgba(201, 203, 207, 0.2)'    // Physical & Dental Exams
+                ],
+                borderColor: [
+                    'rgba(75, 192, 192, 1)',      // Accounts
+                    'rgba(54, 162, 235, 1)',      // Registrations
+                    'rgba(255, 206, 86, 1)',      // Logins
+                    'rgba(153, 102, 255, 1)',     // Appointments
+                    'rgba(255, 99, 132, 1)',      // Complaints
+                    'rgba(255, 159, 64, 1)',      // Dental Records
+                    'rgba(255, 205, 86, 1)',      // Medical Records
+                    'rgba(201, 203, 207, 1)'      // Physical & Dental Exams
+                ],
+                borderWidth: 1
+            }]
+        };
+
         const ctx = document.getElementById('logStatisticsChart').getContext('2d');
         const logStatisticsChart = new Chart(ctx, {
             type: 'bar',
-            data: {
-                labels: ['Accounts', 'Complaints', 'Appointments', 'Dental Records', 'Medical Records'],
-                datasets: [{
-                    label: 'Number of Logs',
-                    data: [{{ $accountLogsCount }}, {{ $complaintLogsCount }}, {{ $appointmentLogsCount }}, {{ $dentalRecordLogsCount }}, {{ $medicalRecordLogsCount }}],
-                    backgroundColor: [
-                        'rgba(75, 192, 192, 0.2)',
-                        'rgba(255, 99, 132, 0.2)',
-                        'rgba(54, 162, 235, 0.2)',
-                        'rgba(153, 102, 255, 0.2)',
-                        'rgba(255, 159, 64, 0.2)'
-                    ],
-                    borderColor: [
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
+            data: chartData,
             options: {
+                responsive: true,
                 scales: {
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
                     }
                 }
             }

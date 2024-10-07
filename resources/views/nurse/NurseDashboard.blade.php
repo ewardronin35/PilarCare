@@ -1,18 +1,16 @@
 <x-app-layout>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         body {
             background-color: #f8f9fa;
-            font-family: 'Arial', sans-serif;
+            font-family: 'Poppins', sans-serif;
         }
 
         .main-content {
-            flex-grow: 1;
-            padding: 20px;
-            margin-top: 30px;
-            margin-left: 80px;
+            
+            margin-top: 40px;
             transition: margin-left 0.3s ease-in-out;
             overflow-y: auto;
+            
         }
 
         .profile-box {
@@ -79,7 +77,7 @@
             padding: 20px;
             border-radius: 8px;
             text-align: center;
-            width: calc(33.33% - 10px);
+            width: calc(25% - 10px);
             margin-bottom: 20px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             transition: background-color 0.3s ease-in-out;
@@ -109,12 +107,27 @@
             text-decoration: none;
         }
 
+        .content-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .chart-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 49%;
+        }
+
         .data-table-wrapper {
             background-color: #ffffff;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            width: 100%;
+            width: 49%;
             overflow-x: auto;
         }
 
@@ -129,8 +142,7 @@
             animation: fadeInUp 0.5s ease-in-out;
         }
 
-        .data-table th,
-        .data-table td {
+        .data-table th, .data-table td {
             padding: 10px;
             text-align: left;
         }
@@ -146,191 +158,65 @@
             border-bottom: 1px solid #eee;
         }
 
+        .nav-tabs {
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            gap: 10px;
+            list-style: none; /* Remove default list-style */
+            padding-left: 0;
+        }
+
+        .nav-tabs .nav-item {
+            margin-bottom: -1px;
+        }
+
+        .nav-tabs .nav-link {
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        .nav-tabs .nav-link:hover {
+            background-color: #0056b3;
+        }
+
+        .nav-tabs .nav-link.active {
+            background-color: #0056b3;
+        }
+
+        .tab-content {
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-top: none;
+        }
+
+        .tab-pane {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .tab-pane.active {
+            display: block;
+            opacity: 1;
+        }
+
         @keyframes fadeInUp {
             from {
                 opacity: 0;
                 transform: translateY(20px);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background-color: #fff;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 100%;
-            max-width: 800px;
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            animation: fadeInUp 0.5s ease-in-out;
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .form-group label {
-            font-weight: bold;
-            color: #333;
-        }
-
-        .form-group input[type="text"],
-        .form-group input[type="date"],
-        .form-group input[type="file"],
-        .form-group input[type="number"],
-        .form-group textarea {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        .form-group input[type="checkbox"] {
-            margin-right: 10px;
-        }
-
-        .row {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .row .form-group {
-            width: 48%;
-        }
-
-        .row .form-group label {
-            display: flex;
-            align-items: center;
-        }
-
-        .row .form-group label i {
-            margin-right: 10px;
-        }
-
-        .optional-sibling {
-            display: none;
-        }
-
-        .toggle-sibling {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
-            text-align: center;
-            text-decoration: none;
-        }
-
-        .toggle-sibling:hover {
-            background-color: #0056b3;
-        }
-
-        .next-button {
-            background-color: #28a745;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            text-align: center;
-            text-decoration: none;
-            margin-top: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .next-button:hover {
-            background-color: #218838;
-        }
-
-        .submit-button {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            text-align: center;
-            text-decoration: none;
-            margin-top: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .submit-button:hover {
-            background-color: #0056b3;
-        }
-
-        .disclaimer {
-            margin-bottom: 20px;
-            text-align: justify;
-            font-size: 14px;
-            color: #555;
-        }
-
-        .medicines-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .medicines-group label {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .arrow {
-            display: inline-block;
-            transition: transform 0.3s;
-        }
-
-        .arrow:hover {
-            transform: translateX(5px);
         }
     </style>
 
@@ -346,321 +232,278 @@
 
         <div class="statistics">
             <div class="stat-box">
-                <a href="{{ route('student.appointment') }}">
+                <a href="{{ route('nurse.appointment') }}">
                     <img src="https://img.icons8.com/ios-filled/50/000000/appointment-reminders.png" alt="Appointments Icon">
                     <h2>{{ $appointmentCount }}</h2>
                     <p>Appointments</p>
                 </a>
             </div>
             <div class="stat-box">
-                <img src="https://img.icons8.com/ios-filled/50/000000/medical-doctor.png" alt="Health Record Icon">
-                <h2>No</h2>
-                <p>Health Record Submitted</p>
+                <a href="{{ route('nurse.inventory') }}">
+                    <img src="https://img.icons8.com/ios-filled/50/000000/warehouse.png" alt="Inventory Icon">
+                    <h2>{{ $inventoryCount }}</h2>
+                    <p>Inventory Items</p>
+                </a>
             </div>
             <div class="stat-box">
-                <a href="{{ route('student.complaint') }}">
+                <a href="{{ route('nurse.complaint') }}">
                     <img src="https://img.icons8.com/ios-filled/50/000000/complaint.png" alt="Complaints Icon">
                     <h2>{{ $complaintCount }}</h2>
                     <p>Complaints</p>
                 </a>
             </div>
-        </div>
+            <div class="stat-box">
+                <a href="{{ route('nurse.pendingApproval') }}">
+                    <img src="https://img.icons8.com/?size=100&id=10247&format=png&color=000000" alt="Pending Approval Icon">
+                    <h2>{{ $pendingApprovalCount }}</h2>
+                    <p>Pending Approvals</p>
+                </a>
+            </div>
+  
+    <!-- New Stat Boxes -->
+    <div class="stat-box">
+        <a href="{{ route('nurse.uploadMedicalDocu') }}">
+            <img src="https://img.icons8.com/ios-filled/50/000000/medical-doctor.png" alt="Medical Records Icon">
+            <h2>{{ $medicalRecordCount }}</h2>
+            <p>Medical Records</p>
+        </a>
 
-        <div class="data-table-wrapper no-scroll">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Sl.No</th>
-                        <th>Name</th>
-                        <th>Appointment Type</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($appointments as $appointment)
-                    <tr>
-                        <td>{{ $loop->iteration }}</td>
-                        <td>{{ $appointment->name }}</td>
-                        <td>{{ $appointment->appointment_type }}</td>
-                        <td>{{ $appointment->appointment_date }}</td>
-                        <td>{{ $appointment->appointment_time }}</td>
-                        <td>
-                            <button onclick="openModal({{ $appointment->id }})">Cancel / Reschedule</button>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+    </div>
+    <div class="stat-box">
+        <a href="{{ route('nurse.uploadDentalDocu') }}">
+            <img src="https://img.icons8.com/ios-filled/50/000000/tooth.png" alt="Dental Records Icon">
+            <h2>{{ $dentalRecordCount }}</h2>
+            <p>Dental Records</p>
+        </a>
+    </div>
     </div>
 
-    <!-- The Modal -->
-    <div id="welcomeModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <div class="disclaimer">
-                <h3>Data Privacy Disclaimer</h3>
-                <p>
-                    In compliance with the Data Privacy Act of 2012, all gathered data from the participant will be treated with utmost confidentiality to protect the participant’s/respondent’s privacy.
-                </p>
-                <p>
-                    In accordance with the Medical Act of 1959 (Republic Act No. 2382), all medical records managed through the clinic system will be kept confidential to protect patient privacy.
-                </p>
-                <p>
-                    In line with the Dental Act of 1998 (Republic Act No. 8978), all dental records handled through the clinic system will be treated with strict confidentiality to ensure patient privacy.
-                </p>
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="agree_disclaimer" name="agree_disclaimer" required>
-                        I have read and understood the above statement. I agree to participate voluntarily in this research without any force.
-                    </label>
-                </div>
-                <p>After agreeing to the terms, you will proceed to fill out your profile information.</p>
-                <button type="button" class="next-button" id="nextButton" disabled>
-                    Next <span class="arrow">&rarr;</span>
-                </button>
+        <div class="content-row">
+            <div class="chart-container">
+                <h3>Monthly Registered Users</h3>
+                <canvas id="monthlyUsersChart"></canvas>
             </div>
 
-            <form id="welcomeForm" action="{{ route('student.profile.store') }}" method="POST" enctype="multipart/form-data" style="display: none;">
-                @csrf
-                <div class="row">
-                    <div class="form-group">
-                        <label for="parent_name_father"><i class="fas fa-user"></i> Father's Name</label>
-                        <input type="text" id="parent_name_father" name="parent_name_father" required>
+            <div class="data-table-wrapper">
+            <h1>Registered Users</h1>
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="student-tab" data-toggle="tab" href="#student" role="tab" aria-controls="student" aria-selected="true">Student</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="staff-tab" data-toggle="tab" href="#staff" role="tab" aria-controls="staff" aria-selected="false">Staff</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="parent-tab" data-toggle="tab" href="#parent" role="tab" aria-controls="parent" aria-selected="false">Parent</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="teacher-tab" data-toggle="tab" href="#teacher" role="tab" aria-controls="teacher" aria-selected="false">Teacher</a>
+                    </li>
+                    <li class="nav-item">
+    <a class="nav-link" id="doctor-tab" data-toggle="tab" href="#doctor" role="tab" aria-controls="doctor" aria-selected="false">Doctor</a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" id="nurse-tab" data-toggle="tab" href="#nurse" role="tab" aria-controls="nurse" aria-selected="false">Nurse</a>
+</li>
+                </ul>
+                <div class="tab-content" id="myTabContent">
+                    <div class="tab-pane fade show active" id="student" role="tabpanel" aria-labelledby="student-tab">
+                        
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID No.</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Email</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($students as $student)
+                                    <tr>
+                                        <td>{{ $student->id_number }}</td>
+                                        <td>{{ $student->first_name }}</td>
+                                        <td>{{ $student->last_name }}</td>
+                                        <td>{{ $student->email }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="form-group">
-                        <label for="parent_name_mother"><i class="fas fa-user"></i> Mother's Name</label>
-                        <input type="text" id="parent_name_mother" name="parent_name_mother" required>
+                    <div class="tab-pane fade" id="staff" role="tabpanel" aria-labelledby="staff-tab">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID No.</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Email</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($staff as $staffMember)
+                                    <tr>
+                                    <td>{{ $staffMember->id_number }}</td>
+                                        <td>{{ $staffMember->first_name }}</td>
+                                        <td>{{ $staffMember->last_name }}</td>
+                                        <td>{{ $staffMember->email }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane fade" id="parent" role="tabpanel" aria-labelledby="parent-tab">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                <th>ID No.</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Email</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($parents as $parent)
+                                    <tr>
+                                        <td>{{ $parent->id_number }}</td>
+                                        <td>{{ $parent->first_name }}</td>
+                                        <td>{{ $parent->last_name }}</td>
+                                        <td>{{ $parent->email }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane fade" id="teacher" role="tabpanel" aria-labelledby="teacher-tab">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                <th>ID No.</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Email</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($teachers as $teacher)
+                                    <tr>
+                                    <td>{{ $teacher->id_number }}</td>
+                                        <td>{{ $teacher->first_name }}</td>
+                                        <td>{{ $teacher->last_name }}</td>
+                                        <td>{{ $teacher->email }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane fade" id="doctor" role="tabpanel" aria-labelledby="doctor-tab">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID No.</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Email</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($doctors as $doctor)
+                                    <tr>
+                                        <td>{{ $doctor->id_number }}</td>
+                                        <td>{{ $doctor->first_name }}</td>
+                                        <td>{{ $doctor->last_name }}</td>
+                                        <td>{{ $doctor->email }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Nurse Tab -->
+                    <div class="tab-pane fade" id="nurse" role="tabpanel" aria-labelledby="nurse-tab">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID No.</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Email</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($nurses as $nurse)
+                                    <tr>
+                                        <td>{{ $nurse->id_number }}</td>
+                                        <td>{{ $nurse->first_name }}</td>
+                                        <td>{{ $nurse->last_name }}</td>
+                                        <td>{{ $nurse->email }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="form-group">
-                        <label for="profile_picture"><i class="fas fa-camera"></i> Profile Picture</label>
-                        <input type="file" id="profile_picture" name="profile_picture" accept="image/*" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="birthdate"><i class="fas fa-calendar-alt"></i> Your Birthdate</label>
-                        <input type="date" id="birthdate" name="birthdate" required>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="form-group">
-                        <label for="emergency_contact_number"><i class="fas fa-phone-alt"></i> Emergency Contact Number</label>
-                        <input type="text" id="emergency_contact_number" name="emergency_contact_number" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="personal_contact_number"><i class="fas fa-phone"></i> Personal Contact Number</label>
-                        <input type="text" id="personal_contact_number" name="personal_contact_number" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="address"><i class="fas fa-home"></i> Address</label>
-                    <input type="text" id="address" name="address" required>
-                </div>
-                <div class="form-group">
-                    <label for="medical_history"><i class="fas fa-notes-medical"></i> Medical History</label>
-                    <textarea id="medical_history" name="medical_history" rows="3" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="allergies"><i class="fas fa-allergies"></i> Allergies</label>
-                    <textarea id="allergies" name="allergies" rows="2" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-pills"></i> Medicines (select all that apply)</label>
-                    <div class="medicines-group">
-                        <label><input type="checkbox" name="medicines[]" value="Paracetamol"> Paracetamol</label>
-                        <label><input type="checkbox" name="medicines[]" value="Ibuprofen"> Ibuprofen</label>
-                        <label><input type="checkbox" name="medicines[]" value="Mefenamic Acid"> Mefenamic Acid</label>
-                        <label><input type="checkbox" name="medicines[]" value="Citirizine/Loratadine"> Citirizine/Loratadine</label>
-                        <label><input type="checkbox" name="medicines[]" value="Camphor + Menthol Liniment"> Camphor + Menthol Liniment</label>
-                        <label><input type="checkbox" name="medicines[]" value="PPA"> PPA</label>
-                        <label><input type="checkbox" name="medicines[]" value="Phenylephrine"> Phenylephrine</label>
-                        <label><input type="checkbox" name="medicines[]" value="Antacid"> Antacid</label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="surgical_history"><i class="fas fa-scalpel"></i> Surgical History</label>
-                    <textarea id="surgical_history" name="surgical_history" rows="3" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="chronic_conditions"><i class="fas fa-heartbeat"></i> Chronic Conditions</label>
-                    <textarea id="chronic_conditions" name="chronic_conditions" rows="3" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="agree_terms" name="agree_terms" required>
-                        I agree to the terms and conditions.
-                    </label>
-                </div>
-                <input type="hidden" name="id_number" value="{{ Auth::user()->id_number }}">
-                <button type="submit" class="submit-button" id="submitButton" disabled>
-                    Submit <span class="arrow">&rarr;</span>
-                </button>
-            </form>
+            </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const modal = document.getElementById("welcomeModal");
-        const nextButton = document.getElementById("nextButton");
-        const submitButton = document.getElementById("submitButton");
-        const welcomeForm = document.getElementById("welcomeForm");
-        const agreeDisclaimer = document.getElementById("agree_disclaimer");
-        const agreeTerms = document.getElementById("agree_terms");
-        const csrfToken = document.querySelector('meta[name="csrf-token"]');
-        
-        let formInteraction = false;
 
-        if (!csrfToken) {
-            console.error('CSRF token not found in meta tags');
-            return;
-        }
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+            const monthlyUserData = @json($monthlyUserData);
+        const ctx = document.getElementById('monthlyUsersChart').getContext('2d');
+        const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const roles = ['Student', 'Teacher', 'Staff', 'Parent', 'Doctor', 'Nurse'];
+        const colors = {
+            'Student': 'rgba(75, 192, 192, 0.2)',
+            'Teacher': 'rgba(255, 99, 132, 0.2)',
+            'Staff': 'rgba(54, 162, 235, 0.2)',
+            'Parent': 'rgba(255, 206, 86, 0.2)',
+            'Doctor': 'rgba(153, 102, 255, 0.2)',
+            'Nurse': 'rgba(255, 159, 64, 0.2)'
+        };
 
-        // Function to enable the beforeunload prompt
-        function enableBeforeUnload() {
-            window.addEventListener('beforeunload', preventFormClose);
-        }
+        const borderColors = {
+            'Student': 'rgba(75, 192, 192, 1)',
+            'Teacher': 'rgba(255, 99, 132, 1)',
+            'Staff': 'rgba(54, 162, 235, 1)',
+            'Parent': 'rgba(255, 206, 86, 1)',
+            'Doctor': 'rgba(153, 102, 255, 1)',
+            'Nurse': 'rgba(255, 159, 64, 1)'
+        };
 
-        // Function to remove the beforeunload prompt
-        function disableBeforeUnload() {
-            window.removeEventListener('beforeunload', preventFormClose);
-        }
+        const datasets = roles.map(role => ({
+            label: role + 's',
+            data: monthlyUserData[role],
+            backgroundColor: colors[role],
+            borderColor: borderColors[role],
+            borderWidth: 1
+        }));
+        const monthlyUsersChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
 
-        // Function to show a warning when trying to leave the page
-        function preventFormClose(event) {
-            event.preventDefault();
-            event.returnValue = ''; // Standard way to trigger a warning dialog
-        }
 
-        // Attach event listeners to form inputs to detect interaction
-        if (welcomeForm) {
-            const inputs = welcomeForm.querySelectorAll('input, textarea, select');
-            inputs.forEach(input => {
-                input.addEventListener('input', () => {
-                    formInteraction = true;
-                    enableBeforeUnload(); // Enable the prompt after user interaction
-                });
-            });
-
-            // Form submission with AJAX
-            welcomeForm.addEventListener('submit', function(event) {
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function (event) {
                 event.preventDefault();
+                document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+                document.querySelectorAll('.tab-pane').forEach(tab => tab.classList.remove('active', 'show'));
 
-                // Disable the beforeunload prompt before form submission
-                disableBeforeUnload();
-
-                const formData = new FormData(welcomeForm);
-
-                fetch('{{ route('student.profile.store') }}', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken.getAttribute('content')
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: 'Profile information updated successfully!',
-                        }).then(() => {
-                            modal.style.display = 'none';
-                            location.reload(); // Reload the page after successful submission
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'There was an error updating your profile. Please try again.',
-                        });
-                    }
-                })
-                .catch(error => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'An unexpected error occurred. Please try again later.',
-                    });
-                });
+                this.classList.add('active');
+                const tabId = this.getAttribute('href').substring(1);
+                document.getElementById(tabId).classList.add('active', 'show');
             });
-        }
-
-        if (modal) {
-            if (@json($showModal)) {
-                modal.style.display = 'flex';
-            }
-
-            const closeModal = document.querySelector('.close');
-            if (closeModal) {
-                closeModal.addEventListener('click', function() {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Incomplete Form',
-                        text: 'You need to complete the form before proceeding.',
-                    });
-                });
-            }
-
-            window.addEventListener('click', function(event) {
-                if (event.target === modal) {
-                    event.preventDefault();
-                }
-            });
-
-            if (agreeDisclaimer && nextButton) {
-                agreeDisclaimer.addEventListener('change', function() {
-                    nextButton.disabled = !this.checked;
-                });
-
-                nextButton.addEventListener('click', function() {
-                    let countdown = 10;
-                    nextButton.disabled = true;
-                    nextButton.innerHTML = `Please wait ${countdown}s`;
-
-                    const countdownInterval = setInterval(() => {
-                        countdown--;
-                        nextButton.innerHTML = `Please wait ${countdown}s`;
-
-                        if (countdown === 0) {
-                            clearInterval(countdownInterval);
-                            nextButton.innerHTML = `Next <span class="arrow">&rarr;</span>`;
-                            nextButton.disabled = false;
-
-                            document.querySelector('.disclaimer').style.display = 'none';
-                            welcomeForm.style.display = 'block';
-
-                            // Animate the form coming into view
-                            welcomeForm.style.opacity = 0;
-                            welcomeForm.style.transform = 'translateY(20px)';
-                            setTimeout(() => {
-                                welcomeForm.style.transition = 'opacity 0.5s, transform 0.5s';
-                                welcomeForm.style.opacity = 1;
-                                welcomeForm.style.transform = 'translateY(0)';
-                            }, 100);
-                        }
-                    }, 1000);
-                });
-            }
-        }
-
-        if (agreeTerms && submitButton) {
-            agreeTerms.addEventListener('change', function() {
-                if (this.checked) {
-                    submitButton.disabled = true;
-                    setTimeout(() => {
-                        submitButton.disabled = false;
-                    }, 1000);
-                } else {
-                    submitButton.disabled = true;
-                }
-            });
-        }
-    });
-</script>
+        });
+    </script>
 </x-app-layout>

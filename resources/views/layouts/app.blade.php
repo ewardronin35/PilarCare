@@ -11,20 +11,27 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
+    <!-- FullCalendar -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.9.0/main.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.9.0/main.min.css" rel="stylesheet" />
+
     <!-- Styles -->
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="{{ mix('css/app.css') }}" rel="stylesheet">
-<script src="{{ mix('js/app.js') }}"></script>
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <!-- Include jQuery via CDN -->
+<!-- Include jQuery via CDN with correct integrity -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+        crossorigin="anonymous"></script>
+
+
+    <!-- Include Laravel's compiled JS -->
+    <script src="{{ mix('js/app.js') }}"></script>
 </head>
 <body class="font-sans antialiased">
-<div class="container">
+    <div class="container">
         @if(Auth::check())
             @switch(Auth::user()->role)
                 @case('Admin')
@@ -69,18 +76,16 @@
                   
                     <span class="username">{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</span>
                     @php
-    $profilePicturePath = Auth::user()->information->profile_picture ?? 'images/pilarLogo.jpg';
-@endphp
+                        $profilePicturePath = Auth::user()->information->profile_picture ?? 'images/pilarLogo.jpg';
+                    @endphp
 
-<div class="user-avatar" id="user-avatar">
-    <img src="{{ asset('storage/' . $profilePicturePath) }}" alt="Profile Image">
-</div>
-                    <div class="dropdown-menu" id="logoutDropdown">
-                       
-                        <form method="POST" action="{{ route('logout') }}">
+                    <div class="user-avatar" id="user-avatar">
+                        <img src="{{ asset('storage/' . $profilePicturePath) }}" alt="Profile Image">
+                    </div>
+                    <div class="logout-dropdown-menu" id="logoutDropdown">
+                        <form id="logout-form" method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <a href="{{ route('logout') }}" class="dropdown-item"
-                               onclick="event.preventDefault(); showLogoutAlert();">
+                            <a href="#" class="dropdown-item" id="logout-button">
                                 <i class="fas fa-sign-out-alt"></i> Logout
                             </a>
                         </form>
@@ -94,35 +99,86 @@
         </div>
     </div>
 
+    <!-- Spinner Overlay -->
+    <div id="spinner-overlay" role="alert" aria-live="assertive" aria-label="Loading">
+        <div class="spinner" aria-hidden="true"></div>
+    </div>
+
+    <!-- Existing scripts... -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
-    const bellIcon = document.querySelector('.notification-icon i');
+document.addEventListener('DOMContentLoaded', function () {
+    // Notification Icon Elements
+    const notificationIcon = document.getElementById('notification-icon');
+    const bellIcon = notificationIcon?.querySelector('i');
     const notificationDot = document.querySelector('.notification-dot');
     const notificationDropdown = document.getElementById('notification-dropdown');
 
-    // Check if the elements exist before adding event listeners or manipulating them
-    if (!notificationDot) {
-        console.error('Error: notificationDot element is not defined in the DOM.');
+    // Logout Dropdown Elements
+    const userAvatar = document.getElementById('user-avatar');
+    const logoutDropdown = document.getElementById('logoutDropdown');
+    const logoutButton = document.getElementById('logout-button');
+
+    // Spinner Elements
+    const spinnerOverlay = document.getElementById('spinner-overlay');
+
+    // Function to Show Spinner
+    function showSpinner() {
+        spinnerOverlay.style.display = 'flex';
     }
 
-    if (!notificationDropdown) {
-        console.error('Error: notificationDropdown element is not defined in the DOM.');
+    // Function to Hide Spinner
+    function hideSpinner() {
+        spinnerOverlay.style.display = 'none';
     }
 
-    if (!bellIcon) {
-        console.error('Error: bellIcon element is not defined in the DOM.');
-    }
+    // Show spinner on sidebar link click, excluding submenu toggles
+    const sidebarLinks = document.querySelectorAll('.sidebar a'); // Ensure sidebar links have the <a> tag within .sidebar
+    sidebarLinks.forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            const href = link.getAttribute('href');
+            // Exclude links that are toggles, such as those with href="#" or javascript:void(0)
+            if (href && href !== '#' && !href.startsWith('javascript:') && !link.classList.contains('no-spinner')) {
+                showSpinner();
+            }
+        });
+    });
 
+    // Show spinner on form submissions in sidebar (if any)
+    const sidebarForms = document.querySelectorAll('.sidebar form');
+    sidebarForms.forEach(function(form) {
+        form.addEventListener('submit', function() {
+            showSpinner();
+        });
+    });
+
+    // Hide spinner once the page has fully loaded
+    window.addEventListener('load', function() {
+        hideSpinner();
+    });
+
+    // Fetch notifications when the page loads
+    fetchNotifications();
+
+    // Notification Icon click
     if (bellIcon && notificationDot && notificationDropdown) {
-        // Bell icon animation on click
-        document.getElementById('notification-icon').addEventListener('click', function() {
+        notificationIcon.addEventListener('click', function (e) {
+            e.stopPropagation(); // Prevent event from bubbling up
+
+            // Add bell ringing animation
             bellIcon.classList.add('ringing');
             notificationDot.classList.add('blowing');
+
+            // Toggle dropdown with smooth animation
             notificationDropdown.classList.toggle('active');
 
+            // Fetch notifications to ensure the latest are displayed
             fetchNotifications();
 
+            // Mark all as read when dropdown is opened
+            markAllAsRead();
+
+            // Remove bell ringing and notification dot animations after 1 second
             setTimeout(() => {
                 bellIcon.classList.remove('ringing');
                 notificationDot.classList.remove('blowing');
@@ -130,108 +186,222 @@
         });
     }
 
-    // Toggle user avatar dropdown
-    document.getElementById('user-avatar')?.addEventListener('click', function() {
-        var dropdown = document.getElementById('logoutDropdown');
-        dropdown?.classList.toggle('active');
-    });
+    if (userAvatar && logoutDropdown) {
+        // Toggle Logout Dropdown on user avatar click
+        userAvatar.addEventListener('click', function (e) {
+            e.stopPropagation(); // Prevent event from bubbling up
+            logoutDropdown.classList.toggle('active');
+        });
+    }
+
+    // Handle Logout Button Click
+    if (logoutButton) {
+        logoutButton.addEventListener('click', function (e) {
+            e.preventDefault(); // Prevent default link behavior
+
+            // Show SweetAlert confirmation
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You will be logged out of the application.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, logout!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Perform AJAX logout
+                    performLogout();
+                }
+            });
+        });
+    }
 
     // Close dropdowns when clicking outside
     document.addEventListener('click', function(event) {
-        var dropdown = document.getElementById('logoutDropdown');
-        var notificationDropdown = document.getElementById('notification-dropdown');
-        if (!dropdown.contains(event.target) && !event.target.closest('#user-avatar')) {
-            dropdown?.classList.remove('active');
+        // Close Logout Dropdown if clicked outside
+        if (logoutDropdown.classList.contains('active') && !logoutDropdown.contains(event.target) && !userAvatar.contains(event.target)) {
+            logoutDropdown.classList.remove('active');
         }
-        if (!notificationDropdown.contains(event.target) && !event.target.closest('#notification-icon')) {
-            notificationDropdown?.classList.remove('active');
+
+        // Close Notification Dropdown if clicked outside
+        if (notificationDropdown.classList.contains('active') && !notificationDropdown.contains(event.target) && !notificationIcon.contains(event.target)) {
+            notificationDropdown.classList.remove('active');
         }
     });
-});
 
-function fetchNotifications() {
-    fetch('{{ route('notifications.index') }}')
-        .then(response => response.json())
-        .then(data => {
-            const notificationDropdown = document.getElementById('notification-dropdown');
-            const notificationDot = document.querySelector('.notification-dot');
+    // Handle Notification Dropdown Clicks
+    if (notificationDropdown) {
+        notificationDropdown.addEventListener('click', function(event) {
+            event.stopPropagation(); // Prevent event from bubbling up
+        });
+    }
 
-            if (!notificationDropdown || !notificationDot) {
-                console.error('Error: notificationDropdown or notificationDot is not defined.');
-                return;
+    if (logoutDropdown) {
+        logoutDropdown.addEventListener('click', function(event) {
+            event.stopPropagation(); // Prevent event from bubbling up
+        });
+    }
+
+    // Function to Perform AJAX Logout
+    function performLogout() {
+        $.ajax({
+            url: "{{ route('logout') }}",
+            type: 'POST',
+            data: {
+                _token: "{{ csrf_token() }}"
+            },
+            success: function(response) {
+                // Show SweetAlert indicating successful logout
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Logged Out',
+                    text: 'You have been successfully logged out.',
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    // Redirect to login page or home page after logout
+                    window.location.href = "{{ route('login') }}";
+                });
+            },
+            error: function(xhr, status, error) {
+                console.error('Logout failed:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while trying to logout. Please try again.',
+                });
             }
+        });
+    }
 
-            notificationDropdown.innerHTML = ''; // Clear previous notifications
+    // Fetch Notifications Function
+    function fetchNotifications() {
+        fetch('{{ route('notifications.index') }}')
+            .then(response => response.json())
+            .then(data => {
+                const notificationDropdown = document.getElementById('notification-dropdown');
+                const notificationDot = document.querySelector('.notification-dot');
 
-            if (data.notifications.length > 0) {
-                data.notifications.forEach(notification => {
-                    const notificationItem = document.createElement('div');
-                    notificationItem.classList.add('dropdown-item');
-                    notificationItem.textContent = `${notification.title}: ${notification.message}`;
+                if (!notificationDropdown || !notificationDot) {
+                    console.error('Error: notificationDropdown or notificationDot is not defined.');
+                    return;
+                }
 
-                    // Mark notification as opened when clicked
-                    notificationItem.addEventListener('click', () => {
-                        markAsOpened(notification.id);
-                        notificationItem.classList.add('opened');
+                notificationDropdown.innerHTML = ''; // Clear previous notifications
+
+                if (data.notifications.length > 0) {
+                    // Optional: Add "Mark All as Read" button
+                    const markAllItem = document.createElement('div');
+                    markAllItem.classList.add('dropdown-item');
+                    markAllItem.id = 'mark-all-as-read';
+                    markAllItem.style.cursor = 'pointer';
+                    markAllItem.style.color = 'blue';
+                    markAllItem.textContent = 'Mark All as Read';
+                    markAllItem.addEventListener('click', () => {
+                        markAllAsRead();
+                    });
+                    notificationDropdown.appendChild(markAllItem);
+
+                    data.notifications.forEach(notification => {
+                        const notificationItem = document.createElement('div');
+                        notificationItem.classList.add('dropdown-item');
+
+                        // Highlight unread notifications
+                        if (!notification.is_opened) { // Changed from === 0 to boolean check
+                            notificationItem.classList.add('unread');  // Custom class for unread
+                        }
+
+                        notificationItem.innerHTML = `
+                            <div class="message">${notification.title}: ${notification.message}</div>
+                            <div class="timestamp">${new Date(notification.scheduled_time).toLocaleString()}</div>
+                        `;
+
+                        // Mark notification as opened when clicked
+                        notificationItem.addEventListener('click', () => {
+                            if (!notification.is_opened) { // Only mark if unread
+                                markAsOpened(notification.id).then(() => {
+                                    notificationItem.classList.remove('unread'); // Remove unread class
+
+                                    // Optionally, update the unread count
+                                    if (data.unreadCount > 0) {
+                                        data.unreadCount -= 1;
+                                        if (data.unreadCount <= 0) {
+                                            notificationDot.style.display = 'none';
+                                        }
+                                    }
+                                });
+                            }
+                        });
+
+                        notificationDropdown.appendChild(notificationItem);
                     });
 
-                    notificationDropdown.appendChild(notificationItem);
-                });
-
-                // Show unread count
-                if (data.unreadCount > 0) {
-                    notificationDot.style.display = 'block';
+                    // Show unread count
+                    if (data.unreadCount > 0) {
+                        notificationDot.style.display = 'block';
+                    } else {
+                        notificationDot.style.display = 'none';
+                    }
                 } else {
+                    notificationDropdown.innerHTML = '<div class="dropdown-item">No new notifications</div>';
                     notificationDot.style.display = 'none';
                 }
-            } else {
-                notificationDropdown.innerHTML = '<div class="dropdown-item">No new notifications</div>';
-                notificationDot.style.display = 'none';
+            })
+            .catch(error => {
+                console.error('Error fetching notifications:', error);
+                const notificationDropdown = document.getElementById('notification-dropdown');
+                notificationDropdown.innerHTML = '<div class="dropdown-item">Failed to load notifications</div>';
+            });
+    }
+
+    // Mark Notification as Opened
+    async function markAsOpened(notificationId) {
+        try {
+            const response = await fetch(`/notifications/${notificationId}/mark-as-opened`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
             }
-        })
-        .catch(error => {
-            console.error('Error fetching notifications:', error);
-            const notificationDropdown = document.getElementById('notification-dropdown');
-            notificationDropdown.innerHTML = '<div class="dropdown-item">Failed to load notifications</div>';
-        });
-}
 
-function markAsOpened(notificationId) {
-    fetch(`/notifications/${notificationId}/mark-as-opened`, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({})
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log(data.message); // Handle success message if needed
-    })
-    .catch(error => console.error('Error marking notification as opened:', error));
-}
-
-// Optionally, refresh notifications count in real-time
-setInterval(fetchNotifications, 30000); // Fetch notifications every 30 seconds
-
-// Show logout confirmation alert
-function showLogoutAlert() {
-    Swal.fire({
-        title: 'Are you sure?',
-        text: "You won't be able to revert this!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, logout!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            document.querySelector('form[method="POST"]').submit();
+            const data = await response.json();
+            console.log(data.message); // Handle success message if needed
+        } catch (error) {
+            console.error('Error marking notification as opened:', error);
         }
-    });
-}
+    }
 
-    </script>
+    // Function to Mark All Notifications as Read
+    function markAllAsRead() {
+        fetch('{{ route('notifications.markAllAsRead') }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data.message); // Handle success message if needed
+            // After marking all as read, ensure the dot is hidden
+            const notificationDot = document.querySelector('.notification-dot');
+            notificationDot.style.display = 'none';
+            // Remove the "unread" class from all notifications
+            const unreadNotifications = document.querySelectorAll('.dropdown-item.unread');
+            unreadNotifications.forEach(item => item.classList.remove('unread'));
+        })
+        .catch(error => console.error('Error marking all notifications as read:', error));
+    }
+});
+</script>
+
 </body>
 </html>
