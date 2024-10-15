@@ -374,13 +374,14 @@
     } 
 }
 .calendar-container {
-            width: 90%;
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin-top: 20px;
-        }
+    width: 100%;
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    transition: background-color 0.3s ease-in-out;
+}
 
         .calendar-container h2 {
             text-align: center;
@@ -465,6 +466,10 @@
         .legend-color.appointed {
             background-color: #ff4d4d;
         }
+        .legend-color.pending {
+            background-color: #ffc107
+            ;
+        }
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -548,6 +553,38 @@
         .modal-content::-webkit-scrollbar-thumb:hover {
             background-color: #888;
         }
+        /* Status Text Colors */
+.status-approved {
+    color: #28a745; /* Green */
+    font-weight: bold;
+}
+
+.status-pending {
+    color: #ffc107; /* Yellow */
+    font-weight: bold;
+}
+
+.status-no-record {
+    color: #dc3545; /* Red */
+    font-weight: bold;
+}
+
+/* Calendar Cell Status Colors */
+.calendar-cell-free {
+    background-color: #66ff66; /* Green for Free */
+    color: #fff;
+}
+
+.calendar-cell-appointed {
+    background-color: #ff4d4d; /* Red for Appointed */
+    color: #fff;
+}
+
+.calendar-cell-pending {
+    background-color: #ffc107; /* Yellow for Pending */
+    color: #fff;
+}
+
 </style>
 
 
@@ -643,6 +680,10 @@
                     <div class="legend-color appointed"></div>
                     <span>Appointed</span>
                 </div>
+                <div class="legend-item">
+        <div class="legend-color pending"></div>
+        <span>Pending</span>
+    </div>
             </div>
         </div>
 
@@ -915,30 +956,43 @@
 
     // Fetch and mark appointments
     function fetchAppointmentMarkers(day, month, year, cell) {
-        const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-        fetch(`/student/appointments/by-date?date=${formattedDate}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken.getAttribute('content')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.appointments && data.appointments.length > 0) {
-                // If there are appointments, mark the cell as red
-                cell.style.backgroundColor = '#ff4d4d'; // Red for appointments
-                cell.style.color = '#fff';
+    fetch(`/student/appointments/by-date?date=${formattedDate}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken.getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.appointments && data.appointments.length > 0) {
+            // Determine the status of the first appointment (assuming single appointment per day)
+            const appointment = data.appointments[0];
+            const status = appointment.status.toLowerCase(); // Ensure consistency
+
+            if (status === 'approved') {
+                cell.classList.add('calendar-cell-appointed');
+                cell.innerHTML += ' <span class="status-approved">(Approved)</span>';
+            } else if (status === 'pending') {
+                cell.classList.add('calendar-cell-pending');
+                cell.innerHTML += ' <span class="status-pending">(Pending)</span>';
             } else {
-                // If no appointments, mark the cell as green
-                cell.style.backgroundColor = '#66ff66'; // Green for free
+                // Default to free if status is unrecognized
+                cell.classList.add('calendar-cell-free');
+                cell.innerHTML += ' <span class="status-free">(Free)</span>';
             }
-        })
-        .catch(error => {
-            console.error('Error fetching appointment markers:', error);
-        });
-    }
+        } else {
+            // If no appointments, mark the cell as free
+            cell.classList.add('calendar-cell-free');
+            cell.innerHTML += ' <span class="status-free">(Free)</span>';
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching appointment markers:', error);
+    });
+}
 
     const getAppointmentsByDateUrl = `{{ route('student.appointments.by-date') }}`;
 

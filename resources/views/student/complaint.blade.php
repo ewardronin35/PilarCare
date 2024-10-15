@@ -1,11 +1,14 @@
 <x-app-layout>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<!-- Font Awesome for Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-yH6jIwETnIsIv+J8bGZ1CST5Q3gqLbG3Ehj3FdJ9VqgqkrFuzqfY1JIDxr2VDYfv4pZwU6yD/WHx3Q+5GfYbQg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!-- SweetAlert2 for Alerts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
+        /* Existing Styles */
+
         body {
             margin: 0;
             padding: 0;
@@ -15,7 +18,8 @@
         }
 
         .main-content {
-            margin-top: 40px;
+            margin-top: 50px;
+            padding: 0 20px; /* Added padding for better responsiveness */
         }
 
         .alert {
@@ -88,10 +92,12 @@
             display: flex;
             gap: 10px;
             justify-content: center;
+            flex-wrap: wrap; /* Allows buttons to wrap on smaller screens */
         }
 
         .preview-button,
-        .pdf-button {
+        .pdf-button,
+        .download-button {
             background-color: #00d1ff;
             color: white;
             padding: 5px 15px;
@@ -100,11 +106,24 @@
             cursor: pointer;
             transition: background-color 0.3s ease-in-out;
             font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none; /* For anchor tags */
         }
 
         .preview-button:hover,
-        .pdf-button:hover {
+        .pdf-button:hover,
+        .download-button:hover {
             background-color: #00b8e6;
+        }
+
+        .pdf-button[disabled],
+        .pdf-button[disabled]:hover,
+        .download-button[disabled],
+        .download-button[disabled]:hover {
+            background-color: #6c757d;
+            cursor: not-allowed;
         }
 
         /* Modal Styling */
@@ -240,11 +259,78 @@
             }
 
             .preview-button,
-            .pdf-button {
+            .pdf-button,
+            .download-button {
                 width: 100%;
                 text-align: center;
             }
+
+            .search-bar input[type="text"] {
+                width: 80%;
+                margin-bottom: 10px;
+            }
+
+            .search-bar button {
+                width: 80%;
+            }
         }
+
+        /* Search Form Styles */
+        .search-form {
+            margin-bottom: 20px;
+        }
+
+        .search-bar input[type="text"] {
+            padding: 10px;
+            width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .search-bar button {
+            padding: 10px 15px;
+            border: none;
+            background-color: #00d1ff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .search-bar button:hover {
+            background-color: #00b8e6;
+        }
+
+        /* Filter Buttons */
+        .filter-buttons {
+            margin-bottom: 20px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-button {
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+            font-size: 1rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .filter-button.active,
+        .filter-button:hover {
+            background-color: #00d1ff;
+        }
+
     </style>
 
     <div class="main-content">
@@ -253,6 +339,29 @@
                 {{ session('success') }}
             </div>
         @endif
+
+        <!-- Filter Buttons -->
+        <div class="filter-buttons">
+            <a href="{{ route('student.complaint', ['filter' => 'present']) }}" class="filter-button {{ request('filter') === 'present' ? 'active' : '' }}">
+                <i class="fas fa-sun"></i> Present Complaint
+            </a>
+            <a href="{{ route('student.complaint', ['filter' => 'past']) }}" class="filter-button {{ request('filter') === 'past' ? 'active' : '' }}">
+                <i class="fas fa-moon"></i> Past Complaint
+            </a>
+        </div>
+
+        <!-- Search Form -->
+        <div class="search-form" style="text-align: center;">
+            <form method="GET" action="{{ route('student.complaint') }}" class="search-bar">
+                <!-- Preserve the 'filter' parameter if set -->
+                <input type="text" name="search" placeholder="Search complaints..." value="{{ request('search') }}">
+                <button type="submit"><i class="fas fa-search"></i> Search</button>
+                <!-- Hidden input to preserve filter -->
+                @if(request('filter'))
+                    <input type="hidden" name="filter" value="{{ request('filter') }}">
+                @endif
+            </form>
+        </div>
 
         <!-- Complaints Section -->
         <div class="complaints-section">
@@ -287,26 +396,35 @@
                                         <button class="preview-button" onclick="openPreviewModal({{ $complaint->id }})">
                                             <i class="fas fa-eye"></i> Preview
                                         </button>
-                                        @if(isset($complaint->pdf_url))
-                                            <a href="{{ $complaint->pdf_url }}" target="_blank" class="pdf-button">
+                                        @if(isset($complaint->report_url))
+                                            <a href="{{ $complaint->report_url }}" target="_blank" class="pdf-button">
                                                 <i class="fas fa-file-pdf"></i> View PDF
+                                            </a>
+                                            <a href="{{ $complaint->report_url }}" download class="download-button">
+                                                <i class="fas fa-download"></i> Download PDF
                                             </a>
                                         @else
                                             <button class="pdf-button" disabled title="PDF not available">
                                                 <i class="fas fa-file-pdf"></i> View PDF
+                                            </button>
+                                            <button class="download-button" disabled title="PDF not available">
+                                                <i class="fas fa-download"></i> Download PDF
                                             </button>
                                         @endif
                                     </div>
                                 </td>
                             </tr>
                         @empty
-                            <tr>
-                                <td colspan="8" style="text-align: center; color: #888;">No complaints found.</td>
-                            </tr>
+                        <td colspan="7" style="text-align: center; color: #888;">
+            {{ request('filter') === 'past' ? 'No past complaints found.' : 'No present complaints found.' }}
+        </td>
                         @endforelse
                     </tbody>
                 </table>
             </div>
+
+       
+
         </div>
     </div>
 
@@ -342,7 +460,11 @@
                         <p><strong>Confine Status:</strong> ${data.confine_status}</p>
                         <p><strong>Medicine Given:</strong> ${data.medicine_given}</p>
                         <p><strong>Status:</strong> ${data.status}</p>
-                        ${data.pdf_url ? `<a href="${data.pdf_url}" target="_blank" class="pdf-link"><i class="fas fa-file-pdf"></i> View PDF</a>` : ''}
+                        ${data.pdf_url ? `
+                            <a href="${data.pdf_url}" target="_blank" class="pdf-link">
+                                <i class="fas fa-file-pdf"></i> View PDF
+                            </a>
+                        ` : ''}
                     `;
                     document.getElementById('preview-modal').style.display = 'flex';
                 })

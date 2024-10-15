@@ -201,7 +201,7 @@
                 <a href="#"><span class="icon"><i class="fas fa-notes-medical"></i></span><span class="menu-text">Records</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
                 <ul class="submenu">
                 @if (!$healthExamination)
-            <li><a href="{{ route('student.upload-pictures') }}">Health Approval</a></li>
+            <li><a href="{{ route('student.health-examination.index') }}">Health Approval</a></li>
         @endif
         @if ($healthExamination)
 

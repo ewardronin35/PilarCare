@@ -30,5 +30,6 @@ class Parents extends Model
 {
     return $this->hasMany(Student::class, 'id_number', 'id_number');
 }
+
 }
 

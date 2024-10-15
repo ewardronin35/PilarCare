@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\Facades\Blade; // Add this line
 use Illuminate\Support\ServiceProvider;
 use App\Models\HealthExamination;
+use App\Models\SchoolYear;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Auth;
 
@@ -41,22 +42,46 @@ class AppServiceProvider extends ServiceProvider
         // View composer to pass health examination approval data to the student sidebar
         view()->composer('components.Studentsidebar', function ($view) {
             $user = Auth::user();
-    
-            // Check if there is an approved health examination
-            $healthExamination = HealthExamination::where('id_number', $user->id_number)
-                                ->where('is_approved', 1)
-                                ->first();
-    
+        
+            if ($user) {
+                // Get the current school year
+                $currentSchoolYear = SchoolYear::where('is_current', true)->first();
+        
+                if ($currentSchoolYear) {
+                    // Check if there is an approved health examination for the current school year
+                    $healthExamination = HealthExamination::where('id_number', $user->id_number)
+                        ->where('school_year', $currentSchoolYear->year)
+                        ->where('is_approved', 1)
+                        ->first();
+                } else {
+                    $healthExamination = null;
+                }
+            } else {
+                $healthExamination = null;
+            }
+        
             // Pass the approval status to the sidebar
             $view->with('healthExamination', $healthExamination);
         });
         view()->composer('components.Teachersidebar', function ($view) {
             $user = Auth::user();
         
-            // Check if there is an approved health examination for teachers
-            $healthExamination = HealthExamination::where('id_number', $user->id_number)
-                                ->where('is_approved', 1)
-                                ->first();
+            if ($user) {
+                // Get the current school year
+                $currentSchoolYear = SchoolYear::where('is_current', true)->first();
+        
+                if ($currentSchoolYear) {
+                    // Check if there is an approved health examination for the current school year
+                    $healthExamination = HealthExamination::where('id_number', $user->id_number)
+                        ->where('school_year', $currentSchoolYear->year)
+                        ->where('is_approved', 1)
+                        ->first();
+                } else {
+                    $healthExamination = null;
+                }
+            } else {
+                $healthExamination = null;
+            }
         
             // Pass the approval status to the sidebar
             $view->with('healthExamination', $healthExamination);
@@ -65,10 +90,22 @@ class AppServiceProvider extends ServiceProvider
         view()->composer('components.Staffsidebar', function ($view) {
             $user = Auth::user();
         
-            // Check if there is an approved health examination for staff
-            $healthExamination = HealthExamination::where('id_number', $user->id_number)
-                                ->where('is_approved', 1)
-                                ->first();
+            if ($user) {
+                // Get the current school year
+                $currentSchoolYear = SchoolYear::where('is_current', true)->first();
+        
+                if ($currentSchoolYear) {
+                    // Check if there is an approved health examination for the current school year
+                    $healthExamination = HealthExamination::where('id_number', $user->id_number)
+                        ->where('school_year', $currentSchoolYear->year)
+                        ->where('is_approved', 1)
+                        ->first();
+                } else {
+                    $healthExamination = null;
+                }
+            } else {
+                $healthExamination = null;
+            }
         
             // Pass the approval status to the sidebar
             $view->with('healthExamination', $healthExamination);

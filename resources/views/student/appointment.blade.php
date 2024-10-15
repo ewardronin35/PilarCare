@@ -336,7 +336,7 @@
             <!-- Appointment History -->
             <div class="history-list">
                 <h2>Appointment History</h2>
-                <div style="overflow-y: auto; max-height: calc(50% - 40px);">
+                <div style=" max-height: calc(50% - 40px);">
                     <table class="appointment-table">
                         <thead>
                             <tr>

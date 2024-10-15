@@ -57,6 +57,73 @@
     .calendar td.red:hover {
         opacity: 0.8;
     }
+    /* Animated Markers for Appointment Status */
+.calendar td.green::after,
+.calendar td.yellow::after,
+.calendar td.red::after {
+    content: '';
+    position: absolute;
+    bottom: 5px; /* Position marker at the bottom */
+    right: 5px;  /* Position marker at the right */
+    width: 12px; /* Marker size */
+    height: 12px;
+    border-radius: 50%; /* Make it a circle */
+    animation: pulse 2s infinite; /* Apply pulsing animation */
+    z-index: 2; /* Ensure marker is above any cell content */
+}
+
+/* Specific Colors for Each Status */
+.calendar td.green::after {
+    background-color: #28a745; /* Green for Free */
+}
+
+.calendar td.yellow::after {
+    background-color: #ffc107; /* Yellow for Pending */
+}
+
+.calendar td.red::after {
+    background-color: #dc3545; /* Red for Confirmed */
+}
+
+/* Keyframes for Pulsing Animation */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.3);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Enhanced Hover Effects for Markers */
+.calendar td.green:hover::after,
+.calendar td.yellow:hover::after,
+.calendar td.red:hover::after {
+    animation: pulse-hover 1.5s infinite;
+}
+
+/* Keyframes for Enhanced Hover Animation */
+@keyframes pulse-hover {
+    0% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+    50% {
+        transform: scale(1.5);
+        opacity: 0.6;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+}
+
         body {
             background-color: #f8f9fa;
             font-family: 'Poppins', sans-serif; 
@@ -274,7 +341,9 @@
             background-color: #00d1ff;
             color: white;
         }
-
+        .calendar td {
+    position: relative; /* Enables positioning of pseudo-elements */
+}
         .calendar td.active {
             background-color: #00b8e6;
             color: white;

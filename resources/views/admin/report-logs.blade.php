@@ -61,17 +61,25 @@
         .table-container {
             margin-top: 20px;
             overflow-x: auto;
+    max-height: 500px; /* Adjust as needed for vertical scroll */
+    overflow-y: auto; 
         }
 
         .table-container table {
             width: 100%;
-            border-collapse: collapse;
-            background-color: white;
-            margin-top: 10px;
-            border-radius: 10px;
-            overflow: hidden;
+    border-collapse: collapse;
+    background-color: white;
+    margin-top: 10px;
+    border-radius: 10px;
+    overflow: hidden;
+    table-layout: fixed; /* Ensures fixed table layout */
         }
-
+        .table-container thead th {
+    position: sticky;
+    top: 0;
+    background-color: #007bff;
+    z-index: 1; /* Ensures headers stay above table rows */
+}
         table th, table td {
             padding: 15px;
             text-align: left;
@@ -210,6 +218,22 @@
         .sub-tab-content.active {
             display: block;
         }
+        @media (max-width: 768px) {
+    .table-container {
+        max-height: 300px; /* Reduce height for smaller screens */
+    }
+
+    .sub-tab {
+        font-size: 12px; /* Reduce font size */
+        padding: 6px 12px; /* Reduce padding */
+    }
+
+    table th, table td {
+        padding: 10px; /* Reduce cell padding */
+        font-size: 14px; /* Reduce font size */
+    }
+}
+
     </style>
 
     <main class="main-content">
@@ -320,8 +344,11 @@
                             @foreach($appointmentLogs as $log)
                                 <tr>
                                     <td>Appointments</td>
-                                    <td>Appointment with {{ $log->user->first_name }} {{ $log->user->last_name }}</td>
-                                    <td>{{ $log->created_at->format('M d, Y h:i A') }}</td>
+<td>
+           Appointment for
+            {{ optional($log->user)->first_name ?? 'Unknown' }} 
+            {{ optional($log->user)->last_name ?? 'User' }}
+        </td>                                    <td>{{ $log->created_at->format('M d, Y h:i A') }}</td>
                                     <td>{{ $log->status }}</td>
                                 </tr>
                             @endforeach

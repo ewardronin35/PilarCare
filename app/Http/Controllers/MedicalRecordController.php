@@ -211,7 +211,7 @@ class MedicalRecordController extends Controller
             // Fetch related data
             $information = Information::where('id_number', $idNumber)->first();
             $physicalExaminations = PhysicalExamination::where('id_number', $idNumber)->get();
-            $healthExamination = HealthExamination::where('id_number', $idNumber)->first();
+            $healthExaminations = HealthExamination::where('id_number', $idNumber)->get(); // Fetch all records
             $medicineIntakes = MedicineIntake::where('id_number', $idNumber)->get();
     
             return response()->json([
@@ -220,7 +220,7 @@ class MedicalRecordController extends Controller
                 'medicalRecords' => $medicalRecords,
                 'information' => $information,
                 'physicalExaminations' => $physicalExaminations,
-                'healthExamination' => $healthExamination,
+                'healthExaminations' => $healthExaminations, // Updated key
                 'medicineIntakes' => $medicineIntakes,
                 'debug_query' => $idNumber,
             ]);
@@ -234,33 +234,31 @@ class MedicalRecordController extends Controller
     }
     
     
-    
-    
-    
     public function history($id_number)
-    {
-        // Fetch all related records based on the provided id_number
-        $medicalRecords = MedicalRecord::where('id_number', $id_number)->get();
-        $physicalExaminations = PhysicalExamination::where('id_number', $id_number)->get();
-        $healthExamination = HealthExamination::where('id_number', $id_number)->first();
-        $medicineIntakes = MedicineIntake::where('id_number', $id_number)->get();
-    
-        if ($medicalRecords->isEmpty() && $physicalExaminations->isEmpty() && !$healthExamination) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No records found.'
-            ]);
-        }
-    
+{
+    // Fetch all related records based on the provided id_number
+    $medicalRecords = MedicalRecord::where('id_number', $id_number)->get();
+    $physicalExaminations = PhysicalExamination::where('id_number', $id_number)->get();
+    $healthExaminations = HealthExamination::where('id_number', $id_number)->get(); // Fetch all records
+    $medicineIntakes = MedicineIntake::where('id_number', $id_number)->get();
+    $information = Information::where('id_number', $id_number)->first(); // Fetch information
+
+    if ($medicalRecords->isEmpty() && $physicalExaminations->isEmpty() && $healthExaminations->isEmpty()) {
         return response()->json([
-            'success' => true,
-            'medicalRecords' => $medicalRecords,
-            'physicalExaminations' => $physicalExaminations,
-            'healthExamination' => $healthExamination,
-            'medicineIntakes' => $medicineIntakes
+            'success' => false,
+            'message' => 'No records found.'
         ]);
     }
-    
+
+    return response()->json([
+        'success' => true,
+        'medicalRecords' => $medicalRecords,
+        'physicalExaminations' => $physicalExaminations,
+        'healthExaminations' => $healthExaminations, // Updated key
+        'medicineIntakes' => $medicineIntakes,
+        'information' => $information, // Include information if needed
+    ]);
+}
 
     
     public function downloadPdf($id)

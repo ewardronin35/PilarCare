@@ -71,4 +71,6 @@ class VerifyEmail extends Notification implements ShouldQueue
             ]
         );
     }
+    
+    
 }

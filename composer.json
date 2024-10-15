@@ -9,6 +9,7 @@
         "ext-imagick": "*",
         "anhskohbo/no-captcha": "^3.6",
         "barryvdh/laravel-dompdf": "^3.0",
+        "doctrine/dbal": "^4.2",
         "laravel/breeze": "^2.0",
         "laravel/framework": "^11.0",
         "laravel/tinker": "^2.9",

@@ -12,27 +12,63 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var laravel_echo__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! laravel-echo */ "./node_modules/laravel-echo/dist/echo.js");
 /* harmony import */ var pusher_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! pusher-js */ "./node_modules/pusher-js/dist/web/pusher.js");
 /* harmony import */ var pusher_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(pusher_js__WEBPACK_IMPORTED_MODULE_1__);
+// resources/js/app.js
 
 
+
+
+// Assign Pusher to the window object
 window.Pusher = (pusher_js__WEBPACK_IMPORTED_MODULE_1___default());
+
+// Initialize Laravel Echo with Pusher
 window.Echo = new laravel_echo__WEBPACK_IMPORTED_MODULE_0__["default"]({
   broadcaster: 'pusher',
-  key: "a10e533bab14a396f687",
-  // Make sure this key is set correctly
-  cluster: "ap1",
-  // This should pull from your .env file
+  key: window.PUSHER_APP_KEY,
+  // Use global variable
+  cluster: window.PUSHER_APP_CLUSTER,
+  // Use global variable
   forceTLS: true,
-  // Force TLS for secure connections
-  encrypted: true,
-  // Make sure encryption is enabled
-  wsHost: window.location.hostname,
-  wsPort: 6001,
-  // Make sure this port is open if you're using WebSockets
-  wssPort: 443,
-  // Ensure you're using the correct port for WSS connections
-  disableStats: true,
-  // Disable stats collection for the free tier
-  enabledTransports: ['ws', 'wss'] // Enable both WebSocket and Secure WebSocket connections
+  // Use TLS for secure connections
+  encrypted: true
+});
+
+// Listen for specific events
+// Listen for specific events
+window.Echo.channel('inventory-channel').listen('.inventory-expiring', function (data) {
+  console.log('Notification Received:', data);
+
+  // Update notification count badge
+  var badge = document.querySelector('#notification-icon .badge'); // Corrected selector
+  if (badge) {
+    var currentCount = parseInt(badge.innerText) || 0;
+    badge.innerText = currentCount + 1;
+    badge.style.display = 'inline'; // Ensure it's visible
+  }
+
+  // Prepend new notification to the dropdown
+  var dropdownMenu = document.querySelector('#notification-dropdown');
+  if (dropdownMenu) {
+    // Remove the "No new notifications" message if it exists
+    var noNotifications = dropdownMenu.querySelector('.dropdown-item');
+    if (noNotifications && noNotifications.textContent === 'No new notifications') {
+      noNotifications.remove();
+    }
+    var newNotification = document.createElement('div');
+    newNotification.classList.add('dropdown-item');
+    newNotification.innerHTML = "\n                <a href=\"#\" class=\"dropdown-item\">\n                    ".concat(data.title, ": ").concat(data.message, " on ").concat(new Date(data.expiry_date).toLocaleDateString(), ".\n                </a>\n            ");
+    dropdownMenu.prepend(newNotification);
+  }
+
+  // Display SweetAlert notification
+  if (typeof Swal !== 'undefined') {
+    Swal.fire({
+      icon: 'info',
+      title: 'Inventory Alert',
+      text: "".concat(data.title, ": ").concat(data.message),
+      timer: 5000,
+      showConfirmButton: false
+    });
+  }
 });
 
 /***/ }),

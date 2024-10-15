@@ -204,7 +204,7 @@
             <li class="has-submenu">
     <a href="#"><span class="icon"><i class="fas fa-check-circle"></i></span><span class="menu-text">Approvals</span><span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span></a>
     <ul class="submenu">
-        <li><a href="{{ route('admin.uploadHealthExamination') }}">Health Approval</a></li>
+        <li><a href="{{ route('admin.health-examinations') }}">Health Approval</a></li>
         <li><a href="{{ route('admin.uploadMedicalDocu') }}">Medical Approval</a></li>
         <li><a href="{{ route('admin.uploadDentalDocu') }}">Dental Approval</a></li>
     </ul>

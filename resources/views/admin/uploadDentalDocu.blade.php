@@ -334,75 +334,75 @@
 
         <!-- Tab Navigation -->
         <div class="tabs">
-            <button class="tab-btn active" data-role="students" onclick="switchTab('students')">
+            <button class="tab-btn active" data-role="student" onclick="switchTab('student')">
                 <i class="fas fa-user-graduate"></i> Students
             </button>
-            <button class="tab-btn" data-role="teachers" onclick="switchTab('teachers')">
+            <button class="tab-btn" data-role="teacher" onclick="switchTab('teacher')">
                 <i class="fas fa-chalkboard-teacher"></i> Teachers
-            </button>
-            <button class="tab-btn" data-role="nurses" onclick="switchTab('nurses')">
-                <i class="fas fa-stethoscope"></i> Nurses
-            </button>
-            <button class="tab-btn" data-role="doctors" onclick="switchTab('doctors')">
-                <i class="fas fa-user-md"></i> Doctors
             </button>
             <button class="tab-btn" data-role="staff" onclick="switchTab('staff')">
                 <i class="fas fa-users-cog"></i> Staff
-            </button>
-            <button class="tab-btn" data-role="parents" onclick="switchTab('parents')">
-                <i class="fas fa-user-friends"></i> Parents
             </button>
         </div>
 
         <!-- Dental Records Table -->
         <div class="table-container">
-            <table id="dental-records-table">
-                <thead>
-                    <tr>
-                        <th>Patient Name</th>
-                        <th>User Type</th>
-                        <th>Tooth Number</th>
-                        <th>Status</th>
-                        <th>Notes</th>
-                        <th>Teeth Images</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($pendingDentalRecords as $dentalRecord)
-                        <tr>
-                            <td>{{ $dentalRecord->dentalRecord->patient_name ?? 'N/A' }}</td>
-                            <td>{{ ucfirst($dentalRecord->dentalRecord->user_type) ?? 'N/A' }}</td>
-                            <td>{{ $dentalRecord->tooth_number }}</td>
-                            <td>{{ ucfirst($dentalRecord->status) }}</td>
-                            <td>{{ $dentalRecord->notes ?? 'N/A' }}</td>
-                            <td>
-                                @if($dentalRecord->dental_pictures)
-                                    <div class="image-previews">
-                                        @foreach($dentalRecord->dental_pictures as $picture)
-                                            <img src="{{ asset('storage/' . $picture) }}" alt="Tooth Image" onclick="openImageModal('{{ asset('storage/' . $picture) }}')" />
-                                        @endforeach
-                                    </div>
-                                @else
-                                    No images
-                                @endif
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-success" onclick="approveRecord({{ $dentalRecord->id }})">
-                                    <i class="fas fa-check"></i> Approve
-                                </button>
-                                <button type="button" class="btn btn-danger" onclick="rejectRecord({{ $dentalRecord->id }})">
-                                    <i class="fas fa-times"></i> Reject
-                                </button>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" style="text-align: center; color: #888;">No pending dental records available.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+      <!-- Table Headers -->
+<table id="dental-records-table">
+    <thead>
+        <tr>
+            <th>Patient Name</th>
+            <th>User Type</th>
+            <th>Tooth Number</th>
+            <th>Status</th>
+            <th>Notes</th>
+            <th>Teeth Images</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @forelse($teethData as $tooth)
+            <tr>
+                <td>{{ $tooth['patient_name'] }}</td>
+                <td>{{ $tooth['user_type'] }}</td>
+                <td>{{ $tooth['tooth_number'] }}</td> <!-- Corrected -->
+                <td>{{ $tooth['status'] }}</td>
+                <td>{{ $tooth['notes'] }}</td>
+                <td>
+    @php
+        // Ensure dental_pictures is an array
+        $pictures = is_array($tooth['dental_pictures']) ? $tooth['dental_pictures'] : json_decode($tooth['dental_pictures'], true) ?? [];
+    @endphp
+
+    @if(count($pictures) > 0)
+        <div class="image-previews">
+        @foreach($pictures as $picture)
+    <img src="{{ $picture }}" alt="Tooth Image" onclick="openImageModal('{{ $picture }}')" />
+@endforeach
+
+        </div>
+    @else
+        No images
+    @endif
+</td>
+
+                <td>
+                    <button type="button" class="btn btn-success" onclick="approveRecord({{ $tooth['id'] }})">
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="rejectRecord({{ $tooth['id'] }})">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                </td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="7" style="text-align: center; color: #888;">No pending dental records available.</td>
+            </tr>
+        @endforelse
+    </tbody>
+</table>
+
         </div>
     </div>
 
@@ -557,7 +557,6 @@
             fetchDentalRecords(role, document.getElementById('search-input').value);
         }
 
-        // Function to fetch dental records based on role and search query
         function fetchDentalRecords(role, searchQuery = '') {
             const tableBody = document.querySelector('#dental-records-table tbody');
             tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #555;">Loading...</td></tr>';
@@ -577,57 +576,49 @@
                 return response.json();
             })
             .then(data => {
-                tableBody.innerHTML = '';
+        tableBody.innerHTML = '';
 
-                if (data.length > 0) {
-                    data.forEach(record => {
-                        let imagesHtml = '';
-                        if (record.dental_pictures && record.dental_pictures.length > 0) {
-                            imagesHtml = `<div class="image-previews">`;
-                            record.dental_pictures.forEach(picture => {
-                                imagesHtml += `<img src="${picture}" alt="Tooth Image" onclick="openImageModal('${picture}')" />`;
-                            });
-                            imagesHtml += `</div>`;
-                        } else {
-                            imagesHtml = 'No images';
-                        }
-
-                        tableBody.innerHTML += `
-                            <tr>
-                                <td>${escapeHtml(record.dentalRecord.patient_name || 'N/A')}</td>
-                                <td>${escapeHtml(record.dentalRecord.user_type ? record.dentalRecord.user_type.charAt(0).toUpperCase() + record.dentalRecord.user_type.slice(1) : 'N/A')}</td>
-                                <td>${escapeHtml(record.tooth_number)}</td>
-                                <td>${escapeHtml(record.status ? record.status.charAt(0).toUpperCase() + record.status.slice(1) : 'N/A')}</td>
-                                <td>${escapeHtml(record.notes || 'N/A')}</td>
-                                <td>${imagesHtml}</td>
-                                <td>
-                                    <button type="button" class="btn btn-success" onclick="approveRecord(${record.id})">
-                                        <i class="fas fa-check"></i> Approve
-                                    </button>
-                                    <button type="button" class="btn btn-danger" onclick="rejectRecord(${record.id})">
-                                        <i class="fas fa-times"></i> Reject
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
+        if (data.length > 0) {
+            data.forEach(tooth => {
+                let imagesHtml = '';
+                if (tooth.dental_pictures && tooth.dental_pictures.length > 0) {
+                    imagesHtml = `<div class="image-previews">`;
+                    tooth.dental_pictures.forEach(picture => {
+                        imagesHtml += `<img src="${picture}" alt="Tooth Image" onclick="openImageModal('${picture}')" />`;
                     });
+                    imagesHtml += `</div>`;
                 } else {
-                    tableBody.innerHTML = `
-                        <tr>
-                            <td colspan="7" style="text-align: center; color: #888;">No pending dental records found.</td>
-                        </tr>
-                    `;
+                    imagesHtml = 'No images';
                 }
-            })
-            .catch(error => {
-                console.error('Error fetching dental records:', error);
-                tableBody.innerHTML = `
+
+                tableBody.innerHTML += `
                     <tr>
-                        <td colspan="7" style="text-align: center; color: #dc3545;">Failed to load dental records. Please try again later.</td>
+                        <td>${escapeHtml(tooth.patient_name || 'N/A')}</td>
+                        <td>${escapeHtml(tooth.user_type || 'N/A')}</td>
+                        <td>${escapeHtml(tooth.tooth_number || 'N/A')}</td> <!-- Corrected -->
+                        <td>${escapeHtml(tooth.status || 'N/A')}</td>
+                        <td>${escapeHtml(tooth.notes || 'N/A')}</td>
+                        <td>${imagesHtml}</td>
+                        <td>
+                            <button type="button" class="btn btn-success" onclick="approveRecord(${tooth.id})">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="rejectRecord(${tooth.id})">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        </td>
                     </tr>
                 `;
             });
+        } else {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; color: #888;">No pending dental records found.</td>
+                </tr>
+            `;
         }
+    });
+}
 
         // Function to handle search
         function searchRecords() {
@@ -639,13 +630,15 @@
 
         // Helper Function to Escape HTML (Prevent XSS)
         function escapeHtml(text) {
-            if (!text) return '';
-            return text.replace(/&/g, "&amp;")
-                       .replace(/</g, "&lt;")
-                       .replace(/>/g, "&gt;")
-                       .replace(/"/g, "&quot;")
-                       .replace(/'/g, "&#039;");
-        }
+    if (text === null || text === undefined) return '';
+    text = text.toString(); // Convert to string
+    return text.replace(/&/g, "&amp;")
+               .replace(/</g, "&lt;")
+               .replace(/>/g, "&gt;")
+               .replace(/"/g, "&quot;")
+               .replace(/'/g, "&#039;");
+}
+
 
         // Spinner Functions
         function showSpinner() {
@@ -658,7 +651,7 @@
 
         // Initialize with default tab and fetch records
         document.addEventListener('DOMContentLoaded', function () {
-            const defaultRole = 'students';
+            const defaultRole = 'student';
             fetchDentalRecords(defaultRole);
         });
 

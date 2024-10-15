@@ -21,6 +21,7 @@ class Teeth extends Model
         
     ];
     protected $casts = [
+        'is_approved' => 'boolean',
         'dental_pictures' => 'array',
     ];
 

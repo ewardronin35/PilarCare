@@ -8,6 +8,8 @@ use App\Models\MedicalRecord;
 use App\Models\DentalRecord;
 use App\Models\Information;
 use App\Models\Parents;
+use App\Models\SchoolYear;
+
 use App\Models\Notification;
 use App\Models\HealthExamination;
 use Illuminate\Http\Request;
@@ -22,37 +24,50 @@ class StudentDashboardController extends Controller
         $user = Auth::user();
         $appointments = Appointment::where('id_number', $user->id_number)->get();
         $appointmentCount = $appointments->count();
-        
+    
         $complaints = Complaint::where('id_number', $user->id_number)->get();
         $complaintCount = $complaints->count();
-        $notifications = Notification::where('user_id', Auth::user()->id_number)->get();
-
+        $notifications = Notification::where('user_id', $user->id_number)->get();
+    
         // Check if the user's profile information is complete
         $information = Information::where('id_number', $user->id_number)->first();
         $showModal = !$information; // If no information exists, show the modal
-
-          // Fetch health examination
-    $healthExaminations = HealthExamination::where('id_number', $user->id_number)->get();
-    $hasHealthExamination = $healthExaminations->isNotEmpty(); // True if health records exist, otherwise false
-    $dentalRecords = DentalRecord::where('id_number', $user->id_number)->get();
-    $hasDentalRecord = $dentalRecords->isNotEmpty(); // True if dental records exist, otherwise false
-
-    // Fetch medical record
-    $medicalRecords = MedicalRecord::where('id_number', $user->id_number)->get();
-    $hasMedicalRecord = $medicalRecords->isNotEmpty(); // True if medical records exist, otherwise false
-
-
-    return view('student.StudentDashboard', compact(
-        'appointments',
-        'appointmentCount',
-        'complaints',
-        'complaintCount',
-        'showModal',
-        'notifications',
-        'hasHealthExamination',
-        'hasDentalRecord',
-        'hasMedicalRecord'     ));
+    
+        // Fetch the current school year
+        $currentSchoolYear = SchoolYear::where('is_current', true)->first();
+    
+        // Fetch health examination for the current school year
+        $healthExamination = null;
+        $hasHealthExamination = false;
+    
+        if ($currentSchoolYear) {
+            $healthExamination = HealthExamination::where('id_number', $user->id_number)
+                ->where('school_year', $currentSchoolYear->year)
+                ->first();
+            $hasHealthExamination = $healthExamination !== null;
+        }
+    
+        // Fetch dental records (if needed)
+        $dentalRecords = DentalRecord::where('id_number', $user->id_number)->get();
+        $hasDentalRecord = $dentalRecords->isNotEmpty();
+    
+        // Fetch medical records (if needed)
+        $medicalRecords = MedicalRecord::where('id_number', $user->id_number)->get();
+        $hasMedicalRecord = $medicalRecords->isNotEmpty();
+    
+        return view('student.StudentDashboard', compact(
+            'appointments',
+            'appointmentCount',
+            'complaints',
+            'complaintCount',
+            'showModal',
+            'notifications',
+            'hasHealthExamination',
+            'hasDentalRecord',
+            'hasMedicalRecord'
+        ));
     }
+    
     public function storeProfile(Request $request)
     {
         try {

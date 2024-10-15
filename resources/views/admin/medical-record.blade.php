@@ -422,7 +422,30 @@
     transition: all 0.3s ease;
     resize: vertical;
 }
+.scrollable-container {
+            max-height: 400px; /* Adjust as needed */
+            overflow-y: auto;
+            padding-right: 10px; /* To prevent content from hiding behind scrollbar */
+        }
 
+        /* Scrollbar Styling */
+        .scrollable-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollable-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 8px;
+        }
+
+        .scrollable-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 8px;
+        }
+
+        .scrollable-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
 /* On focus, change border color and box-shadow for emphasis */
 .styled-textarea:focus {
     outline: none;
@@ -724,7 +747,7 @@
                 <table class="history-table">
                     <thead>
                         <tr>
-                            <th>Type</th>
+                            <th>Year</th>
                             <th>File</th>
                         </tr>
                     </thead>
@@ -738,25 +761,27 @@
 
         </div>
         <div class="form-container">
-            <div class="form-header">
-             <h2>Medicine Intake History</h2>
-             <div class="history-scrollable">
+    <div class="form-header">
+        <h2>Medicine Intake History</h2>
+    </div>
+    <div class="scrollable-container">
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Medicine</th>
+                    <th>Date</th>
+                    <th>Dosage</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody id="medicine-intake-history-body">
+                <!-- This will be populated via JS/AJAX -->
+            </tbody>
+        </table>
+    </div>
 
-    <table class="history-table">
-        <thead>
-            <tr>
-                <th>Medicine</th>
-                <th>Date</th>
-                <th>Dosage</th>
-                <th>Reason</th>
-            </tr>
-        </thead>
-        <tbody id="medicine-intake-history-body">
-            <!-- This will be populated via JS/AJAX -->
-                
-        </tbody>
-    </table>
-</div>
+    </div>
+
 @if(session('success'))
         <div class="alert alert-success">
             {{ session('success') }}
@@ -782,550 +807,721 @@
     @endif
     </div>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // URL for search route
+        const searchUrl = "{{ route('admin.medical-record.search') }}";
 
-<script>
-// URL for search route
-const searchUrl = "{{ route('admin.medical-record.search') }}";
+        // Function to show tab
+        function showTab(tabId) {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.style.opacity = 0;
+                setTimeout(() => {
+                    tab.classList.add('hidden');
+                }, 400);
+            });
 
-// Function to show tab
-function showTab(tabId) {
-    const tabs = document.querySelectorAll('.tab');
-    tabs.forEach(tab => {
-        tab.style.opacity = 0;
-        setTimeout(() => {
-            tab.classList.add('hidden');
-        }, 400);
-    });
+            setTimeout(() => {
+                const selectedTab = document.getElementById(tabId);
+                selectedTab.classList.remove('hidden');
+                setTimeout(() => {
+                    selectedTab.style.opacity = 1;
+                }, 50);
+            }, 400);
 
-    setTimeout(() => {
-        const selectedTab = document.getElementById(tabId);
-        selectedTab.classList.remove('hidden');
-        setTimeout(() => {
-            selectedTab.style.opacity = 1;
-        }, 50);
-    }, 400);
+            document.querySelectorAll('.tab-buttons button').forEach(button => {
+                button.classList.remove('active');
+            });
 
-    document.querySelectorAll('.tab-buttons button').forEach(button => {
-        button.classList.remove('active');
-    });
+            document.getElementById(tabId + '-tab').classList.add('active');
+        }
 
-    document.getElementById(tabId + '-tab').classList.add('active');
-}
+        // Initialize tab on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            showTab('medical');
+        });
 
-// Initialize tab on page load
-document.addEventListener('DOMContentLoaded', function () {
-    showTab('medical');
-});
+        // Fetch medical history and show alerts based on success or failure
+        function fetchMedicalHistory(showAlertOnNoData = true) {
+            fetch('{{ route("admin.medical-records.history") }}')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Data received from server:', data); // Log full response
 
-// Fetch medical history and show alerts based on success or failure
-function fetchMedicalHistory(showAlertOnNoData = true) {
-    fetch('{{ route("admin.medical-records.history") }}')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok.');
+                    if (data.success) {
+                        // Check if records exist
+                        if (data.medicalRecords.length > 0 || data.physicalExaminations.length > 0 || data.healthExaminations.length > 0) {
+                            populateFields(data); // Populate fields if data is available
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'Medical record data found and populated successfully!',
+                                timer: 2000, // Auto-close after 2 seconds
+                                showConfirmButton: false
+                            });
+                        } else if (showAlertOnNoData) {
+                            showNoDataAlert(); // Show alert if no data found
+                        }
+                    } else {
+                        // If `data.success` is false
+                        console.warn('No success status in the response:', data);
+                        if (showAlertOnNoData) {
+                            showNoDataAlert();
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching history:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'There was an error fetching the history data.',
+                    });
+                });
+        }
+
+        // Populate fields based on the fetched data
+        function populateFields(data) {
+            // Populate the medical record fields
+            if (data.medicalRecord) {
+                document.getElementById('name').value = data.medicalRecord.name || '';
+                document.getElementById('birthdate').value = data.medicalRecord.birthdate || '';
+                document.getElementById('age').value = data.medicalRecord.age || '';
+                document.getElementById('address').value = data.medicalRecord.address || '';
+                document.getElementById('father-name').value = data.medicalRecord.father_name || '';
+                document.getElementById('mother-name').value = data.medicalRecord.mother_name || '';
+                document.getElementById('personal-contact-number').value = data.medicalRecord.personal_contact_number || '';
+                document.getElementById('emergency-contact-number').value = data.medicalRecord.emergency_contact_number || '';
+
+                // Populate medical history details
+                document.getElementById('past-illness').value = data.medicalRecord.past_illness || '';
+                document.getElementById('chronic-conditions').value = data.medicalRecord.chronic_conditions || '';
+                document.getElementById('surgical-history').value = data.medicalRecord.surgical_history || '';
+                document.getElementById('family-medical-history').value = data.medicalRecord.family_medical_history || '';
+                document.getElementById('allergies').value = data.medicalRecord.allergies || '';
+                document.getElementById('physical-exam-id_number').value = data.medicalRecord.id_number || '';
+                console.log('Set physical-exam-id_number to:', data.medicalRecord.id_number || '');
+
+                // Medicines (assuming they are checkboxes)
+                let medicines = Array.isArray(data.medicalRecord.medicines) ? data.medicalRecord.medicines : JSON.parse(data.medicalRecord.medicines || '[]');
+                document.querySelectorAll("input[name='medicines[]']").forEach((checkbox) => {
+                    checkbox.checked = medicines.includes(checkbox.value);
+                });
+            } else {
+                console.warn('No medical records found.');
             }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Data received from server:', data); // Log full response
-            
-            if (data.success) {
-                // Debugging: Check if the records exist and the length
-                console.log('Records found:', data.medicalRecords);
-                if (data.medicalRecords.length > 0 || data.physicalExaminations.length > 0 || data.healthExamination) {
-                    populateFields(data); // Populate fields if data is available
+
+            // Populate Medical Record History
+            if (data.medicalRecords) {
+                populateMedicalRecordHistory(data.medicalRecords);
+                console.log('Setting id_number to:', data.medicalRecord.id_number);
+                document.getElementById('physical-exam-id_number').value = data.medicalRecord.id_number || '';
+                document.getElementById('save-button').disabled = false; // Enable the button
+            } else {
+                document.getElementById('save-button').disabled = true; // Keep the button disabled
+            }
+
+            // Populate Physical Examination History
+            if (data.physicalExaminations && data.physicalExaminations.length > 0) {
+                populatePhysicalExaminationHistory(data.physicalExaminations);
+            }
+
+            // Populate Health Examination Uploads
+            if (data.healthExaminations && data.healthExaminations.length > 0) {
+                populateHealthExaminationHistory(data.healthExaminations);
+            } else {
+                // If no health examinations found, clear the table
+                const healthExaminationUploadsBody = document.getElementById('health-examination-uploads-body');
+                healthExaminationUploadsBody.innerHTML = '<tr><td colspan="2">No Health Examination Uploads found.</td></tr>';
+            }
+
+            // Populate profile picture
+            if (data.information && data.information.profile_picture) {
+                document.getElementById('profile-picture-preview').src = `/storage/${data.information.profile_picture}`;
+            }
+
+            // Populate Medicine Intake History
+            if (data.medicineIntakes && data.medicineIntakes.length > 0) {
+                populateMedicineIntakeHistory(data.medicineIntakes);
+            } else {
+                // If no records found, clear the table
+                const medicineIntakeBody = document.getElementById('medicine-intake-history-body');
+                medicineIntakeBody.innerHTML = '<tr><td colspan="4">No medicine intake records found.</td></tr>';
+            }
+        }
+
+        // Populate Medical Record History Table
+        function populateMedicalRecordHistory(records) {
+            const medicalHistoryBody = document.getElementById('medical-record-history-body');
+            medicalHistoryBody.innerHTML = ''; // Clear existing rows
+
+            records.forEach(record => {
+                // Medicines are already arrays due to model casting
+                let medicines = Array.isArray(record.medicines) ? record.medicines : JSON.parse(record.medicines || '[]');
+
+                // Handle Health Examination Pictures
+                let healthExamDocumentsHtml = '';
+                if (record.health_examination_picture && Array.isArray(record.health_examination_picture) && record.health_examination_picture.length > 0) {
+                    healthExamDocumentsHtml = record.health_examination_picture.map((document, index) => `
+                        <a href="/storage/${document}" target="_blank">Health Exam ${index + 1}</a>
+                    `).join('<br>');
+                } else {
+                    healthExamDocumentsHtml = 'No Health Exam Documents';
+                }
+
+                // Handle Lab Result Pictures
+                let labResultDocumentsHtml = '';
+                if (record.lab_result_picture && Array.isArray(record.lab_result_picture) && record.lab_result_picture.length > 0) {
+                    labResultDocumentsHtml = record.lab_result_picture.map((document, index) => `
+                        <a href="/storage/${document}" target="_blank">Lab Result ${index + 1}</a>
+                    `).join('<br>');
+                } else {
+                    labResultDocumentsHtml = 'No Lab Result Documents';
+                }
+
+                // Handle X-ray Pictures
+                let xrayDocumentsHtml = '';
+                if (record.xray_picture && Array.isArray(record.xray_picture) && record.xray_picture.length > 0) {
+                    xrayDocumentsHtml = record.xray_picture.map((document, index) => `
+                        <a href="/storage/${document}" target="_blank">X-ray ${index + 1}</a>
+                    `).join('<br>');
+                } else {
+                    xrayDocumentsHtml = 'No X-ray Documents';
+                }
+
+                // Combine all documents into one HTML string
+                let healthDocumentsHtml = `
+                    <strong>Health Exams:</strong><br>${healthExamDocumentsHtml}<br>
+                    <strong>Lab Results:</strong><br>${labResultDocumentsHtml}<br>
+                    <strong>X-rays:</strong><br>${xrayDocumentsHtml}
+                `;
+
+                const row = `
+                    <tr>
+                        <td>${record.chronic_conditions || 'N/A'}</td>
+                        <td>${record.surgical_history || 'N/A'}</td>
+                        <td>${record.family_medical_history || 'N/A'}</td>
+                        <td>${record.allergies || 'N/A'}</td>
+                        <td>${medicines.length > 0 ? medicines.join(', ') : 'N/A'}</td>
+                        <td>${healthDocumentsHtml}</td>
+                        <td>${record.is_approved ? 'Approved' : 'Pending Approval'}</td>
+                        <td>${record.is_current ? 'Yes' : 'No'}</td>
+                    </tr>`;
+                medicalHistoryBody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        // Populate Physical Examination History Table with BMI
+        function populatePhysicalExaminationHistory(exams) {
+            const physicalExaminationBody = document.getElementById('physical-examination-history-body');
+            physicalExaminationBody.innerHTML = ''; // Clear existing rows
+
+            exams.forEach(exam => {
+                // Parse height and weight as floats
+                const heightCm = parseFloat(exam.height);
+                const weightKg = parseFloat(exam.weight);
+
+                // Initialize BMI as 'N/A'
+                let bmi = 'N/A';
+
+                // Calculate BMI if height and weight are valid numbers
+                if (!isNaN(heightCm) && !isNaN(weightKg) && heightCm > 0) {
+                    const heightM = heightCm / 100; // Convert cm to meters
+                    bmi = (weightKg / (heightM * heightM)).toFixed(2); // BMI formula
+                }
+
+                const row = `
+                    <tr>
+                        <td>${!isNaN(heightCm) && heightCm > 0 ? heightCm : 'N/A'}</td>
+                        <td>${!isNaN(weightKg) && weightKg > 0 ? weightKg : 'N/A'}</td>
+                        <td>${bmi}</td> <!-- Display BMI -->
+                        <td>${exam.vision || 'N/A'}</td>
+                        <td>${exam.remarks || 'N/A'}</td>
+                    </tr>`;
+                physicalExaminationBody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        // Populate Health Examination Uploads Table
+        function populateHealthExaminationHistory(healthExaminations) {
+            const healthExaminationUploadsBody = document.getElementById('health-examination-uploads-body');
+            healthExaminationUploadsBody.innerHTML = ''; // Clear existing rows
+
+            if (!Array.isArray(healthExaminations) || healthExaminations.length === 0) {
+                const row = `<tr><td colspan="2">No Health Examination Uploads found.</td></tr>`;
+                healthExaminationUploadsBody.insertAdjacentHTML('beforeend', row);
+                return;
+            }
+
+            healthExaminations.forEach((healthExamination, examIndex) => {
+                // Handle health_examination_picture
+                if (healthExamination.health_examination_picture && Array.isArray(healthExamination.health_examination_picture) && healthExamination.health_examination_picture.length > 0) {
+                    healthExamination.health_examination_picture.forEach((picture, picIndex) => {
+                        const row = `
+                            <tr>
+                                <td>${healthExamination.school_year || 'N/A'}</td>
+                                <td><a href="javascript:void(0);" onclick="openImageModal('/storage/${picture}')">Health Exam ${picIndex + 1}</a></td>
+                            </tr>`;
+                        healthExaminationUploadsBody.insertAdjacentHTML('beforeend', row);
+                    });
+                }
+
+                // Handle lab_result_picture
+                if (healthExamination.lab_result_picture && Array.isArray(healthExamination.lab_result_picture) && healthExamination.lab_result_picture.length > 0) {
+                    healthExamination.lab_result_picture.forEach((labResult, labIndex) => {
+                        const row = `
+                            <tr>
+                                <td>${healthExamination.school_year || 'N/A'}</td>
+                                <td><a href="javascript:void(0);" onclick="openImageModal('/storage/${labResult}')">Lab Result ${labIndex + 1}</a></td>
+                            </tr>`;
+                        healthExaminationUploadsBody.insertAdjacentHTML('beforeend', row);
+                    });
+                }
+
+                // Handle xray_picture
+                if (healthExamination.xray_picture && Array.isArray(healthExamination.xray_picture) && healthExamination.xray_picture.length > 0) {
+                    healthExamination.xray_picture.forEach((xrayPicture, xrayIndex) => {
+                        const row = `
+                            <tr>
+                                <td>${healthExamination.school_year || 'N/A'}</td>
+                                <td><a href="javascript:void(0);" onclick="openImageModal('/storage/${xrayPicture}')">X-ray ${xrayIndex + 1}</a></td>
+                            </tr>`;
+                        healthExaminationUploadsBody.insertAdjacentHTML('beforeend', row);
+                    });
+                }
+            });
+        }
+
+        // Open Image Modal Function using SweetAlert
+        function openImageModal(imageUrl) {
+            Swal.fire({
+                imageUrl: imageUrl,
+                imageAlt: 'Preview Image',
+                showCloseButton: true,
+                showConfirmButton: false,
+            });
+        }
+
+        // Show alert if no data found
+        function showNoDataAlert() {
+            Swal.fire({
+                icon: 'error',
+                title: 'No data found',
+                text: 'No medical history data found.',
+            });
+        }
+
+        // Search functionality when search button is clicked
+        document.getElementById('search-button').addEventListener('click', function (event) {
+            event.preventDefault(); // Prevent form submission
+            const query = document.getElementById('search-input').value.trim();
+
+            // Simple validation for query
+            if (!query) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Empty Search',
+                    text: 'Please enter an ID number',
+                });
+                return;
+            }
+
+            fetch(`${searchUrl}?query=${query}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Search response:', data); // Log search response for debugging
+                    if (data.success) {
+                        populateFields(data);
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Medical record data found and populated successfully!',
+                            timer: 2000, // Auto-close after 2 seconds
+                            showConfirmButton: false
+                        });
+
+                        // Optionally, switch to the 'history' tab to view the fetched data
+                        showTab('history');
+                    } else {
+                        showNoDataAlert(); // Show alert if no matching data found
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching search results:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An error occurred while fetching the search results.',
+                    });
+                });
+        });
+
+        // Function to calculate BMI and auto-update it
+        function calculateBMI() {
+            const height = parseFloat(document.getElementById('height').value) / 100; // Convert cm to meters
+            const weight = parseFloat(document.getElementById('weight').value);
+
+            if (!isNaN(height) && !isNaN(weight) && height > 0) {
+                const bmi = weight / (height * height);
+                document.getElementById('bmi-value').textContent = bmi.toFixed(2);
+            } else {
+                document.getElementById('bmi-value').textContent = 'N/A';
+            }
+        }
+
+        // Function to populate Medicine Intake History
+        function populateMedicineIntakeHistory(medicineIntakes) {
+            console.log('Medicine Intakes:', medicineIntakes); // Debugging
+            const medicineIntakeBody = document.getElementById('medicine-intake-history-body');
+            medicineIntakeBody.innerHTML = ''; // Clear existing rows
+
+            if (medicineIntakes.length === 0) {
+                const row = `<tr><td colspan="4">No medicine intake records found.</td></tr>`;
+                medicineIntakeBody.insertAdjacentHTML('beforeend', row);
+                return;
+            }
+
+            medicineIntakes.forEach(intake => {
+                // Medicine Name
+                const medicine = intake.medicine_name || 'N/A';
+
+                // Date Handling
+                let formattedDate = 'N/A';
+                if (intake.created_at) { // Assuming 'created_at' exists
+                    const parsedDate = new Date(intake.created_at);
+                    if (!isNaN(parsedDate)) {
+                        formattedDate = parsedDate.toLocaleDateString();
+                    }
+                } else if (intake.date) { // If there's a 'date' field
+                    const parsedDate = new Date(intake.date);
+                    if (!isNaN(parsedDate)) {
+                        formattedDate = parsedDate.toLocaleDateString();
+                    }
+                }
+
+                // Dosage
+                const dosage = intake.dosage || 'N/A';
+
+                // Reason
+                const reason = intake.reason || 'N/A'; // Ensure 'reason' exists
+
+                const row = `
+                    <tr>
+                        <td>${medicine}</td>
+                        <td>${formattedDate}</td>
+                        <td>${dosage}</td>
+                        <td>${reason}</td>
+                    </tr>`;
+                medicineIntakeBody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        // Function to populate Health Examination Uploads
+        function populateHealthExaminationHistory(healthExaminations) {
+            const healthExaminationUploadsBody = document.getElementById('health-examination-uploads-body');
+            healthExaminationUploadsBody.innerHTML = ''; // Clear existing rows
+
+            if (!Array.isArray(healthExaminations) || healthExaminations.length === 0) {
+                const row = `<tr><td colspan="2">No Health Examination Uploads found.</td></tr>`;
+                healthExaminationUploadsBody.insertAdjacentHTML('beforeend', row);
+                return;
+            }
+
+            healthExaminations.forEach((healthExamination, examIndex) => {
+                // Handle health_examination_picture
+                if (healthExamination.health_examination_picture && Array.isArray(healthExamination.health_examination_picture) && healthExamination.health_examination_picture.length > 0) {
+                    healthExamination.health_examination_picture.forEach((picture, picIndex) => {
+                        const row = `
+                            <tr>
+                                <td>${healthExamination.school_year || 'N/A'}</td>
+                                <td><a href="javascript:void(0);" onclick="openImageModal('/storage/${picture}')">Health Exam ${picIndex + 1}</a></td>
+                            </tr>`;
+                        healthExaminationUploadsBody.insertAdjacentHTML('beforeend', row);
+                    });
+                }
+
+                // Handle lab_result_picture
+                if (healthExamination.lab_result_picture && Array.isArray(healthExamination.lab_result_picture) && healthExamination.lab_result_picture.length > 0) {
+                    healthExamination.lab_result_picture.forEach((labResult, labIndex) => {
+                        const row = `
+                            <tr>
+                                <td>${healthExamination.school_year || 'N/A'}</td>
+                                <td><a href="javascript:void(0);" onclick="openImageModal('/storage/${labResult}')">Lab Result ${labIndex + 1}</a></td>
+                            </tr>`;
+                        healthExaminationUploadsBody.insertAdjacentHTML('beforeend', row);
+                    });
+                }
+
+                // Handle xray_picture
+                if (healthExamination.xray_picture && Array.isArray(healthExamination.xray_picture) && healthExamination.xray_picture.length > 0) {
+                    healthExamination.xray_picture.forEach((xrayPicture, xrayIndex) => {
+                        const row = `
+                            <tr>
+                                <td>${healthExamination.school_year || 'N/A'}</td>
+                                <td><a href="javascript:void(0);" onclick="openImageModal('/storage/${xrayPicture}')">X-ray ${xrayIndex + 1}</a></td>
+                            </tr>`;
+                        healthExaminationUploadsBody.insertAdjacentHTML('beforeend', row);
+                    });
+                }
+            });
+        }
+
+        // Open Image Modal Function using SweetAlert
+        function openImageModal(imageUrl) {
+            Swal.fire({
+                imageUrl: imageUrl,
+                imageAlt: 'Preview Image',
+                showCloseButton: true,
+                showConfirmButton: false,
+            });
+        }
+
+        // Show alert if no data found
+        function showNoDataAlert() {
+            Swal.fire({
+                icon: 'error',
+                title: 'No data found',
+                text: 'No medical history data found.',
+            });
+        }
+
+        // Search functionality when search button is clicked
+        document.getElementById('search-button').addEventListener('click', function (event) {
+            event.preventDefault(); // Prevent form submission
+            const query = document.getElementById('search-input').value.trim();
+
+            // Simple validation for query
+            if (!query) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Empty Search',
+                    text: 'Please enter an ID number',
+                });
+                return;
+            }
+
+            fetch(`${searchUrl}?query=${query}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Search response:', data); // Log search response for debugging
+                    if (data.success) {
+                        populateFields(data);
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Medical record data found and populated successfully!',
+                            timer: 2000, // Auto-close after 2 seconds
+                            showConfirmButton: false
+                        });
+
+                        // Optionally, switch to the 'history' tab to view the fetched data
+                        showTab('history');
+                    } else {
+                        showNoDataAlert(); // Show alert if no matching data found
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching search results:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An error occurred while fetching the search results.',
+                    });
+                });
+        });
+
+        // Function to calculate BMI and auto-update it
+        function calculateBMI() {
+            const height = parseFloat(document.getElementById('height').value) / 100; // Convert cm to meters
+            const weight = parseFloat(document.getElementById('weight').value);
+
+            if (!isNaN(height) && !isNaN(weight) && height > 0) {
+                const bmi = weight / (height * height);
+                document.getElementById('bmi-value').textContent = bmi.toFixed(2);
+            } else {
+                document.getElementById('bmi-value').textContent = 'N/A';
+            }
+        }
+
+        // Function to populate Medicine Intake History
+        function populateMedicineIntakeHistory(medicineIntakes) {
+            console.log('Medicine Intakes:', medicineIntakes); // Debugging
+            const medicineIntakeBody = document.getElementById('medicine-intake-history-body');
+            medicineIntakeBody.innerHTML = ''; // Clear existing rows
+
+            if (medicineIntakes.length === 0) {
+                const row = `<tr><td colspan="4">No medicine intake records found.</td></tr>`;
+                medicineIntakeBody.insertAdjacentHTML('beforeend', row);
+                return;
+            }
+
+            medicineIntakes.forEach(intake => {
+                // Medicine Name
+                const medicine = intake.medicine_name || 'N/A';
+
+                // Date Handling
+                let formattedDate = 'N/A';
+                if (intake.created_at) { // Assuming 'created_at' exists
+                    const parsedDate = new Date(intake.created_at);
+                    if (!isNaN(parsedDate)) {
+                        formattedDate = parsedDate.toLocaleDateString();
+                    }
+                } else if (intake.date) { // If there's a 'date' field
+                    const parsedDate = new Date(intake.date);
+                    if (!isNaN(parsedDate)) {
+                        formattedDate = parsedDate.toLocaleDateString();
+                    }
+                }
+
+                // Dosage
+                const dosage = intake.dosage || 'N/A';
+
+                // Reason
+                const reason = intake.reason || 'N/A'; // Ensure 'reason' exists
+
+                const row = `
+                    <tr>
+                        <td>${medicine}</td>
+                        <td>${formattedDate}</td>
+                        <td>${dosage}</td>
+                        <td>${reason}</td>
+                    </tr>`;
+                medicineIntakeBody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        // Handle Physical Examination Form Submission
+        document.getElementById('physical-examination-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            const form = event.target;
+            const formData = new FormData(form);
+            const idNumber = document.getElementById('physical-exam-id_number').value;
+
+            // Debug: Log formData entries
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}: ${value}`);
+            }
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                    'Accept': 'application/json',
+                },
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
                     Swal.fire({
                         icon: 'success',
                         title: 'Success',
-                        text: 'Medical record data found and populated successfully!',
-                        timer: 2000, // Auto-close after 2 seconds
+                        text: 'Physical Examination data saved successfully!',
+                        timer: 2000,
                         showConfirmButton: false
                     });
-                } else if (showAlertOnNoData) {
-                    showNoDataAlert(); // Show alert if no data found
+                    
+                    // Reset specific fields without affecting id_number
+                    form.querySelectorAll('input[type="text"], textarea, input[type="number"]').forEach(input => {
+                        input.value = '';
+                    });
+                    document.getElementById('bmi-value').textContent = 'N/A';
+                    // Optionally, re-fetch history data
+                    fetchMedicalHistory(false);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'There was an error saving the data.',
+                    });
                 }
-            } else {
-                // Debugging: If `data.success` is false
-                console.warn('No success status in the response:', data);
-                if (showAlertOnNoData) {
-                    showNoDataAlert();
-                }
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching history:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'There was an error fetching the history data.',
-            });
-        });
-}
-
-// Populate fields based on the fetched data
-function populateFields(data) {
-    // Populate the medical record fields
-    if (data.medicalRecord) {
-        document.getElementById('name').value = data.medicalRecord.name || '';
-        document.getElementById('birthdate').value = data.medicalRecord.birthdate || '';
-        document.getElementById('age').value = data.medicalRecord.age || '';
-        document.getElementById('address').value = data.medicalRecord.address || '';
-        document.getElementById('father-name').value = data.medicalRecord.father_name || '';
-        document.getElementById('mother-name').value = data.medicalRecord.mother_name || '';
-        document.getElementById('personal-contact-number').value = data.medicalRecord.personal_contact_number || '';
-        document.getElementById('emergency-contact-number').value = data.medicalRecord.emergency_contact_number || '';
-
-        // Populate medical history details
-        document.getElementById('past-illness').value = data.medicalRecord.past_illness || '';
-        document.getElementById('chronic-conditions').value = data.medicalRecord.chronic_conditions || '';
-        document.getElementById('surgical-history').value = data.medicalRecord.surgical_history || '';
-        document.getElementById('family-medical-history').value = data.medicalRecord.family_medical_history || '';
-        document.getElementById('allergies').value = data.medicalRecord.allergies || '';
-        document.getElementById('physical-exam-id_number').value = data.medicalRecord.id_number || '';
-        console.log('Set physical-exam-id_number to:', data.medicalRecord.id_number || '');
-
-        // Medicines (assuming they are checkboxes)
-        let medicines = JSON.parse(data.medicalRecord.medicines || '[]');
-        document.querySelectorAll("input[name='medicines[]']").forEach((checkbox) => {
-            checkbox.checked = medicines.includes(checkbox.value);
-        });
-    } else {
-        console.warn('No medical records found.');
-    }
-
-    // Populate Medical Record History
-    if (data.medicalRecords) {
-        populateMedicalRecordHistory(data.medicalRecords);
-        console.log('Setting id_number to:', data.medicalRecord.id_number);
-        document.getElementById('physical-exam-id_number').value = data.medicalRecord.id_number || '';
-        document.getElementById('save-button').disabled = false; // Enable the button
-
-    }  else {
-        document.getElementById('save-button').disabled = true; // Keep the button disabled
-    }
-
-    // Populate Physical Examination History
-    if (data.physicalExaminations && data.physicalExaminations.length > 0) {
-        populatePhysicalExaminationHistory(data.physicalExaminations);
-    }
-
-    // Populate Health Examination Data
-    if (data.healthExamination) {
-        populateHealthExaminationHistory(data.healthExamination);
-    }
-    if (data.healthDocuments && data.healthDocuments.length > 0) {
-        populateHealthDocuments(data.healthDocuments);
-    }
-
-    // Populate profile picture
-    if (data.information && data.information.profile_picture) {
-        document.getElementById('profile-picture-preview').src = `/storage/${data.information.profile_picture}`;
-    }
-    if (data.medicineIntakes && data.medicineIntakes.length > 0) {
-        populateMedicineIntakeHistory(data.medicineIntakes);
-    } else {
-        // If no records found, clear the table
-        const medicineIntakeBody = document.getElementById('medicine-intake-history-body');
-        medicineIntakeBody.innerHTML = '<tr><td colspan="4">No medicine intake records found.</td></tr>';
-    }
-    document.getElementById('physical-exam-id_number').value = data.medicalRecord.id_number || '';
-
-}
-
-// Populate Medical Record History Table
-// Populate Medical Record History Table
-function populateMedicalRecordHistory(records) {
-    const medicalHistoryBody = document.getElementById('medical-record-history-body');
-    medicalHistoryBody.innerHTML = ''; // Clear existing rows
-    
-    records.forEach(record => {
-        // If medicines are stored as JSON or a comma-separated string, we should parse it
-        let medicines = record.medicines;
-        if (typeof medicines === 'string') {
-            medicines = JSON.parse(medicines); // Adjust this if medicines are stored differently
-        }
-
-        // Check if health documents exist
-        let healthDocumentsHtml = '';
-        if (record.health_documents) {
-    const healthDocuments = JSON.parse(record.health_documents); // Assuming health documents are stored as a JSON array
-    healthDocumentsHtml = healthDocuments.map(document => `
-        <a href="/storage/${document}" target="_blank">View Document</a>
-    `).join('<br>');
-} else {
-    healthDocumentsHtml = 'No documents';
-}
-
-
-        const row = `
-            <tr>
-                <td>${record.chronic_conditions || 'N/A'}</td>
-                <td>${record.surgical_history || 'N/A'}</td>
-                <td>${record.family_medical_history || 'N/A'}</td>
-                <td>${record.allergies || 'N/A'}</td>
-                <td>${medicines ? medicines.join(', ') : 'N/A'}</td>
-                <td>${healthDocumentsHtml}</td>
-                <td>${record.is_approved ? 'Approved' : 'Pending Approval'}</td> <!-- Health document approval status -->
-                <td>${record.is_current ? 'Yes' : 'No'}</td> <!-- Whether this record is current or not -->
-            </tr>`;
-        medicalHistoryBody.insertAdjacentHTML('beforeend', row);
-    });
-}
-
-function populateHealthDocuments(documents) {
-    const medicalHistoryBody = document.getElementById('medical-record-history-body');
-    medicalHistoryBody.innerHTML = ''; // Clear existing rows
-
-    documents.forEach(document => {
-        const row = `
-            <tr>
-                <td>${document.chronic_conditions || 'N/A'}</td>
-                <td>${document.surgical_history || 'N/A'}</td>
-                <td>${document.family_medical_history || 'N/A'}</td>
-                <td>${document.allergies || 'N/A'}</td>
-                <td>${document.medicines ? document.medicines.join(', ') : 'N/A'}</td>
-                <td>
-                    <a href="javascript:void(0);" onclick="openImageModal('${document.file_path}')">
-                        View Document
-                    </a>
-                </td>
-                <td>${document.is_approved ? 'Approved' : 'Pending'}</td>
-                <td>${document.is_current ? 'Current' : 'Not Current'}</td>
-            </tr>`;
-        medicalHistoryBody.insertAdjacentHTML('beforeend', row);
-    });
-}
-
-/// Populate Physical Examination History Table with BMI
-function populatePhysicalExaminationHistory(exams) {
-    const physicalExaminationBody = document.getElementById('physical-examination-history-body');
-    physicalExaminationBody.innerHTML = ''; // Clear existing rows
-
-    exams.forEach(exam => {
-        // Parse height and weight as floats
-        const heightCm = parseFloat(exam.height);
-        const weightKg = parseFloat(exam.weight);
-
-        // Initialize BMI as 'N/A'
-        let bmi = 'N/A';
-
-        // Calculate BMI if height and weight are valid numbers
-        if (!isNaN(heightCm) && !isNaN(weightKg) && heightCm > 0) {
-            const heightM = heightCm / 100; // Convert cm to meters
-            bmi = (weightKg / (heightM * heightM)).toFixed(2); // BMI formula
-        }
-
-        const row = `
-            <tr>
-                <td>${!isNaN(heightCm) && heightCm > 0 ? heightCm : 'N/A'}</td>
-                <td>${!isNaN(weightKg) && weightKg > 0 ? weightKg : 'N/A'}</td>
-                <td>${bmi}</td> <!-- Display BMI -->
-                <td>${exam.vision || 'N/A'}</td>
-                <td>${exam.remarks || 'N/A'}</td>
-            </tr>`;
-        physicalExaminationBody.insertAdjacentHTML('beforeend', row);
-    });
-}
-
-
-// Populate Health Examination Uploads Table and Add Preview Modal for Images
-function populateHealthExaminationHistory(healthExamination) {
-    const healthExaminationUploadsBody = document.getElementById('health-examination-uploads-body');
-    healthExaminationUploadsBody.innerHTML = ''; // Clear existing rows
-
-    // Add Health Examination Picture with Preview Modal
-    if (healthExamination.health_examination_picture) {
-        const healthExamRow = `
-            <tr>
-                <td>2024-2025</td>
-                <td><a href="javascript:void(0);" onclick="openImageModal('/storage/${healthExamination.health_examination_picture}')">View</a></td>
-            </tr>`;
-        healthExaminationUploadsBody.insertAdjacentHTML('beforeend', healthExamRow);
-    }
-
-    // Add Lab Results with Preview Modal
-    if (healthExamination.lab_result_picture) {
-        try {
-            let labResults = JSON.parse(healthExamination.lab_result_picture);
-            labResults.forEach((labResult, index) => {
-                const labResultRow = `
-                    <tr>
-                        <td>2024-2025</td>
-                        <td><a href="javascript:void(0);" onclick="openImageModal('/storage/${labResult}')">Lab Result ${index + 1}</a></td>
-                    </tr>`;
-                healthExaminationUploadsBody.insertAdjacentHTML('beforeend', labResultRow);
-            });
-        } catch (error) {
-            console.error('Error parsing lab result pictures:', error);
-        }
-    }
-
-    // Add X-ray Pictures with Preview Modal
-    if (healthExamination.xray_picture) {
-        try {
-            let xrayPictures = JSON.parse(healthExamination.xray_picture);
-            xrayPictures.forEach((xrayPicture, index) => {
-                const xrayPictureRow = `
-                    <tr>
-                        <td>2024-2025</td>
-                        <td><a href="javascript:void(0);" onclick="openImageModal('/storage/${xrayPicture}')">X-ray ${index + 1}</a></td>
-                    </tr>`;
-                healthExaminationUploadsBody.insertAdjacentHTML('beforeend', xrayPictureRow);
-            });
-        } catch (error) {
-            console.error('Error parsing x-ray pictures:', error);
-        }
-    }
-}
-
-// Open Image Modal Function using SweetAlert
-function openImageModal(imageUrl) {
-    Swal.fire({
-        imageUrl: imageUrl,
-        imageAlt: 'Preview Image',
-        showCloseButton: true,
-        showConfirmButton: false,
-    });
-}
-
-// Show alert if no data found
-function showNoDataAlert() {
-    Swal.fire({
-        icon: 'error',
-        title: 'No data found',
-        text: 'No medical history data found.',
-    });
-}
-
-// Search functionality when search button is clicked
-document.getElementById('search-button').addEventListener('click', function (event) {
-    event.preventDefault(); // Prevent form submission
-    const query = document.getElementById('search-input').value.trim();
-
-    // Simple validation for query
-    if (!query) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Empty Query',
-            text: 'Please enter a search term.',
-        });
-        return;
-    }
-
-    fetch(`${searchUrl}?query=${query}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok.');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Search response:', data); // Log search response for debugging
-            if (data.success) {
-                populateFields(data);
-                const idNumber = document.getElementById('physical-exam-id_number').value;
+            })
+            .catch(error => {
+                console.error('Error submitting form:', error);
                 Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: 'Medical record data found and populated successfully!',
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An unexpected error occurred.',
+                });
+            });
+        });
+
+        // Function to clear forms
+        function clearForm(button) {
+            if (!button) {
+                console.error('No button element provided to clearForm.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Unable to identify the button element.',
+                });
+                return;
+            }
+
+            // Find the closest parent form of the clicked button
+            const form = button.closest('form');
+
+            if (form) {
+                // Clear all input fields of type text, number, date
+                form.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]').forEach(input => {
+                    input.value = '';
+                });
+
+                // Uncheck all checkboxes and radio buttons
+                form.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(input => {
+                    input.checked = false;
+                });
+
+                // Clear all textarea fields
+                form.querySelectorAll('textarea').forEach(textarea => {
+                    textarea.value = '';
+                });
+
+                // Reset BMI display if it exists within the form
+                const bmiValue = form.querySelector('#bmi-value');
+                if (bmiValue) {
+                    bmiValue.textContent = 'N/A';
+                }
+
+                // Optionally, disable the Save button if necessary
+                const saveButton = form.querySelector('#save-button');
+                if (saveButton) {
+                    saveButton.disabled = true;
+                }
+
+                // Display SweetAlert notification
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Form Cleared',
+                    text: 'All fields have been cleared successfully.',
                     timer: 2000, // Auto-close after 2 seconds
                     showConfirmButton: false
                 });
             } else {
-                showNoDataAlert(); // Show alert if no matching data found
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching search results:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'An error occurred while fetching the search results.',
-            });
-        });
-});
-
-
-// Function to calculate BMI and auto-update it
-function calculateBMI() {
-    const height = parseFloat(document.getElementById('height').value) / 100; // Convert cm to meters
-    const weight = parseFloat(document.getElementById('weight').value);
-
-    if (!isNaN(height) && !isNaN(weight) && height > 0) {
-        const bmi = weight / (height * height);
-        document.getElementById('bmi-value').textContent = bmi.toFixed(2);
-    } else {
-        document.getElementById('bmi-value').textContent = 'N/A';
-    }
-}
-function populateMedicineIntakeHistory(medicineIntakes) {
-    console.log('Medicine Intakes:', medicineIntakes); // Debugging
-    const medicineIntakeBody = document.getElementById('medicine-intake-history-body');
-    medicineIntakeBody.innerHTML = ''; // Clear existing rows
-
-    if (medicineIntakes.length === 0) {
-        const row = `<tr><td colspan="4">No medicine intake records found.</td></tr>`;
-        medicineIntakeBody.insertAdjacentHTML('beforeend', row);
-        return;
-    }
-
-    medicineIntakes.forEach(intake => {
-        // Medicine Name
-        const medicine = intake.medicine_name || 'N/A';
-
-        // Date Handling
-        let formattedDate = 'N/A';
-        if (intake.created_at) { // Assuming 'created_at' exists
-            const parsedDate = new Date(intake.created_at);
-            if (!isNaN(parsedDate)) {
-                formattedDate = parsedDate.toLocaleDateString();
-            }
-        } else if (intake.date) { // If there's a 'date' field
-            const parsedDate = new Date(intake.date);
-            if (!isNaN(parsedDate)) {
-                formattedDate = parsedDate.toLocaleDateString();
+                // If no parent form is found, display an error alert
+                console.error('No parent form found for the Clear button.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Unable to locate the form to clear.',
+                });
             }
         }
-
-        // Dosage
-        const dosage = intake.dosage || 'N/A';
-
-        // Reason
-        const reason = intake.reason || 'N/A'; // Ensure 'reason' exists
-
-        const row = `
-            <tr>
-                <td>${medicine}</td>
-                <td>${formattedDate}</td>
-                <td>${dosage}</td>
-                <td>${reason}</td>
-            </tr>`;
-        medicineIntakeBody.insertAdjacentHTML('beforeend', row);
-    });
-}
-
-// Auto-calculate BMI when height and weight are input
-document.getElementById('height').addEventListener('input', calculateBMI);
-document.getElementById('weight').addEventListener('input', calculateBMI);
-document.getElementById('physical-examination-form').addEventListener('submit', function(event) {
-    event.preventDefault(); // Prevent the default form submission
-
-    const form = event.target;
-    const formData = new FormData(form);
-    const idNumber = document.getElementById('physical-exam-id_number').value;
-
-
-    // Debug: Log formData entries
-    for (let [key, value] of formData.entries()) {
-        console.log(`${key}: ${value}`);
-    }
-
-    fetch(form.action, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
-            'Accept': 'application/json',
-        },
-        body: formData,
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Success',
-                text: 'Physical Examination data saved successfully!',
-                timer: 2000,
-                showConfirmButton: false
-            });
-            
-            // Reset specific fields without affecting id_number
-            form.querySelectorAll('input[type="text"], textarea').forEach(input => {
-                input.value = '';
-            });
-            document.getElementById('bmi-value').textContent = 'N/A';
-            // Reset other fields as necessary
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data.message || 'There was an error saving the data.',
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Error submitting form:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'An unexpected error occurred.',
-        });
-    });
-});
-
-
-   
-function clearForm(button) {
-        if (!button) {
-            console.error('No button element provided to clearForm.');
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Unable to identify the button element.',
-            });
-            return;
-        }
-
-        // Find the closest parent form of the clicked button
-        const form = button.closest('form');
-
-        if (form) {
-            // Clear all input fields of type text, number, date
-            form.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]').forEach(input => {
-                input.value = '';
-            });
-
-            // Uncheck all checkboxes and radio buttons
-            form.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(input => {
-                input.checked = false;
-            });
-
-            // Clear all textarea fields
-            form.querySelectorAll('textarea').forEach(textarea => {
-                textarea.value = '';
-            });
-
-            // Reset BMI display if it exists within the form
-            const bmiValue = form.querySelector('#bmi-value');
-            if (bmiValue) {
-                bmiValue.textContent = 'N/A';
-            }
-
-            // Optionally, disable the Save button if necessary
-            const saveButton = form.querySelector('#save-button');
-            if (saveButton) {
-                saveButton.disabled = true;
-            }
-
-            // Display SweetAlert notification
-            Swal.fire({
-                icon: 'info',
-                title: 'Form Cleared',
-                text: 'All fields have been cleared successfully.',
-                timer: 2000, // Auto-close after 2 seconds
-                showConfirmButton: false
-            });
-        } else {
-            // If no parent form is found, display an error alert
-            console.error('No parent form found for the Clear button.');
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Unable to locate the form to clear.',
-            });
-        }
-    }
-</script>
-
-
+    </script>
 </x-app-layout>

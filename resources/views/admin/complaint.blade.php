@@ -1,6 +1,15 @@
 <x-app-layout>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- SweetAlert2 for Alerts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Chart.js for Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
+        /* Existing Styles */
+
         .main-content {
             margin-top: 40px;
             position: relative; /* To contain absolutely positioned elements */
@@ -168,17 +177,35 @@
             background-color: #fff;
         }
 
-        .preview-button {
+        .preview-button,
+        .pdf-button,
+        .download-button {
             background-color: #00d1ff;
             color: white;
             padding: 5px 10px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none; /* For anchor tags */
         }
 
-        .preview-button:hover {
+        .preview-button:hover,
+        .pdf-button:hover,
+        .download-button:hover {
             background-color: #00b8e6;
+        }
+
+        .pdf-button[disabled],
+        .pdf-button[disabled]:hover,
+        .download-button[disabled],
+        .download-button[disabled]:hover {
+            background-color: #6c757d;
+            cursor: not-allowed;
         }
 
         /* Tabs */
@@ -420,8 +447,9 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-           /* Responsive adjustments */
-           @media (max-width: 768px) {
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
             .container {
                 flex-direction: column;
             }
@@ -430,12 +458,13 @@
                 width: 100%;
             }
         }
-        .complaint-list-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
 
+        .complaint-list-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            margin-bottom: 400px
+        }
 
     </style>
 
@@ -522,7 +551,10 @@
                         <div class="form-group">
                             <div class="input-wrapper">
                                 <label for="medicine_given"><i class="fas fa-pills"></i> Medicine Given</label>
-                                <select id="medicine_given" name="medicine_given" required></select>
+                                <select id="medicine_given" name="medicine_given" required>
+                                    <option value="">Select Medicine</option>
+                                    <!-- Options will be populated via AJAX -->
+                                </select>
                             </div>
                         </div>
 
@@ -546,18 +578,19 @@
                                 </div>
                             </div>
                         </div>
-<!-- Go Home Status -->
-<div class="form-group">
-    <label for="go_home"><i class="fas fa-home"></i> Go Home Status</label>
-    <div class="radio-group">
-        <label>
-            <input type="radio" name="go_home" value="yes" required> Yes
-        </label>
-        <label>
-            <input type="radio" name="go_home" value="no" required> No
-        </label>
-    </div>
-</div>
+
+                        <!-- Go Home Status -->
+                        <div class="form-group">
+                            <label for="go_home"><i class="fas fa-home"></i> Go Home Status</label>
+                            <div class="radio-group">
+                                <label>
+                                    <input type="radio" name="go_home" value="yes" required> Yes
+                                </label>
+                                <label>
+                                    <input type="radio" name="go_home" value="no" required> No
+                                </label>
+                            </div>
+                        </div>
 
                         <!-- Submit button -->
                         <div class="form-group">
@@ -607,152 +640,201 @@
                     </div>
                 </div>
             </div>
-           
+        </div>
 
         <!-- Main Complaint List Tab Content -->
         <div id="complaint-table" class="main-tab-content">
-        <div class="complaint-list-container">
-           
+            <div class="complaint-list-container">
+                <!-- Inner Tabs for Complaint Roles -->
+                <div class="tabs inner-tabs">
+                    <div class="tab inner-tab active" onclick="showInnerTab('student-complaints', this)">Student Complaints</div>
+                    <div class="tab inner-tab" onclick="showInnerTab('staff-complaints', this)">Staff Complaints</div>
+                    <div class="tab inner-tab" onclick="showInnerTab('parent-complaints', this)">Parent Complaints</div>
+                    <div class="tab inner-tab" onclick="showInnerTab('teacher-complaints', this)">Teacher Complaints</div>
+                </div>
 
-            <!-- Inner Tabs for Complaint Roles -->
-            <div class="tabs inner-tabs">
-            <div class="tab inner-tab active" onclick="showInnerTab('student-complaints', this)">Student Complaints</div>
-<div class="tab inner-tab" onclick="showInnerTab('staff-complaints', this)">Staff Complaints</div>
-<div class="tab inner-tab" onclick="showInnerTab('parent-complaints', this)">Parent Complaints</div>
-<div class="tab inner-tab" onclick="showInnerTab('teacher-complaints', this)">Teacher Complaints</div>
-
-            </div>
-
-            <!-- Inner Tab Contents -->
-            <!-- Student Complaints Tab -->
-            <div id="student-complaints" class="inner-tab-content active">
-                <h2>Student Complaints</h2>
-                <!-- Search bar for student complaints -->
-                <input type="text" id="student-search" class="search-input" onkeyup="searchTable('student-search', 'student-complaints-table')" placeholder="Search for complaints..">
-                <div class="table-container">
-                    <table class="complaints-table" id="student-complaints-table">
-                        <thead>
-                            <tr>
-                                <th>First Name</th>
-                                <th>Last Name</th>
-                                <th>Description of Sickness</th>
-                                <th>Pain Assessment</th>
-                                <th>Medicine Given</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($studentComplaints as $complaint)
+                <!-- Inner Tab Contents -->
+                <!-- Student Complaints Tab -->
+                <div id="student-complaints" class="inner-tab-content active">
+                    <h2>Student Complaints</h2>
+                    <!-- Search bar for student complaints -->
+                    <input type="text" id="student-search" class="search-input" onkeyup="searchTable('student-search', 'student-complaints-table')" placeholder="Search for complaints..">
+                    <div class="table-container">
+                        <table class="complaints-table" id="student-complaints-table">
+                            <thead>
                                 <tr>
-                                    <td>{{ $complaint->first_name }}</td>
-                                    <td>{{ $complaint->last_name }}</td>
-                                    <td>{{ $complaint->sickness_description }}</td>
-                                    <td>{{ $complaint->pain_assessment }}</td>
-                                    <td>{{ $complaint->medicine_given }}</td>
-                                    <td><button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button></td>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Description of Sickness</th>
+                                    <th>Pain Assessment</th>
+                                    <th>Medicine Given</th>
+                                    <th>Action</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach ($studentComplaints as $complaint)
+                                    <tr id="complaint-row-{{ $complaint->id }}">
+                                        <td>{{ $complaint->first_name }}</td>
+                                        <td>{{ $complaint->last_name }}</td>
+                                        <td>{{ $complaint->sickness_description }}</td>
+                                        <td>{{ $complaint->pain_assessment }}</td>
+                                        <td>{{ $complaint->medicine_given }}</td>
+                                        <td>
+                                            <button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button>
+                                            @if($complaint->report_url)
+                                                <a href="{{ $complaint->report_url }}" target="_blank" class="pdf-button">
+                                                    <i class="fas fa-file-pdf"></i> View PDF
+                                                </a>
+                                             
+                                            @else
+                                                <button class="pdf-button" disabled title="PDF not available">
+                                                    <i class="fas fa-file-pdf"></i> View PDF
+                                                </button>
+                                               
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Staff Complaints Tab -->
+                <div id="staff-complaints" class="inner-tab-content">
+                    <h2>Staff Complaints</h2>
+                    <input type="text" id="staff-search" class="search-input" onkeyup="searchTable('staff-search', 'staff-complaints-table')" placeholder="Search for complaints..">
+                    <div class="table-container">
+                        <table class="complaints-table" id="staff-complaints-table">
+                            <thead>
+                                <tr>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Description of Sickness</th>
+                                    <th>Pain Assessment</th>
+                                    <th>Medicine Given</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($staffComplaints as $complaint)
+                                    <tr id="complaint-row-{{ $complaint->id }}">
+                                        <td>{{ $complaint->first_name }}</td>
+                                        <td>{{ $complaint->last_name }}</td>
+                                        <td>{{ $complaint->sickness_description }}</td>
+                                        <td>{{ $complaint->pain_assessment }}</td>
+                                        <td>{{ $complaint->medicine_given }}</td>
+                                        <td>
+                                            <button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button>
+                                            @if($complaint->report_url)
+                                                <a href="{{ $complaint->report_url }}" target="_blank" class="pdf-button">
+                                                    <i class="fas fa-file-pdf"></i> View PDF
+                                                </a>
+                                             
+                                            @else
+                                                <button class="pdf-button" disabled title="PDF not available">
+                                                    <i class="fas fa-file-pdf"></i> View PDF
+                                                </button>
+                                              
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Parent Complaints Tab -->
+                <div id="parent-complaints" class="inner-tab-content">
+                    <h2>Parent Complaints</h2>
+                    <input type="text" id="parent-search" class="search-input" onkeyup="searchTable('parent-search', 'parent-complaints-table')" placeholder="Search for complaints..">
+                    <div class="table-container">
+                        <table class="complaints-table" id="parent-complaints-table">
+                            <thead>
+                                <tr>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Description of Sickness</th>
+                                    <th>Pain Assessment</th>
+                                    <th>Medicine Given</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($parentComplaints as $complaint)
+                                    <tr id="complaint-row-{{ $complaint->id }}">
+                                        <td>{{ $complaint->first_name }}</td>
+                                        <td>{{ $complaint->last_name }}</td>
+                                        <td>{{ $complaint->sickness_description }}</td>
+                                        <td>{{ $complaint->pain_assessment }}</td>
+                                        <td>{{ $complaint->medicine_given }}</td>
+                                        <td>
+                                            <button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button>
+                                            @if($complaint->report_url)
+                                                <a href="{{ $complaint->report_url }}" target="_blank" class="pdf-button">
+                                                    <i class="fas fa-file-pdf"></i> View PDF
+                                                </a>
+                                             
+                                            @else
+                                                <button class="pdf-button" disabled title="PDF not available">
+                                                    <i class="fas fa-file-pdf"></i> View PDF
+                                                </button>
+                                                
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Teacher Complaints Tab -->
+                <div id="teacher-complaints" class="inner-tab-content">
+                    <h2>Teacher Complaints</h2>
+                    <input type="text" id="teacher-search" class="search-input" onkeyup="searchTable('teacher-search', 'teacher-complaints-table')" placeholder="Search for complaints..">
+                    <div class="table-container">
+                        <table class="complaints-table" id="teacher-complaints-table">
+                            <thead>
+                                <tr>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Description of Sickness</th>
+                                    <th>Pain Assessment</th>
+                                    <th>Medicine Given</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($teacherComplaints as $complaint)
+                                    <tr id="complaint-row-{{ $complaint->id }}">
+                                        <td>{{ $complaint->first_name }}</td>
+                                        <td>{{ $complaint->last_name }}</td>
+                                        <td>{{ $complaint->sickness_description }}</td>
+                                        <td>{{ $complaint->pain_assessment }}</td>
+                                        <td>{{ $complaint->medicine_given }}</td>
+                                        <td>
+                                            <button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button>
+                                            @if($complaint->report_url)
+                                                <a href="{{ $complaint->report_url }}" target="_blank" class="pdf-button">
+                                                    <i class="fas fa-file-pdf"></i> View PDF
+                                                </a>
+                                             
+                                            @else
+                                                <button class="pdf-button" disabled title="PDF not available">
+                                                    <i class="fas fa-file-pdf"></i> View PDF
+                                                </button>
+                                        
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-
-            <!-- Staff Complaints Tab -->
-            <div id="staff-complaints" class="inner-tab-content">
-                <h2>Staff Complaints</h2>
-                <input type="text" id="staff-search" class="search-input" onkeyup="searchTable('staff-search', 'staff-complaints-table')" placeholder="Search for complaints..">
-                <div class="table-container">
-                    <table class="complaints-table" id="staff-complaints-table">
-                        <thead>
-                            <tr>
-                                <th>First Name</th>
-                                <th>Last Name</th>
-                                <th>Description of Sickness</th>
-                                <th>Pain Assessment</th>
-                                <th>Medicine Given</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($staffComplaints as $complaint)
-                                <tr>
-                                    <td>{{ $complaint->first_name }}</td>
-                                    <td>{{ $complaint->last_name }}</td>
-                                    <td>{{ $complaint->sickness_description }}</td>
-                                    <td>{{ $complaint->pain_assessment }}</td>
-                                    <td>{{ $complaint->medicine_given }}</td>
-                                    <td><button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button></td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Parent Complaints Tab -->
-            <div id="parent-complaints" class="inner-tab-content">
-                <h2>Parent Complaints</h2>
-                <input type="text" id="parent-search" class="search-input" onkeyup="searchTable('parent-search', 'parent-complaints-table')" placeholder="Search for complaints..">
-                <div class="table-container">
-                    <table class="complaints-table" id="parent-complaints-table">
-                        <thead>
-                            <tr>
-                                <th>First Name</th>
-                                <th>Last Name</th>
-                                <th>Description of Sickness</th>
-                                <th>Pain Assessment</th>
-                                <th>Medicine Given</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($parentComplaints as $complaint)
-                                <tr>
-                                    <td>{{ $complaint->first_name }}</td>
-                                    <td>{{ $complaint->last_name }}</td>
-                                    <td>{{ $complaint->sickness_description }}</td>
-                                    <td>{{ $complaint->pain_assessment }}</td>
-                                    <td>{{ $complaint->medicine_given }}</td>
-                                    <td><button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button></td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Teacher Complaints Tab -->
-            <div id="teacher-complaints" class="inner-tab-content">
-                <h2>Teacher Complaints</h2>
-                <input type="text" id="teacher-search" class="search-input" onkeyup="searchTable('teacher-search', 'teacher-complaints-table')" placeholder="Search for complaints..">
-                <div class="table-container">
-                    <table class="complaints-table" id="teacher-complaints-table">
-                        <thead>
-                            <tr>
-                                <th>First Name</th>
-                                <th>Last Name</th>
-                                <th>Description of Sickness</th>
-                                <th>Pain Assessment</th>
-                                <th>Medicine Given</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($teacherComplaints as $complaint)
-                                <tr>
-                                    <td>{{ $complaint->first_name }}</td>
-                                    <td>{{ $complaint->last_name }}</td>
-                                    <td>{{ $complaint->sickness_description }}</td>
-                                    <td>{{ $complaint->pain_assessment }}</td>
-                                    <td>{{ $complaint->medicine_given }}</td>
-                                    <td><button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button></td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
         </div>
     </main>
 
@@ -764,18 +846,21 @@
         </div>
     </div>
 
-    <!-- SweetAlert2 and Chart.js Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Spinner Overlay -->
+    <div id="spinner-overlay">
+        <div class="spinner"></div>
+    </div>
 
     <script>
+            let complaintChart;
+
         document.addEventListener('DOMContentLoaded', function() {
             fetchAvailableMedicines();
             renderChart();
         });
 
         // Function to switch between main tabs
-        function showTab(tabId) {
+        function showTab(tabId, element) {
             console.log(`Switching to tab: ${tabId}`);
 
             // Hide all main tab contents
@@ -801,14 +886,11 @@
             }
 
             // Add active class to the selected main tab
-            const selectedTab = document.querySelector(`.main-tab[onclick="showTab('${tabId}')"]`);
-            if (selectedTab) {
-                selectedTab.classList.add('active');
-            }
+            element.classList.add('active');
         }
 
         // Function to switch between inner complaint tabs
-        function showInnerTab(tabId) {
+        function showInnerTab(tabId, element) {
             console.log(`Switching to inner tab: ${tabId}`);
 
             // Hide all inner tab contents
@@ -834,10 +916,7 @@
             }
 
             // Add active class to the selected inner tab
-            const selectedInnerTab = document.querySelector(`.inner-tab[onclick="showInnerTab('${tabId}')"]`);
-            if (selectedInnerTab) {
-                selectedInnerTab.classList.add('active');
-            }
+            element.classList.add('active');
         }
 
         // Fetch available medicines
@@ -846,7 +925,7 @@
                 .then(response => response.json())
                 .then(data => {
                     const medicineSelect = document.getElementById('medicine_given');
-                    medicineSelect.innerHTML = '';
+                    medicineSelect.innerHTML = '<option value="">Select Medicine</option>';
                     data.forEach(medicine => {
                         const option = document.createElement('option');
                         option.value = medicine;
@@ -859,7 +938,7 @@
                 });
         }
 
-        // Fetch person data
+        // Fetch person data based on ID number
         function fetchPersonData() {
             const idNumber = document.getElementById('id_number').value;
 
@@ -915,11 +994,15 @@
                     modalBody.innerHTML = `
                         <p><strong>First Name:</strong> ${data.first_name}</p>
                         <p><strong>Last Name:</strong> ${data.last_name}</p>
-                        <p><strong>Pain Assessment:</strong> ${data.pain_assessment}</p>
                         <p><strong>Description of Sickness:</strong> ${data.sickness_description}</p>
-                        <p><strong>Medicine Given:</strong> ${data.medicine_given}</p>
+                        <p><strong>Pain Assessment:</strong> ${data.pain_assessment}</p>
                         <p><strong>Confine Status:</strong> ${data.confine_status}</p>
                         <p><strong>Status:</strong> ${data.status}</p>
+                        ${data.pdf_url ? `
+                            <a href="${data.pdf_url}" target="_blank" class="pdf-link">
+                                <i class="fas fa-file-pdf"></i> View PDF
+                            </a>
+                        ` : ''}
                     `;
                     document.getElementById('complaint-modal').style.display = 'block';
                 })
@@ -938,118 +1021,196 @@
             document.getElementById('complaint-modal').style.display = 'none';
         }
 
-        // Render chart for complaint statistics
         function renderChart() {
-            const ctx = document.getElementById('complaint-chart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Most Common Complaint', 'Most Used Medicine'],
-                    datasets: [{
-                        label: 'Occurrences',
-                        data: [{{ $commonComplaintCount }}, {{ $mostUsedMedicineCount }}],
-                        backgroundColor: ['rgba(54, 162, 235, 0.2)', 'rgba(255, 99, 132, 0.2)'],
-                        borderColor: ['rgba(54, 162, 235, 1)', 'rgba(255, 99, 132, 1)'],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
+    fetch('{{ route('admin.complaint.statistics') }}', {
+        method: 'GET',
+        credentials: 'same-origin', // Ensure cookies are sent
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        const ctx = document.getElementById('complaint-chart').getContext('2d');
+
+        // Destroy existing chart instance if it exists
+        if (complaintChart) {
+            complaintChart.destroy();
         }
 
-        // Handle complaint form submission with SweetAlert
-      // Handle complaint form submission with SweetAlert
-document.getElementById('complaint-form').addEventListener('submit', function(event) {
-    event.preventDefault(); // Prevent the default form submission
-
-    const form = event.target;
-    const formData = new FormData(form); // Collect form data
-
-    Swal.fire({
-        title: 'Submit Complaint',
-        text: "Are you sure you want to submit this complaint?",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#00d1ff',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, submit it!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Show loading spinner
-            Swal.fire({
-                title: 'Submitting...',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-
-            fetch("{{ route('admin.complaint.store') }}", { // Use the admin route here
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                Swal.close(); // Close the loading spinner
-
-                if (data.success) {
-                    // Clear all form fields
-                    form.reset();
-
-                    if (data.report_url) {
-                        // SweetAlert success message with option to view the PDF
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: 'Complaint submitted successfully.',
-                            showCancelButton: true,
-                            confirmButtonText: 'View Report',
-                            cancelButtonText: 'Close',
-                            reverseButtons: true
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                window.open(data.report_url, '_blank');
-                            }
-                        });
-                    } else {
-                        // SweetAlert success message
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: 'Complaint submitted successfully.'
-                        });
+        // Create a new chart instance
+        complaintChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Most Common Complaint', 'Most Used Medicine'],
+                datasets: [{
+                    label: 'Occurrences',
+                    data: [data.commonComplaintCount, data.mostUsedMedicineCount],
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 99, 132, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 99, 132, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
                     }
-                } else {
-                    // SweetAlert error message
+                },
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching statistics:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to load chart data. Please try again later.'
+        });
+    });
+}
+
+
+
+        // Handle complaint form submission with AJAX and SweetAlert
+        document.getElementById('complaint-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            const form = event.target;
+            const formData = new FormData(form); // Collect form data
+
+            Swal.fire({
+                title: 'Submit Complaint',
+                text: "Are you sure you want to submit this complaint?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#00d1ff',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, submit it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading spinner
                     Swal.fire({
-                        icon: 'error',
-                        title: 'Error!',
-                        text: data.message || 'An error occurred while submitting the form.'
+                        title: 'Submitting...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    fetch("{{ route('admin.complaint.store') }}", { // Use the admin route here
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        Swal.close(); // Close the loading spinner
+
+                        if (data.success) {
+                            // Clear all form fields
+                            form.reset();
+
+                            // Prepare the new complaint row HTML
+                            let newRow = `
+                                <tr id="complaint-row-${data.complaint_id}">
+                                    <td>${data.first_name}</td>
+                                    <td>${data.last_name}</td>
+                                    <td>${data.sickness_description}</td>
+                                    <td>${data.pain_assessment}</td>
+                                    <td>${data.medicine_given}</td>
+                                    <td>
+                                        <button class="preview-button" onclick="openModal(${data.complaint_id})">Preview</button>
+                                        ${data.report_url ? `
+                                            <a href="${data.report_url}" target="_blank" class="pdf-button">
+                                                <i class="fas fa-file-pdf"></i> View PDF
+                                            </a>
+                                            <a href="${data.report_url}" download class="download-button">
+                                                <i class="fas fa-download"></i> Download PDF
+                                            </a>
+                                        ` : `
+                                            <button class="pdf-button" disabled title="PDF not available">
+                                                <i class="fas fa-file-pdf"></i> View PDF
+                                            </button>
+                                            <button class="download-button" disabled title="PDF not available">
+                                                <i class="fas fa-download"></i> Download PDF
+                                            </button>
+                                        `}
+                                    </td>
+                                </tr>
+                            `;
+
+                            // Append the new row to the Student Complaints table (assuming role is student)
+                            // Modify this if handling different roles dynamically
+                            document.querySelector('#student-complaints-table tbody').insertAdjacentHTML('beforeend', newRow);
+
+                            // Optionally, update statistics and charts
+                            renderChart();
+
+                            // SweetAlert success message with option to view the PDF
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: 'Complaint submitted successfully.',
+                                showCancelButton: data.report_url ? true : false,
+                                confirmButtonText: data.report_url ? 'View Report' : 'Close',
+                                cancelButtonText: 'Close',
+                                reverseButtons: true
+                            }).then((result) => {
+                                if (result.isConfirmed && data.report_url) {
+                                    window.open(data.report_url, '_blank');
+                                }
+                            });
+                        } else {
+                            // Handle validation errors
+                            if (data.errors) {
+                                let errorMessages = '';
+                                for (let key in data.errors) {
+                                    errorMessages += `${data.errors[key][0]}<br>`;
+                                }
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Validation Error',
+                                    html: errorMessages
+                                });
+                            } else {
+                                // SweetAlert error message
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error!',
+                                    text: data.message || 'An error occurred while submitting the form.'
+                                });
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+
+                        // SweetAlert error message for any network issues
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: 'Something went wrong. Please try again later.'
+                        });
                     });
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-
-                // SweetAlert error message for any network issues
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    text: 'Something went wrong. Please try again later.'
-                });
             });
-        }
-    });
-});
+        });
 
         // Search function for tables
         function searchTable(inputId, tableId) {

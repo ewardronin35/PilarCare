@@ -25,6 +25,9 @@ class Complaint extends Model
         'go_home', // Added this line
 
     ];
+
+    public $timestamps = true; // Ensure timestamps are enabled
+
     public function user()
     {
         return $this->belongsTo(User::class, 'id_number', 'id_number');

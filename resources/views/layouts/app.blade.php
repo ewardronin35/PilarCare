@@ -19,16 +19,22 @@
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="{{ mix('css/app.css') }}" rel="stylesheet">
+    <script>
+    window.PUSHER_APP_KEY = "50f98f50cabf2f77a875";
+    window.PUSHER_APP_CLUSTER = "ap1";
+</script>
+
 
     <!-- Include jQuery via CDN -->
 <!-- Include jQuery via CDN with correct integrity -->
+ 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+
         integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
         crossorigin="anonymous"></script>
 
 
     <!-- Include Laravel's compiled JS -->
-    <script src="{{ mix('js/app.js') }}"></script>
 </head>
 <body class="font-sans antialiased">
     <div class="container">
@@ -66,13 +72,18 @@
                     <span>{{ $pageTitle ?? ucfirst(str_replace('.', ' ', Route::currentRouteName())) }}</span>
                 </div>
                 <div class="fixed-user-info">
-                    <div class="notification-icon" id="notification-icon">
-                        <i class="fas fa-bell"></i>
-                        <div class="notification-dot" style="display: none;"></div> <!-- Will be shown if there are unread notifications -->
-                        <div class="notification-dropdown" id="notification-dropdown">
-                            <div class="dropdown-item">No new notifications</div>
-                        </div>
-                    </div>
+                <div class="notification-icon" id="notification-icon" style="position: relative;">
+    <i class="fas fa-bell"></i>
+    <span class="badge" style="display: none; position: absolute; top: 0; right: 0; background-color: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px;">0</span>
+    <div class="notification-dot" style="display: none;"></div> <!-- Will be shown if there are unread notifications -->
+
+    <div class="notification-dropdown" id="notification-dropdown">
+        <div class="dropdown-item">No new notifications</div>
+    </div>
+</div>
+
+    
+
                   
                     <span class="username">{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</span>
                     @php
@@ -106,6 +117,8 @@
 
     <!-- Existing scripts... -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ mix('js/app.js') }}"></script>
+
     <script>
 document.addEventListener('DOMContentLoaded', function () {
     // Notification Icon Elements
@@ -197,9 +210,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // Handle Logout Button Click
     if (logoutButton) {
         logoutButton.addEventListener('click', function (e) {
-            e.preventDefault(); // Prevent default link behavior
+            e.preventDefault(); // Prevent the default link behavior
 
-            // Show SweetAlert confirmation
+            // Use SweetAlert to show a confirmation dialog
             Swal.fire({
                 title: 'Are you sure?',
                 text: "You will be logged out of the application.",
@@ -210,7 +223,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 confirmButtonText: 'Yes, logout!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Perform AJAX logout
+                    // Perform AJAX logout if confirmed
                     performLogout();
                 }
             });
@@ -246,13 +259,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // Function to Perform AJAX Logout
     function performLogout() {
         $.ajax({
-            url: "{{ route('logout') }}",
-            type: 'POST',
+            url: "{{ route('logout') }}", // The logout route
+            type: 'POST', // Use POST request as required
             data: {
-                _token: "{{ csrf_token() }}"
+                _token: "{{ csrf_token() }}" // Pass CSRF token for security
             },
             success: function(response) {
-                // Show SweetAlert indicating successful logout
+                // Show a SweetAlert success message upon successful logout
                 Swal.fire({
                     icon: 'success',
                     title: 'Logged Out',
@@ -260,11 +273,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     timer: 2000,
                     showConfirmButton: false
                 }).then(() => {
-                    // Redirect to login page or home page after logout
+                    // Redirect to the login page or another route after logout
                     window.location.href = "{{ route('login') }}";
                 });
             },
             error: function(xhr, status, error) {
+                // Show an error message if logout fails
                 console.error('Logout failed:', error);
                 Swal.fire({
                     icon: 'error',
@@ -274,6 +288,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+});
 
     // Fetch Notifications Function
     function fetchNotifications() {
@@ -400,7 +415,7 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .catch(error => console.error('Error marking all notifications as read:', error));
     }
-});
+
 </script>
 
 </body>

@@ -206,114 +206,101 @@ class DentalRecordController extends Controller
     }
     
 
-    
-public function storeTooth(Request $request)
-{
-    Log::info('Incoming request data: ', $request->all());
-    $rules = [
-        'dental_record_id' => 'required|exists:dental_records,dental_record_id', // Corrected
-        'tooth_number' => 'required|integer|min:11|max:48',
-        'status' => 'required|string',
-        'notes' => 'nullable|string',
-        'svg_path' => 'required|string',
-    ];
-    // Check if this tooth already exists for the given dental record
-    $existingTooth = Teeth::where('dental_record_id', $request->dental_record_id)
-        ->where('tooth_number', $request->tooth_number)
-        ->first();
+    public function storeTooth(Request $request)
+    {
+        Log::info('Incoming request data: ', $request->all());
+        $rules = [
+            'dental_record_id' => 'required|exists:dental_records,dental_record_id',
+            'tooth_number' => 'required|integer|min:11|max:48',
+            'status' => 'required|string',
+            'notes' => 'nullable|string',
+            'svg_path' => 'required|string',
+            'update_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10048',
+        ];
 
-    Log::info('Existing tooth: ', $existingTooth ? $existingTooth->toArray() : ['No existing tooth']);
+        // Validate the request
+        $validatedData = $request->validate($rules);
+        Log::info('Validated data: ', $validatedData);
 
-  
+        // Find existing tooth record
+        $existingTooth = Teeth::where('dental_record_id', $validatedData['dental_record_id'])
+            ->where('tooth_number', $validatedData['tooth_number'])
+            ->first();
 
-    // If the tooth exists (second submission or update), images are required
-    if ($existingTooth) {
-        Log::info('Update submission detected, requiring images.');
-        $rules['update_images.*'] = 'required|image|mimes:jpeg,png,jpg,gif|max:10048';
-    } else {
-        Log::info('First submission, images optional.');
-        // For first submission, images are optional
-        $rules['update_images.*'] = 'nullable|image|mimes:jpeg,png,jpg,gif|max:10048';
-    }
+        Log::info('Existing tooth: ', $existingTooth ? $existingTooth->toArray() : ['No existing tooth']);
 
-    // Validate the request
-    $validatedData = $request->validate($rules);
-    Log::info('Validated data: ', $validatedData);
-
-    // Initialize an array for storing image paths
-    $dentalPicturesPaths = [];
-
-    // Handle file uploads if available
-    if ($request->hasFile('update_images')) {
-        Log::info('Uploading images...');
-        foreach ($request->file('update_images') as $image) {
-            try {
-                $path = $image->store('dental_pictures', 'public');
-                $dentalPicturesPaths[] = $path;
-                Log::info('Image uploaded to: ' . $path);
-            } catch (\Exception $e) {
-                Log::error('Image upload failed: ' . $e->getMessage());
-                return response()->json(['error' => 'Failed to upload images. Please try again.'], 500);
+        // Handle file uploads if available
+        $dentalPicturesPaths = [];
+        if ($request->hasFile('update_images')) {
+            Log::info('Uploading images...');
+            foreach ($request->file('update_images') as $image) {
+                try {
+                    $path = $image->store('dental_pictures', 'public');
+                    $dentalPicturesPaths[] = $path;
+                    Log::info('Image uploaded to: ' . $path);
+                } catch (\Exception $e) {
+                    Log::error('Image upload failed: ' . $e->getMessage());
+                    return response()->json(['error' => 'Failed to upload images. Please try again.'], 500);
+                }
             }
         }
-    }
 
-    // Convert dental pictures paths to JSON if any images are uploaded
-    $dentalPicturesJson = !empty($dentalPicturesPaths) ? json_encode($dentalPicturesPaths) : null;
+        if ($existingTooth) {
+            Log::info('Updating existing tooth record.');
 
-    if ($existingTooth) {
-        Log::info('Updating existing tooth record.');
+            if (!$existingTooth->is_approved) {
+                Log::warning('Tooth record is pending approval. Cannot update.');
+                return response()->json([
+                    'error' => 'This tooth is pending approval. Please wait for approval before updating again.',
+                ], 422);
+            }
 
-        if (!$existingTooth->is_approved) {
-            Log::warning('Tooth record is pending approval. Cannot update.');
+            // Merge existing pictures with new ones
+            $existingPictures = $existingTooth->dental_pictures ?? [];
+            $updatedPictures = array_merge($existingPictures, $dentalPicturesPaths);
+
+            // Update the existing tooth record
+            $existingTooth->update([
+                'status' => $validatedData['status'],
+                'notes' => $validatedData['notes'] ?? $existingTooth->notes,
+                'svg_path' => $validatedData['svg_path'],
+                'dental_pictures' => $updatedPictures, // Pass array directly
+                'is_approved' => false, // Mark as pending approval
+            ]);
+
+            Log::info('Tooth record updated successfully.');
+
             return response()->json([
-                'error' => 'This tooth is pending approval. Please wait for approval before updating again.',
-            ], 422);
+                'success' => true,
+                'message' => 'Tooth details updated successfully! Awaiting approval.',
+                'exists_in_database' => true, // This is an update
+                'update' => true
+            ]);
+        } else {
+            Log::info('Creating new tooth record.');
+
+            // Create a new tooth record
+            Teeth::create([
+                'dental_record_id' => $validatedData['dental_record_id'],
+                'tooth_number' => $validatedData['tooth_number'],
+                'status' => $validatedData['status'],
+                'notes' => $validatedData['notes'] ?? null,
+                'svg_path' => $validatedData['svg_path'],
+                'dental_pictures' => $dentalPicturesPaths, // Pass array directly
+                'is_current' => true,
+                'is_approved' => true, // First-time save is automatically approved
+            ]);
+
+            Log::info('New tooth record created successfully.');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tooth details saved successfully!',
+                'exists_in_database' => false, // This is a new record
+                'update' => false // Indicate that this is not an update
+            ]);
         }
-
-        // Update the existing tooth record
-        $existingTooth->update([
-            'status' => $validatedData['status'],
-            'notes' => $validatedData['notes'] ?? $existingTooth->notes,
-            'svg_path' => $validatedData['svg_path'],
-            'dental_pictures' => $dentalPicturesJson ?? $existingTooth->dental_pictures,
-            'is_approved' => false, // Mark it as pending approval again
-        ]);
-
-        Log::info('Tooth record updated successfully.');
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Tooth details updated successfully! Awaiting approval.',
-            'exists_in_database' => true, // This is an update
-            'update' => true
-        ]);
-    } else {
-        Log::info('Creating new tooth record.');
-
-        // First-time save
-        Teeth::create([
-            'dental_record_id' => $validatedData['dental_record_id'],
-            'tooth_number' => $validatedData['tooth_number'],
-            'status' => $validatedData['status'],
-            'notes' => $validatedData['notes'] ?? null,
-            'svg_path' => $validatedData['svg_path'],
-            'dental_pictures' => $dentalPicturesJson,
-            'is_current' => true,
-            'is_approved' => true, // First-time save is automatically approved
-        ]);
-
-        Log::info('New tooth record created successfully.');
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Tooth details saved successfully!',
-            'exists_in_database' => false, // This is a new record
-            'update' => false // Indicate that this is not an update
-        ]);
     }
-}
-
 public function getToothStatus(Request $request)
 {
     // Validate incoming request data
@@ -415,8 +402,7 @@ public function searchRecords(Request $request)
     $teeth = $dentalRecord->teeth;
 
     // Fetch all previous examinations
-    $previousExaminations = DB::table('dental_examinations')
-        ->where('id_number', $user->id_number)
+    $previousExaminations = DentalExamination::where('id_number', $user->id_number)
         ->orderBy('date_of_examination', 'desc')
         ->get();
 
@@ -471,6 +457,7 @@ public function searchRecords(Request $request)
             ];
         }
     }
+    $dentalRecord->previousExaminations = $previousExaminations;
 
     // Construct the response data
     $response = [
@@ -543,19 +530,43 @@ public function rejectTooth($id)
 }
 public function viewAllDentalRecords()
 {
-    // Fetch all pending dental records that are not approved
-    $pendingDentalRecords = Teeth::where('is_approved', false)
-        ->with('dentalRecord')  // Assuming you have set up the relationship with the DentalRecord model
+    // Fetch all pending teeth records that are not approved
+    $pendingTeethRecords = Teeth::where('is_approved', 0)
+        ->with('dentalRecord.user')  // Eager load relationships
         ->get();
     
-    Log::info('Fetched all pending dental records.');
+    Log::info('Fetched all pending teeth records.', ['records' => $pendingTeethRecords->toArray()]);
     
     // Get the user's role
     $role = strtolower(auth()->user()->role); // Ensure role is in lowercase
     
-    // Return the view with the pending dental records
-    return view("{$role}.uploadDentalDocu", compact('pendingDentalRecords'));
+    // Prepare $teethData
+    $teethData = $pendingTeethRecords->map(function($tooth) {
+        // Ensure dental_pictures is an array
+        $dentalPictures = is_array($tooth->dental_pictures) ? $tooth->dental_pictures : json_decode($tooth->dental_pictures, true) ?? [];
+        
+        // Convert paths to full URLs
+        $dentalPictures = collect($dentalPictures)->map(function($path) {
+            return asset('storage/' . $path);
+        })->toArray();
+        
+        return [
+            'id' => $tooth->id,
+            'patient_name' => $tooth->dentalRecord->patient_name ?? 'N/A',
+            'user_type' => ucfirst($tooth->dentalRecord->user_type ?? 'N/A'),
+            'tooth_number' => $tooth->tooth_number,
+            'notes' => $tooth->notes ?? 'N/A',
+            'status' => ucfirst($tooth->status),
+            'dental_pictures' => $dentalPictures,
+        ];
+    });
+    
+    // Return the view with both variables
+    return view("{$role}.uploadDentalDocu", compact('pendingTeethRecords', 'teethData'));
 }
+
+
+
 
 // In your controller, e.g., DentalController.php
 public function showDentalHistory($patientId)
@@ -655,6 +666,49 @@ public function toothHistory(Request $request)
     Log::info('Tooth History for Record ID ' . $dentalRecordId . ':', $toothHistory->toArray());
 
     return response()->json($toothHistory);
+}
+public function fetchDentalRecords(Request $request)
+{
+    $role = $request->input('role', 'student'); // Default to 'student'
+    $search = $request->input('search', '');
+
+    // Validate role
+    $validRoles = ['student', 'teacher', 'staff', 'nurse', 'doctor', 'parent'];
+    if (!in_array($role, $validRoles)) {
+        return response()->json(['error' => 'Invalid role specified.'], 400);
+    }
+
+    // Fetch teeth records based on role and search query
+    $teethData = Teeth::where('is_approved', 0)
+        ->whereHas('dentalRecord', function ($query) use ($role, $search) {
+            $query->where('user_type', $role);
+            if ($search) {
+                $query->where('patient_name', 'like', '%' . $search . '%');
+            }
+        })
+        ->with('dentalRecord')
+        ->get()
+        ->map(function($tooth) {
+            // Ensure dental_pictures is an array
+            $dentalPictures = is_array($tooth->dental_pictures) ? $tooth->dental_pictures : json_decode($tooth->dental_pictures, true) ?? [];
+            
+            // Convert paths to full URLs
+            $dentalPictures = collect($dentalPictures)->map(function($path) {
+                return asset('storage/' . $path);
+            })->toArray();
+
+            return [
+                'id' => $tooth->id,
+                'patient_name' => $tooth->dentalRecord->patient_name ?? 'N/A',
+                'user_type' => ucfirst($tooth->dentalRecord->user_type ?? 'N/A'),
+                'tooth_number' => $tooth->tooth_number,
+                'notes' => $tooth->notes ?? 'N/A',
+                'status' => ucfirst($tooth->status),
+                'dental_pictures' => $dentalPictures,
+            ];
+        });
+
+    return response()->json($teethData);
 }
 
 }

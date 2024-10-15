@@ -34,6 +34,9 @@ class MedicalRecord extends Model
 
     protected $casts = [
         'medicines' => 'array',
+        'health_documents' => 'array', // Assuming you have this field
+        'is_approved' => 'boolean',
+        'is_current' => 'boolean',
     ];
     public function user()
     {

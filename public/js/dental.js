@@ -243,7 +243,7 @@ $(document).ready(function () {
                     $('#modal-is-first-submission').val(isApproved ? 'true' : 'false'); // true if approved, false if pending
 
                     // Show modal with the correct information
-                    $('#modal-tooth').val('Tooth ' + toothNumberExtracted);
+                    $('#modal-tooth').val('Tooth ' + toothNumberExtracted + ': ' + description);
                     $('#modal-status').val(status);
                     $('#modal-notes').val(description);
                     // $('#modal-svg-path').val(svgPath); // Already set above
@@ -413,7 +413,7 @@ $(document).ready(function () {
         }
 
         // Capture values from the form
-        var toothNumber = $('#modal-tooth').val().split(' ')[1]; // Extract the tooth number
+        var toothNumber = parseInt($('#modal-tooth').val().split(' ')[1], 10); // Convert to integer
         var status = $('#modal-status').val();
         var notes = $('#modal-notes').val();
         var updateImages = $('#modal-upload-images')[0].files; // Get selected images
@@ -672,7 +672,6 @@ $(document).ready(function () {
             ];
     
             let fieldCount = 0; // To check if any fields are displayed
-    
             fields.forEach(field => {
                 let value = exam[field.key];
                 if (value !== null && value !== '' && value !== 0) {
@@ -681,6 +680,13 @@ $(document).ready(function () {
                     if (typeof value === 'number' && (value === 0 || value === 1)) {
                         value = value === 1 ? 'Yes' : 'No';
                     }
+                    // If the field is an array (e.g., tooth numbers), map to tooth names
+                    else if (Array.isArray(value)) {
+                        value = value.map(toothNum => {
+                            const toothName = teethData[toothNum.toString()] || 'Unknown Tooth';
+                            return `${toothNum}: ${toothName}`;
+                        }).join(', ');
+                    }
                     examHtml += `
                         <tr>
                             <td colspan="3"><strong>${field.label}:</strong> ${value}</td>
@@ -688,6 +694,7 @@ $(document).ready(function () {
                     `;
                 }
             });
+            
     
             if (fieldCount === 0) {
                 examHtml += `
@@ -749,6 +756,7 @@ $(document).ready(function () {
         data.forEach(tooth => {
             console.log('Processing tooth:', tooth); // Debugging
             const toothNumber = tooth.tooth_number ? tooth.tooth_number : 'N/A';
+const toothName = teethData[toothNumber] ? teethData[toothNumber] : 'Unknown Tooth';
             const status = tooth.status ? tooth.status : 'N/A';
             const notes = tooth.notes ? tooth.notes : 'N/A';
             const updatedAt = tooth.updated_at ? new Date(tooth.updated_at).toLocaleDateString() : 'N/A';
@@ -772,7 +780,7 @@ $(document).ready(function () {
     
             tableBody.append(`
                 <tr>
-                    <td>Tooth ${toothNumber}</td>
+        <td>Tooth ${toothNumber}: ${toothName}</td>
                     <td>${status}</td>
                     <td>${notes}</td>
                     <td>${dentalPicturesHtml}</td>

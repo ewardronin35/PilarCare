@@ -1,8 +1,128 @@
 <x-app-layout>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
-        /* Your existing CSS styles... */
+/* Legend Styling */
+.calendar-legend {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 20px;
+    margin-top: 10px;
+    animation: fadeInUp 0.5s ease-in-out;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+}
+
+.legend-color {
+    width: 15px;
+    height: 15px;
+    border-radius: 3px;
+}
+
+.legend-green {
+    background-color: #28a745;
+}
+
+.legend-yellow {
+    background-color: #ffc107;
+}
+
+.legend-red {
+    background-color: #dc3545;
+}
         /* Ensure all CSS remains unchanged except for any image URL corrections */
+        .calendar td.green {
+        background-color: #28a745; /* Green for free */
+        color: white;
+    }
+
+    .calendar td.yellow {
+        background-color: #ffc107; /* Yellow for pending */
+        color: black;
+    }
+
+    .calendar td.red {
+        background-color: #dc3545; /* Red for confirmed */
+        color: white;
+    }
+
+    /* Optional: Add cursor pointer for clickable cells */
+    .calendar td.green:hover,
+    .calendar td.yellow:hover,
+    .calendar td.red:hover {
+        opacity: 0.8;
+    }
+    /* Animated Markers for Appointment Status */
+.calendar td.green::after,
+.calendar td.yellow::after,
+.calendar td.red::after {
+    content: '';
+    position: absolute;
+    bottom: 5px; /* Position marker at the bottom */
+    right: 5px;  /* Position marker at the right */
+    width: 12px; /* Marker size */
+    height: 12px;
+    border-radius: 50%; /* Make it a circle */
+    animation: pulse 2s infinite; /* Apply pulsing animation */
+    z-index: 2; /* Ensure marker is above any cell content */
+}
+
+/* Specific Colors for Each Status */
+.calendar td.green::after {
+    background-color: #28a745; /* Green for Free */
+}
+
+.calendar td.yellow::after {
+    background-color: #ffc107; /* Yellow for Pending */
+}
+
+.calendar td.red::after {
+    background-color: #dc3545; /* Red for Confirmed */
+}
+
+/* Keyframes for Pulsing Animation */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.3);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Enhanced Hover Effects for Markers */
+.calendar td.green:hover::after,
+.calendar td.yellow:hover::after,
+.calendar td.red:hover::after {
+    animation: pulse-hover 1.5s infinite;
+}
+
+/* Keyframes for Enhanced Hover Animation */
+@keyframes pulse-hover {
+    0% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+    50% {
+        transform: scale(1.5);
+        opacity: 0.6;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+}
 
         body {
             background-color: #f8f9fa;
@@ -14,6 +134,7 @@
             justify-content: space-between;
             align-items: flex-start;
             gap: 30px;
+            flex-wrap: wrap;
             padding: 20px;
         }
 
@@ -64,6 +185,7 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             animation: fadeInUp 0.5s ease-in-out;
             width: 100%;
+            
             max-width: 500px;
             box-sizing: border-box;
         }
@@ -219,7 +341,9 @@
             background-color: #00d1ff;
             color: white;
         }
-
+        .calendar td {
+    position: relative; /* Enables positioning of pseudo-elements */
+}
         .calendar td.active {
             background-color: #00b8e6;
             color: white;
@@ -230,13 +354,14 @@
         }
 
         .chart-container {
-            flex: 1;
             background-color: #ffffff;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            animation: fadeInUp 0.5s ease-in-out;
+            width: 100%;
+            box-sizing: border-box;
         }
-
         .chart-container h2 {
             text-align: center;
             color: #0056b3;
@@ -245,11 +370,34 @@
 
         /* Appointment List container (Table section) */
         .appointment-list-container {
-            flex: 2;
+            flex: 1;
             background-color: #ffffff;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-height: 700px; /* Increased height for more visibility */
+            overflow-y: auto; /* Enable vertical scrolling */
+        }
+        .appointment-list-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .appointment-list-container::-webkit-scrollbar-thumb {
+        background-color: #ccc;
+        border-radius: 5px;
+    }
+
+    .appointment-list-container::-webkit-scrollbar-thumb:hover {
+        background-color: #888;
+    }
+    .right-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            width: 100%;
+            max-width: 600px; /* Adjust as needed */
         }
 
         .appointment-list-container h2 {
@@ -295,7 +443,30 @@
             background-color: rgba(0, 0, 0, 0.6); /* Dark background with opacity */
             animation: fadeIn 0.4s ease-in-out;
         }
+        .modal .add-appointment-btn {
+    background-color: #28a745;
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background-color 0.3s, box-shadow 0.3s, transform 0.2s ease-in-out;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+}
 
+.modal .add-appointment-btn:hover {
+    background-color: #218838;
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    transform: scale(1.02);
+}
+
+.modal .add-appointment-btn:active {
+    transform: scale(0.98);
+    box-shadow: 0 3px 4px rgba(0, 0, 0, 0.2);
+}
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -306,17 +477,18 @@
         }
 
         .modal-content {
-            background-color: white;
-            margin: 10% auto;
-            padding: 20px;
-            border-radius: 12px;
-            max-width: 600px;
-            width: 90%;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            animation: slideIn 0.4s ease-in-out;
-            overflow-y: auto;
-            max-height: 80%;
-        }
+    background-color: white;
+    margin: 5% auto; /* Reduced top margin for better positioning */
+    padding: 30px 40px;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 90%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.4s ease-in-out;
+    overflow-y: auto;
+    max-height: 80%;
+}
+ 
 
         @keyframes slideIn {
             from {
@@ -328,12 +500,12 @@
         }
 
         .modal h2 {
-            margin-top: 0;
-            font-size: 1.8rem;
-            text-align: center;
-            color: #0056b3;
-        }
-
+    margin-top: 0;
+    font-size: 1.8rem;
+    text-align: center;
+    color: #0056b3;
+    margin-bottom: 20px;
+}
         /* Close Button */
         .close {
             color: #999;
@@ -459,7 +631,105 @@
             color: #333;
             font-size: 1rem;
         }
-        
+      /* Existing styles... */
+
+/* Generate Report Container */
+.generate-report-container {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        animation: fadeInUp 0.5s ease-in-out;
+        margin-top: -30px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+/* Ensure the form elements inside generate-report-container are properly spaced */
+.generate-report-container h2 {
+        text-align: center;
+        color: #0056b3;
+        margin-bottom: 20px;
+    }
+
+    .generate-report-container form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .generate-report-container .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .generate-report-container .form-group label {
+        margin-bottom: 5px;
+        font-size: 1rem;
+    }
+
+    .generate-report-container .form-group select,
+    .generate-report-container .form-group input {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 1rem;
+    }
+
+    .generate-report-container .form-group button {
+        align-self: center;
+    }
+
+    @media (max-width: 768px) {
+        .stats-and-table-container {
+            flex-direction: column;
+        }
+
+        .calendar-container,
+        .form-container,
+        .chart-container,
+        .appointment-list-container,
+        .generate-report-container {
+            width: 100%;
+            margin-left: 0;
+        }
+    }
+    #edit-form .form-group {
+    margin-bottom: 20px;
+}
+
+#edit-form .form-group label {
+    margin-bottom: 5px;
+    font-size: 1rem;
+    color: #333;
+}
+
+#edit-form .form-group input,
+#edit-form .form-group select {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#edit-form .form-group input:focus,
+#edit-form .form-group select:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+/* Input Row Styling */
+.input-row {
+    display: flex;
+    gap: 20px;
+}
+
+.input-row .input-column {
+    flex: 1;
+}
     </style>
 
     <main class="main-content">
@@ -532,16 +802,16 @@
             </select>
         </div>
         <div class="form-group">
-                            <label for="doctor">Select Doctor</label>
-                            <select id="doctor" name="doctor_id" required>
-                                <option value="" disabled selected>Select Doctor</option>
-                                @foreach($doctors as $doctor)
-                                    <option value="{{ $doctor->id }}">
-                                        {{ $doctor->user->first_name }} {{ $doctor->user->last_name }} ({{ $doctor->specialization }})
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+    <label for="doctor">Select Doctor <span style="color: red;">*</span></label>
+    <select id="doctor" name="doctor_id" required>
+        <option value="" disabled selected>Select Doctor</option>
+        @foreach($doctors as $doctor)
+            <option value="{{ $doctor->id }}">
+                {{ $doctor->user->first_name }} {{ $doctor->user->last_name }} ({{ $doctor->specialization }})
+            </option>
+        @endforeach
+    </select>
+</div>
                         <div class="form-group">
                             <button type="button" class="add-appointment-btn" onclick="addAppointment()">Add Appointment</button>
                         </div>
@@ -572,6 +842,22 @@
                             <!-- Dynamically generated calendar rows go here -->
                         </tbody>
                     </table>
+                    <!-- Legend Section -->
+<div class="calendar-legend">
+    <div class="legend-item">
+        <div class="legend-color legend-green"></div>
+        <span>Free</span>
+    </div>
+    <div class="legend-item">
+        <div class="legend-color legend-yellow"></div>
+        <span>Pending</span>
+    </div>
+    <div class="legend-item">
+        <div class="legend-color legend-red"></div>
+        <span>Confirmed</span>
+    </div>
+</div>
+
                 </div>
 
                 <!-- Doctors Profile Section -->
@@ -611,13 +897,10 @@
         <!-- Statistics and Appointment List Tab -->
         <div id="stats-appointment-list" class="tab-content">
             <div class="stats-and-table-container">
-                <div class="chart-container">
-                    <h2>Statistics</h2>
-                    <canvas id="appointmentsChart"></canvas>
-                </div>
+                <!-- Left Column: Appointment List -->
                 <div class="appointment-list-container">
                     <h2>Appointment List</h2>
-                    <div class="filter-container">
+                    <div class="filter-container" style="margin-bottom: 15px;">
                         <label for="status-filter">Filter by Status: </label>
                         <select id="status-filter" onchange="filterAppointments()" style="width: 200px; padding: 8px; border-radius: 5px;">
                             <option value="">All</option>
@@ -625,57 +908,72 @@
                             <option value="confirmed">Confirmed</option>
                         </select>
                     </div>
+                    <!-- Existing Appointment Table -->
                     <table class="appointment-table">
-    <thead>
-        <tr>
-            <th>ID Number</th>
-            <th>Patient Name</th>
-            <th>Appointment Date</th>
-            <th>Appointment Time</th>
-            <th>Appointment Type</th>
-            <th>Doctor</th> <!-- New Column -->
-            <th>Status</th> <!-- New Column -->
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach ($appointments as $appointment)
-            <tr id="appointment-row-{{ $appointment->id }}">
-                <td>{{ $appointment->id_number }}</td>
-                <td>{{ $appointment->patient_name }}</td>
-                <td>{{ $appointment->appointment_date }}</td>
-                <td>{{ $appointment->appointment_time }}</td>
-                <td>{{ $appointment->appointment_type }}</td>
-                <td>{{ $appointment->doctor->user->first_name ?? 'N/A' }} {{ $appointment->doctor->user->last_name ?? '' }}</td> <!-- Display Doctor's Name -->
-                <td>
-                    @if ($appointment->status === 'confirmed')
-                        <span style="color: green; font-weight: bold;">Confirmed</span>
-                    @else
-                        <span style="color: orange; font-weight: bold;">Pending</span>
-                    @endif
-                </td>
-                <td>
-                    <div class="action-buttons">
-                        @if ($appointment->status !== 'confirmed')
-                            <button id="confirm-btn-{{ $appointment->id }}" 
-                                    onclick="confirmAppointment({{ $appointment->id }})">
-                                Confirm
-                            </button>
-                        @endif
-                        
-                        <button id="reschedule-btn-{{ $appointment->id }}" 
-                                onclick="openEditModal({{ $appointment->id }})">
-                            Reschedule
-                        </button>
+                        <thead>
+                            <tr>
+                                <th>ID Number</th>
+                                <th>Patient Name</th>
+                                <th>Appointment Date</th>
+                                <th>Appointment Time</th>
+                                <th>Appointment Type</th>
+                                <th>Doctor</th> <!-- New Column -->
+                                <th>Status</th> <!-- New Column -->
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($appointments as $appointment)
+                                <tr id="appointment-row-{{ $appointment->id }}">
+                                    <td>{{ $appointment->id_number }}</td>
+                                    <td>{{ $appointment->patient_name }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($appointment->appointment_date)->format('M d, Y') }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($appointment->appointment_time)->format('h:i A') }}</td>
+                                    <td>{{ $appointment->appointment_type }}</td>
+                                    <td>{{ $appointment->doctor->user->first_name ?? 'N/A' }} {{ $appointment->doctor->user->last_name ?? '' }}</td> <!-- Display Doctor's Name -->
+                                    <td>
+                                        @if ($appointment->status === 'confirmed')
+                                            <span style="color: green; font-weight: bold;">Confirmed</span>
+                                        @else
+                                            <span style="color: orange; font-weight: bold;">Pending</span>
+                                        @endif
+                                    </td>
+                                
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
 
-                        <button onclick="confirmDelete({{ $appointment->id }})">Delete</button>
+                <!-- Right Column: Statistics Chart and Generate Report -->
+                <div class="right-column">
+                    <!-- Statistics Chart -->
+                    <div class="chart-container">
+                        <h2>Statistics</h2>
+                        <canvas id="appointmentsChart"></canvas>
                     </div>
-                </td>
-            </tr>
-        @endforeach
-    </tbody>
-</table>
 
+                    <!-- Generate Report Form -->
+                    <div class="generate-report-container">
+                        <h2>Generate Appointment Statistics Report</h2>
+                        <form id="report-form" method="GET" action="{{ route('nurse.appointments.statisticsReport') }}">
+                            @csrf
+                            <div class="form-group">
+                                <label for="report-period">Select Report Period</label>
+                                <select id="report-period" name="report_period" required>
+                                    <option value="week">Weekly</option>
+                                    <option value="month">Monthly</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="report-date">Select Date</label>
+                                <input type="date" id="report-date" name="report_date" required>
+                            </div>
+                            <div class="form-group">
+                            <button type="button" class="add-appointment-btn" onclick="generateStatisticsReport()">Generate Report</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -749,7 +1047,7 @@
                 </select>
             </div>
             <div class="form-group">
-                <button type="button" onclick="updateAppointment()">Update Appointment</button>
+                <button type="button" class="add-appointment-btn" onclick="updateAppointment()">Update Appointment</button>
             </div>
         </form>
     </div>
@@ -893,56 +1191,92 @@
         }
 
         // Add Appointment Function
-        function addAppointment() {
-            const form = document.getElementById('add-form');
-            const formData = new FormData(form);
+       // Add Appointment Function with Front-end Validation
+function addAppointment() {
+    const form = document.getElementById('add-form');
+    const doctorSelect = document.getElementById('doctor');
+    const doctorId = doctorSelect.value;
+    const appointmentDate = document.getElementById('appointment-date').value;
+    const appointmentTime = document.getElementById('appointment-time').value;
 
-            fetch('{{ route("nurse.appointment.add") }}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: formData
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: data.success,
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
-                    setTimeout(() => {
-                        location.reload();
-                    }, 3000);
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.error || 'Error adding appointment',
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Unexpected error occurred.',
-                    timer: 3000,
-                    showConfirmButton: false
-                });
+    // Front-end Validation
+    if (!appointmentDate) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            text: 'Please select an appointment date.',
+            timer: 3000,
+            showConfirmButton: false
+        });
+        return;
+    }
+
+    if (!appointmentTime) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            text: 'Please select an appointment time.',
+            timer: 3000,
+            showConfirmButton: false
+        });
+        return;
+    }
+
+    if (!doctorId) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Doctor Not Selected',
+            text: 'Please select a doctor before adding an appointment.',
+            timer: 3000,
+            showConfirmButton: false
+        });
+        return;
+    }
+
+    const formData = new FormData(form);
+
+    fetch('{{ route("nurse.appointment.add") }}', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: data.success,
+                timer: 3000,
+                showConfirmButton: false
+            });
+            setTimeout(() => {
+                location.reload();
+            }, 3000);
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.error || 'Error adding appointment',
+                timer: 3000,
+                showConfirmButton: false
             });
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Unexpected error occurred.',
+            timer: 3000,
+            showConfirmButton: false
+        });
+    });
+}
+
 
         // Confirm Delete Function
         function confirmDelete(id) {
@@ -987,106 +1321,131 @@
 
         // Calendar Rendering Functions
         const currentDate = new Date();
-        let currentMonth = currentDate.getMonth();
-        let currentYear = currentDate.getFullYear();
+    let currentMonth = currentDate.getMonth();
+    let currentYear = currentDate.getFullYear();
 
-        function renderCalendar(month, year) {
-            const monthString = String(month + 1).padStart(2, '0');
-            const fetchUrl = `/${userRole}/appointments/by-month?month=${year}-${monthString}`;
+    function renderCalendar(month, year) {
+    const monthString = String(month + 1).padStart(2, '0');
+    const fetchUrl = `/${userRole}/appointments/by-month?month=${year}-${monthString}`;
 
-            fetch(fetchUrl)
-                .then(response => response.json())
-                .then(data => {
-                    const appointmentsByDate = {};
+    fetch(fetchUrl)
+        .then(response => response.json())
+        .then(data => {
+            const appointmentsByDate = {};
 
-                    if (data.appointments && data.appointments.length > 0) {
-                        data.appointments.forEach(appointment => {
-                            const date = appointment.appointment_date;
-                            if (!appointmentsByDate[date]) {
-                                appointmentsByDate[date] = [];
-                            }
-                            appointmentsByDate[date].push(appointment);
-                        });
+            if (data.appointments && data.appointments.length > 0) {
+                data.appointments.forEach(appointment => {
+                    // Extract 'YYYY-MM-DD' from 'appointment_date'
+                    const date = appointment.appointment_date.split('T')[0];
+                    if (!appointmentsByDate[date]) {
+                        appointmentsByDate[date] = [];
                     }
-
-                    renderCalendarDays(month, year, appointmentsByDate);
-                })
-                .catch(error => {
-                    console.error('Error fetching appointments for the month:', error);
-                    renderCalendarDays(month, year, {}); // Proceed without appointments
+                    appointmentsByDate[date].push(appointment);
                 });
-        }
-
-        function renderCalendarDays(month, year, appointmentsByDate) {
-            const calendarBody = document.getElementById('calendar-body');
-            calendarBody.innerHTML = '';
-            const monthYearText = document.getElementById('calendar-month-year');
-            const firstDay = new Date(year, month).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const monthNames = [
-                "January", "February", "March", "April", "May", "June",
-                "July", "August", "September", "October", "November", "December"
-            ];
-            monthYearText.textContent = `${monthNames[month]} ${year}`;
-            let date = 1;
-
-            for (let i = 0; i < 6; i++) {
-                let row = document.createElement('tr');
-                for (let j = 0; j < 7; j++) {
-                    let cell = document.createElement('td');
-                    if (i === 0 && j < firstDay) {
-                        cell.appendChild(document.createTextNode(''));
-                    } else if (date > daysInMonth) {
-                        break;
-                    } else {
-                        let selectedDate = date;
-                        cell.textContent = selectedDate;
-
-                        const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
-
-                        // Mark the cell with class based on appointments
-                        if (appointmentsByDate[dateString]) {
-                            cell.classList.add('booked'); // Has appointments
-                        } else {
-                            cell.classList.add('available'); // No appointments
-                        }
-
-                        // Add click event
-                        cell.onclick = () => {
-                            openPreviewModal(selectedDate, month, year);
-                        };
-
-                        // Highlight today's date
-                        const today = new Date();
-                        if (selectedDate === today.getDate() && year === today.getFullYear() && month === today.getMonth()) {
-                            cell.classList.add('active');
-                        }
-
-                        date++;
-                    }
-                    row.appendChild(cell);
-                }
-                calendarBody.appendChild(row);
             }
-        }
 
-        // Initialize Calendar on Page Load
-        document.addEventListener('DOMContentLoaded', function () {
-            renderCalendar(currentMonth, currentYear);
+            renderCalendarDays(month, year, appointmentsByDate);
+        })
+        .catch(error => {
+            console.error('Error fetching appointments for the month:', error);
+            renderCalendarDays(month, year, {}); // Proceed without appointments
         });
+}
 
-        // Change Month Function
-        function changeMonth(direction) {
-            currentMonth += direction;
-            if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            } else if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
+function renderCalendarDays(month, year, appointmentsByDate) {
+    const calendarBody = document.getElementById('calendar-body');
+    calendarBody.innerHTML = '';
+    const monthYearText = document.getElementById('calendar-month-year');
+    const firstDay = new Date(year, month).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+    monthYearText.textContent = `${monthNames[month]} ${year}`;
+    let date = 1;
+
+    for (let i = 0; i < 6; i++) {
+        let row = document.createElement('tr');
+        for (let j = 0; j < 7; j++) {
+            let cell = document.createElement('td');
+            if (i === 0 && j < firstDay) {
+                cell.appendChild(document.createTextNode(''));
+            } else if (date > daysInMonth) {
+                break;
+            } else {
+                let selectedDate = date;
+                cell.textContent = selectedDate;
+
+                const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
+
+                // Determine the class based on appointment statuses
+                if (appointmentsByDate[dateString]) {
+                    const appointments = appointmentsByDate[dateString];
+                    let hasConfirmed = false;
+                    let hasPending = false;
+
+                    appointments.forEach(appointment => {
+                        const status = appointment.status.toLowerCase().trim(); // Ensure lowercase and trim
+                        console.log(`Processing appointment ID ${appointment.id} with status: ${status}`);
+                        if (status === 'confirmed') {
+                            hasConfirmed = true;
+                        } else if (status === 'pending') {
+                            hasPending = true;
+                        }
+                    });
+
+                    if (hasConfirmed) {
+                        cell.classList.add('red'); // Confirmed appointments
+                        console.log(`Date ${dateString} marked as confirmed (red)`);
+                    } else if (hasPending) {
+                        cell.classList.add('yellow'); // Pending appointments
+                        console.log(`Date ${dateString} marked as pending (yellow)`);
+                    }
+                } else {
+                    cell.classList.add('green'); // Free date
+                    console.log(`Date ${dateString} marked as free (green)`);
+                }
+
+                // Add click event
+                cell.onclick = () => {
+                    openPreviewModal(selectedDate, month, year);
+                };
+
+                // Highlight today's date
+                const today = new Date();
+                if (selectedDate === today.getDate() && year === today.getFullYear() && month === today.getMonth()) {
+                    cell.classList.add('active');
+                    console.log(`Date ${dateString} is today and marked as active (blue)`);
+                }
+
+                date++;
             }
-            renderCalendar(currentMonth, currentYear);
+            row.appendChild(cell);
         }
+        calendarBody.appendChild(row);
+    }
+}
+
+
+
+    // Initialize Calendar on Page Load
+    document.addEventListener('DOMContentLoaded', function () {
+        renderCalendar(currentMonth, currentYear);
+    });
+
+    // Change Month Function
+    function changeMonth(direction) {
+        currentMonth += direction;
+        if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        } else if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        }
+        renderCalendar(currentMonth, currentYear);
+    }
 
         // Chart.js Initialization with Safe Data Passing
         const ctx = document.getElementById('appointmentsChart').getContext('2d');
@@ -1132,14 +1491,10 @@ function confirmAppointment(id) {
                 showConfirmButton: false
             });
 
-            // Update the status cell
-            const row = document.getElementById(`appointment-row-${id}`);
-            const statusCell = row.querySelector('td:nth-child(7)'); // Status is the 7th column
-            statusCell.innerHTML = '<span style="color: green; font-weight: bold;">Confirmed</span>';
-
-            // Hide the confirm button and show the reschedule button
-            document.getElementById(`confirm-btn-${id}`).style.display = 'none';
-            document.getElementById(`reschedule-btn-${id}`).style.display = 'inline-block';
+            // Reload the page to update calendar and table
+            setTimeout(() => {
+                location.reload();
+            }, 3000);
         } else {
             Swal.fire({
                 icon: 'error',
@@ -1161,6 +1516,7 @@ function confirmAppointment(id) {
         });
     });
 }
+
 function populateEditDoctorsDropdown() {
     fetch('{{ route("nurse.appointment.getApprovedDoctors") }}')
         .then(response => response.json())
@@ -1187,92 +1543,139 @@ function populateEditDoctorsDropdown() {
 }
 
         // Update Appointment Function
-        function updateAppointment() {
-            const form = document.getElementById('edit-form');
-            const formData = new FormData(form);
-            const id = document.getElementById('edit-appointment-id').value;
-            const data = {};
+      // Update Appointment Function with Front-end Validation
+function updateAppointment() {
+    const form = document.getElementById('edit-form');
+    const doctorSelect = document.getElementById('edit-doctor');
+    const doctorId = doctorSelect.value;
+    const appointmentDate = document.getElementById('edit-appointment-date').value;
+    const appointmentTime = document.getElementById('edit-appointment-time').value;
 
-            formData.forEach((value, key) => {
-                data[key] = value;
-            });
+    // Front-end Validation
+    if (!appointmentDate) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            text: 'Please select an appointment date.',
+            timer: 3000,
+            showConfirmButton: false
+        });
+        return;
+    }
 
-            fetch(`/nurse/appointment/update/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification('Appointment Rescheduled Successfully');
-                    setTimeout(() => {
-                        location.reload();
-                    }, 3000);
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Error rescheduling appointment',
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
+    if (!appointmentTime) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            text: 'Please select an appointment time.',
+            timer: 3000,
+            showConfirmButton: false
+        });
+        return;
+    }
+
+    if (!doctorId) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Doctor Not Selected',
+            text: 'Please select a doctor before updating the appointment.',
+            timer: 3000,
+            showConfirmButton: false
+        });
+        return;
+    }
+
+    const formData = new FormData(form);
+    const id = document.getElementById('edit-appointment-id').value;
+    const data = {};
+
+    formData.forEach((value, key) => {
+        data[key] = value;
+    });
+
+    fetch(`/nurse/appointment/update/${id}`, {
+        method: 'PUT',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Appointment Rescheduled Successfully');
+            setTimeout(() => {
+                location.reload();
+            }, 3000);
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error rescheduling appointment',
+                timer: 3000,
+                showConfirmButton: false
             });
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Unexpected error occurred.',
+            timer: 3000,
+            showConfirmButton: false
+        });
+    });
+}
 
         // Get Appointments by Date URL
         const getAppointmentsByDateUrl = `{{ route('nurse.appointments.by-date') }}`;
 
         // Open Preview Modal Function
         function openPreviewModal(date, month, year) {
-            const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+        const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
 
-            document.getElementById('preview-date').innerText = formattedDate;
+        document.getElementById('preview-date').innerText = formattedDate;
 
-            fetch(`${getAppointmentsByDateUrl}?date=${formattedDate}`)
-                .then(response => response.json())
-                .then(data => {
-                    const appointmentsList = document.getElementById('appointments-list');
-                    appointmentsList.innerHTML = ''; // Clear previous appointments
+        fetch(`{{ route('nurse.appointments.by-date') }}?date=${formattedDate}`)
+            .then(response => response.json())
+            .then(data => {
+                const appointmentsList = document.getElementById('appointments-list');
+                appointmentsList.innerHTML = ''; // Clear previous appointments
 
-                    if (data.appointments && data.appointments.length > 0) {
-                        data.appointments.forEach(appointment => {
-                            // Convert appointment_time to 12-hour AM/PM format
-                            const timeString = appointment.appointment_time;
-                            const timeFormatted = formatTimeTo12Hour(timeString);
+                if (data.appointments && data.appointments.length > 0) {
+                    data.appointments.forEach(appointment => {
+                        // Convert appointment_time to 12-hour AM/PM format
+                        const timeString = appointment.appointment_time;
+                        const timeFormatted = formatTimeTo12Hour(timeString);
 
-                            const li = document.createElement('li');
-                            li.innerText = `${appointment.patient_name} - ${timeFormatted} (${appointment.appointment_type})`;
-                            appointmentsList.appendChild(li);
-                        });
-                    } else {
                         const li = document.createElement('li');
-                        li.innerText = 'No appointments for this day.';
+                        li.innerText = `${appointment.patient_name} - ${timeFormatted} (${appointment.appointment_type})`;
                         appointmentsList.appendChild(li);
-                    }
-
-                    const modal = document.getElementById('preview-modal');
-                    modal.style.display = 'block'; // Show the modal
-                })
-                .catch(error => {
-                    console.error('Error fetching appointments:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Failed to load appointments.',
-                        timer: 3000,
-                        showConfirmButton: false
                     });
+                } else {
+                    const li = document.createElement('li');
+                    li.innerText = 'No appointments for this day.';
+                    appointmentsList.appendChild(li);
+                }
+
+                const modal = document.getElementById('preview-modal');
+                modal.style.display = 'block'; // Show the modal
+            })
+            .catch(error => {
+                console.error('Error fetching appointments:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to load appointments.',
+                    timer: 3000,
+                    showConfirmButton: false
                 });
-        }
+            });
+    }
 
         // Helper function to format time to 12-hour AM/PM
         function formatTimeTo12Hour(timeString) {
@@ -1295,6 +1698,119 @@ function populateEditDoctorsDropdown() {
             row.style.display = '';
         } else {
             row.style.display = 'none';
+        }
+    });
+}
+// Generate Statistics Report Function with Enhanced Features
+function generateStatisticsReport() {
+    const form = document.getElementById('report-form');
+    const reportPeriod = document.getElementById('report-period').value;
+    const reportDate = document.getElementById('report-date').value;
+
+    // Front-end Validation
+    if (!reportPeriod) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            text: 'Please select a report period.',
+            timer: 3000,
+            showConfirmButton: false
+        });
+        return;
+    }
+
+    if (!reportDate) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            text: 'Please select a date for the report.',
+            timer: 3000,
+            showConfirmButton: false
+        });
+        return;
+    }
+
+    // Construct query string parameters
+    const formData = new FormData(form);
+    const params = new URLSearchParams();
+    formData.forEach((value, key) => {
+        params.append(key, value);
+    });
+
+    // Construct the URL with query parameters
+    const url = `${form.action}?${params.toString()}`;
+
+    // Show confirmation SweetAlert
+    Swal.fire({
+        title: 'Generate Report?',
+        text: "Do you want to generate the appointment statistics report?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#00d1ff',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, generate it!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading SweetAlert
+            Swal.fire({
+                title: 'Generating Report...',
+                html: 'Please wait while your report is being generated.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Send GET request to generate the report
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Close the loading SweetAlert
+                Swal.close();
+
+                if (data.success) {
+                    // Show success SweetAlert and automatically open the PDF
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Report Generated',
+                        text: 'Your appointment statistics report has been generated successfully!',
+                        timer: 3000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        // Automatically open the generated PDF in a new tab
+                        window.open(data.pdf_url, '_blank');
+                    });
+                } else {
+                    // Show error SweetAlert
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error || 'An error occurred while generating the report.',
+                        timer: 3000,
+                        showConfirmButton: false,
+                    });
+                }
+            })
+            .catch(error => {
+                // Close the loading SweetAlert
+                Swal.close();
+
+                console.error('Error generating report:', error);
+                // Show error SweetAlert
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An unexpected error occurred.',
+                    timer: 3000,
+                    showConfirmButton: false,
+                });
+            });
         }
     });
 }

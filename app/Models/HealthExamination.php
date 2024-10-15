@@ -16,6 +16,12 @@ class HealthExamination extends Model
         'lab_result_picture',
         'is_approved',
     ];
+    protected $casts = [
+        'health_examination_picture' => 'array',
+        'xray_picture' => 'array',
+        'lab_result_picture' => 'array',
+        'is_approved' => 'boolean',
+    ];
 
     // Define the relationship using id_number instead of user_id
     public function user()

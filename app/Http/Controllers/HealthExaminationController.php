@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf; // <-- Correct namespace
 use Illuminate\Support\Facades\Route;
+use App\Models\SchoolYear; // <-- Import the SchoolYear model
 
 
 class HealthExaminationController extends Controller
@@ -23,110 +24,173 @@ class HealthExaminationController extends Controller
     {
         $user = Auth::user();
         $role = strtolower($user->role);
-
-        $healthExaminations = HealthExamination::where('id_number', $user->id_number)->get();
-        
-        return view("$role.upload-pictures", compact('healthExaminations'));
+    
+        // Get the current school year
+        $currentSchoolYear = SchoolYear::where('is_current', true)->first();
+    
+        $healthExaminations = HealthExamination::where('id_number', $user->id_number)
+            ->orderBy('school_year', 'desc')
+            ->get();
+                
+        return view("$role.upload-pictures", compact('healthExaminations', 'currentSchoolYear'));
     }
+    
+    public function Admin()
+    {
+        $user = Auth::user();
+        $role = strtolower($user->role);
+        $pendingExaminations = HealthExamination::where('is_approved', false)
+        ->with('user') // Assuming a relationship is defined
+        ->get();
+        $schoolYears = SchoolYear::orderBy('year', 'desc')->pluck('year');
 
+       
+                
+        return view("$role.uploadHealthExamination", compact('pendingExaminations', 'schoolYears'));
+    }
 
     public function create()
     {
         $user = Auth::user();
         $role = strtolower($user->role);
-        $currentSchoolYear = $this->getCurrentSchoolYear();
+    
+        // Get all school years from the database
+        $schoolYears = SchoolYear::orderBy('year', 'desc')->get();
+    
+        // Get the current school year
+        $currentSchoolYear = SchoolYear::where('is_current', true)->first();
+    
+        if (!$currentSchoolYear) {
+            return redirect()->back()->with('error', 'No current school year is set. Please contact the administrator.');
+        }
+    
+        // Pass the school years and current school year to the view
+        return view("$role.uploadHealthExamination", compact('schoolYears', 'currentSchoolYear'));
+    }
+    
+
+    public function store(Request $request)
+{
+    try {
+        // Log the incoming request data for debugging
+        Log::info('Health Examination Store Request:', $request->all());
+
+        $messages = [
+            'health_examination_picture.required' => 'Please upload at least one health examination picture.',
+            'health_examination_picture.array' => 'Health examination pictures must be an array.',
+            'health_examination_picture.*.image' => 'Each health examination file must be an image.',
+            'health_examination_picture.*.mimes' => 'Health examination images must be of type: jpeg, png, jpg, gif.',
+            'health_examination_picture.*.max' => 'Each health examination image must not exceed 10MB.',
+            
+            'xray_picture.required' => 'Please upload at least one X-ray picture.',
+            'xray_picture.array' => 'X-ray pictures must be an array.',
+            'xray_picture.*.image' => 'Each X-ray file must be an image.',
+            'xray_picture.*.mimes' => 'X-ray images must be of type: jpeg, png, jpg, gif.',
+            'xray_picture.*.max' => 'Each X-ray image must not exceed 10MB.',
+            
+            'lab_result_picture.required' => 'Please upload at least one lab result picture.',
+            'lab_result_picture.array' => 'Lab result pictures must be an array.',
+            'lab_result_picture.*.image' => 'Each lab result file must be an image.',
+            'lab_result_picture.*.mimes' => 'Lab result images must be of type: jpeg, png, jpg, gif.',
+            'lab_result_picture.*.max' => 'Each lab result image must not exceed 10MB.',
+            
+            'school_year.required' => 'The school year is required.',
+            'school_year.exists' => 'The selected school year is invalid.',
+        ];
         
-        $healthExamination = HealthExamination::where('id_number', $user->id_number)
-            ->where('school_year', $currentSchoolYear)
+        $validated = $request->validate([
+            'health_examination_picture' => 'required|array|max:10',
+            'health_examination_picture.*' => 'image|mimes:jpeg,png,jpg,gif|max:10048',
+        
+            'xray_picture' => 'required|array|max:10',
+            'xray_picture.*' => 'image|mimes:jpeg,png,jpg,gif|max:10048',
+        
+            'lab_result_picture' => 'required|array|max:10',
+            'lab_result_picture.*' => 'image|mimes:jpeg,png,jpg,gif|max:10048',
+        
+            'school_year' => 'required|string|exists:school_years,year',
+        ], $messages);
+        
+        $schoolYear = $request->input('school_year');
+
+        // Check if a record for this school year already exists
+        $existingExamination = HealthExamination::where('id_number', Auth::user()->id_number)
+            ->where('school_year', $schoolYear)
             ->first();
 
-        if ($healthExamination) {
-            if ($healthExamination->is_approved) {
-                return redirect()->route("$role.medical-record.create");
-            } else {
-                return view("$role.upload-pictures")->with('pending', true);
-            }
-        }
-
-        return view("$role.upload-pictures")->with('pending', false);
-    }
-
-    public function medicalRecord()
-    {
-        $pendingExaminations = HealthExamination::where('is_approved', false)->with('user')->get();
-        $role = strtolower(auth()->user()->role); // Ensure role is in lowercase
-    
-        // Return the view with the pending dental records
-        return view("{$role}.medical-record", compact('pendingExaminations'));
-       
-    }
-    
-    public function store(Request $request)
-    {
-        try {
-            // Validate the incoming request data
-            $validated = $request->validate([
-                'health_examination_picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:10048',
-                'xray_pictures.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:10048',
-                'lab_result_pictures.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:10048',
+        if ($existingExamination) {
+            Log::info('User attempted to submit multiple health examinations for the same school year.', [
+                'id_number' => Auth::user()->id_number,
+                'school_year' => $schoolYear
             ]);
-
-            $currentSchoolYear = $this->getCurrentSchoolYear();
-
-            // Check if the student has already uploaded health documents for this school year
-            $existingExamination = HealthExamination::where('id_number', Auth::user()->id_number)
-                ->where('school_year', $currentSchoolYear)
-                ->first();
-
-            if ($existingExamination) {
-                return response()->json(['success' => false, 'message' => 'You have already submitted health documents for the current school year.'], 400);
-            }
-
-            // Create a new HealthExamination instance
-            $healthExamination = new HealthExamination();
-            $healthExamination->id_number = Auth::user()->id_number;
-            $healthExamination->school_year = $currentSchoolYear;
-
-            // Handle the health examination picture upload
-            if ($request->hasFile('health_examination_picture')) {
-                $healthExamination->health_examination_picture = $request->file('health_examination_picture')->store('health_examinations', 'public');
-            }
-
-            // Handle the x-ray pictures upload
-            if ($request->hasFile('xray_pictures')) {
-                $xrayPaths = [];
-                foreach ($request->file('xray_pictures') as $xray) {
-                    $xrayPaths[] = $xray->store('health_examinations', 'public');
-                }
-                $healthExamination->xray_picture = json_encode($xrayPaths);
-            }
-
-            // Handle the lab result pictures upload
-            if ($request->hasFile('lab_result_pictures')) {
-                $labPaths = [];
-                foreach ($request->file('lab_result_pictures') as $lab) {
-                    $labPaths[] = $lab->store('health_examinations', 'public');
-                }
-                $healthExamination->lab_result_picture = json_encode($labPaths);
-            }
-
-            // Mark the health examination as not approved by default
-            $healthExamination->is_approved = false;
-            $healthExamination->save();
-
-            // Set a session variable to indicate that the health examination is pending approval
-            session(['health_examination_pending' => true]);
-
-            // Return a JSON response indicating success
-            return response()->json(['success' => true, 'message' => 'Health Examination submitted successfully and is waiting for approval.']);
-        } catch (\Exception $e) {
-            // Log the exception message
-            Log::error('Error in HealthExaminationController@store: ' . $e->getMessage());
-
-            // Return a JSON response indicating failure
-            return response()->json(['success' => false, 'message' => 'An error occurred while processing your request. Please try again later.'], 500);
+            return response()->json(['success' => false, 'message' => 'You have already submitted health documents for the selected school year.'], 400);
         }
+
+        // Get the current school year
+        $currentSchoolYear = SchoolYear::where('is_current', true)->first();
+
+        if (!$currentSchoolYear || $schoolYear !== $currentSchoolYear->year) {
+            return response()->json(['success' => false, 'message' => 'You can only submit health examinations for the current school year.'], 400);
+        }
+
+        // Create a new HealthExamination instance
+        $healthExamination = new HealthExamination();
+        $healthExamination->id_number = Auth::user()->id_number;
+        $healthExamination->school_year = $schoolYear;
+
+        // Handle the health examination pictures upload
+        if ($request->hasFile('health_examination_picture')) {
+            $healthPaths = [];
+            foreach ($request->file('health_examination_picture') as $healthPic) {
+                $healthPaths[] = $healthPic->store('health_examinations', 'public');
+            }
+            $healthExamination->health_examination_picture = $healthPaths; // Assign array directly
+        } else {
+            return response()->json(['success' => false, 'message' => 'Health examination pictures are required.'], 400);
+        }
+
+        // Handle the x-ray pictures upload
+        if ($request->hasFile('xray_picture')) {
+            $xrayPaths = [];
+            foreach ($request->file('xray_picture') as $xray) {
+                $xrayPaths[] = $xray->store('health_examinations', 'public');
+            }
+            $healthExamination->xray_picture = $xrayPaths; // Assign array directly
+        } else {
+            return response()->json(['success' => false, 'message' => 'X-ray pictures are required.'], 400);
+        }
+
+        // Handle the lab result pictures upload
+        if ($request->hasFile('lab_result_picture')) {
+            $labPaths = [];
+            foreach ($request->file('lab_result_picture') as $lab) {
+                $labPaths[] = $lab->store('health_examinations', 'public');
+            }
+            $healthExamination->lab_result_picture = $labPaths; // Assign array directly
+        } else {
+            return response()->json(['success' => false, 'message' => 'Lab result pictures are required.'], 400);
+        }
+
+        // Mark the health examination as not approved by default
+        $healthExamination->is_approved = false;
+        $healthExamination->save();
+
+        // Return a JSON response indicating success
+        return response()->json(['success' => true, 'message' => 'Health Examination submitted successfully and is waiting for approval.']);
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        // Return validation errors
+        return response()->json(['success' => false, 'message' => $e->validator->errors()->first()], 422);
+    } catch (\Exception $e) {
+        // Log the exception message
+        \Log::error('Error in HealthExaminationController@store: ' . $e->getMessage());
+
+        // Return a JSON response indicating failure
+        return response()->json(['success' => false, 'message' => 'An error occurred while processing your request. Please try again later.'], 500);
     }
+}
+
+
+    
 
     private function getCurrentSchoolYear()
     {
@@ -258,38 +322,117 @@ class HealthExaminationController extends Controller
         }
     }
 
-
+    public function resetSchoolYear(Request $request)
+    {
+        // Validate the incoming request
+        $request->validate([
+            'school_year' => 'required|string|regex:/^\d{4}-\d{4}$/',
+        ]);
+    
+        $schoolYear = $request->input('school_year');
+    
+        try {
+            // Begin transaction
+            DB::beginTransaction();
+    
+            // Delete HealthExaminations for the selected school year
+            $deletedExaminations = HealthExamination::where('school_year', $schoolYear)->delete();
+    
+            // Update 'is_current' flag for school years
+            // Set all to false
+            SchoolYear::query()->update(['is_current' => false]);
+            // Set selected school year to true
+            SchoolYear::where('year', $schoolYear)->update(['is_current' => true]);
+    
+            // Commit transaction
+            DB::commit();
+    
+            // Log the reset action
+            Log::info("School year data reset for: {$schoolYear}. Total records deleted: {$deletedExaminations}");
+    
+            return response()->json([
+                'success' => true,
+                'message' => "School year data for {$schoolYear} has been successfully reset and set as the current school year. Users will need to upload new health examinations."
+            ]);
+        } catch (\Exception $e) {
+            // Rollback transaction on error
+            DB::rollBack();
+    
+            // Log the error
+            Log::error("Error resetting school year data for {$schoolYear}: " . $e->getMessage());
+    
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while resetting the school year data. Please try again later.'
+            ], 500);
+        }
+    }
+    
     public function update(Request $request)
     {
+        // Validate the incoming request data
         $validated = $request->validate([
-            'health_examination_picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:10048',
-            'xray_pictures' => 'required|array|min:2|max:2', // Ensuring exactly 2 X-ray pictures
-            'xray_pictures.*' => 'image|mimes:jpeg,png,jpg,gif|max:10048',
-            'lab_result_pictures' => 'required|array|min:4|max:4', // Ensuring exactly 4 Lab result pictures
-            'lab_result_pictures.*' => 'image|mimes:jpeg,png,jpg,gif|max:10048',
+            'examination_id' => 'required|integer|exists:health_examinations,id',
+            'health_examination_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10048',
+            'xray_pictures.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10048',
+            'lab_result_pictures.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10048',
+            'school_year' => 'required|string|regex:/^\d{4}-\d{4}$/',
         ]);
-
-        $examination = HealthExamination::findOrFail($request->examination_id);
-
-        if ($request->hasFile('health_examination_picture')) {
-            $path = $request->file('health_examination_picture')->store('health_examinations', 'public');
-            $examination->health_examination_picture = $path;
+    
+        try {
+            $examination = HealthExamination::findOrFail($request->input('examination_id'));
+    
+            // Optional: Ensure the user owns this examination
+            if ($examination->id_number !== Auth::user()->id_number) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized action.'], 403);
+            }
+    
+            // Update school year if changed
+            if ($examination->school_year !== $request->input('school_year')) {
+                $examination->school_year = $request->input('school_year');
+            }
+    
+            // Handle the health examination picture upload
+            if ($request->hasFile('health_examination_picture')) {
+                // Optionally, delete the old picture
+                if ($examination->health_examination_picture && Storage::disk('public')->exists($examination->health_examination_picture)) {
+                    Storage::disk('public')->delete($examination->health_examination_picture);
+                }
+                $examination->health_examination_picture = $request->file('health_examination_picture')->store('health_examinations', 'public');
+            }
+    
+            // Handle the x-ray pictures upload
+            if ($request->hasFile('xray_pictures')) {
+                $existingXrays = json_decode($examination->xray_picture, true) ?? [];
+                foreach ($request->file('xray_pictures') as $xray) {
+                    $existingXrays[] = $xray->store('health_examinations', 'public');
+                }
+                $examination->xray_picture = json_encode($existingXrays);
+            }
+    
+            // Handle the lab result pictures upload
+            if ($request->hasFile('lab_result_pictures')) {
+                $existingLabs = json_decode($examination->lab_result_picture, true) ?? [];
+                foreach ($request->file('lab_result_pictures') as $lab) {
+                    $existingLabs[] = $lab->store('health_examinations', 'public');
+                }
+                $examination->lab_result_picture = json_encode($existingLabs);
+            }
+    
+            // Reset approval status if updated
+            $examination->is_approved = false;
+            $examination->save();
+    
+            return response()->json(['success' => true, 'message' => 'Health Examination updated successfully and is now pending approval.']);
+        } catch (\Exception $e) {
+            // Log the exception message
+            Log::error('Error in HealthExaminationController@update: ' . $e->getMessage());
+    
+            // Return a JSON response indicating failure
+            return response()->json(['success' => false, 'message' => 'An error occurred while updating your submission. Please try again later.'], 500);
         }
-
-        if ($request->hasFile('xray_pictures')) {
-            $path = $request->file('xray_pictures')->store('health_examinations', 'public');
-            $examination->xray_picture = $path;
-        }
-
-        if ($request->hasFile('lab_result_pictures')) {
-            $path = $request->file('lab_result_pictures')->store('health_examinations', 'public');
-            $examination->lab_result_picture = $path;
-        }
-
-        $examination->save();
-
-        return response()->json(['success' => true, 'message' => 'Health Examination updated successfully.']);
     }
+    
 
     public function viewAllRecords()
     {
@@ -305,24 +448,32 @@ class HealthExaminationController extends Controller
     {
         try {
             $user = Auth::user();
-            $healthExamination = HealthExamination::where('id_number', $user->id_number)->first();
+            $currentSchoolYear = SchoolYear::where('is_current', true)->first();
+    
+            if (!$currentSchoolYear) {
+                return response()->json(['error' => 'Current school year not set.'], 400);
+            }
+    
+            $healthExamination = HealthExamination::where('id_number', $user->id_number)
+                ->where('school_year', $currentSchoolYear->year)
+                ->first();
     
             if (!$healthExamination) {
-                // If no submission exists, return exists: false
+                // No submission exists for current school year
                 return response()->json(['exists' => false]);
             }
     
-            // If submission exists, check if it's approved
+            // Submission exists; check if it's approved
             return response()->json([
                 'exists' => true,
-                'is_approved' => $healthExamination->is_approved,
+                'is_approved' => (bool) $healthExamination->is_approved,
             ]);
         } catch (\Exception $e) {
             \Log::error('Error checking approval status: ' . $e->getMessage());
-    
-            return response()->json(['error' => 'An error occurred while checking approval status.'], 500);
+            return response()->json(['exists' => false, 'is_approved' => false], 500);
         }
     }
+    
     
     public function downloadPdf($id)
     {
@@ -350,6 +501,7 @@ class HealthExaminationController extends Controller
             $staff = Staff::where('id_number', $user->id_number)->first();
             $gradeOrCourse = $staff ? $staff->department : 'N/A'; // Replace 'department' with the relevant field
         }
+        
     
         // If no data is found for user or information, default to 'N/A'
         $name = $user ? $user->first_name . ' ' . $user->last_name : 'N/A';
@@ -401,22 +553,20 @@ class HealthExaminationController extends Controller
     }
     public function getPendingExaminations(Request $request)
     {
-        // The role is determined by the route prefix (admin, nurse, doctor)
-        $routePrefix = $request->route()->getPrefix(); // e.g., 'admin', 'nurse', 'doctor'
+        // Determine the role based on the route prefix (admin, nurse, doctor)
+        $routePrefix = $request->route()->getPrefix(); // e.g., '/admin', '/nurse', '/doctor'
         $role = strtolower(str_replace('/', '', $routePrefix)); // Remove '/' if present
-
-        // Optional: Customize data based on role
-        // For example, admins might see all pending examinations,
-        // while nurses/doctors see only specific ones.
-
-        // Fetch user and role-based logic if necessary
-        // Currently, fetching all pending examinations
+    
+        // Get the authenticated user
+        $user = Auth::user();
+    
+        // Fetch search query
         $search = $request->input('search', '');
-
+    
         // Query pending examinations
         $query = HealthExamination::where('is_approved', false)
             ->with('user');
-
+    
         // Apply search filters if any
         if (!empty($search)) {
             $query->whereHas('user', function($q) use ($search) {
@@ -425,38 +575,35 @@ class HealthExaminationController extends Controller
                   ->orWhere('id_number', 'like', "%{$search}%");
             });
         }
-
-
-
-        
-        if ($role === 'nurse') {
-            $query->where('id_number', $user->id_number);
-        } elseif ($role === 'doctor') {
+    
+        // Role-based logic (if needed)
+        if (in_array($role, ['nurse', 'doctor'])) {
             $query->where('id_number', $user->id_number);
         }
-        
-
+    
         // Fetch the examinations
         $pendingExaminations = $query->orderBy('created_at', 'desc')->get();
-
+    
         // Transform data for JSON response
         $transformed = $pendingExaminations->map(function($exam) {
             return [
                 'id' => $exam->id,
                 'user_name' => $exam->user->first_name . ' ' . $exam->user->last_name,
                 'id_number' => $exam->user->id_number,
-                'health_examination_picture' => asset('storage/' . $exam->health_examination_picture),
+                'school_year' => $exam->school_year,
+                'health_examination_pictures' => array_map(function($pic) {
+                    return asset('storage/' . $pic);
+                }, $exam->health_examination_picture ?? []),
                 'xray_pictures' => array_map(function($xray) {
                     return asset('storage/' . $xray);
-                }, json_decode($exam->xray_picture, true) ?? []),
+                }, $exam->xray_picture ?? []),
                 'lab_result_pictures' => array_map(function($lab) {
                     return asset('storage/' . $lab);
-                }, json_decode($exam->lab_result_picture, true) ?? []),
+                }, $exam->lab_result_picture ?? []),
             ];
         });
-
+    
         return response()->json($transformed);
     }
-
-
+    
 }

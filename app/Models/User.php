@@ -12,6 +12,7 @@ use App\Models\Information;
 use Illuminate\Notifications\Notifiable;
 use App\Notifications\VerifyEmail;
 
+
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable;
@@ -59,6 +60,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $this->notify(new VerifyEmail);
     }
+    
     public function healthExaminations()
 {
     return $this->hasMany(HealthExamination::class, 'id_number', 'id_number');
@@ -102,5 +104,13 @@ public function students()
 public function notifications()
 {
     return $this->hasMany(Notification::class, 'user_id', 'id_number');
+}
+public function hasRole($roles)
+{
+    if (is_array($roles)) {
+        return in_array($this->role, $roles);
+    }
+
+    return $this->role === $roles;
 }
 }

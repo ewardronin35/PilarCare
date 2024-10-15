@@ -179,12 +179,47 @@
 
         <!-- Logout Button -->
         <div class="logout-button">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit">
-                    {{ __('Log Out') }}
-                </button>
-            </form>
-        </div>
-    </div>
+    <form method="POST" action="{{ route('custom.logout') }}">
+        @csrf
+        <button type="submit">
+            {{ __('Log Out') }}
+        </button>
+    </form>
+</div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- Optional: Include Bootstrap JS if needed -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // SweetAlert for Logout Confirmation
+    document.getElementById('logoutBtn').addEventListener('click', function(e) {
+        e.preventDefault(); // Prevent the default button action
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "Do you really want to log out?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, log me out!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('logoutForm').submit(); // Submit the logout form
+            }
+        });
+    });
+
+    // Optional: Show success message after logout
+    @if(session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Logged Out',
+            text: '{{ session('success') }}',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    @endif
+</script>
 </x-guest-layout>

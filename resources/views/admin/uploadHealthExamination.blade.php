@@ -1,14 +1,14 @@
-<!-- resources/views/admin-health-examinations.blade.php --
+<!-- resources/views/admin-health-examinations.blade.php -->
 <x-app-layout>
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    
+
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- SweetAlert2 for Alerts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+
     <style>
         /* General Styling */
         body {
@@ -113,9 +113,7 @@
             background-color: #f2f2f2;
             font-weight: 600;
             color: #333;
-            position: sticky;
-            top: 0;
-            z-index: 1;
+         
         }
 
         table tbody tr:hover {
@@ -321,9 +319,11 @@
                 width: 200px;
             }
         }
+
+        /* School Year Reset Styles */
         .school-year-container {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             margin: 20px 0;
         }
@@ -331,7 +331,8 @@
         .school-year-container select {
             padding: 10px;
             font-size: 16px;
-            margin-right: 10px;
+            margin-bottom: 10px;
+            width: 200px;
         }
 
         .reset-button {
@@ -349,6 +350,7 @@
             background-color: #c82333;
         }
     </style>
+
 
     <div class="main-content">
         <!-- Success Message -->
@@ -373,13 +375,15 @@
                 <i class="fas fa-calendar-alt"></i> School Year Reset
             </button>
         </div>
-        <!-- Health Examinations Table -->
-        <div class="table-container">
+
+        <!-- Pending Approvals Tab Content -->
+        <div class="table-container tab-content" id="pending-approvals">
             <table id="health-examinations-table">
                 <thead>
                     <tr>
                         <th>Patient Name</th>
-                        <th>Health Exam Picture</th>
+                        <th>School Year</th>
+                        <th>Health Exam Pictures</th>
                         <th>X-ray Pictures</th>
                         <th>Lab Result Pictures</th>
                         <th>Actions</th>
@@ -387,27 +391,44 @@
                 </thead>
                 <tbody>
                     @forelse($pendingExaminations as $examination)
-                        <tr>
+                        <tr data-id="{{ $examination->id }}">
                             <td>{{ $examination->user->first_name }} {{ $examination->user->last_name }}</td>
+                            <td>{{ $examination->school_year }}</td>
+
+                            <!-- Health Examination Pictures -->
                             <td>
                                 <div class="image-previews">
-                                    <img src="{{ asset('storage/' . $examination->health_examination_picture) }}" alt="Health Examination Picture" onclick="openImageModal('{{ asset('storage/' . $examination->health_examination_picture) }}')">
+                                    @forelse(($examination->health_examination_picture ?? []) as $healthPic)
+                                        <img src="{{ asset('storage/' . $healthPic) }}" alt="Health Examination Picture" onclick="openImageModal('{{ asset('storage/' . $healthPic) }}')">
+                                    @empty
+                                        <p>No Health Examination pictures uploaded.</p>
+                                    @endforelse
                                 </div>
                             </td>
+
+                            <!-- X-ray Pictures -->
                             <td>
                                 <div class="image-previews">
-                                    @foreach(json_decode($examination->xray_picture) as $xray)
+                                    @forelse(($examination->xray_picture ?? []) as $xray)
                                         <img src="{{ asset('storage/' . $xray) }}" alt="X-ray Picture" onclick="openImageModal('{{ asset('storage/' . $xray) }}')">
-                                    @endforeach
+                                    @empty
+                                        <p>No X-ray pictures uploaded.</p>
+                                    @endforelse
                                 </div>
                             </td>
+
+                            <!-- Lab Result Pictures -->
                             <td>
                                 <div class="image-previews">
-                                    @foreach(json_decode($examination->lab_result_picture) as $lab)
+                                    @forelse(($examination->lab_result_picture ?? []) as $lab)
                                         <img src="{{ asset('storage/' . $lab) }}" alt="Lab Result Picture" onclick="openImageModal('{{ asset('storage/' . $lab) }}')">
-                                    @endforeach
+                                    @empty
+                                        <p>No Lab Result pictures uploaded.</p>
+                                    @endforelse
                                 </div>
                             </td>
+
+                            <!-- Actions (Approve/Reject) -->
                             <td>
                                 <button type="button" class="btn btn-success" onclick="approveExamination({{ $examination->id }})">
                                     <i class="fas fa-check"></i> Approve
@@ -419,25 +440,26 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" style="text-align: center; color: #888;">No pending examinations available.</td>
+                            <td colspan="6" style="text-align: center; color: #888;">No pending examinations available.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-    </div>
-    <div class="school-year-container tab-content" id="school-year-reset" style="display: none;">
+
+        <!-- School Year Reset Tab Content -->
+        <div class="school-year-container tab-content" id="school-year-reset" style="display: none;">
             <h2>Select School Year to Reset Data</h2>
             <select id="school-year-select">
-                <!-- Replace with dynamic years based on your logic -->
-                <option value="2024-2025">2024-2025</option>
-                <option value="2025-2026">2025-2026</option>
-                <option value="2026-2027">2026-2027</option>
-                <option value="2027-2028">2027-2028</option>
+                @foreach($schoolYears as $year)
+                    <option value="{{ $year }}">{{ $year }}</option>
+                @endforeach
             </select>
+
             <button type="button" class="reset-button" id="reset-school-year">Reset School Year</button>
         </div>
     </div>
+
     <!-- Image Preview Modal -->
     <div id="image-modal" class="modal">
         <div class="modal-content">
@@ -503,15 +525,11 @@
                                 data.message || 'The examination has been approved.',
                                 'success'
                             ).then(() => {
-                                // Option 1: Reload the entire page
-                                // location.reload();
-
-                                // Option 2: Remove the approved row without reloading
+                                // Remove the approved row without reloading
                                 const row = document.querySelector(`tr[data-id="${id}"]`);
                                 if (row) {
                                     row.remove();
                                 }
-                                // Optionally, update the unread count if displayed
                             });
                         } else {
                             Swal.fire(
@@ -563,15 +581,11 @@
                                 data.message || 'The examination has been rejected.',
                                 'success'
                             ).then(() => {
-                                // Option 1: Reload the entire page
-                                // location.reload();
-
-                                // Option 2: Remove the rejected row without reloading
+                                // Remove the rejected row without reloading
                                 const row = document.querySelector(`tr[data-id="${id}"]`);
                                 if (row) {
                                     row.remove();
                                 }
-                                // Optionally, update the unread count if displayed
                             });
                         } else {
                             Swal.fire(
@@ -594,8 +608,10 @@
             });
         }
 
-        // Function to switch tabs (if multiple tabs are present)
+        // Function to switch tabs
         function switchTab(tabId) {
+            showSpinner(); // Show spinner when switching tabs
+
             // Remove 'active' class from all tab buttons
             const tabButtons = document.querySelectorAll('.tab-btn');
             tabButtons.forEach(button => button.classList.remove('active'));
@@ -606,105 +622,143 @@
                 activeTab.classList.add('active');
             }
 
-            // Fetch examinations based on selected tab
-            fetchPendingExaminations(tabId, document.getElementById('search-input').value);
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => content.style.display = 'none');
+
+            // Show the selected tab content
+            const activeContent = document.getElementById(tabId);
+            if (activeContent) {
+                // Simulate data loading with a timeout (if data loading is not needed)
+                setTimeout(() => {
+                    activeContent.style.display = (tabId === 'school-year-reset') ? 'flex' : 'block';
+                    hideSpinner(); // Hide spinner after content is displayed
+                }, 500); // Adjust timeout as needed
+            } else {
+                hideSpinner(); // Hide spinner if content not found
+            }
+
+            // Optionally, refresh data based on the active tab
+            if (tabId === 'pending-approvals') {
+                fetchPendingExaminations(); // Fetch pending approvals
+            }
         }
 
-        // Function to fetch pending examinations based on role and search query
-        function fetchPendingExaminations(role, searchQuery = '') {
-    const tableBody = document.querySelector('#health-examinations-table tbody');
-    tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #555;">Loading...</td></tr>';
-    showSpinner();
+        // Function to fetch pending examinations based on search query
+        function fetchPendingExaminations(searchQuery = '', showSpinnerOption = true) {
+            const tableBody = document.querySelector('#health-examinations-table tbody');
+            tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #555;">Loading...</td></tr>';
 
-    fetch(`/admin/health-examinations/pending-data?role=${encodeURIComponent(role)}&search=${encodeURIComponent(searchQuery)}`, {
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRF-TOKEN': csrfToken
-        }
-    })
-    .then(response => {
-        hideSpinner();
-        if (!response.ok) {
-            throw new Error(`Server responded with status ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        tableBody.innerHTML = '';
+            if (showSpinnerOption) {
+                showSpinner();
+            }
 
-        if (data.length > 0) {
-            data.forEach(examination => {
-                let xrayHtml = '';
-                if (examination.xray_pictures && examination.xray_pictures.length > 0) {
-                    xrayHtml = `<div class="image-previews">`;
-                    examination.xray_pictures.forEach(xray => {
-                        xrayHtml += `<img src="${xray}" alt="X-ray Picture" onclick="openImageModal('${xray}')" />`;
-                    });
-                    xrayHtml += `</div>`;
-                } else {
-                    xrayHtml = 'No X-ray pictures';
+            fetch(`/admin/health-examinations/pending-data?search=${encodeURIComponent(searchQuery)}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken
                 }
-
-                let labHtml = '';
-                if (examination.lab_result_pictures && examination.lab_result_pictures.length > 0) {
-                    labHtml = `<div class="image-previews">`;
-                    examination.lab_result_pictures.forEach(lab => {
-                        labHtml += `<img src="${lab}" alt="Lab Result Picture" onclick="openImageModal('${lab}')" />`;
-                    });
-                    labHtml += `</div>`;
-                } else {
-                    labHtml = 'No Lab Result pictures';
+            })
+            .then(response => {
+                if (showSpinnerOption) {
+                    hideSpinner();
                 }
+                if (!response.ok) {
+                    throw new Error(`Server responded with status ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                tableBody.innerHTML = '';
 
-                tableBody.innerHTML += `
-                    <tr data-id="${examination.id}">
-                        <td>${escapeHtml(examination.user_name)}</td>
-                        <td>
-                            <div class="image-previews">
-                                <img src="${examination.health_examination_picture}" alt="Health Examination Picture" onclick="openImageModal('${examination.health_examination_picture}')">
-                            </div>
-                        </td>
-                        <td>
-                            ${xrayHtml}
-                        </td>
-                        <td>
-                            ${labHtml}
-                        </td>
-                        <td>
-                            <button type="button" class="btn btn-success" onclick="approveExamination(${examination.id})">
-                                <i class="fas fa-check"></i> Approve
-                            </button>
-                            <button type="button" class="btn btn-danger" onclick="rejectExamination(${examination.id})">
-                                <i class="fas fa-times"></i> Reject
-                            </button>
-                        </td>
+                if (data.length > 0) {
+                    data.forEach(examination => {
+                        // Generate HTML for Health Examination Pictures
+                        let healthPicsHtml = '';
+                        if (examination.health_examination_pictures.length > 0) {
+                            healthPicsHtml = `<div class="image-previews">`;
+                            examination.health_examination_pictures.forEach(picUrl => {
+                                healthPicsHtml += `<img src="${picUrl}" alt="Health Examination Picture" onclick="openImageModal('${picUrl}')"/>`;
+                            });
+                            healthPicsHtml += `</div>`;
+                        } else {
+                            healthPicsHtml = `<p>No Health Examination pictures uploaded.</p>`;
+                        }
+
+                        // Generate HTML for X-ray Pictures
+                        let xrayPicsHtml = '';
+                        if (examination.xray_pictures.length > 0) {
+                            xrayPicsHtml = `<div class="image-previews">`;
+                            examination.xray_pictures.forEach(xrayUrl => {
+                                xrayPicsHtml += `<img src="${xrayUrl}" alt="X-ray Picture" onclick="openImageModal('${xrayUrl}')"/>`;
+                            });
+                            xrayPicsHtml += `</div>`;
+                        } else {
+                            xrayPicsHtml = `<p>No X-ray pictures uploaded.</p>`;
+                        }
+
+                        // Generate HTML for Lab Result Pictures
+                        let labPicsHtml = '';
+                        if (examination.lab_result_pictures.length > 0) {
+                            labPicsHtml = `<div class="image-previews">`;
+                            examination.lab_result_pictures.forEach(labUrl => {
+                                labPicsHtml += `<img src="${labUrl}" alt="Lab Result Picture" onclick="openImageModal('${labUrl}')"/>`;
+                            });
+                            labPicsHtml += `</div>`;
+                        } else {
+                            labPicsHtml = `<p>No Lab Result pictures uploaded.</p>`;
+                        }
+
+                        // Append the row to the table
+                        tableBody.innerHTML += `
+                            <tr data-id="${examination.id}">
+                                <td>${escapeHtml(examination.user_name)}</td>
+                                <td>${escapeHtml(examination.school_year)}</td>
+                                <td>
+                                    ${healthPicsHtml}
+                                </td>
+                                <td>
+                                    ${xrayPicsHtml}
+                                </td>
+                                <td>
+                                    ${labPicsHtml}
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-success" onclick="approveExamination(${examination.id})">
+                                        <i class="fas fa-check"></i> Approve
+                                    </button>
+                                    <button type="button" class="btn btn-danger" onclick="rejectExamination(${examination.id})">
+                                        <i class="fas fa-times"></i> Reject
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: #888;">No pending examinations found.</td>
+                        </tr>
+                    `;
+                }
+            })
+            .catch(error => {
+                if (showSpinnerOption) {
+                    hideSpinner();
+                }
+                console.error('Error fetching pending examinations:', error);
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #dc3545;">Failed to load pending examinations. Please try again later.</td>
                     </tr>
                 `;
             });
-        } else {
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="5" style="text-align: center; color: #888;">No pending examinations found.</td>
-                </tr>
-            `;
         }
-    })
-    .catch(error => {
-        console.error('Error fetching pending examinations:', error);
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="5" style="text-align: center; color: #dc3545;">Failed to load pending examinations. Please try again later.</td>
-            </tr>
-        `;
-    });
-}
 
         // Function to handle search
         function searchExaminations() {
             const searchQuery = document.getElementById('search-input').value.trim();
-            const activeTab = document.querySelector('.tab-btn.active');
-            const role = activeTab ? activeTab.getAttribute('data-role') : 'pending-approvals';
-            fetchPendingExaminations(role, searchQuery);
+            fetchPendingExaminations(searchQuery); // Spinner will show by default
         }
 
         // Helper Function to Escape HTML (Prevent XSS)
@@ -733,23 +787,91 @@
                 const activeTab = document.querySelector('.tab-btn.active');
                 const role = activeTab ? activeTab.getAttribute('data-role') : 'pending-approvals';
                 const searchQuery = document.getElementById('search-input').value.trim();
-                fetchPendingExaminations(role, searchQuery);
+                if (role === 'pending-approvals') {
+                    fetchPendingExaminations(searchQuery, false); // Do not show spinner during real-time refresh
+                }
+                // Add additional conditions if other tabs require periodic refresh
             }, 10000);
         }
 
         // Initialize with default tab and fetch records
         document.addEventListener('DOMContentLoaded', function () {
             const defaultRole = 'pending-approvals';
-            fetchPendingExaminations(defaultRole);
-            startRealTimeRefresh();
+            switchTab(defaultRole); // Switch to the default tab
+            fetchPendingExaminations(); // Spinner will show by default
+            startRealTimeRefresh(); // Start real-time refresh
         });
 
         // Close modal when clicking outside of the modal content
         window.onclick = function(event) {
-            const imageModal = document.getElementById('image-modal');
-            if (event.target == imageModal) {
-                imageModal.style.display = 'none';
-            }
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            });
         }
+
+        // Function to reset school year
+        document.getElementById('reset-school-year').addEventListener('click', function () {
+            const selectedYear = document.getElementById('school-year-select').value;
+
+            // Confirmation Dialog before Reset
+            Swal.fire({
+                title: 'Are you sure?',
+                text: `You want to reset the school year to ${selectedYear}? Users will need to upload new health examinations for this year.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, reset it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    showSpinner();
+
+                    // Send AJAX request to reset school year data
+                    fetch(`/admin/reset-school-year`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({
+                            school_year: selectedYear
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        hideSpinner();
+                        if (data.success) {
+                            Swal.fire(
+                                'Reset!',
+                                data.message || `The school year has been reset to ${selectedYear}. Users can now upload new health examinations.`,
+                                'success'
+                            ).then(() => {
+                                // Optionally, perform additional actions like reloading the page or updating UI
+                                location.reload(); // Reload to reflect changes
+                            });
+                        } else {
+                            Swal.fire(
+                                'Error!',
+                                data.message || 'Failed to reset the school year data.',
+                                'error'
+                            );
+                        }
+                    })
+                    .catch(error => {
+                        hideSpinner();
+                        console.error('Error:', error);
+                        Swal.fire(
+                            'Error!',
+                            'There was a problem resetting the school year data.',
+                            'error'
+                        );
+                    });
+                }
+            });
+        });
     </script>
+
 </x-app-layout>

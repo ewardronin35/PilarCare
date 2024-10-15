@@ -128,5 +128,11 @@ class NotificationController extends Controller
             'message' => 'Notification not found or unauthorized.'
         ], 404);
     }
-    
+    public function count()
+    {
+        $user = Auth::user();
+        $unreadCount = $user->unreadNotifications->count();
+
+        return response()->json(['unreadCount' => $unreadCount]);
+    }
 }

@@ -1,6 +1,23 @@
 <x-app-layout>
+
     <link rel="stylesheet" href="{{ asset('css/dental.css') }}">
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
+    
+
+<!-- Select2 CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css" rel="stylesheet" />
+
+<!-- jQuery (ensure it's loaded before Select2) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+<!-- Select2 JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js"></script>
+
+<!-- SweetAlert2 CSS and JS (if used) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- Your Custom JS File -->
+<script src="{{ asset('js/admindental.js') }}"></script>
 
     <div class="main-container">
         <!-- Left side: Dental Record -->
@@ -907,7 +924,7 @@
             <input type="hidden" name="extraction" value="0">
             <input type="checkbox" id="extraction" name="extraction" value="1">
             <label for="extraction">For Extraction: Tooth #</label>
-            <select id="extraction-tooth" name="extraction_tooth[]" class="form-control" multiple disabled>
+            <select id="extraction-tooth" name="extraction_tooth[]" class="form-control tooth-select" multiple disabled>
                 <option value="">Select Tooth</option>
                 @foreach($teethData as $number => $name)
                     <option value="{{ $number }}">{{ $number }}: {{ $name }}</option>
@@ -923,7 +940,7 @@
             <input type="hidden" name="endodontic" value="0">
             <input type="checkbox" id="endodontic" name="endodontic" value="1">
             <label for="endodontic">For Endodontic Tx/RCT: Tooth #</label>
-            <select id="endodontic-tooth" name="endodontic_tooth[]" class="form-control" multiple disabled>
+            <select id="endodontic-tooth" name="endodontic_tooth[]" class="form-control tooth-select" multiple disabled>
                 <option value="">Select Tooth</option>
                 @foreach($teethData as $number => $name)
                     <option value="{{ $number }}">{{ $number }}: {{ $name }}</option>
@@ -939,7 +956,7 @@
             <input type="hidden" name="radiograph" value="0">
             <input type="checkbox" id="radiograph" name="radiograph" value="1">
             <label for="radiograph">For Radiograph/X-ray: Tooth #</label>
-            <select id="radiograph-tooth" name="radiograph_tooth[]" class="form-control" multiple disabled>
+            <select id="radiograph-tooth" name="radiograph_tooth[]" class="form-control tooth-select" multiple disabled>
                 <option value="">Select Tooth</option>
                 @foreach($teethData as $number => $name)
                     <option value="{{ $number }}">{{ $number }}: {{ $name }}</option>
@@ -955,7 +972,7 @@
             <input type="hidden" name="prosthesis" value="0">
             <input type="checkbox" id="prosthesis" name="prosthesis" value="1">
             <label for="prosthesis">Needs Prosthesis/Denture: Tooth #</label>
-            <select id="prosthesis-tooth" name="prosthesis_tooth[]" class="form-control" multiple disabled>
+            <select id="prosthesis-tooth" name="prosthesis_tooth[]" class="form-control tooth-select" multiple disabled>
                 <option value="">Select Tooth</option>
                 @foreach($teethData as $number => $name)
                     <option value="{{ $number }}">{{ $number }}: {{ $name }}</option>
@@ -1067,31 +1084,16 @@
         </table>
 </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="{{ asset('js/admindental.js') }}"></script>
+
+
+
     <script>
     window.dentalExamStoreUrl = "{{ route('admin.dental-examination.store') }}";
     window.getToothStatusUrl = "{{ route('admin.getToothStatus') }}";
     window.searchRecordsUrl = "{{ route('admin.searchRecords') }}";
-    const modal = document.getElementById("previewModal");
-        const closeModalButton = document.querySelector(".close");
-        const saveButton = document.getElementById("save-tooth-details");
+   
 
-        closeModalButton.onclick = function() {
-            modal.style.display = "none";
-        };
-
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        };
-
-        saveButton.onclick = function() {
-            saveButton.classList.add("animate-save");
-            setTimeout(() => saveButton.classList.remove("animate-save"), 1000);
-        };
+       
         document.addEventListener('DOMContentLoaded', function() {
                 const tabButtons = document.querySelectorAll('.tab-button');
                 const tabContents = document.querySelectorAll('.tab-content');

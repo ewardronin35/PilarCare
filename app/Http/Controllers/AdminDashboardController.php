@@ -10,17 +10,21 @@ use App\Models\Notification;
 use App\Models\HealthExamination;
 use App\Models\Teeth;
 use App\Models\MedicalRecord;
+use App\Models\DentalRecord;
 use Illuminate\Support\Facades\Auth;
 
 class AdminDashboardController extends Controller
+
+
 {
+
     public function index()
     {
         $appointmentCount = Appointment::count();
         $inventoryCount = Inventory::count();
         $complaintCount = Complaint::count();
         $pendingApprovalCount = HealthExamination::where('is_approved', false)->count();
-        $dentalRecordCount = Teeth::count();
+        $dentalRecordCount = DentalRecord::count();
         $medicalRecordCount = MedicalRecord::count();
             // Fetch pending approvals for health examinations, dental records, and medical records
     $pendingHealthExams = HealthExamination::where('is_approved', false)->count();

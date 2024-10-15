@@ -14,6 +14,7 @@ use App\Models\Information;
 use App\Models\Nurse;
 use App\Models\Doctor;
 use App\Models\Staff;
+use App\Notifications\CustomVerifyEmail; // Import the custom notification
 
 class SettingsController extends Controller
 {
@@ -71,281 +72,151 @@ class SettingsController extends Controller
                 break;
         }
 
-        return view($viewPath, compact('user', 'roleData' ,'information'));
+        return view($viewPath, compact('user', 'roleData', 'information'));
     }
 
     /**
-     * Update the user's profile information.
+     * Update the user's account settings.
      */
     public function update(Request $request)
     {
         $user = Auth::user();
-    
-        // Base validation rules
+
+        // Updated validation rules with password complexity
         $rules = [
-            'first_name' => 'required|string|max:255',
-            'last_name'  => 'required|string|max:255',
-            'email'      => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'password'   => 'nullable|min:6',
-            'address'    => 'required|string|max:500',
-            'birthdate'  => 'required|date',
-            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Add validation for image
+            'first_name'       => 'required|string|max:255',
+            'last_name'        => 'required|string|max:255',
+            'email'            => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'password'         => [
+                'nullable',
+                'min:8',
+                'regex:/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/',
+            ],
+            'profile_picture'  => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ];
-    
-        // Role-specific validation
+
+        // Custom validation messages
+        $messages = [
+            'password.regex'            => 'Password must be at least 8 characters long and contain both letters and numbers.',
+            'profile_picture.image'     => 'The profile picture must be an image.',
+            'profile_picture.mimes'     => 'The profile picture must be a file of type: jpeg, png, jpg, gif.',
+            'profile_picture.max'       => 'The profile picture may not be greater than 2MB.',
+        ];
+
+        // Validate the request
+        $validatedData = $request->validate($rules, $messages);
+
+        // Update common user info
+        $user->first_name = $validatedData['first_name'];
+        $user->last_name  = $validatedData['last_name'];
+        $user->email      = $validatedData['email'];
+
+        // Update password if provided
+        if ($request->filled('password')) {
+            $user->password = Hash::make($validatedData['password']);
+        }
+
+        // Save user data
+        $user->save();
+
+        // Update Information model
+        $information = Information::firstOrCreate(
+            ['id_number' => $user->id_number],
+            []
+        );
+
+        // Handle profile picture upload
+        if ($request->hasFile('profile_picture')) {
+            // Delete old image if exists
+            if ($information->profile_picture && Storage::disk('public')->exists($information->profile_picture)) {
+                Storage::disk('public')->delete($information->profile_picture);
+            }
+            // Store new image
+            $path = $request->file('profile_picture')->store('profile_pictures', 'public');
+            $information->profile_picture = $path;
+        }
+
+        $information->save();
+
+        // Check if email was changed to require verification
+        if ($user->wasChanged('email')) {
+            $user->email_verified_at = null; // Invalidate email verification
+            $user->save();
+
+            // Send custom verification email
+            $user->sendCustomEmailVerificationNotification();
+
+            // Inform the user to verify the new email
+            return redirect()->back()->with('email_verification_required', true);
+        }
+
+        return redirect()->back()->with('success', 'Profile updated successfully.');
+    }
+    /**
+     * Update the user's additional information.
+     */
+    public function updateAdditional(Request $request)
+    {
+        $user = Auth::user();
         $role = strtolower(trim($user->role));
+
+        // Define validation rules based on role
+        $rules = [
+            'address'   => 'required|string|max:500',
+            'birthdate' => 'required|date',
+        ];
+
         if ($role === 'parent') {
             $rules = array_merge($rules, [
                 'parent_name_father'       => 'nullable|string|max:255',
                 'parent_name_mother'       => 'nullable|string|max:255',
                 'guardian_name'            => 'nullable|string|max:255',
                 'guardian_relationship'    => 'nullable|string|max:255',
-                'emergency_contact_number' => 'nullable|string|regex:/^\d{11}$/',
-                'personal_contact_number'  => 'nullable|string|regex:/^\d{11}$/',
             ]);
-        } elseif (in_array($role, ['student', 'teacher', 'nurse', 'doctor', 'staff'])) {
+        }
+
+        if (in_array($role, ['student', 'teacher', 'nurse', 'doctor', 'staff'])) {
             $rules = array_merge($rules, [
                 'emergency_contact_number' => 'nullable|string|regex:/^\d{11}$/',
                 'personal_contact_number'  => 'nullable|string|regex:/^\d{11}$/',
             ]);
         }
-    
+
         // Custom validation messages
         $messages = [
             'emergency_contact_number.regex' => 'The emergency contact number must be exactly 11 digits.',
             'personal_contact_number.regex'  => 'The personal contact number must be exactly 11 digits.',
-            'profile_image.image'            => 'The profile picture must be an image.',
-            'profile_image.mimes'            => 'The profile picture must be a file of type: jpeg, png, jpg, gif.',
-            'profile_image.max'              => 'The profile picture may not be greater than 2MB.',
         ];
-    
+
         // Validate the request
-        $request->validate($rules, $messages);
-    
-        // Update common user info
-        $user->first_name = $request->first_name;
-        $user->last_name  = $request->last_name;
-        $user->email      = $request->email;
-    
-        // Update password if provided
-        if ($request->password) {
-            $user->password = Hash::make($request->password);
-        }
-    
-        // Update additional common fields
-        $user->address   = $request->address;
-        $user->birthdate = $request->birthdate;
-    
-        // Handle profile image upload
-        if ($request->hasFile('profile_image')) {
-            // Delete old image if exists
-            if ($user->profile_image && Storage::disk('public')->exists($user->profile_image)) {
-                Storage::disk('public')->delete($user->profile_image);
-            }
-            // Store new image
-            $path = $request->file('profile_image')->store('profile_images', 'public');
-            $user->profile_image = $path;
-        }
-    
-        // Save user data
-        $user->save();
-    
+        $validatedData = $request->validate($rules, $messages);
+
         // Update Information model
         $information = Information::firstOrCreate(
             ['id_number' => $user->id_number],
             []
         );
-    
-        $information->birthdate = $user->birthdate;
-        $information->address = $user->address;
-    
-        if ($role === 'parent') {
-            $information->parent_name_father = $request->parent_name_father;
-            $information->parent_name_mother = $request->parent_name_mother;
-            $information->guardian_name = $request->guardian_name;
-            $information->guardian_relationship = $request->guardian_relationship;
-        }
-    
-        if (in_array($role, ['student', 'teacher', 'nurse', 'doctor', 'staff'])) {
-            $information->emergency_contact_number = $request->emergency_contact_number;
-            $information->personal_contact_number  = $request->personal_contact_number;
-        }
-    
-        $information->save();
-    
-        // Check if email was changed to require verification
-        if ($user->wasChanged('email')) {
-            $user->email_verified_at = null; // Invalidate email verification
-            $user->save();
-    
-            // Send verification email manually
-            $user->sendEmailVerificationNotification();
-    
-            // Redirect back with email verification required
-            return redirect()->back()->with('email_verification_required', true);
-        }
-    
-        return redirect()->back()->with('success', 'Profile updated successfully.');
-    }
-    
-    /**
-     * Update role-specific fields.
-     */
-    protected function updateRoleSpecificFields($user, $request)
-    {
-        switch (strtolower($user->role)) {
-            case 'parent':
-                $parent = ParentModel::where('id_number', $user->id_number)->first();
-                if ($parent) {
-                    $parent->parent_name_father     = $request->parent_name_father;
-                    $parent->parent_name_mother     = $request->parent_name_mother;
-                    $parent->guardian_name          = $request->guardian_name;
-                    $parent->guardian_relationship  = $request->guardian_relationship;
-                    $parent->emergency_contact_number = $request->emergency_contact_number;
-                    $parent->personal_contact_number  = $request->personal_contact_number;
-                    $parent->save();
-                } else {
-                    // Create if not exists
-                    ParentModel::create([
-                        'user_id'                   => $user->id,
-                        'id_number'                 => $user->id_number,
-                        'parent_name_father'        => $request->parent_name_father,
-                        'parent_name_mother'        => $request->parent_name_mother,
-                        'guardian_name'             => $request->guardian_name,
-                        'guardian_relationship'     => $request->guardian_relationship,
-                        'emergency_contact_number'  => $request->emergency_contact_number,
-                        'personal_contact_number'   => $request->personal_contact_number,
-                        'address'                   => $user->address,
-                        'birthdate'                 => $user->birthdate,
-                        'profile_image'             => $user->profile_image,
-                    ]);
-                }
-                break;
-            case 'student':
-                $student = Student::where('id_number', $user->id_number)->first();
-                if ($student) {
-                    $student->emergency_contact_number = $request->emergency_contact_number;
-                    $student->personal_contact_number  = $request->personal_contact_number;
-                    $student->save();
-                } else {
-                    Student::create([
-                        'user_id'                   => $user->id,
-                        'id_number'                 => $user->id_number,
-                        'emergency_contact_number'  => $request->emergency_contact_number,
-                        'personal_contact_number'   => $request->personal_contact_number,
-                        'address'                   => $user->address,
-                        'birthdate'                 => $user->birthdate,
-                        'profile_image'             => $user->profile_image,
-                    ]);
-                }
-                break;
-            case 'teacher':
-                $teacher = Teacher::where('id_number', $user->id_number)->first();
-                if ($teacher) {
-                    $teacher->emergency_contact_number = $request->emergency_contact_number;
-                    $teacher->personal_contact_number  = $request->personal_contact_number;
-                    $teacher->save();
-                } else {
-                    Teacher::create([
-                        'user_id'                   => $user->id,
-                        'id_number'                 => $user->id_number,
-                        'emergency_contact_number'  => $request->emergency_contact_number,
-                        'personal_contact_number'   => $request->personal_contact_number,
-                        'address'                   => $user->address,
-                        'birthdate'                 => $user->birthdate,
-                        'profile_image'             => $user->profile_image,
-                    ]);
-                }
-                break;
-            case 'nurse':
-                $nurse = Nurse::where('id_number', $user->id_number)->first();
-                if ($nurse) {
-                    $nurse->emergency_contact_number = $request->emergency_contact_number;
-                    $nurse->personal_contact_number  = $request->personal_contact_number;
-                    $nurse->save();
-                } else {
-                    Nurse::create([
-                        'user_id'                   => $user->id,
-                        'id_number'                 => $user->id_number,
-                        'emergency_contact_number'  => $request->emergency_contact_number,
-                        'personal_contact_number'   => $request->personal_contact_number,
-                        'address'                   => $user->address,
-                        'birthdate'                 => $user->birthdate,
-                        'profile_image'             => $user->profile_image,
-                    ]);
-                }
-                break;
-            case 'doctor':
-                $doctor = Doctor::where('id_number', $user->id_number)->first();
-                if ($doctor) {
-                    $doctor->emergency_contact_number = $request->emergency_contact_number;
-                    $doctor->personal_contact_number  = $request->personal_contact_number;
-                    $doctor->save();
-                } else {
-                    Doctor::create([
-                        'user_id'                   => $user->id,
-                        'id_number'                 => $user->id_number,
-                        'emergency_contact_number'  => $request->emergency_contact_number,
-                        'personal_contact_number'   => $request->personal_contact_number,
-                        'address'                   => $user->address,
-                        'birthdate'                 => $user->birthdate,
-                        'profile_image'             => $user->profile_image,
-                    ]);
-                }
-                break;
-            case 'staff':
-                $staff = Staff::where('id_number', $user->id_number)->first();
-                if ($staff) {
-                    $staff->emergency_contact_number = $request->emergency_contact_number;
-                    $staff->personal_contact_number  = $request->personal_contact_number;
-                    $staff->save();
-                } else {
-                    Staff::create([
-                        'user_id'                   => $user->id,
-                        'id_number'                 => $user->id_number,
-                        'emergency_contact_number'  => $request->emergency_contact_number,
-                        'personal_contact_number'   => $request->personal_contact_number,
-                        'address'                   => $user->address,
-                        'birthdate'                 => $user->birthdate,
-                        'profile_image'             => $user->profile_image,
-                    ]);
-                }
-                break;
-            // Add more cases if necessary
-            default:
-                // No role-specific fields to update
-                break;
-        }
-    }
 
-    /**
-     * Update email in the role-specific table.
-     */
-    protected function updateRoleSpecificEmail($user, $email)
-    {
-        switch (strtolower($user->role)) {
-            case 'doctor':
-                Doctor::where('id_number', $user->id_number)->update(['email' => $email]);
-                break;
-            case 'nurse':
-                Nurse::where('id_number', $user->id_number)->update(['email' => $email]);
-                break;
-            case 'teacher':
-                Teacher::where('id_number', $user->id_number)->update(['email' => $email]);
-                break;
-            case 'staff':
-                Staff::where('id_number', $user->id_number)->update(['email' => $email]);
-                break;
-            case 'parent':
-                ParentModel::where('id_number', $user->id_number)->update(['email' => $email]);
-                break;
-            case 'student':
-                Student::where('id_number', $user->id_number)->update(['email' => $email]);
-                break;
-            default:
-                // No role-specific update required
-                break;
+        // Update common fields
+        $information->address = $validatedData['address'];
+        $information->birthdate = $validatedData['birthdate'];
+
+        // Update role-specific fields
+        if ($role === 'parent') {
+            $information->parent_name_father = $validatedData['parent_name_father'] ?? $information->parent_name_father;
+            $information->parent_name_mother = $validatedData['parent_name_mother'] ?? $information->parent_name_mother;
+            $information->guardian_name = $validatedData['guardian_name'] ?? $information->guardian_name;
+            $information->guardian_relationship = $validatedData['guardian_relationship'] ?? $information->guardian_relationship;
         }
+
+        if (in_array($role, ['student', 'teacher', 'nurse', 'doctor', 'staff'])) {
+            $information->emergency_contact_number = $validatedData['emergency_contact_number'] ?? $information->emergency_contact_number;
+            $information->personal_contact_number  = $validatedData['personal_contact_number'] ?? $information->personal_contact_number;
+        }
+
+        $information->save();
+
+        return redirect()->back()->with('success', 'Additional information updated successfully.');
     }
 
     /**

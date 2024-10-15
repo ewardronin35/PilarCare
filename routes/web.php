@@ -38,6 +38,14 @@ use App\Http\Controllers\DoctorDashboardController;
 use App\Http\Controllers\NurseDashboardController;
 use App\Http\Controllers\MedicineIntakeController;
 use App\Http\Controllers\ParentDashboardController;
+use App\Http\Middleware\CheckRoleMiddleware;
+use App\Http\Middleware\TestMiddleware;
+use App\Http\Middleware\BasicTestMiddleware;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request; // Make sure you have this line at the top of your file
+use App\Http\Controllers\Auth\CustomLogoutController;
+
+use App\Events\LowStockEvent;
 
 
 
@@ -50,27 +58,31 @@ Route::get('/', function () {
 // Authentication Routes
 Route::get('login', [LoginController::class, 'create'])->name('login');
 Route::post('login', [LoginController::class, 'login'])->name('login.perform'); // Changed the name to avoid conflict
-Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
 // Registration and Email Verification Routes
 Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
 Route::post('register', [RegisteredUserController::class, 'store'])->name('register.store');
+Route::middleware('auth')->group(function () {
+    // Email Verification Notice
+    Route::get('email/verify', [EmailVerificationPromptController::class, '__invoke'])
+        ->name('verification.notice');
 
-Route::get('email/verify', [EmailVerificationPromptController::class, '__invoke'])
-    ->middleware('auth')
-    ->name('verification.notice');
+    // Resend Verification Email
+    Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
+});
 
 Route::get('email/verify/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
-    ->middleware(['auth', 'signed'])
-    ->name('verification.verify');
+->middleware(['signed', 'throttle:6,1']) // Note: No 'auth' middleware
+->name('verification.verify');
 
-Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
-    ->middleware(['auth', 'throttle:6,1'])
-    ->name('verification.send');
-
-Route::get('email-verified', function () {
-    return view('auth.email-verified');
+Route::get('email/verified', function () {
+    return view('auth.email-verified'); // This view displays a success message
 })->name('verification.verified');
+
+
+    Route::post('/custom-logout', [CustomLogoutController::class, 'logout'])->name('custom.logout');
 
 // Redirect to specific dashboard based on user role
 Route::middleware(['auth', 'verified'])->get('/dashboard', function () {
@@ -94,21 +106,21 @@ Route::middleware(['auth', 'verified'])->get('/dashboard', function () {
             return redirect('/');
     }
 })->name('dashboard');
-Route::get('/logout', function (Request $request) {
-    Auth::logout();
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
+Route::middleware(['auth'])->group(function () {
+    Route::post('/logout', function (Request $request) {
+        Auth::logout(); // Logs out the user
+        $request->session()->invalidate(); // Invalidate the session
+        $request->session()->regenerateToken(); // Regenerate CSRF token
 
-    if ($request->ajax()) {
         return response()->json(['success' => true, 'message' => 'Logged out successfully.']);
-    }
+    })->name('logout');
+});
 
-    return redirect('/login')->with('status', 'Logged out successfully.');
-})->name('logout');
+
 
 // Redirect to specific dashboard based on user role
 // Group parent routes
-Route::middleware(['auth', 'verified'])->prefix('parent')->name('parent.')->group(function () {
+Route::middleware(['auth', 'verified', CheckRoleMiddleware::class . ':parent'])->prefix('parent')->name('parent.')->group(function () {
     Route::get('/dashboard', [ParentDashboardController::class, 'index'])->name('dashboard');
 
 
@@ -130,26 +142,29 @@ Route::middleware(['auth', 'verified'])->prefix('parent')->name('parent.')->grou
 
 // Group student routes
 
-    Route::middleware(['auth', 'verified'])->prefix('student')->name('student.')->group(function () {
-        Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
+Route::middleware(['auth', 'verified', CheckRoleMiddleware::class . ':student'])->prefix('student')->name('student.')->group(function () {
+    Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
         Route::get('/submit-health-exam', [HealthExaminationController::class, 'create'])->name('submit-health-exam');
         Route::get('/medical-record/index', [MedicalRecordController::class, 'index'])->name('medical-record');
         Route::get('/dental-record/index', [DentalRecordController::class, 'index'])->name('dental-record');
         Route::post('/health-examination/store', [HealthExaminationController::class, 'store'])->name('health-examination.store');
+        Route::put('/health-examination/update', [HealthExaminationController::class, 'update'])->name('health-examination.update');
+        Route::get('/health-examination', [HealthExaminationController::class, 'index'])->name('health-examination.index');
+
         Route::get('/health-examination/status', [HealthExaminationController::class, 'checkApprovalStatus'])->name('health-examination.status');
+        Route::get('/health-examination/{id}/details', [HealthExaminationController::class, 'getDetails'])->name('health-examination.details');
+        
         Route::get('/upload-pictures', [HealthExaminationController::class, 'create'])->name('upload-pictures');
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
         Route::post('/notifications', [NotificationController::class, 'store'])->name('notifications.store');
         Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
         Route::get('/dental-record/pdf/{id_number}', [App\Http\Controllers\DentalRecordController::class, 'generatePdf'])->name('dentalRecord.pdf');
-        Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
         Route::put('/profile-image', [SettingsController::class, 'updateImage'])->name('profile.update.image');
         Route::delete('/settings/delete', [SettingsController::class, 'destroy'])->name('settings.delete');
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::post('profile/store', [StudentDashboardController::class, 'storeProfile'])->name('profile.store');
     Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
     Route::put('/settings/update', [SettingsController::class, 'update'])->name('settings.update');
-    Route::put('/settings/update-image', [SettingsController::class, 'updateImage'])->name('settings.updateImage');
     Route::delete('/settings/delete', [SettingsController::class, 'delete'])->name('settings.delete');
 
     Route::put('settings/updateAdditional', [SettingsController::class, 'updateAdditional'])->name('settings.updateAdditional');
@@ -202,7 +217,7 @@ Route::middleware(['auth', 'verified'])->prefix('parent')->name('parent.')->grou
 });
 
 // Group teacher routes
-Route::middleware(['auth', 'verified'])->prefix('teacher')->name('teacher.')->group(function () {
+Route::middleware(['auth', 'verified', CheckRoleMiddleware::class . ':teacher'])->prefix('teacher')->name('teacher.')->group(function () {
     Route::get('/dashboard', [TeacherDashboardController::class, 'index'])->name('dashboard');
     Route::get('/submit-health-exam', [HealthExaminationController::class, 'create'])->name('submit-health-exam');
     Route::get('/medical-record/index', [MedicalRecordController::class, 'index'])->name('medical-record');
@@ -214,10 +229,8 @@ Route::middleware(['auth', 'verified'])->prefix('teacher')->name('teacher.')->gr
     Route::post('/notifications', [NotificationController::class, 'store'])->name('notifications.store');
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
     Route::get('/dental-record/pdf/{id_number}', [App\Http\Controllers\DentalRecordController::class, 'generatePdf'])->name('dentalRecord.pdf');
-    Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
     Route::put('/profile-image', [SettingsController::class, 'updateImage'])->name('profile.update.image');
     Route::delete('/settings/delete', [SettingsController::class, 'destroy'])->name('settings.delete');
-    Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
 Route::post('profile/store', [StudentDashboardController::class, 'storeProfile'])->name('profile.store');
 Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
 Route::put('/settings/update', [SettingsController::class, 'update'])->name('settings.update');
@@ -272,7 +285,7 @@ Route::delete('/appointment/delete/{id}', [AppointmentController::class, 'delete
 });
 
 // Group staff routes
-Route::middleware(['auth', 'verified'])->prefix('staff')->name('staff.')->group(function () {
+Route::middleware(['auth', 'verified', CheckRoleMiddleware::class . ':staff'])->prefix('staff')->name('staff.')->group(function () {
     Route::get('/dashboard', [StaffDashboardController::class, 'index'])->name('dashboard');
     Route::get('/submit-health-exam', [HealthExaminationController::class, 'create'])->name('submit-health-exam');
     Route::get('/medical-record/index', [MedicalRecordController::class, 'index'])->name('medical-record');
@@ -284,7 +297,6 @@ Route::middleware(['auth', 'verified'])->prefix('staff')->name('staff.')->group(
     Route::post('/notifications', [NotificationController::class, 'store'])->name('notifications.store');
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
     Route::get('/dental-record/pdf/{id_number}', [App\Http\Controllers\DentalRecordController::class, 'generatePdf'])->name('dentalRecord.pdf');
-    Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
     Route::put('/profile-image', [SettingsController::class, 'updateImage'])->name('profile.update.image');
     Route::delete('/settings/delete', [SettingsController::class, 'destroy'])->name('settings.delete');
     Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
@@ -342,7 +354,8 @@ Route::delete('/appointment/delete/{id}', [AppointmentController::class, 'delete
 });
 
 // Group admin routes (only accessible to admins)
-Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'verified', CheckRoleMiddleware::class . ':admin'])->prefix('admin')->name('admin.')->group(function () {
+
     // Dashboard Route
     Route::get('/medical-records/history', [MedicalRecordController::class, 'history'])->name('medical-records.history');
     Route::post('physical-examination/store', [MedicalRecordController::class, 'storePhysicalExamination'])->name('physical-examination.store');
@@ -352,6 +365,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::get('/fetch-profiles', [ProfileController::class, 'fetchProfiles'])->name('profiles.fetch');
     Route::get('/profiles', [ProfileController::class, 'index'])->name('profiles.index');
     Route::post('/profiles/store', [UserController::class, 'store'])->name('profiles.store');
+    Route::get('/complaint/statistics', [ComplaintController::class, 'getStatistics'])->name('complaint.statistics');
 
 
 
@@ -445,7 +459,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::post('/dental-record/{id}/reject', [DentalRecordController::class, 'rejectTooth'])->name('dental-record.reject');
 
     Route::get('/dental-record', [DentalRecordController::class, 'index'])->name('dental-record.index');
-    Route::get('/dental-records', [DentalRecordController::class, 'viewAllRecords'])->name('dental-records');
+    Route::get('/dental-records', [DentalRecordController::class, 'fetchDentalRecords'])->name('dental-records');
     Route::get('/dental-record/create', [DentalRecordController::class, 'create'])->name('dental-record.create');
     Route::post('/dental-record/store', [DentalRecordController::class, 'store'])->name('dental-record.store');
     Route::post('/dental-record/store-tooth', [DentalRecordController::class, 'storeAdminTooth'])->name('dental-record.store-tooth');
@@ -477,6 +491,8 @@ Route::get('/search-medical-record', [MedicalRecordController::class, 'search'])
     Route::get('/medical-records', [MedicalRecordController::class, 'index'])->name('medical-record.index');
     Route::get('/pending-examinations', [HealthExaminationController::class, 'medicalRecord'])->name('medical-records.pending');
     Route::post('/medical-record/store', [HealthExaminationController::class, 'store'])->name('medical-record.store');
+    Route::get('/health-examinations', [HealthExaminationController::class, 'Admin'])->name('health-examinations');
+    Route::post('/reset-school-year', [HealthExaminationController::class, 'resetSchoolYear'])->name('resetSchoolYear');
     Route::post('/health-examination/{id}/approve', [HealthExaminationController::class, 'approve'])->name('health-examination.approve');
     Route::get('/health-examinations/pending', [HealthExaminationController::class, 'viewAllRecords'])->name('health-examinations.pending.view');
     Route::get('/health-examinations/pending-data', [HealthExaminationController::class, 'getPendingExaminations'])->name('health-examinations.pending.data');
@@ -519,10 +535,19 @@ Route::get('/search-medical-record', [MedicalRecordController::class, 'search'])
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 });
 
-Route::middleware(['auth', 'verified'])->prefix('doctor')->name('doctor.')->group(function () {
+Route::middleware(['auth', 'verified', CheckRoleMiddleware::class . ':doctor'])->prefix('doctor')->name('doctor.')->group(function () {
     // Dashboard Route
     Route::get('/dashboard', [DoctorDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/appointments', [DoctorDashboardController::class, 'appointments'])->name('appointments');
 
+// Complaints
+Route::get('/complaints', [DoctorDashboardController::class, 'complaints'])->name('complaints');
+
+// Medical Records
+Route::get('/medical-records', [DoctorDashboardController::class, 'medicalRecords'])->name('medicalRecords');
+
+// Dental Records
+Route::get('/dental-records', [DoctorDashboardController::class, 'dentalRecords'])->name('dentalRecords');
 
     Route::get('/medical-records/history', [MedicalRecordController::class, 'history'])->name('medical-records.history');
 
@@ -578,12 +603,15 @@ Route::get('/search-medical-record', [MedicalRecordController::class, 'search'])
     // Appointment Routes
     Route::get('/appointment', [AppointmentController::class, 'index'])->name('appointment');
     Route::post('/appointment/add', [AppointmentController::class, 'add'])->name('appointment.add');
-    Route::put('/appointment/update/{id}', [AppointmentController::class, 'update'])->name('appointment.update');
     Route::delete('/appointment/delete/{id}', [AppointmentController::class, 'delete'])->name('appointment.delete');
-    Route::get('/appointment/fetch-patient-name/{id}', [AppointmentController::class, 'fetchPatientName'])->name('appointment.fetch-patient-name'); // Added this route
-    Route::get('/appointments-by-month', [AppointmentController::class, 'getAppointmentsByMonth'])->name('appointments.by-month');
+    Route::get('/appointment/fetch-patient-name/{id}', [AppointmentController::class, 'fetchPatientName'])->name('appointment.fetch-patient-name');
+    Route::put('/appointment/update/{id}', [AppointmentController::class, 'update'])->name('appointment.update');
+    Route::post('/appointment/confirm/{id}', [AppointmentController::class, 'confirm'])->name('appointment.confirm');
+    Route::get('/appointments-by-month-doctor', [AppointmentController::class, 'getAppointmentsByMonthDoctor'])->name('appointments.by-month-doctor');
     Route::get('/appointments-by-date', [AppointmentController::class, 'getAppointmentsByDate'])->name('appointments.by-date');
+    Route::get('/appointments/statisticsReport', [AppointmentController::class, 'generateStatisticsReport'])->name('appointments.statisticsReport');
 
+    Route::get('/inventory/available-medicines', [InventoryController::class, 'getAvailableMedicines'])->name('inventory.available-medicines');
 
 
     // Notification Routes
@@ -592,7 +620,7 @@ Route::get('/search-medical-record', [MedicalRecordController::class, 'search'])
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 });
 
-Route::middleware(['auth', 'verified'])->prefix('nurse')->name('nurse.')->group(function () {
+Route::middleware(['auth', 'verified', CheckRoleMiddleware::class . ':nurse'])->prefix('nurse')->name('nurse.')->group(function () {
     // Dashboard Route
     Route::get('/dashboard', [NurseDashboardController::class, 'index'])->name('dashboard');
 
@@ -769,6 +797,8 @@ Route::prefix('notifications')->name('notifications.')->middleware(['auth'])->gr
     Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
     Route::post('/{id}/mark-as-opened', [NotificationController::class, 'markAsOpened'])->name('markAsOpened');
     Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('markAllAsRead');
+    Route::get('/count', [NotificationController::class, 'count'])->name('notifications.count');
+
 });
 
 // Grouped routes for profile with middleware for auth
@@ -780,4 +810,22 @@ Route::middleware('auth')->group(function () {
 });
 Route::get('/refresh-csrf', function () {
     return response()->json(['csrf_token' => csrf_token()]);
+});
+Route::middleware(TestMiddleware::class)->get('/test', function () {
+    return response()->json(['message' => 'Middleware Test Successful!'], 200);
+});
+
+Route::middleware(BasicTestMiddleware::class)->get('/test-basic', function () {
+    Log::info('Test route reached!');
+    return 'Route reached successfully!';
+});
+
+Route::get('/test-broadcast', function () {
+    event(new LowStockEvent([
+        'title' => 'Test Alert',
+        'message' => 'This is a test notification.',
+        'expiry_date' => '2024-12-31',
+    ]));
+
+    return 'Test broadcast sent!';
 });

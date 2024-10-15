@@ -1,5 +1,6 @@
 <x-app-layout>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <style>
         body {
@@ -769,8 +770,8 @@ h1 {
         </div>
         <div class="form-group" style="flex: 1; margin-left: 10px;">
             <label for="dosage" style="font-weight: 500; margin-bottom: 5px;">Dosage</label>
-            <input type="text" id="dosage" name="dosage" value="{{ old('dosage') }}" required style="padding: 10px; border-radius: 8px; border: 1px solid #ddd; width: 50%; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-        </div>
+            <input type="number" id="dosage" name="dosage" value="{{ old('dosage') }}" required min="0" step="0.01" style="padding: 10px; border-radius: 8px; border: 1px solid #ddd; width: 100%; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+            </div>
     </div>
 
     <div class="form-group-inline" style="display: flex; justify-content: space-between; margin-bottom: 20px;">
@@ -813,48 +814,53 @@ h1 {
         </tr>
     </thead>
     <tbody>
-        @if($healthExaminationPictures->isEmpty())
+    @if($healthExaminationPictures->isEmpty())
+        <tr>
+            <td colspan="4">No health examination pictures available.</td>
+        </tr>
+    @else
+        @foreach($healthExaminationPictures as $examination)
             <tr>
-                <td colspan="4">No health examination pictures available.</td>
-            </tr>
-        @else
-            @foreach($healthExaminationPictures as $examination)
-                <tr>
-                    <td>{{ $examination->school_year ?? 'Unknown' }}</td> <!-- Display School Year -->
-                    <td>
-                        @if($examination->health_examination_picture)
-                            <div class="image-container">
-                                <img src="{{ asset('storage/' . $examination->health_examination_picture) }}" alt="Health Examination Picture">
-                            </div>
-                        @else
-                            <span>No Health Exam Picture</span>
-                        @endif
-                    </td>
+                <td>{{ $examination->school_year ?? 'Unknown' }}</td> <!-- Display School Year -->
+                <td>
+                    @if(is_array($examination->health_examination_picture) && !empty($examination->health_examination_picture))
+                        <div class="image-previews">
+                            @foreach($examination->health_examination_picture as $picture)
+                                <div class="image-container">
+                                    <img src="{{ asset('storage/' . $picture) }}" alt="Health Examination Picture">
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <span>No Health Exam Picture</span>
+                    @endif
+                </td>
                     <td>
                         <div class="image-previews">
                             @if($examination->xray_picture)
-                                @foreach(json_decode($examination->xray_picture) as $xray)
-                                    <div class="image-container">
-                                        <img src="{{ asset('storage/' . $xray) }}" alt="X-ray Picture">
-                                    </div>
-                                @endforeach
+                            @foreach($examination->xray_picture as $xray)
+    <div class="image-container">
+        <img src="{{ asset('storage/' . $xray) }}" alt="X-ray Picture">
+    </div>
+@endforeach
+
                             @else
                                 <span>No X-ray Pictures</span>
                             @endif
                         </div>
                     </td>
                     <td>
-                        <div class="image-previews">
-                            @if($examination->lab_result_picture)
-                                @foreach(json_decode($examination->lab_result_picture) as $lab)
-                                    <div class="image-container">
-                                        <img src="{{ asset('storage/' . $lab) }}" alt="Lab Result Picture">
-                                    </div>
-                                @endforeach
-                            @else
-                                <span>No Lab Result Pictures</span>
-                            @endif
+                    <div class="image-previews">
+                @if($examination->lab_result_picture)
+                    @foreach($examination->lab_result_picture as $lab)
+                        <div class="image-container">
+                            <img src="{{ asset('storage/' . $lab) }}" alt="Lab Result Picture">
                         </div>
+                    @endforeach
+                @else
+                    <span>No Lab Result Pictures</span>
+                @endif
+            </div>
                     </td>
                 </tr>
             @endforeach
@@ -1466,8 +1472,15 @@ function submitMedicineIntakeForm(event) {
     let form = event.target;
     let formData = new FormData(form);
 
+    // Retrieve CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
     fetch(form.action, {
         method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json' // Ensure the server returns JSON
+        },
         body: formData,
     })
     .then(response => {
@@ -1489,35 +1502,41 @@ function submitMedicineIntakeForm(event) {
     })
     .then(data => {
         // If it's a string, it's likely an error HTML page or unexpected response
+        if (typeof data === 'string') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data,
+            });
+            return;
+        }
 
         if (data.success) {
-        let newRow = `
-            <tr>
-                <td>${data.medicineIntake.medicine_name}</td>
-                <td>${data.medicineIntake.intake_time}</td>
-                <td>${data.medicineIntake.dosage}</td>
-                <td>${data.medicineIntake.notes ?? 'No notes'}</td>
-            </tr>
-        `;
-        document.getElementById('medicine-intake-history-body').innerHTML += newRow;
+            let newRow = `
+                <tr>
+                    <td>${data.medicineIntake.medicine_name}</td>
+                    <td>${data.medicineIntake.intake_time}</td>
+                    <td>${data.medicineIntake.dosage}</td>
+                    <td>${data.medicineIntake.notes ?? 'No notes'}</td>
+                </tr>
+            `;
+            document.getElementById('medicine-intake-history-body').innerHTML += newRow;
 
-            if (data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: 'Medicine intake recorded successfully!',
-                    timer: 3000,
-                    showConfirmButton: false,
-                }).then(() => {
-                    location.reload();  // Optionally reload the page or update the UI
-                });
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: data.message || 'Failed to record medicine intake.',
-                });
-            }
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Medicine intake recorded successfully!',
+                timer: 3000,
+                showConfirmButton: false,
+            }).then(() => {
+                location.reload();  // Optionally reload the page or update the UI
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message || 'Failed to record medicine intake.',
+            });
         }
     })
     .catch(error => {

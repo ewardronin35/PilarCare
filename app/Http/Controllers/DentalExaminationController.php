@@ -161,12 +161,16 @@ class DentalExaminationController extends Controller
             };
 
             // Map and store tooth selections as JSON (handled by model casting)
-            $dentalExamination->sealant_tooth = $mapTeeth($request->sealant_tooth);
-            $dentalExamination->filling_tooth = $mapTeeth($request->filling_tooth);
-            $dentalExamination->extraction_tooth = $mapTeeth($request->extraction_tooth);
-            $dentalExamination->endodontic_tooth = $mapTeeth($request->endodontic_tooth);
-            $dentalExamination->radiograph_tooth = $mapTeeth($request->radiograph_tooth);
-            $dentalExamination->prosthesis_tooth = $mapTeeth($request->prosthesis_tooth);
+      // Remove the mapTeeth function since we won't use it anymore
+
+// Map and store tooth selections as arrays (handled by model casting)
+$dentalExamination->sealant_tooth = $request->sealant_tooth;
+$dentalExamination->filling_tooth = $request->filling_tooth;
+$dentalExamination->extraction_tooth = $request->extraction_tooth;
+$dentalExamination->endodontic_tooth = $request->endodontic_tooth;
+$dentalExamination->radiograph_tooth = $request->radiograph_tooth;
+$dentalExamination->prosthesis_tooth = $request->prosthesis_tooth;
+
 
             $dentalExamination->medical_clearance = $request->medical_clearance ?? false;
             $dentalExamination->other_recommendation = $request->other_recommendation;
