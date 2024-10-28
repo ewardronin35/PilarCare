@@ -231,4 +231,23 @@ $dentalExamination->prosthesis_tooth = $request->prosthesis_tooth;
             return redirect()->back()->with('error', 'An unexpected error occurred while saving the dental examination.');
         }
     }
+    public function downloadDentalExamPdf($id)
+    {
+        // Fetch the Dental Examination by ID
+        $dentalExamination = DentalExamination::find($id);
+    
+        // Check if the examination exists
+        if (!$dentalExamination) {
+            return redirect()->back()->with('error', 'Dental Examination not found.');
+        }
+    
+        // Generate the PDF using Snappy PDF with the Blade template
+        $pdf = SnappyPdf::loadView('dental_examination_report', [
+            'dentalExamination' => $dentalExamination,
+        ]);
+    
+        // Return the PDF download with a custom file name
+        return $pdf->download('dental_examination_' . $dentalExamination->id . '.pdf');
+    }
+    
 }
