@@ -128,7 +128,6 @@
                 <th>Pain Assessment</th>
                 <th>Medicine Given</th>
                 <th>Confine Status</th>
-                <th>Status</th>
             </tr>
         </thead>
         <tbody>
@@ -140,7 +139,6 @@
                     <td>{{ $complaint->pain_assessment }}</td>
                     <td>{{ $complaint->medicine_given }}</td>
                     <td>{{ ucfirst(str_replace('_', ' ', $complaint->confine_status)) }}</td>
-                    <td>{{ ucfirst($complaint->status) }}</td>
                 </tr>
             @endforeach
         </tbody>

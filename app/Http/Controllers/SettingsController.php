@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use App\Models\User;
-use App\Models\ParentModel; // Adjust based on your actual model names
+use App\Models\Parents; // Adjust based on your actual model names
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\Information;
@@ -50,7 +50,7 @@ class SettingsController extends Controller
         $roleData = null;
         switch ($role) {
             case 'parent':
-                $roleData = ParentModel::where('id_number', $user->id_number)->first();
+                $roleData = Parents::where('id_number', $user->id_number)->first();
                 break;
             case 'student':
                 $roleData = Student::where('id_number', $user->id_number)->first();

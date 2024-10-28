@@ -13,23 +13,29 @@ class Parents extends Model
         'id_number',
         'first_name',
         'last_name',
-        'Student_ID',
-        'approved' // Adjust this field name as needed
+        'student_id',
+        'approved',
     ];
 
-    public function dentalRecords()
-    {
-        return $this->hasMany(DentalRecord::class, 'id_number', 'id_number');
-    }
+    protected $appends = ['guardian_relationship'];
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'id_number', 'id_number');
+        return $this->belongsTo(User::class, 'id_number', 'id_number'); // Parent User
     }
-    public function students()
-{
-    return $this->hasMany(Student::class, 'id_number', 'id_number');
-}
 
-}
+    public function student()
+    {
+        return $this->belongsTo(User::class, 'student_id', 'id_number'); // Student User
+    }
 
+    public function information()
+    {
+        return $this->hasOne(Information::class, 'id_number', 'student_id');
+    }
+    
+    public function getGuardianRelationshipAttribute()
+    {
+        return $this->information ? $this->information->guardian_relationship : 'Not Specified';
+    }
+}

@@ -36,7 +36,9 @@ class DentalExamination extends Model
         'radiograph_tooth', 
         'prosthesis_tooth', 
         'medical_clearance', 
-        'other_recommendation'
+        'other_recommendation',
+        'is_downloaded'
+
     ];
     
     protected $casts = [
@@ -72,7 +74,7 @@ class DentalExamination extends Model
     }
     public function DentalRecord()
 {
-    return $this->belongsTo(DentalRecord::class, 'dental_record_id', 'id');
-    }
+    return $this->belongsTo(DentalRecord::class, 'dental_record_id', 'dental_record_id');
+}
 }
     

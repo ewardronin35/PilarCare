@@ -1,5 +1,7 @@
-<x-app-layout>
+<x-app-layout :pageTitle="'Medical Record'">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.dataTables.min.css">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <style>
@@ -770,7 +772,7 @@ h1 {
         </div>
         <div class="form-group" style="flex: 1; margin-left: 10px;">
             <label for="dosage" style="font-weight: 500; margin-bottom: 5px;">Dosage</label>
-            <input type="number" id="dosage" name="dosage" value="{{ old('dosage') }}" required min="0" step="0.01" style="padding: 10px; border-radius: 8px; border: 1px solid #ddd; width: 100%; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+            <input type="number" id="dosage" name="dosage" value="{{ old('dosage') }}" required min="1" max="10" step="1" style="padding: 10px; border-radius: 8px; border: 1px solid #ddd; width: 100%; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
             </div>
     </div>
 
@@ -874,8 +876,8 @@ h1 {
         <h2>Medicine Intake History</h2>
     </div>
     @if(isset($medicalRecord) && $medicalRecord->medicineIntakes && $medicalRecord->medicineIntakes->isNotEmpty())
-    <table class="history-table">
-        <thead>
+    <table class="history-table" id="medicine-intake-history-table">
+    <thead>
             <tr>
                 <th>Medicine Name</th>
                 <th>Dosage</th>
@@ -911,7 +913,7 @@ h1 {
 
 <!-- Health Documents Table -->
 @if(isset($medicalRecords) && $medicalRecords->where('is_approved', 1)->isNotEmpty())
-    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+    <table class="history-table" id="health-documents-table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
         <thead>
             <tr>
                 <th>Document</th>
@@ -926,16 +928,19 @@ h1 {
                 <tr>
                     <!-- Health Documents -->
                     <td>
-                        @if($record->health_documents)
-                            @foreach(json_decode($record->health_documents) as $document)
-                                <a href="{{ asset('storage/' . $document) }}" target="_blank" style="text-decoration: none; color: #007bff;">
-                                    <i class="fas fa-file-alt"></i> View Document
-                                </a>
-                                <br>
-                            @endforeach
-                        @else
-                            No documents
-                        @endif
+                    @if($record->health_documents)
+    @php
+        $documents = is_array($record->health_documents) ? $record->health_documents : json_decode($record->health_documents, true);
+    @endphp
+
+    @foreach($documents as $document)
+        <a href="{{ asset('storage/' . $document) }}" target="_blank" style="text-decoration: none; color: #007bff;">
+            <i class="fas fa-file-alt"></i> View Document
+        </a>
+        <br>
+    @endforeach
+@endif
+
                     </td>
                     <!-- Medical Condition -->
                     <td>{{ $record->medical_condition }}</td>
@@ -965,8 +970,8 @@ h1 {
     <div class="form-header">
         <h2>Medical Record History</h2>
     </div>
-    <table class="history-table">
-        <thead>
+    <table class="history-table" id="medical-record-history-table">
+    <thead>
             <tr>
                 <th>Past Illnesses/Injuries</th>
                 <th>Chronic Conditions</th>
@@ -987,8 +992,8 @@ h1 {
     </table>
 
     <h2>Physical Examination History</h2>
-    <table class="history-table">
-        <thead>
+    <table class="history-table" id="physical-examination-history-table">
+    <thead>
             <tr>
                 <th>Height in (cm)</th>
                 <th>Weight in (kg)</th>
@@ -1025,15 +1030,82 @@ h1 {
         <img id="modalImage" src="" alt="Modal Image">
     </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Include jQuery (already included in your code) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Include DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
+
+    <!-- Existing Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
  document.addEventListener('DOMContentLoaded', function() {
     // Load BMI chart when the document is ready
     const id_number = "{{ $user->id_number }}";  // Ensure the user variable is passed in Blade
     loadBMIChart(id_number);
+    $('#health-exam-pictures-table').DataTable({
+                "paging": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "responsive": true,
+                "language": {
+                    "emptyTable": "No health examination pictures available."
+                },
+                "columnDefs": [
+                    { "orderable": false, "targets": [1, 2, 3] } // Disable ordering on image columns
+                ]
+            });
+
+            // Initialize DataTables for Medicine Intake History Table
+            $('#medicine-intake-history-table').DataTable({
+                "paging": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "responsive": true,
+                "language": {
+                    "emptyTable": "No medicine intake history available."
+                }
+            });
+
+            // Initialize DataTables for Health Documents Table
+            $('#health-documents-table').DataTable({
+                "paging": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "responsive": true,
+                "language": {
+                    "emptyTable": "No health documents available."
+                }
+            });
+
+            // Initialize DataTables for Medical Record History Table
+            $('#medical-record-history-table').DataTable({
+                "paging": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "responsive": true,
+                "language": {
+                    "emptyTable": "No medical record history available."
+                }
+            });
+
+            // Initialize DataTables for Physical Examination History Table
+            $('#physical-examination-history-table').DataTable({
+                "paging": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "responsive": true,
+                "language": {
+                    "emptyTable": "No physical examination history available."
+                }
+            });
 
     // Attach event listeners to dynamically loaded images for modal preview
 

@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use App\Models\Inventory;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use App\Events\LowStockEvent;
 use PDF;
 use Illuminate\Support\Facades\View;
 use Carbon\Carbon;
@@ -14,54 +13,65 @@ use Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
-use App\Notifications\InventoryExpiringNotification; 
-use App\Notifications\LowStockNotification; // Import the new notification class
+use App\Models\Nurse;
+use App\Models\Notification; // Import your custom Notification model
 
 class InventoryController extends Controller
 {
-    /**
-     * Display the inventory management page.
-     */
-    public function index()
-    {
-        // Fetch all inventory items
-        $inventoryItems = Inventory::all();
 
-        // Gather statistics for the most used items (medicines and equipment)
-        $inventoryStats = [
-            'items' => [],
-            'usage' => []
-        ];
+  public function index()
+{
+    // Fetch all inventory items
+    $inventoryItems = Inventory::all();
 
-        // Fetch statistics for most used medicines and equipment
-        $medicineUsage = Inventory::where('type', 'Medicine')
-                                  ->selectRaw('item_name, SUM(quantity) as total_quantity')
-                                  ->groupBy('item_name')
-                                  ->orderByDesc('total_quantity')
-                                  ->limit(5)
-                                  ->get();
-        
-        $equipmentUsage = Inventory::where('type', 'Equipment')
-                                   ->selectRaw('item_name, SUM(quantity) as total_quantity')
-                                   ->groupBy('item_name')
-                                   ->orderByDesc('total_quantity')
-                                   ->limit(5)
-                                   ->get();
+    // Gather statistics for the most used items (medicines and equipment)
+    $inventoryStats = [
+        'items' => [],
+        'usage' => []
+    ];
 
-        // Combine the data for display in the chart
-        foreach ($medicineUsage as $medicine) {
-            $inventoryStats['items'][] = $medicine->item_name;
-            $inventoryStats['usage'][] = $medicine->total_quantity;
-        }
+    // Fetch statistics for most used medicines and equipment
+    $medicineUsage = Inventory::where('type', 'Medicine')
+                              ->selectRaw('item_name, SUM(quantity) as total_quantity')
+                              ->groupBy('item_name')
+                              ->orderByDesc('total_quantity')
+                              ->limit(5)
+                              ->get();
 
-        foreach ($equipmentUsage as $equipment) {
-            $inventoryStats['items'][] = $equipment->item_name;
-            $inventoryStats['usage'][] = $equipment->total_quantity;
-        }
+    $equipmentUsage = Inventory::where('type', 'Equipment')
+                               ->selectRaw('item_name, SUM(quantity) as total_quantity')
+                               ->groupBy('item_name')
+                               ->orderByDesc('total_quantity')
+                               ->limit(5)
+                               ->get();
 
-        // Pass data to the view, including the inventory statistics
-        return view('admin.inventory', compact('inventoryItems', 'inventoryStats'));
+    // Combine the data for display in the chart
+    foreach ($medicineUsage as $medicine) {
+        $inventoryStats['items'][] = $medicine->item_name;
+        $inventoryStats['usage'][] = $medicine->total_quantity;
     }
+
+    foreach ($equipmentUsage as $equipment) {
+        $inventoryStats['items'][] = $equipment->item_name;
+        $inventoryStats['usage'][] = $equipment->total_quantity;
+    }
+
+    // Get the current authenticated user
+    $user = Auth::user();
+
+    // Determine the view based on the user's role
+    if ($user->role === 'Admin') {
+        $view = 'admin.inventory';
+    } elseif ($user->role === 'Nurse') {
+        $view = 'nurse.inventory';
+    } else {
+        // Optionally, handle unauthorized access
+        abort(403, 'Unauthorized action.');
+    }
+
+    // Pass data to the view, including the inventory statistics
+    return view($view, compact('inventoryItems', 'inventoryStats'));
+}
 
     /**
      * Add a new inventory item.
@@ -96,23 +106,20 @@ class InventoryController extends Controller
             if ($inventoryItem->quantity <= 2) {
                 Log::info('Low Stock Alert: ' . $inventoryItem->item_name . ' is low in stock.');
 
-                // Fetch relevant users to notify (e.g., admins)
-                $users = User::where('role', 'Admin')->get(); // Adjust the role as needed
+                // Fetch relevant users to notify (Admins and Nurses)
+                $users = User::whereIn('role', ['Admin', 'Nurse'])->get();
 
                 foreach ($users as $user) {
-                    // Notify via Notification
-                    $user->notify(new LowStockNotification($inventoryItem->item_name, $inventoryItem->quantity));
-
-                    // Optionally, send an InventoryExpiringNotification if relevant
-                    // $user->notify(new InventoryExpiringNotification($inventoryItem->item_name, $inventoryItem->expiry_date));
+                    // Create a new notification entry
+                    Notification::create([
+                        'user_id' => $user->id_number, // Ensure this matches your foreign key setup
+                        'title' => 'Low Stock Alert',
+                        'message' => "The item '{$inventoryItem->item_name}' is low in stock with only {$inventoryItem->quantity} left.",
+                        'scheduled_time' => now(),
+                        'role' => $user->role,
+                        'is_opened' => false,
+                    ]);
                 }
-
-                // Broadcast the Low Stock Event
-                event(new LowStockEvent([
-                    'title' => 'Low Stock Alert',
-                    'message' => "The item {$inventoryItem->item_name} is low in stock with only {$inventoryItem->quantity} left.",
-                    'expiry_date' => $inventoryItem->expiry_date,
-                ]));
             }
 
             // Expiry Date Check
@@ -121,20 +128,20 @@ class InventoryController extends Controller
             if ($expiryDate->isBetween($now, $now->copy()->addDays(7))) {
                 Log::info('Expiry Alert: ' . $inventoryItem->item_name . ' is expiring soon.');
 
-                // Fetch relevant users to notify (e.g., admins)
-                $users = User::where('role', 'Admin')->get(); // Adjust the role as needed
+                // Fetch relevant users to notify (Admins and Nurses)
+                $users = User::whereIn('role', ['Admin', 'Nurse'])->get();
 
                 foreach ($users as $user) {
-                    // Notify via Notification
-                    $user->notify(new InventoryExpiringNotification($inventoryItem->item_name, $inventoryItem->expiry_date));
+                    // Create a new notification entry
+                    Notification::create([
+                        'user_id' => $user->id_number,
+                        'title' => 'Inventory Expiry Alert',
+                        'message' => "The item '{$inventoryItem->item_name}' is expiring on {$inventoryItem->expiry_date->toFormattedDateString()}.",
+                        'scheduled_time' => now(),
+                        'role' => $user->role,
+                        'is_opened' => false,
+                    ]);
                 }
-
-                // Optionally, dispatch a separate event if needed
-                event(new LowStockEvent([
-                    'title' => 'Item Expiry Alert',
-                    'message' => "The item {$inventoryItem->item_name} is expiring on {$inventoryItem->expiry_date}.",
-                    'expiry_date' => $inventoryItem->expiry_date,
-                ]));
             }
 
             // Return Success Response
@@ -182,20 +189,19 @@ class InventoryController extends Controller
             if ($inventoryItem->quantity <= 2) {
                 Log::info('Low Stock Alert: ' . $inventoryItem->item_name . ' is low in stock.');
 
-                // Fetch relevant users to notify (e.g., admins)
-                $users = User::where('role', 'Admin')->get(); // Adjust the role as needed
-
+                // Fetch relevant users to notify (Admins and Nurses)
+                $users = User::whereIn('role', ['Admin', 'Nurse'])->get();
                 foreach ($users as $user) {
-                    // Notify via Notification
-                    $user->notify(new LowStockNotification($inventoryItem->item_name, $inventoryItem->quantity));
+                    // Create a new notification entry
+                    Notification::create([
+                        'user_id' => $user->id_number,
+                        'title' => 'Low Stock Alert',
+                        'message' => "The item '{$inventoryItem->item_name}' is low in stock with only {$inventoryItem->quantity} left.",
+                        'scheduled_time' => now(),
+                        'role' => $user->role,
+                        'is_opened' => false,
+                    ]);
                 }
-
-                // Broadcast the Low Stock Event
-                event(new LowStockEvent([
-                    'title' => 'Low Stock Alert',
-                    'message' => "The item {$inventoryItem->item_name} is low in stock with only {$inventoryItem->quantity} left.",
-                    'expiry_date' => $inventoryItem->expiry_date,
-                ]));
             }
 
             // Expiry Date Check
@@ -204,20 +210,20 @@ class InventoryController extends Controller
             if ($expiryDate->isBetween($now, $now->copy()->addDays(7))) {
                 Log::info('Expiry Alert: ' . $inventoryItem->item_name . ' is expiring soon.');
 
-                // Fetch relevant users to notify (e.g., admins)
-                $users = User::where('role', 'Admin')->get(); // Adjust the role as needed
+                // Fetch relevant users to notify (Admins and Nurses)
+                $users = User::whereIn('role', ['Admin', 'Nurse'])->get();
 
                 foreach ($users as $user) {
-                    // Notify via Notification
-                    $user->notify(new InventoryExpiringNotification($inventoryItem->item_name, $inventoryItem->expiry_date));
+                    // Create a new notification entry
+                    Notification::create([
+                        'user_id' => $user->id_number,
+                        'title' => 'Inventory Expiry Alert',
+                        'message' => "The item '{$inventoryItem->item_name}' is expiring on {$inventoryItem->expiry_date->toFormattedDateString()}.",
+                        'scheduled_time' => now(),
+                        'role' => $user->role,
+                        'is_opened' => false,
+                    ]);
                 }
-
-                // Optionally, dispatch a separate event if needed
-                event(new LowStockEvent([
-                    'title' => 'Item Expiry Alert',
-                    'message' => "The item {$inventoryItem->item_name} is expiring on {$inventoryItem->expiry_date}.",
-                    'expiry_date' => $inventoryItem->expiry_date,
-                ]));
             }
 
             return response()->json(['success' => true, 'message' => 'Item updated successfully!']);
@@ -238,16 +244,20 @@ class InventoryController extends Controller
 
             Log::info('Inventory item deleted successfully.', ['item' => $inventoryItem]);
 
-            // Optionally, notify users about the deletion
-            // Fetch relevant users to notify (e.g., admins)
-            $users = User::where('role', 'Admin')->get(); // Adjust the role as needed
+            // Notify users about the deletion (Admins and Nurses)
+            $users = User::whereIn('role', ['Admin', 'Nurse'])->get();
 
             foreach ($users as $user) {
-                $user->notify(new InventoryExpiringNotification($inventoryItem->item_name, $inventoryItem->expiry_date));
+                // Create a new notification entry
+                Notification::create([
+                    'user_id' => $user->id_number,
+                    'title' => 'Inventory Deletion Alert',
+                    'message' => "The item '{$inventoryItem->item_name}' has been deleted from the inventory.",
+                    'scheduled_time' => now(),
+                    'role' => $user->role,
+                    'is_opened' => false,
+                ]);
             }
-
-            // Broadcast the Deletion Event if needed
-            // event(new InventoryDeletionEvent([...]));
 
             return response()->json(['success' => 'Item deleted successfully!']);
         } catch (\Exception $e) {
@@ -299,20 +309,20 @@ class InventoryController extends Controller
             if ($inventoryItem->quantity <= 2) {
                 Log::info('Low Stock Alert: ' . $inventoryItem->item_name . ' is low in stock.');
 
-                // Fetch relevant users to notify (e.g., admins)
-                $users = User::where('role', 'Admin')->get(); // Adjust the role as needed
+                // Fetch relevant users to notify (Admins and Nurses)
+                $users = User::whereIn('role', ['Admin', 'Nurse'])->get();
 
                 foreach ($users as $user) {
-                    // Notify via Notification
-                    $user->notify(new LowStockNotification($inventoryItem->item_name, $inventoryItem->quantity));
+                    // Create a new notification entry
+                    Notification::create([
+                        'user_id' => $user->id_number,
+                        'title' => 'Low Stock Alert',
+                        'message' => "The item '{$inventoryItem->item_name}' is low in stock with only {$inventoryItem->quantity} left.",
+                        'scheduled_time' => now(),
+                        'role' => $user->role,
+                        'is_opened' => false,
+                    ]);
                 }
-
-                // Broadcast the Low Stock Event
-                event(new LowStockEvent([
-                    'title' => 'Low Stock Alert',
-                    'message' => "The item {$inventoryItem->item_name} is low in stock with only {$inventoryItem->quantity} left.",
-                    'expiry_date' => $inventoryItem->expiry_date,
-                ]));
             }
 
             return response()->json(['success' => true, 'message' => 'Inventory updated successfully!']);
@@ -332,18 +342,19 @@ class InventoryController extends Controller
             'report_period' => 'required|string|in:week,month,year',
             'report_date' => 'required|date',
         ]);
-
+    
         if ($validator->fails()) {
             Log::warning('Validation failed when generating inventory report.', ['errors' => $validator->errors()]);
             return response()->json([
                 'success' => false,
+                'message' => 'Validation failed.',
                 'errors' => $validator->errors()
             ], 422);
         }
-
+    
         $reportPeriod = $request->input('report_period');
         $reportDate = $request->input('report_date');
-
+    
         // Determine the start and end dates based on the report period
         switch ($reportPeriod) {
             case 'week':
@@ -362,15 +373,54 @@ class InventoryController extends Controller
                 Log::warning('Invalid report period provided.', ['report_period' => $reportPeriod]);
                 return response()->json(['success' => false, 'message' => 'Invalid report period.'], 400);
         }
-
+    
         try {
             // Fetch inventory data within the specified period
             $inventoryData = Inventory::whereBetween('date_acquired', [$startDate, $endDate])->get();
-
-            // Fetch additional statistics as needed
+    
+            // Calculate statistics
             $totalItems = Inventory::count();
             $totalQuantity = Inventory::sum('quantity');
-
+    
+            // Calculate usage statistics: most used items based on quantity
+            $mostUsedItems = Inventory::orderByDesc('quantity')->take(5)->get();
+    
+            // Reorder Recommendations: Items with quantity <= threshold (e.g., 5)
+            $reorderThreshold = 5;
+            $reorderRecommendations = Inventory::where('quantity', '<=', $reorderThreshold)->get();
+    
+            // Identify items expiring within the next 30 days
+            $expiringSoon = Inventory::where('expiry_date', '<=', Carbon::now()->addDays(30))
+                                    ->where('expiry_date', '>=', Carbon::now())
+                                    ->get();
+    
+            // Generate Chart Image URL using QuickChart
+            $chartConfig = [
+                'type' => 'bar',
+                'data' => [
+                    'labels' => $mostUsedItems->pluck('item_name')->toArray(),
+                    'datasets' => [[
+                        'label' => 'Quantity Used',
+                        'data' => $mostUsedItems->pluck('quantity')->toArray(),
+                        'backgroundColor' => 'rgba(54, 162, 235, 0.6)',
+                        'borderColor' => 'rgba(54, 162, 235, 1)',
+                        'borderWidth' => 1
+                    ]]
+                ],
+                'options' => [
+                    'plugins' => [
+                        'legend' => ['display' => false],
+                        'title' => ['display' => true, 'text' => 'Top 5 Most Used Inventory Items']
+                    ],
+                    'scales' => [
+                        'y' => ['beginAtZero' => true, 'title' => ['display' => true, 'text' => 'Quantity Used']],
+                        'x' => ['title' => ['display' => true, 'text' => 'Item Name']]
+                    ]
+                ]
+            ];
+    
+            $chartUrl = 'https://quickchart.io/chart?c=' . urlencode(json_encode($chartConfig));
+    
             // Prepare data for the report
             $data = [
                 'report_period' => ucfirst($reportPeriod),
@@ -378,45 +428,66 @@ class InventoryController extends Controller
                 'inventoryData' => $inventoryData,
                 'totalItems' => $totalItems,
                 'totalQuantity' => $totalQuantity,
+                'mostUsedItems' => $mostUsedItems,
+                'reorderRecommendations' => $reorderRecommendations,
+                'expiringSoon' => $expiringSoon,
+                'chartUrl' => $chartUrl,
+                'logoBase64' => base64_encode(file_get_contents(public_path('images/pilarLogo.png'))),
             ];
-
+    
+            // Log the report generation details
+            Log::info('Generating Inventory Statistics Report', [
+                'report_period' => $reportPeriod,
+                'report_date' => $reportDate,
+                'start_date' => $startDate->toDateString(),
+                'end_date' => $endDate->toDateString(),
+                'total_items' => $totalItems,
+                'total_quantity' => $totalQuantity,
+                'most_used_items' => $mostUsedItems->toArray(),
+                'reorder_recommendations' => $reorderRecommendations->toArray(),
+                'expiring_soon' => $expiringSoon->toArray(),
+            ]);
+    
             // Generate PDF using Blade view
-            $pdf = PDF::loadView('pdf.inventory_report', $data); // Ensure you have this view
-
-            // Save the PDF to storage (optional)
+            $pdf = PDF::loadView('pdf.inventory_report', $data);
             $fileName = 'Inventory_Report_' . now()->timestamp . '.pdf';
             $pdfPath = 'reports/' . $fileName;
             Storage::disk('public')->put($pdfPath, $pdf->output());
-
-            // Log the report generation
-            Log::info('Inventory statistics report generated.', ['file' => $pdfPath]);
-
+    
+            // Log PDF generation
+            Log::info("Inventory Statistics Report generated and saved to {$pdfPath}");
+    
             // Return the URL to download the report
             $pdfUrl = asset('storage/' . $pdfPath);
-
+    
             return response()->json(['success' => true, 'pdf_url' => $pdfUrl]);
         } catch (\Exception $e) {
             // Log the error
             Log::error('Error generating inventory report:', ['error' => $e->getMessage()]);
-
+    
             return response()->json(['success' => false, 'message' => 'Failed to generate the report.'], 500);
         }
     }
+
+    /**
+     * Check and create low stock notifications.
+     */
     public function checkLowStock($item)
-{
-    if ($item->quantity <= 2) {
-        $data = [
-            'title' => 'Low Stock Alert',
-            'message' => "The item '{$item->item_name}' is low in stock with only {$item->quantity} left.",
-            'expiry_date' => $item->expiry_date,
-        ];
+    {
+        if ($item->quantity <= 1) {
+            // Notify relevant users (Admins and Nurses)
+            $users = User::whereIn('role', ['Admin', 'Nurse'])->get();
 
-        // Dispatch the event
-        event(new LowStockEvent($data));
-
-        // Notify the user(s)
-        $user = User::where('role', 'Admin')->first();
-        $user->notify(new LowStockNotification($item->item_name, $item->quantity));
+            foreach ($users as $user) {
+                Notification::create([
+                    'user_id' => $user->id_number,
+                    'title' => 'Low Stock Alert',
+                    'message' => "The item '{$item->item_name}' is low in stock with only {$item->quantity} left.",
+                    'scheduled_time' => now(),
+                    'role' => $user->role,
+                    'is_opened' => false,
+                ]);
+            }
+        }
     }
-}
 }

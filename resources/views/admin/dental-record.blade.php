@@ -1,9 +1,9 @@
-<x-app-layout>
+<x-app-layout :pageTitle="'Dental Record'">   
 
     <link rel="stylesheet" href="{{ asset('css/dental.css') }}">
     
 
-<!-- Select2 CSS -->
+<!-- Select2 CSS -->5555655
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css" rel="stylesheet" />
 
 <!-- jQuery (ensure it's loaded before Select2) -->
@@ -15,6 +15,8 @@
 <!-- SweetAlert2 CSS and JS (if used) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
 <!-- Your Custom JS File -->
 <script src="{{ asset('js/admindental.js') }}"></script>
@@ -808,6 +810,7 @@
         <div class="form-section">
     <label for="dentist-name">Dentist Name:</label>
     <input type="text" id="dentist-name" class="form-control" readonly value="{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}">
+    
 </div>
 
         <!-- Date of Examination and Grade & Section -->
@@ -991,15 +994,15 @@
         </div>
 
         <!-- Others, Specify -->
-        <div class="checkbox-group full-width">
-            <input type="hidden" name="others_specify" value="0">
-            <input type="checkbox" id="others-specify" name="others_specify" value="1">
-            <label for="others-specify">Others, Specify:</label>
-            <input type="text" id="other-recommendation" name="other_recommendation" class="form-control">
-            @error('other_recommendation')
-                <small class="text-danger">{{ $message }}</small>
-            @enderror
-        </div>
+        <div class="form-group">
+    <input type="hidden" name="others_specify" value="0">
+    <input type="checkbox" id="others-specify" name="others_specify" value="1">
+    <label for="others-specify">Others, Specify:</label>
+    <input type="text" id="other-recommendation" name="other_recommendation" class="form-control">
+    @error('other_recommendation')
+        <small class="text-danger">{{ $message }}</small>
+    @enderror
+</div>
 
 
     
@@ -1043,8 +1046,8 @@
         </table>
 
         <!-- Previous Examinations -->
-        <table class="history-table">
-            <thead>
+        <table id="dental-examination-history-table" class="history-table">
+        <thead>
                 <tr>
                     <th colspan="3">Dental Examinations History</th>
                 </tr>
@@ -1055,8 +1058,8 @@
         </table>
 
         <!-- Tooth History Table -->
-        <table class="history-table">
-            <caption>Tooth History</caption>
+        <table id="tooth-history-table" class="history-table">
+        <caption>Tooth History</caption>
             <thead>
                 <tr>
                     <th>Tooth Number</th>

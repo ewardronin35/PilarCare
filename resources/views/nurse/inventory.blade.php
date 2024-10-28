@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :pageTitle="' Inventory'">
     <!-- Google Fonts and Font Awesome -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -59,7 +59,6 @@
 
         .table-container {
             flex: 1;
-            max-height: 400px;
             overflow-y: auto; /* Ensures scrollability */
             animation: slideInRight 0.6s ease-in-out;
         }
@@ -181,16 +180,15 @@
 
         /* Action Buttons Styles */
         .action-buttons button {
-            background-color: #00d1ff;
-            color: white;
-            padding: 5px 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.3s;
-            font-size: 0.9rem;
-            margin-right: 5px;
-        }
+    color: white;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+    font-size: 0.9rem;
+    margin-right: 5px;
+}
 
         .action-buttons button:hover {
             background-color: #00b8e6;
@@ -331,6 +329,34 @@
         .modal-footer button:hover {
             background-color: #0056b3;
         }
+        /* Edit and Delete Button Styles */
+
+.action-buttons button:hover {
+    background-color: #0056b3; /* Darker shade on hover */
+    transform: scale(1.05);
+}
+
+.action-buttons button:active {
+    transform: scale(0.95);
+}
+
+/* Specific Styles for Edit and Delete Button */
+.edit-button {
+    background-color: #28a745; /* Green color for Edit */
+}
+
+.delete-button {
+    background-color: #dc3545; /* Red color for Delete */
+}
+
+.edit-button:hover {
+    background-color: #218838; /* Darker green on hover */
+}
+
+.delete-button:hover {
+    background-color: #c82333; /* Darker red on hover */
+}
+
     </style>
 
     <main class="main-content">
@@ -387,8 +413,8 @@
                 <!-- Inventory Table -->
                 <div class="table-container">
                     <h2><i class="fas fa-table"></i> Inventory Table</h2>
-                    <table class="inventory-table">
-                        <thead>
+                    <table id="inventory-table" class="inventory-table">
+                    <thead>
                             <tr>
                                 <th>Item Name</th>
                                 <th>Quantity</th>
@@ -409,10 +435,11 @@
                                     <td>{{ \Carbon\Carbon::parse($item->date_acquired)->format('Y-m-d') }}</td>
                                     <td>{{ \Carbon\Carbon::parse($item->expiry_date)->format('Y-m-d') }}</td>
                                     <td>
-                                        <div class="action-buttons">
-                                            <button onclick="openEditModal({{ $item->id }})"><i class="fas fa-edit"></i> Edit</button>
-                                            <button onclick="confirmDelete({{ $item->id }})"><i class="fas fa-trash"></i> Delete</button>
-                                        </div>
+                                    <div class="action-buttons">
+    <button class="edit-button" onclick="openEditModal({{ $item->id }})"><i class="fas fa-edit"></i> Edit</button>
+    <button class="delete-button" onclick="confirmDelete({{ $item->id }})"><i class="fas fa-trash"></i> Delete</button>
+</div>
+
                                     </td>
                                 </tr>
                             @endforeach
@@ -435,7 +462,7 @@
                     </div>
 
                     <!-- Generate Inventory Statistics Report -->
-                    <div class="report-container">
+                    <div class="form-container">
                         <h2><i class="fas fa-file-pdf"></i> Generate Inventory Statistics Report</h2>
                         <form id="inventory-report-form">
                             @csrf
@@ -453,7 +480,6 @@
                             </div>
                             <div class="form-group">
                                 <button type="button" onclick="generateInventoryReport()">Generate Report</button>
-                                <button type="button" onclick="clearReportForm()">Clear Form</button>
                             </div>
                         </form>
                     </div>
@@ -514,9 +540,27 @@
     <script src="https://js.pusher.com/7.0/pusher.min.js"></script> <!-- Pusher JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+<!-- DataTables JS and jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
     <script>
     window.PUSHER_APP_KEY = "50f98f50cabf2f77a875";
     window.PUSHER_APP_CLUSTER = "ap1";
+    document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTables for the inventory table
+    $('#inventory-table').DataTable({
+        paging: true,
+        searching: true,
+        ordering: true,
+        order: [[4, 'desc']], // Example: Sort by Date Acquired by default
+        columnDefs: [
+            { orderable: false, targets: 6 } // Disable ordering on Actions column
+        ]
+    });
+});
 
         // Clear Add Form Function
         function clearAddForm() {
@@ -812,77 +856,103 @@
         });
 
         // Generate Inventory Report Function
-        function generateInventoryReport() {
-            const form = document.getElementById('inventory-report-form');
-            const formData = new FormData(form);
+// Generate Inventory Statistics Report with SweetAlert
+function generateInventoryReport() {
+    const form = document.getElementById('inventory-report-form');
+    const formData = new FormData(form);
 
-            // Show SweetAlert loading spinner
+    // Front-end Validation
+    const reportPeriod = formData.get('report_period');
+    const reportDate = formData.get('report_date');
+
+    if (!reportPeriod || !reportDate) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Please select both report period and date.'
+        });
+        return;
+    }
+
+    // Confirmation Prompt
+    Swal.fire({
+        title: 'Generate Report',
+        text: `Do you want to generate a ${capitalizeFirstLetter(reportPeriod)} report for ${reportDate}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, generate it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading spinner
             Swal.fire({
                 title: 'Generating Report...',
-                text: 'Please wait while we generate your report.',
+                text: 'Please wait while your report is being generated.',
                 allowOutsideClick: false,
                 didOpen: () => {
                     Swal.showLoading();
                 }
             });
 
+            // Send POST request to generate the report
             fetch('{{ route("nurse.inventory.generateReport") }}', {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
                 }
             })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.message || 'Unknown error');
+                    });
                 }
-
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    throw new Error('Invalid JSON response');
-                }
-
                 return response.json();
             })
             .then(data => {
                 Swal.close(); // Close the loading spinner
 
                 if (data.success) {
+                    // Automatically open the generated PDF in a new tab
+                    window.open(data.pdf_url, '_blank');
+
+                    // Notify the user of successful generation
                     Swal.fire({
                         icon: 'success',
                         title: 'Report Generated',
-                        text: 'Your inventory statistics report has been generated.',
-                        showCancelButton: true,
-                        confirmButtonText: 'Download',
-                        cancelButtonText: 'Close',
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.open(data.pdf_url, '_blank');
-                        }
+                        text: 'Your Inventory Statistics Report has been generated and opened in a new tab.',
+                        timer: 3000,
+                        showConfirmButton: false
                     });
                 } else {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: data.error || 'Failed to generate the report.',
-                        timer: 3000,
-                        showConfirmButton: false
+                        text: data.message || 'An error occurred while generating the report.'
                     });
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                Swal.close();
+                console.error('Error generating report:', error);
+
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'An unexpected error occurred while generating the report.',
-                    timer: 3000,
-                    showConfirmButton: false
+                    text: error.message || 'An unexpected error occurred while generating the report.'
                 });
             });
         }
+    });
+}
+
+// Helper function to capitalize the first letter
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 
         // Handle clicks outside the modal content to close it
         window.onclick = function(event) {

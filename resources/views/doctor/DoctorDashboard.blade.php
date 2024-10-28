@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :pageTitle="' Dashboard'">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         body {
@@ -13,6 +13,7 @@
         }
 
         .profile-box {
+            position: relative; /* Required for the overlay */
             display: flex;
             align-items: center;
             padding: 20px;
@@ -23,6 +24,18 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
             color: white;
+            overflow: hidden; /* Clip the overlay within the border-radius */
+        }
+
+        .profile-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5); /* 50% opacity black overlay */
+            z-index: 1; /* Place behind the profile content */
         }
 
         .profile-box img {
@@ -30,12 +43,15 @@
             width: 80px;
             height: 80px;
             margin-right: 20px;
+            z-index: 2; /* Ensure the profile image is above the overlay */
         }
 
         .profile-info {
             display: flex;
             flex-direction: column;
+            z-index: 2; /* Ensure text content is above the overlay */
         }
+
 
         .profile-info h2 {
             margin: 0;

@@ -108,7 +108,7 @@ class StaffDashboardController extends Controller
                 'id_number' => $parentIdNumber,
                 'first_name' => $request->guardian_first_name,
                 'last_name' => $request->guardian_last_name,
-                'Staff_ID' => $staffIdNumber,
+                'student_id' => $staffIdNumber,
                 'approved' => 1, // Automatically approved
             ]);
     

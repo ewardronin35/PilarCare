@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,7 +10,7 @@ class Complaint extends Model
     use HasFactory;
 
     protected $fillable = [
-        'id_number', // Added this line
+        'id_number',
         'first_name',
         'last_name',
         'age',
@@ -22,8 +23,8 @@ class Complaint extends Model
         'role',
         'medicine_given',
         'confine_status',
-        'go_home', // Added this line
-
+        'go_home',
+        'report_url', // Ensure this field exists in your migrations
     ];
 
     public $timestamps = true; // Ensure timestamps are enabled
@@ -31,5 +32,10 @@ class Complaint extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'id_number', 'id_number');
+    }
+
+    public function doctor()
+    {
+        return $this->belongsTo(Doctor::class, 'doctor_id', 'id'); // Specify foreign and local keys
     }
 }

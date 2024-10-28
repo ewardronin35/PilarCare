@@ -22,10 +22,53 @@ class NurseDashboardController extends Controller
         $pendingApprovalCount = HealthExamination::where('is_approved', false)->count();
         $dentalRecordCount = Teeth::count();
         $medicalRecordCount = MedicalRecord::count();
-            // Fetch pending approvals for health examinations, dental records, and medical records
-    $pendingHealthExams = HealthExamination::where('is_approved', false)->count();
-    $pendingDentalApprovals = Teeth::where('is_approved', false)->count();
-    $pendingMedicalApprovals = MedicalRecord::where('is_approved', false)->count();
+        
+        // Statistics for submissions by role (HealthExaminations, DentalRecords, MedicalRecords)
+        $roles = ['Student', 'Teacher', 'Staff', 'Parent', 'Doctor', 'Nurse'];
+        $submissionsPerRole = [];
+
+        foreach ($roles as $role) {
+            $healthExamCount = HealthExamination::whereHas('user', function($query) use ($role) {
+                $query->where('role', $role);
+            })->count();
+
+            $dentalRecordCountRole = Teeth::whereHas('dentalRecord.user', function($query) use ($role) {
+                $query->where('role', $role);
+            })->count();
+
+            $medicalRecordCountRole = MedicalRecord::whereHas('user', function($query) use ($role) {
+                $query->where('role', $role);
+            })->count();
+
+            $submissionsPerRole[$role] = [
+                'health_examinations' => $healthExamCount,
+                'dental_records' => $dentalRecordCountRole,
+                'medical_records' => $medicalRecordCountRole,
+            ];
+        }
+
+        // Fetch Complaints by Status
+        $complaintsByConfineStatus = Complaint::select('confine_status', \DB::raw('count(*) as total'))
+        ->groupBy('confine_status')
+        ->get()
+        ->pluck('total', 'confine_status')
+        ->toArray();
+
+// 3. Complaints by Go Home
+$complaintsByGoHome = Complaint::select('go_home', \DB::raw('count(*) as total'))
+  ->groupBy('go_home')
+  ->get()
+  ->pluck('total', 'go_home')
+  ->toArray();
+
+        // Fetch Inventory by Category
+        // Assuming your Inventory model has a 'category' field
+        $inventoryByCategory = Inventory::select('type', \DB::raw('count(*) as total'))
+                                        ->groupBy('type')
+                                        ->get()
+                                        ->pluck('total', 'type')
+                                        ->toArray();
+    
         // Fetch low stock notifications
         $notifications = Notification::where('user_id', 'admin')->get();
     
@@ -37,41 +80,26 @@ class NurseDashboardController extends Controller
         $doctors = User::where('role', 'Doctor')->get();
         $nurses = User::where('role', 'Nurse')->get();
     
-        // Prepare data for the chart
-        $roles = ['Student', 'Teacher', 'Staff', 'Parent', 'Doctor', 'Nurse'];
-        $monthlyUserData = [];
-    
-        foreach ($roles as $role) {
-            $monthlyCounts = User::selectRaw('MONTH(created_at) as month, COUNT(*) as count')
-                ->where('role', $role)
-                ->whereYear('created_at', date('Y'))
-                ->groupBy('month')
-                ->pluck('count', 'month')->toArray();
-    
-            // Initialize counts for all months
-            $counts = [];
-            for ($i = 1; $i <= 12; $i++) {
-                $counts[] = isset($monthlyCounts[$i]) ? $monthlyCounts[$i] : 0;
-            }
-            $monthlyUserData[$role] = $counts;
-        }
-    
         return view('nurse.NurseDashboard', compact(
             'appointmentCount',
             'complaintCount',
             'inventoryCount',
             'pendingApprovalCount',
+            'dentalRecordCount',
+            'medicalRecordCount',
             'students',
             'staff',
             'parents',
-            'dentalRecordCount',
-            'medicalRecordCount',
             'teachers',
             'doctors',
             'nurses',
-            'monthlyUserData'
+            'submissionsPerRole',
+            'complaintsByConfineStatus',
+            'complaintsByGoHome',
+            'inventoryByCategory' // Added variables
         ));
     }
+
     
     public function pendingApprovals()
     {

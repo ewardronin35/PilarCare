@@ -1,138 +1,192 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use App\Models\Notification;
 use Illuminate\Http\Request;
+use App\Models\Notification;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Contracts\Validation\Factory as ValidatorFactory;
+use App\Events\NewNotification; // Ensure this event exists
 
 class NotificationController extends Controller
 {
-    // Fetch notifications and unread count
-    
+    /**
+     * Display a listing of notifications for the authenticated user.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function index()
     {
         $user = Auth::user();
-        
-        // Fetch notifications specific to the user via id_number or their role
+
+        // Fetch notifications where the role matches or user_id matches
         $notifications = Notification::where(function($query) use ($user) {
-            $query->where('user_id', $user->id_number)
-                  ->orWhere('role', $user->role);
-        })->orderBy('created_at', 'desc')->get();
-    
-        // Count unread notifications directly
+                $query->where('user_id', $user->id_number)
+                      ->orWhere('role', $user->role);
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Count unread notifications
         $unreadCount = $notifications->where('is_opened', false)->count();
-    
+
         return response()->json([
             'notifications' => $notifications,
-            'unreadCount' => $unreadCount
+            'unreadCount' => $unreadCount,
         ]);
     }
-    
-    public function markAsOpened(Request $request, $id)
-    {
-        try {
-            $user = Auth::user();
-    
-            if (!$user) {
-                return response()->json(['message' => 'Unauthorized'], 401);
-            }
-    
-            $notification = $user->notifications()->where('id', $id)->first();
-    
-            if ($notification) {
-                $notification->is_opened = true; // Use boolean
-                $notification->save();
-    
-                return response()->json(['message' => 'Notification marked as read.'], 200);
-            }
-    
-            return response()->json(['message' => 'Notification not found.'], 404);
-        } catch (\Exception $e) {
-            \Log::error('Error in markAsOpened: ' . $e->getMessage());
-    
-            return response()->json(['message' => 'Failed to mark notification as read.'], 500);
-        }
-    }
-    
-    public function markAllAsRead(Request $request)
-    {
-        try {
-            $user = Auth::user();
-    
-            if (!$user) {
-                return response()->json(['message' => 'Unauthorized'], 401);
-            }
-    
-            $updated = Notification::where('user_id', $user->id_number)
-                ->where('is_opened', false)
-                ->update(['is_opened' => true]);
-    
-            return response()->json([
-                'message' => 'All notifications marked as read.',
-                'updated_count' => $updated
-            ], 200);
-        } catch (\Exception $e) {
-            \Log::error('Error in markAllAsRead: ' . $e->getMessage());
-    
-            return response()->json(['message' => 'Failed to mark notifications as read.'], 500);
-        }
-    }
-    
-    
-    
 
-    // Store a new notification
+    /**
+     * Store a newly created notification in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function store(Request $request)
     {
-        // Validate the request
+        // Validate the incoming request
         $request->validate([
-            'user_id' => 'required|string|exists:users,id_number',
+            'user_id' => 'nullable|string|exists:users,id_number',
             'title' => 'required|string|max:255',
             'message' => 'required|string',
             'scheduled_time' => 'nullable|date',
-            'role' => 'nullable|string' // Validate the role input
+            'role' => 'nullable|string|in:Admin,Student,Parent,Teacher,Staff,Nurse,Doctor', // Adjust roles as needed
         ]);
 
         // Create the notification
-        Notification::create([
+        $notification = Notification::create([
             'user_id' => $request->user_id,
             'title' => $request->title,
             'message' => $request->message,
             'scheduled_time' => $request->scheduled_time ?? now(),
-            'role' => $request->role,  // Store the role if provided
+            'role' => $request->role,
+            'is_opened' => false,
         ]);
+
+        // Optionally, broadcast the notification event
+        if ($notification->role || $notification->user_id) {
+            event(new NewNotification($notification));
+        }
+
+        // Log the creation
+        Log::info("Notification created: ID {$notification->id}");
 
         return response()->json([
-            'message' => 'Notification created successfully'
-        ]);
+            'success' => true,
+            'message' => 'Notification created successfully.',
+            'notification' => $notification,
+        ], 201);
     }
 
+    /**
+     * Remove the specified notification from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function destroy($id)
     {
         $user = Auth::user();
-    
-        // Find the notification belonging to the user via id_number
+
+        // Find the notification
         $notification = Notification::where('id', $id)
-            ->where('user_id', $user->id_number)
+            ->where(function($query) use ($user) {
+                $query->where('user_id', $user->id_number)
+                      ->orWhere('role', $user->role);
+            })
             ->first();
-    
-        if ($notification) {
-            $notification->delete();
-    
-            return response()->json([
-                'message' => 'Notification deleted successfully'
-            ]);
+
+        if (!$notification) {
+            return response()->json(['message' => 'Notification not found.'], 404);
         }
-    
-        return response()->json([
-            'message' => 'Notification not found or unauthorized.'
-        ], 404);
+
+        // Delete the notification
+        $notification->delete();
+
+        // Log the deletion
+        Log::info("Notification deleted: ID {$id}");
+
+        return response()->json(['message' => 'Notification deleted successfully.'], 200);
     }
+
+    /**
+     * Mark the specified notification as opened.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function markAsOpened($id)
+    {
+        $user = Auth::user();
+
+        // Find the notification for the user based on user_id or role
+        $notification = Notification::where('id', $id)
+            ->where(function($query) use ($user) {
+                $query->where('user_id', $user->id_number)
+                      ->orWhere('role', $user->role);
+            })
+            ->first();
+
+        if (!$notification) {
+            return response()->json(['message' => 'Notification not found.'], 404);
+        }
+
+        // Mark as opened
+        $notification->is_opened = true;
+        $notification->save();
+
+        // Log the update
+        Log::info("Notification marked as opened: ID {$id}");
+
+        return response()->json(['message' => 'Notification marked as read.'], 200);
+    }
+
+    /**
+     * Mark all notifications as read for the authenticated user.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function markAllAsRead()
+    {
+        $user = Auth::user();
+
+        // Update all notifications to mark them as opened
+        $updated = Notification::where(function($query) use ($user) {
+                $query->where('user_id', $user->id_number)
+                      ->orWhere('role', $user->role);
+            })
+            ->where('is_opened', false)
+            ->update(['is_opened' => true]);
+
+        // Log the update
+        Log::info("All notifications marked as read for user ID {$user->id_number}");
+
+        return response()->json([
+            'message' => 'All notifications marked as read.',
+            'updated_count' => $updated
+        ], 200);
+    }
+
+    /**
+     * Get the count of unread notifications for the authenticated user.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function count()
     {
         $user = Auth::user();
-        $unreadCount = $user->unreadNotifications->count();
 
-        return response()->json(['unreadCount' => $unreadCount]);
+        // Count unread notifications
+        $unreadCount = Notification::where(function($query) use ($user) {
+                $query->where('user_id', $user->id_number)
+                      ->orWhere('role', $user->role);
+            })
+            ->where('is_opened', false)
+            ->count();
+
+        return response()->json([
+            'unreadCount' => $unreadCount,
+        ], 200);
     }
 }

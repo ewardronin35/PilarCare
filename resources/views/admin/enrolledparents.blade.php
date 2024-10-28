@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :pageTitle="'Manage Parents'">   
     <style>
         /* Import Poppins Font */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
@@ -241,9 +241,8 @@
             border-color: #00d1ff;
         }
 
-        /* Staff (Parents) Table */
+        /* Parents (Staff) Table */
         .staff-section {
-            max-height: 600px;
             overflow-y: auto;
             margin-top: 20px;
         }
@@ -396,15 +395,19 @@
             text-decoration: none;
         }
 
-        /* Modal Header */
-        .modal-content h2 {
-            font-size: 20px;
+        /* Input Fields */
+        .modal-content input[type="text"] {
+            width: 100%;
+            padding: 10px;
             margin-bottom: 15px;
-            color: #333;
-            text-align: center;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+            font-size: 14px;
         }
 
-        /* Save Button in Modal */
+        /* Save Button */
         .modal-content .save-button {
             background-color: #28a745;
             color: white;
@@ -414,31 +417,15 @@
             cursor: pointer;
             font-size: 14px;
             transition: background-color 0.3s ease;
-            align-self: center;
-            width: 100%;
-            max-width: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
+            display: inline-block;
+            margin-top: 10px;
         }
 
         .modal-content .save-button:hover {
             background-color: #218838;
         }
 
-        /* Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
+        /* Animation for modal */
         @keyframes slideIn {
             from {
                 opacity: 0;
@@ -450,30 +437,14 @@
             }
         }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .forms-container {
-                flex-direction: column;
-                align-items: center;
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
             }
-
-            .form-wrapper {
-                max-width: 100%;
-            }
-
-            .staff-table th,
-            .staff-table td {
-                padding: 10px;
-                font-size: 14px;
-            }
-
-            .search-container input[type="text"] {
-                width: 100%;
-                max-width: 100%;
-            }
-
-            .modal-content {
-                width: 95%;
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
 
@@ -508,6 +479,34 @@
         .download-template-button i {
             font-size: 18px; /* Slightly larger icon */
         }
+        
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .forms-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .form-wrapper {
+                max-width: 100%;
+            }
+
+            .staff-table th,
+            .staff-table td {
+                padding: 10px;
+                font-size: 14px;
+            }
+
+            .search-container input[type="text"] {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .modal-content {
+                width: 95%;
+            }
+        }
     </style>
 
     <div class="main-content">
@@ -517,7 +516,7 @@
                 <i class="fas fa-upload"></i>
                 Upload Parents List
             </div>
-            <div class="tab" data-tab="staff-tab">
+            <div class="tab" data-tab="parents-tab">
                 <i class="fas fa-users"></i>
                 View Parents List
             </div>
@@ -529,7 +528,7 @@
                 <!-- Upload Parents List Form -->
                 <div class="form-wrapper">
                     <h2><i class="fas fa-file-upload"></i> Upload Parents List</h2>
-                    <p>Please ensure the Excel file follows the format: ID Number, First Name, Last Name, Relationship</p>
+                    <p>Please ensure the Excel file follows the format: ID Number, Student ID, Relationship</p>
                     <a href="{{ route('admin.download.parents-template') }}" class="download-template-button">
                         <i class="fas fa-download"></i> Download Excel Template
                     </a>
@@ -550,16 +549,13 @@
                 <!-- Add Late Parents Form -->
                 <div class="form-wrapper">
                     <h2><i class="fas fa-user-plus"></i> Add Late Parents</h2>
-                    <form id="late-staff-form">
+                    <form id="late-parents-form">
                         @csrf
                         <label for="late-id_number">ID Number</label>
                         <input type="text" id="late-id_number" name="late-id_number" required maxlength="7" pattern="[A-Za-z][0-9]{6}" title="ID number must start with a letter followed by 6 digits.">
                         
-                        <label for="late-first_name">First Name</label>
-                        <input type="text" id="late-first_name" name="late-first_name" required>
-                        
-                        <label for="late-last_name">Last Name</label>
-                        <input type="text" id="late-last_name" name="late-last_name" required>
+                        <label for="late-student_id">Student ID</label>
+                        <input type="text" id="late-student_id" name="late-student_id" required maxlength="7" pattern="[A-Za-z][0-9]{6}" title="Student ID must start with a letter followed by 6 digits.">
                         
                         <label for="late-relationship">Relationship</label>
                         <input type="text" id="late-relationship" name="late-relationship" required>
@@ -571,54 +567,71 @@
         </div>
 
         <!-- View Parents List Tab Content -->
-        <div id="staff-tab" class="tab-content">
+        <div id="parents-tab" class="tab-content">
             <div class="staff-section">
                 <h2><i class="fas fa-users"></i> Enrolled Parents</h2>
-                <div class="search-container">
-                    <input type="text" id="staff-search" placeholder="Search by ID, Name, or Relationship">
-                </div>
+                
                 @if($parents->isEmpty())
                     <p>No parents enrolled yet.</p>
                 @else
-                    <table class="staff-table" id="staff-table">
-                        <thead>
-                            <tr>
-                                <th><i class="fas fa-id-card"></i> ID</th>
-                                <th><i class="fas fa-user"></i> First Name</th>
-                                <th><i class="fas fa-user"></i> Last Name</th>
-                                <th><i class="fas fa-info-circle"></i> Relationship</th>
-                                <th><i class="fas fa-toggle-on"></i> Status</th>
-                                <th><i class="fas fa-tools"></i> Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="staff-table-body">
-                            @foreach($parents as $parent)
-                                <tr id="staff-row-{{ $parent->id }}">
-                                    <td>{{ $parent->id_number }}</td>
-                                    <td>{{ $parent->first_name }}</td>
-                                    <td>{{ $parent->last_name }}</td>
-                                    <td>{{ $parent->relationship }}</td>
-                                    <td>
-                                        <label class="switch">
-                                            <input type="checkbox" class="toggle-approval" data-parent-id="{{ $parent->id }}" {{ $parent->approved ? 'checked' : '' }}>
-                                            <span class="slider"></span>
-                                        </label>
-                                        <span class="status-text" style="margin-left: 8px; color: {{ $parent->approved ? '#28a745' : '#dc3545' }};">
-                                            {{ $parent->approved ? 'Active' : 'Inactive' }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button class="edit-button" data-parent-id="{{ $parent->id }}">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </button>
-                                        <button class="delete-button" onclick="deleteParent({{ $parent->id }})">
-                                            <i class="fas fa-trash-alt"></i> Delete
-                                        </button>
-                                    </td>
+                    <div class="table-responsive">
+                        <table class="staff-table" id="parents-table" aria-label="Enrolled Parents Table">
+                            <thead>
+                                <tr>
+                                    <th scope="col"><i class="fas fa-id-card" aria-hidden="true"></i> ID</th>
+                                    <th scope="col"><i class="fas fa-user" aria-hidden="true"></i> Parent First Name</th>
+                                    <th scope="col"><i class="fas fa-user" aria-hidden="true"></i> Parent Last Name</th>
+                                    <th scope="col"><i class="fas fa-child" aria-hidden="true"></i> Child's Name</th>
+                                    <th scope="col"><i class="fas fa-check-circle" aria-hidden="true"></i> Relationship</th>
+                                    <th scope="col"><i class="fas fa-info-circle" aria-hidden="true"></i> Status</th>
+                                    <th scope="col"><i class="fas fa-toggle-on"></i> Toggle Status</th>
+                                    <th scope="col"><i class="fas fa-tools"></i> Actions</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody id="parents-table-body">
+                                @foreach($parents as $parent)
+                                    <tr id="parents-row-{{ $parent->id }}">
+                                        <td>{{ $parent->id_number }}</td>
+                                        <td>{{ $parent->first_name }}</td>
+                                        <td>{{ $parent->last_name }}</td>
+                                        <td>
+                                            @if($parent->student)
+                                                {{ $parent->student->first_name }} {{ $parent->student->last_name }}
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($parent->guardian_relationship !== 'Not Specified')
+                                                {{ $parent->guardian_relationship }}
+                                            @else
+                                                <span class="text-warning">Not Specified</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <button class="preview-button status-button" style="background-color: {{ $parent->approved ? '#28a745' : '#dc3545' }};" aria-label="Parent Status">
+                                                {{ $parent->approved ? 'Active' : 'Inactive' }}
+                                            </button>
+                                        </td>
+                                        <td>
+                                            <label class="switch" aria-label="Toggle parent approval status">
+                                                <input type="checkbox" class="toggle-approval" data-parent-id="{{ $parent->id }}" {{ $parent->approved ? 'checked' : '' }}>
+                                                <span class="slider"></span>
+                                            </label>
+                                        </td>
+                                        <td>
+                                            <button class="edit-button" data-parent-id="{{ $parent->id }}" aria-label="Edit Parent">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </button>
+                                            <button class="delete-button" onclick="deleteParent({{ $parent->id }})" aria-label="Delete Parent">
+                                                <i class="fas fa-trash-alt"></i> Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 @endif
             </div>
 
@@ -640,6 +653,9 @@
                         <label for="edit-last-name">Last Name</label>
                         <input type="text" name="last_name" id="edit-last-name" required>
                         
+                        <label for="edit-student-id">Student ID</label>
+                        <input type="text" name="student_id" id="edit-student-id" required maxlength="7" pattern="[A-Za-z][0-9]{6}" title="Student ID must start with a letter followed by 6 digits.">
+                        
                         <label for="edit-relationship">Relationship</label>
                         <input type="text" name="relationship" id="edit-relationship" required>
                         
@@ -652,100 +668,26 @@
         <!-- SweetAlert2 -->
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <!-- Font Awesome -->
-        <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
         <script>
-            // Function to switch main tabs
-            function switchTab(tabId) {
-                document.querySelectorAll('.tab').forEach(tab => {
-                    tab.classList.remove('active');
-                });
-                document.querySelectorAll('.tab-content').forEach(content => {
-                    content.classList.remove('active');
-                });
-
-                document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
-                document.getElementById(tabId).classList.add('active');
-            }
-
-            // Initialize Main Tabs
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', function() {
-                    const targetTab = this.getAttribute('data-tab');
-                    switchTab(targetTab);
-                });
-            });
-
-            // Function to open the modal and populate it with parent data
-            function openEditModal(parent) {
-                document.getElementById('edit-parent-id').value = parent.id;
-                document.getElementById('edit-id-number').value = parent.id_number;
-                document.getElementById('edit-first-name').value = parent.first_name;
-                document.getElementById('edit-last-name').value = parent.last_name;
-                document.getElementById('edit-relationship').value = parent.relationship;
-
-                // Display the modal
-                document.getElementById('edit-parent-modal').style.display = 'flex';
-            }
-
-            // Close the modal when clicking the 'X' button
-            document.querySelectorAll('.close').forEach(closeBtn => {
-                closeBtn.addEventListener('click', function() {
-                    this.parentElement.parentElement.style.display = 'none';
-                });
-            });
-
-            // Close the modal when clicking outside the modal content
-            window.onclick = function(event) {
-                const modals = document.querySelectorAll('.modal');
-                modals.forEach(modal => {
-                    if (event.target == modal) {
-                        modal.style.display = "none";
-                    }
-                });
-            }
-
-            // Global deleteParent function to be available on button click
-            function deleteParent(parentId) {
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: "You won't be able to revert this!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, delete it!'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        fetch(`/admin/parents/${parentId}`, {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                _method: 'DELETE'
-                            })
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                Swal.fire('Deleted!', data.message, 'success');
-                                document.getElementById('staff-row-' + parentId).remove();
-                            } else {
-                                Swal.fire('Error!', 'There was a problem deleting the parent.', 'error');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            Swal.fire('Error!', 'There was a problem deleting the parent.', 'error');
-                        });
-                    }
-                });
-            }
-
             document.addEventListener('DOMContentLoaded', function() {
-                // Initialize modal
-                document.getElementById('edit-parent-modal').style.display = 'none';
+                // Tab functionality
+                $('#parents-table').DataTable({
+        "paging": true,
+        "searching": true,
+        "ordering": true,
+        "info": true
+    });
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', function() {
+                        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+                        this.classList.add('active');
+                        document.getElementById(this.getAttribute('data-tab')).classList.add('active');
+                    });
+                });
 
                 // File selection feedback
                 document.getElementById('file').addEventListener('change', function(event) {
@@ -757,26 +699,7 @@
                     }
                 });
 
-                // Search functionality for Parents
-                const searchInput = document.getElementById('staff-search');
-                searchInput.addEventListener('input', function() {
-                    const searchValue = this.value.toLowerCase();
-                    const tableRows = document.querySelectorAll('#staff-table tbody tr');
-
-                    tableRows.forEach(row => {
-                        const id = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
-                        const firstName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                        const lastName = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-                        const relationship = row.querySelector('td:nth-child(4)') ? row.querySelector('td:nth-child(4)').textContent.toLowerCase() : '';
-
-                        // Show the row if any of the fields match the search value
-                        if (id.includes(searchValue) || firstName.includes(searchValue) || lastName.includes(searchValue) || relationship.includes(searchValue)) {
-                            row.style.display = '';
-                        } else {
-                            row.style.display = 'none';
-                        }
-                    });
-                });
+           
 
                 // Upload form submission
                 document.getElementById('upload-form').addEventListener('submit', function(event) {
@@ -800,7 +723,7 @@
                                 showConfirmButton: false,
                                 timer: 1500
                             });
-                            fetchAndUpdateStaffTable(); // Re-fetch and update the table
+                            fetchAndUpdateParentsTable(); // Re-fetch and update the table
                             document.getElementById('upload-form').reset();
                             document.getElementById('file-name').textContent = 'No file chosen';
                         } else {
@@ -824,7 +747,7 @@
                 });
 
                 // Add late parents form submission
-                document.getElementById('late-staff-form').addEventListener('submit', function(event) {
+                document.getElementById('late-parents-form').addEventListener('submit', function(event) {
                     event.preventDefault();
                     var formData = new FormData(this);
 
@@ -845,8 +768,8 @@
                                 showConfirmButton: false,
                                 timer: 1500
                             });
-                            fetchAndUpdateStaffTable(); // Re-fetch and update the table
-                            document.getElementById('late-staff-form').reset();
+                            fetchAndUpdateParentsTable(); // Re-fetch and update the table
+                            document.getElementById('late-parents-form').reset();
                         } else {
                             Swal.fire({
                                 icon: 'error',
@@ -867,8 +790,79 @@
                     });
                 });
 
-                // Fetch updated parents table
-                function fetchAndUpdateStaffTable() {
+                // Edit parent modal functionality
+                const editModal = document.getElementById('edit-parent-modal');
+                const closeModalButtons = editModal.querySelectorAll('.close');
+
+                closeModalButtons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        editModal.style.display = 'none';
+                    });
+                });
+
+                window.onclick = function(event) {
+                    if (event.target == editModal) {
+                        editModal.style.display = 'none';
+                    }
+                }
+
+                // Form submission inside the modal
+                document.getElementById('edit-parent-form').addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    var formData = new FormData(this);
+                    var parentId = document.getElementById('edit-parent-id').value;
+
+                    // Convert FormData to JSON
+                    var data = {};
+                    formData.forEach((value, key) => {
+                        data[key] = value;
+                    });
+
+                    fetch(`/admin/parents/${parentId}/edit`, {
+                        method: 'POST',
+                        body: JSON.stringify(data),
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: data.message,
+                                showConfirmButton: false,
+                                timer: 1500
+                            });
+                            fetchAndUpdateParentsTable(); // Re-fetch and update the table
+                            editModal.style.display = 'none'; // Close the modal
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                html: data.errors ? data.errors.join('<br>') : data.message,
+                                showConfirmButton: true,
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'There was a problem updating the parent.',
+                            showConfirmButton: true,
+                        });
+                    });
+                });
+
+                // Initial fetch of parents on page load
+                fetchAndUpdateParentsTable();
+
+                // Function to fetch and update parents table
+                function fetchAndUpdateParentsTable() {
                     fetch('{{ route('admin.parents.enrolled') }}', {
                         method: 'GET',
                         headers: {
@@ -877,55 +871,64 @@
                     })
                     .then(response => response.json())
                     .then(parents => {
-                        updateStaffTable(parents);
+                        updateParentsTable(parents);
                     })
                     .catch(error => {
                         console.error('Error:', error);
                     });
                 }
 
-                // Update parents table
-                function updateStaffTable(parents) {
-                    var tbody = document.getElementById('staff-table-body');
-                    if (!tbody) {
-                        console.error("Element with ID 'staff-table-body' not found.");
-                        return;
-                    }
-                    tbody.innerHTML = '';
-                    parents.forEach(parent => {
-                        var row = document.createElement('tr');
-                        row.id = 'staff-row-' + parent.id;
+                // Function to update parents table
+                function updateParentsTable(parents) {
+    var tbody = document.getElementById('parents-table-body');
+    if (!tbody) {
+        console.error("Element with ID 'parents-table-body' not found.");
+        return;
+    }
+    tbody.innerHTML = '';
+    parents.forEach(parent => {
+        var row = document.createElement('tr');
+        row.id = 'parents-row-' + parent.id;
 
-                        row.innerHTML = `
-                            <td>${parent.id_number}</td>
-                            <td>${parent.first_name}</td>
-                            <td>${parent.last_name}</td>
-                            <td>${parent.relationship}</td>
-                            <td>
-                                <label class="switch">
-                                    <input type="checkbox" class="toggle-approval" data-parent-id="${parent.id}" ${parent.approved ? 'checked' : ''}>
-                                    <span class="slider"></span>
-                                </label>
-                                <span class="status-text" style="margin-left: 8px; color: ${parent.approved ? '#28a745' : '#dc3545'};">
-                                    ${parent.approved ? 'Active' : 'Inactive'}
-                                </span>
-                            </td>
-                            <td>
-                                <button class="edit-button" data-parent-id="${parent.id}">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                                <button class="delete-button" onclick="deleteParent(${parent.id})">
-                                    <i class="fas fa-trash-alt"></i> Delete
-                                </button>
-                            </td>
-                        `;
-                        tbody.appendChild(row);
-                    });
-                    attachToggleApprovalEvents();
-                    attachEditEvents();
-                }
+        row.innerHTML = `
+            <td>${parent.id_number}</td>
+            <td>${parent.first_name}</td>
+            <td>${parent.last_name}</td>
+            <td>${parent.student ? parent.student.first_name + ' ' + parent.student.last_name : '<span class="text-muted">N/A</span>'}</td>
+            <td>
+                ${parent.guardian_relationship !== 'Not Specified' 
+                    ? parent.guardian_relationship 
+                    : `<span class="text-warning">Not Specified</span> <a href="/admin/parents/${parent.id}/edit" class="edit-link" style="margin-left: 10px;"><i class="fas fa-edit"></i> Add Relationship</a>`}
+            </td>
+            <td>
+                <button class="preview-button status-button" style="background-color: ${parent.approved ? '#28a745' : '#dc3545'};">
+                    ${parent.approved ? 'Active' : 'Inactive'}
+                </button>
+            </td>
+            <td>
+                <label class="switch" aria-label="Toggle parent approval status">
+                    <input type="checkbox" class="toggle-approval" data-parent-id="${parent.id}" ${parent.approved ? 'checked' : ''}>
+                    <span class="slider"></span>
+                </label>
+            </td>
+            <td>
+                <button class="edit-button" data-parent-id="${parent.id}" aria-label="Edit Parent">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="delete-button" onclick="deleteParent(${parent.id})" aria-label="Delete Parent">
+                    <i class="fas fa-trash-alt"></i> Delete
+                </button>
+            </td>
+        `;
 
-                // Toggle approval events
+        tbody.appendChild(row);
+    });
+    attachToggleApprovalEvents();
+    attachEditEvents();
+}
+
+
+                // Function to attach toggle approval events
                 function attachToggleApprovalEvents() {
                     document.querySelectorAll('.toggle-approval').forEach(input => {
                         input.addEventListener('change', function() {
@@ -981,20 +984,27 @@
                     });
                 }
 
-                // Update parent row
+                // Function to update parent row status
                 function updateParentRow(parentId, parent) {
-                    var row = document.getElementById('staff-row-' + parentId);
+                    var row = document.getElementById('parents-row-' + parentId);
                     if (!row) {
                         console.error(`Row for parentId ${parentId} not found`);
                         return;
                     }
 
-                    var statusText = row.querySelector('.status-text');
-                    statusText.textContent = parent.approved ? 'Active' : 'Inactive';
-                    statusText.style.color = parent.approved ? '#28a745' : '#dc3545';
+                    var statusButton = row.querySelector('.status-button');
+
+                    // Update button text and background color
+                    if (parent.approved == 1) {
+                        statusButton.textContent = 'Active';
+                        statusButton.style.backgroundColor = '#28a745';
+                    } else {
+                        statusButton.textContent = 'Inactive';
+                        statusButton.style.backgroundColor = '#dc3545';
+                    }
                 }
 
-                // Edit button events
+                // Function to attach edit button events
                 function attachEditEvents() {
                     document.querySelectorAll('.edit-button').forEach(button => {
                         button.addEventListener('click', function() {
@@ -1014,54 +1024,239 @@
                     });
                 }
 
-                // Form submission inside the modal
-                document.getElementById('edit-parent-form').addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    var formData = new FormData(this);
-                    var parentId = document.getElementById('edit-parent-id').value;
+                // Function to open the edit modal and populate it with parent data
+                function openEditModal(parent) {
+                    document.getElementById('edit-parent-id').value = parent.id;
+                    document.getElementById('edit-id-number').value = parent.id_number;
+                    document.getElementById('edit-first-name').value = parent.first_name;
+                    document.getElementById('edit-last-name').value = parent.last_name;
+                    document.getElementById('edit-student-id').value = parent.student_id;
+                    document.getElementById('edit-relationship').value = parent.guardian_relationship !== 'Not Specified' ? parent.guardian_relationship : '';
 
-                    fetch(`/admin/parents/${parentId}/edit`, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: data.message,
-                                showConfirmButton: false,
-                                timer: 1500
+                    // Display the modal
+                    document.getElementById('edit-parent-modal').style.display = 'flex';
+                }
+
+                // Global deleteParent function to be available on button click
+                window.deleteParent = function(parentId) {
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "You won't be able to revert this!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, delete it!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            fetch(`/admin/parents/${parentId}`, {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    _method: 'DELETE'
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire('Deleted!', data.message, 'success');
+                                    document.getElementById('parents-row-' + parentId).remove();
+                                } else {
+                                    Swal.fire('Error!', 'There was a problem deleting the parent.', 'error');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                Swal.fire('Error!', 'There was a problem deleting the parent.', 'error');
                             });
-                            fetchAndUpdateStaffTable(); // Re-fetch and update the table
-                            document.getElementById('edit-parent-modal').style.display = 'none'; // Close the modal
-                        } else {
+                        }
+                    });
+                }
+            });
+
+            // Function to attach event listeners for Edit and Toggle buttons after table update
+            function attachToggleApprovalEvents() {
+                document.querySelectorAll('.toggle-approval').forEach(input => {
+                    input.addEventListener('change', function() {
+                        var parentId = this.getAttribute('data-parent-id');
+                        var approved = this.checked ? 1 : 0;
+
+                        var formData = new FormData();
+                        formData.append('approved', approved);
+
+                        var actionUrl = `/admin/parents/${parentId}/toggle-approval`;
+
+                        fetch(actionUrl, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success',
+                                    text: data.message,
+                                    showConfirmButton: false,
+                                    timer: 1500
+                                });
+                                updateParentRow(parentId, data.parent);
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'There was a problem updating the parent status.',
+                                    showConfirmButton: true,
+                                });
+                                // Revert the checkbox state
+                                this.checked = !approved;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error',
-                                html: data.errors.join('<br>'),
+                                text: 'There was a problem updating the parent status.',
                                 showConfirmButton: true,
                             });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'There was a problem updating the parent.',
-                            showConfirmButton: true,
+                            // Revert the checkbox state
+                            this.checked = !approved;
                         });
                     });
                 });
+            }
 
-                // Initial fetch of parents
-                fetchAndUpdateStaffTable();
+            function attachEditEvents() {
+                document.querySelectorAll('.edit-button').forEach(button => {
+                    button.addEventListener('click', function() {
+                        var parentId = this.getAttribute('data-parent-id');
+
+                        // Fetch parent data and open the modal
+                        fetch(`/admin/parents/${parentId}`)
+                            .then(response => response.json())
+                            .then(parent => {
+                                openEditModal(parent); // Open the modal with the parent data
+                            })
+                            .catch(error => {
+                                console.error('Error fetching parent data:', error);
+                                Swal.fire('Error', 'Unable to fetch parent data', 'error');
+                            });
+                    });
+                });
+            }
+
+            function openEditModal(parent) {
+                document.getElementById('edit-parent-id').value = parent.id;
+                document.getElementById('edit-id-number').value = parent.id_number;
+                document.getElementById('edit-first-name').value = parent.first_name;
+                document.getElementById('edit-last-name').value = parent.last_name;
+                document.getElementById('edit-student-id').value = parent.student_id;
+                document.getElementById('edit-relationship').value = parent.guardian_relationship !== 'Not Specified' ? parent.guardian_relationship : '';
+
+                // Display the modal
+                document.getElementById('edit-parent-modal').style.display = 'flex';
+            }
+
+            // Close the modal when clicking the 'X' button or outside the modal
+            document.querySelectorAll('.close').forEach(closeBtn => {
+                closeBtn.addEventListener('click', function() {
+                    document.getElementById('edit-parent-modal').style.display = 'none';
+                });
             });
+
+            window.onclick = function(event) {
+                const modal = document.getElementById('edit-parent-modal');
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+
+            // Form submission inside the modal
+            document.getElementById('edit-parent-form').addEventListener('submit', function(event) {
+                event.preventDefault();
+                var formData = new FormData(this);
+                var parentId = document.getElementById('edit-parent-id').value;
+
+                // Convert FormData to JSON
+                var data = {};
+                formData.forEach((value, key) => {
+                    data[key] = value;
+                });
+
+                fetch(`/admin/parents/${parentId}/edit`, {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: data.message,
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        fetchAndUpdateParentsTable(); // Re-fetch and update the table
+                        document.getElementById('edit-parent-modal').style.display = 'none'; // Close the modal
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            html: data.errors ? data.errors.join('<br>') : data.message,
+                            showConfirmButton: true,
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'There was a problem updating the parent.',
+                        showConfirmButton: true,
+                    });
+                });
+            });
+
+            // Function to update parent row status after toggle
+            function updateParentRow(parentId, parent) {
+                var row = document.getElementById('parents-row-' + parentId);
+                if (!row) {
+                    console.error(`Row for parentId ${parentId} not found`);
+                    return;
+                }
+
+                var statusButton = row.querySelector('.status-button');
+
+                // Update button text and background color
+                if (parent.approved == 1) {
+                    statusButton.textContent = 'Active';
+                    statusButton.style.backgroundColor = '#28a745';
+                } else {
+                    statusButton.textContent = 'Inactive';
+                    statusButton.style.backgroundColor = '#dc3545';
+                }
+
+                // Update relationship column if changed
+                var relationshipCell = row.querySelector('td:nth-child(5)');
+                if (parent.guardian_relationship !== 'Not Specified') {
+                    relationshipCell.innerHTML = parent.guardian_relationship;
+                } else {
+                    relationshipCell.innerHTML = `<span class="text-warning">Not Specified</span> <a href="/admin/parents/${parentId}/edit" class="edit-link" style="margin-left: 10px;"><i class="fas fa-edit"></i> Add Relationship</a>`;
+                }
+            }
         </script>
     </div>
 </x-app-layout>

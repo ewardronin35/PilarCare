@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :pageTitle="' Appointments'">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         /* Legend Styling */
@@ -703,6 +703,11 @@
     </style>
 
 
+    @php
+        $userRole = strtolower(Auth::user()->role);
+        $currentDoctor = $userRole === 'doctor' ? Auth::user()->doctor : null;
+    @endphp
+
     <main class="main-content">
         <div class="tabs">
             <div class="tab active" onclick="showTab('add-appointment-calendar')">Add Appointment & Calendar</div>
@@ -713,35 +718,42 @@
         <div id="add-appointment-calendar" class="tab-content active">
             <div style="display: flex; justify-content: space-between; width: 100%; gap: 20px; flex-wrap: wrap;">
                 <!-- Form Section -->
-                <div class="form-container" style="flex: 1;">
-                    <h2>Add Appointment</h2>
-                    <form id="add-form">
-                        @csrf
-                        <div class="form-group">
-                            <label for="id-number">ID Number</label>
-                            <div style="display: flex; align-items: center;">
-                                <input type="text" id="id-number" name="id_number" placeholder="Enter ID Number" required maxlength="7">
-                                <button type="button" class="search-btn" onclick="fetchPatientName()">Search</button>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="patient-name">Patient Name</label>
-                            <input type="text" id="patient-name" name="patient_name" required>
-                        </div>
-                        <div class="form-group input-row">
-                            <div class="input-column">
-                                <label for="appointment-date">Appointment Date</label>
-                                <input type="date" id="appointment-date" name="appointment_date" required>
-                            </div>
-                            <div class="input-column">
-                                <label for="appointment-time">Appointment Time</label>
-                                <input type="time" id="appointment-time" name="appointment_time" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="appointment-type">Appointment Type</label>
-                            <select id="appointment-type" name="appointment_type" required>
-                                <option value="General Checkup">General Checkup</option>
+           <!-- Form Section -->
+<div class="form-container" style="flex: 1;">
+    <h2>Add Appointment</h2>
+    <form id="add-form">
+        @csrf
+        <!-- ID Number Field -->
+        <div class="form-group">
+            <label for="id-number">ID Number</label>
+            <div style="display: flex; align-items: center;">
+                <input type="text" id="id-number" name="id_number" placeholder="Enter ID Number" required maxlength="7">
+                <button type="button" class="search-btn" onclick="fetchPatientName()">Search</button>
+            </div>
+        </div>
+        <!-- Patient Name Field -->
+        <div class="form-group">
+            <label for="patient-name">Patient Name</label>
+            <input type="text" id="patient-name" name="patient_name" required readonly>
+        </div>
+        <!-- Appointment Date and Time -->
+        <div class="form-group input-row">
+            <div class="input-column">
+                <label for="appointment-date">Appointment Date</label>
+                <input type="date" id="appointment-date" name="appointment_date" required>
+            </div>
+            <div class="input-column">
+                <label for="appointment-time">Appointment Time</label>
+                <input type="time" id="appointment-time" name="appointment_time" required min="08:00" max="16:00" step="3600">
+            </div>
+        </div>
+        <!-- Appointment Type -->
+        <div class="form-group">
+            <label for="appointment-type">Appointment Type</label>
+            <select id="appointment-type" name="appointment_type" required>
+                <!-- Add more options as needed -->
+                <option value="General Checkup">General Checkup</option>
+  <option value="General Checkup">General Checkup</option>
                                 <option value="Dental Cleaning">Dental Cleaning</option>
                                 <option value="Cavity Treatment">Cavity Treatment</option>
                                 <option value="Orthodontics Consultation">Orthodontics Consultation</option>
@@ -767,21 +779,34 @@
                                 <option value="Skin Examination">Skin Examination</option>
                                 <option value="Diabetes Screening">Diabetes Screening</option>
                                 <option value="Hypertension Screening">Hypertension Screening</option>
-                                <option value="Cholesterol Check">Cholesterol Check</option>
-                                <!-- Add more options as needed -->
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="doctor">Doctor <span style="color: red;">*</span></label>
-                            <!-- Auto-select the logged-in doctor and disable the dropdown -->
-                            <input type="hidden" id="doctor-id" name="doctor_id" value="{{ $doctors->first()->id ?? '' }}">
-                            <input type="text" value="{{ $doctors->first()->user->first_name ?? '' }} {{ $doctors->first()->user->last_name ?? '' }} ({{ $doctors->first()->specialization ?? '' }})" disabled>
-                        </div>
-                        <div class="form-group">
-                            <button type="button" class="add-appointment-btn" onclick="addAppointment()">Add Appointment</button>
-                        </div>
-                    </form>
-                </div>
+                                <option value="Cholesterol Check">Cholesterol Check</option>            </select>
+        </div>
+        <!-- Conditionally Render Doctor Field -->
+        @if ($userRole === 'doctor' && $currentDoctor)
+            <div class="form-group">
+                <label for="doctor">Doctor</label>
+                <input type="hidden" id="doctor-id" name="doctor_id" value="{{ $currentDoctor->id }}">
+                <input type="text" value="{{ $currentDoctor->user->first_name }} {{ $currentDoctor->user->last_name }} ({{ $currentDoctor->specialization }})" readonly>
+            </div>
+        @else
+            <div class="form-group">
+                <label for="doctor">Select Doctor <span style="color: red;">*</span></label>
+                <select id="doctor-id" name="doctor_id" required>
+                    <option value="" disabled selected>Select Doctor</option>
+                    @foreach($doctors as $doctor)
+                        <option value="{{ $doctor->id }}">
+                            {{ $doctor->user->first_name }} {{ $doctor->user->last_name }} ({{ $doctor->specialization }})
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        @endif
+        <!-- Add Appointment Button -->
+        <div class="form-group">
+            <button type="button" class="add-appointment-btn" onclick="addAppointment()">Add Appointment</button>
+        </div>
+    </form>
+</div>
 
                 <!-- Calendar Section -->
                 <div class="calendar-container" style="flex: 1.5;">
@@ -890,36 +915,42 @@
         </div>
 
         <!-- Edit Appointment Modal -->
-        <div id="edit-modal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="closeEditModal()">&times;</span>
-                <h2>Edit Appointment</h2>
-                <form id="edit-form">
-                    @csrf
-                    @method('PUT') <!-- Add method field for PUT request -->
-                    <input type="hidden" id="edit-appointment-id" name="id">
-                    <div class="form-group">
-                        <label for="edit-id-number">ID Number</label>
-                        <input type="text" id="edit-id-number" name="id_number" required maxlength="7">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-patient-name">Patient Name</label>
-                        <input type="text" id="edit-patient-name" name="patient_name" required>
-                    </div>
-                    <div class="form-group input-row">
-                        <div class="input-column">
-                            <label for="edit-appointment-date">Appointment Date</label>
-                            <input type="date" id="edit-appointment-date" name="appointment_date" required>
-                        </div>
-                        <div class="input-column">
-                            <label for="edit-appointment-time">Appointment Time</label>
-                            <input type="time" id="edit-appointment-time" name="appointment_time" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-appointment-type">Appointment Type</label>
-                        <select id="edit-appointment-type" name="appointment_type" required>
-                            <option value="General Checkup">General Checkup</option>
+     <!-- Edit Appointment Modal -->
+<div id="edit-modal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeEditModal()">&times;</span>
+        <h2>Edit Appointment</h2>
+        <form id="edit-form">
+            @csrf
+            @method('PUT') <!-- Add method field for PUT request -->
+            <input type="hidden" id="edit-appointment-id" name="id">
+            <!-- ID Number Field -->
+            <div class="form-group">
+                <label for="edit-id-number">ID Number</label>
+                <input type="text" id="edit-id-number" name="id_number" required maxlength="7">
+            </div>
+            <!-- Patient Name Field -->
+            <div class="form-group">
+                <label for="edit-patient-name">Patient Name</label>
+                <input type="text" id="edit-patient-name" name="patient_name" required>
+            </div>
+            <!-- Appointment Date and Time -->
+            <div class="form-group input-row">
+                <div class="input-column">
+                    <label for="edit-appointment-date">Appointment Date</label>
+                    <input type="date" id="edit-appointment-date" name="appointment_date" required>
+                </div>
+                <div class="input-column">
+                    <label for="edit-appointment-time">Appointment Time</label>
+                    <input type="time" id="edit-appointment-time" name="appointment_time" required min="08:00" max="16:00" step="3600">
+                </div>
+            </div>
+            <!-- Appointment Type -->
+            <div class="form-group">
+                <label for="edit-appointment-type">Appointment Type</label>
+                <select id="edit-appointment-type" name="appointment_type" required>
+                    <!-- Add more options as needed -->
+   <option value="General Checkup">General Checkup</option>
                             <option value="Dental Cleaning">Dental Cleaning</option>
                             <option value="Cavity Treatment">Cavity Treatment</option>
                             <option value="Orthodontics Consultation">Orthodontics Consultation</option>
@@ -945,22 +976,36 @@
                             <option value="Skin Examination">Skin Examination</option>
                             <option value="Diabetes Screening">Diabetes Screening</option>
                             <option value="Hypertension Screening">Hypertension Screening</option>
-                            <option value="Cholesterol Check">Cholesterol Check</option>
-                            <!-- Add more options as needed -->
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-doctor">Doctor</label>
-                        <!-- Auto-select the logged-in doctor and disable the dropdown -->
-                        <input type="hidden" id="edit-doctor-id" name="doctor_id" value="{{ $doctors->first()->id ?? '' }}">
-                        <input type="text" value="{{ $doctors->first()->user->first_name ?? '' }} {{ $doctors->first()->user->last_name ?? '' }} ({{ $doctors->first()->specialization ?? '' }})" disabled>
-                    </div>
-                    <div class="form-group">
-                        <button type="button" class="add-appointment-btn" onclick="updateAppointment()">Update Appointment</button>
-                    </div>
-                </form>
+                            <option value="Cholesterol Check">Cholesterol Check</option>                    <!-- ... other options ... -->
+                </select>
             </div>
-        </div>
+            <!-- Conditionally Render Doctor Field -->
+            @if ($userRole === 'doctor' && $currentDoctor)
+                <div class="form-group">
+                    <label for="edit-doctor">Doctor</label>
+                    <input type="hidden" id="edit-doctor-id" name="doctor_id" value="{{ $currentDoctor->id }}">
+                    <input type="text" value="{{ $currentDoctor->user->first_name }} {{ $currentDoctor->user->last_name }} ({{ $currentDoctor->specialization }})" readonly>
+                </div>
+            @else
+                <div class="form-group">
+                    <label for="edit-doctor">Select Doctor</label>
+                    <select id="edit-doctor-id" name="doctor_id" required>
+                        <option value="" disabled selected>Select Doctor</option>
+                        @foreach($doctors as $doctor)
+                            <option value="{{ $doctor->id }}">
+                                {{ $doctor->user->first_name }} {{ $doctor->user->last_name }} ({{ $doctor->specialization }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
+            <!-- Update Appointment Button -->
+            <div class="form-group">
+                <button type="button" class="add-appointment-btn" onclick="updateAppointment()">Update Appointment</button>
+            </div>
+        </form>
+    </div>
+</div>
 
         <!-- Preview Appointments Modal -->
         <div id="preview-modal" class="modal">
@@ -1067,47 +1112,60 @@
 
     // Open Edit Modal Function
     function openEditModal(id) {
-        const appointment = document.getElementById(`appointment-row-${id}`);
-        if (!appointment) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Appointment data not found.',
-                timer: 3000,
-                showConfirmButton: false
-            });
-            return;
-        }
-
-        document.getElementById('edit-appointment-id').value = id;
-        document.getElementById('edit-id-number').value = appointment.children[0].innerText;
-        document.getElementById('edit-patient-name').value = appointment.children[1].innerText;
-        
-        // Convert formatted date back to Y-m-d for input value
-        const dateParts = appointment.children[2].innerText.split(' ');
-        const date = new Date(`${dateParts[0]} ${dateParts[1]} ${dateParts[2]}`);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const formattedDate = `${year}-${month}-${day}`;
-        document.getElementById('edit-appointment-date').value = formattedDate;
-
-        // Convert formatted time back to H:i for input value
-        const timeParts = appointment.children[3].innerText.split(' ');
-        let [hour, minute] = timeParts[0].split(':');
-        const ampm = timeParts[1];
-        hour = ampm === 'PM' && hour !== '12' ? parseInt(hour) + 12 : hour;
-        const formattedTime = `${String(hour).padStart(2, '0')}:${minute}`;
-        document.getElementById('edit-appointment-time').value = formattedTime;
-
-        document.getElementById('edit-appointment-type').value = appointment.children[4].innerText;
-
-        // Populate doctors dropdown
-        populateEditDoctorsDropdown();
-
-        // Since the doctor is auto-selected and the dropdown is disabled, no action needed
-        document.getElementById('edit-modal').style.display = 'block';
+    const appointment = document.getElementById(`appointment-row-${id}`);
+    if (!appointment) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Appointment data not found.',
+            timer: 3000,
+            showConfirmButton: false
+        });
+        return;
     }
+
+    document.getElementById('edit-appointment-id').value = id;
+    document.getElementById('edit-id-number').value = appointment.children[0].innerText;
+    document.getElementById('edit-patient-name').value = appointment.children[1].innerText;
+
+    // Convert formatted date back to Y-m-d for input value
+    const dateParts = appointment.children[2].innerText.split(' ');
+    const date = new Date(`${dateParts[0]} ${dateParts[1]} ${dateParts[2]}`);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`;
+    document.getElementById('edit-appointment-date').value = formattedDate;
+
+    // Convert formatted time back to H:i for input value
+    const timeParts = appointment.children[3].innerText.split(' ');
+    let [hour, minute] = timeParts[0].split(':');
+    const ampm = timeParts[1];
+    hour = ampm === 'PM' && hour !== '12' ? parseInt(hour) + 12 : hour;
+    const formattedTime = `${String(hour).padStart(2, '0')}:${minute}`;
+    document.getElementById('edit-appointment-time').value = formattedTime;
+
+    document.getElementById('edit-appointment-type').value = appointment.children[4].innerText;
+
+    // Conditionally handle doctor field
+    if (userRole === 'doctor' && "{{ $currentDoctor->id ?? '' }}" !== '') {
+        // If user is a doctor, set the hidden doctor_id and display the read-only name
+        document.getElementById('edit-doctor-id').value = "{{ $currentDoctor->id ?? '' }}";
+    } else {
+        // For non-doctors, select the appropriate doctor from the dropdown
+        const doctorName = appointment.children[5].innerText.trim(); // Assuming the 6th column is Doctor
+        const doctorSelect = document.getElementById('edit-doctor-id');
+        for (let i = 0; i < doctorSelect.options.length; i++) {
+            const option = doctorSelect.options[i];
+            if (option.textContent.includes(doctorName)) {
+                option.selected = true;
+                break;
+            }
+        }
+    }
+
+    document.getElementById('edit-modal').style.display = 'block';
+}
 
     // Close Edit Modal Function
     function closeEditModal() {
@@ -1121,88 +1179,129 @@
 
     // Add Appointment Function with Front-end Validation
     function addAppointment() {
-        const form = document.getElementById('add-form');
-        const doctorId = document.getElementById('doctor-id').value;
-        const appointmentDate = document.getElementById('appointment-date').value;
-        const appointmentTime = document.getElementById('appointment-time').value;
+    const form = document.getElementById('add-form');
+    const doctorSelect = document.getElementById('doctor-id');
+    const doctorId = doctorSelect ? doctorSelect.value : document.getElementById('doctor-id').value;
+    const appointmentDate = document.getElementById('appointment-date').value;
+    const appointmentTime = document.getElementById('appointment-time').value;
+    const addButton = form.querySelector('.add-appointment-btn');
 
-        // Front-end Validation
-        if (!appointmentDate) {
+    // Front-end Validation
+    if (!appointmentDate) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            text: 'Please select an appointment date.',
+            timer: 3000,
+            showConfirmButton: false
+        });
+        return;
+    }
+
+    if (!appointmentTime) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            text: 'Please select an appointment time.',
+            timer: 3000,
+            showConfirmButton: false
+        });
+        return;
+    }
+
+    if (!doctorId) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Doctor Not Selected',
+            text: 'Please select a doctor before adding an appointment.',
+            timer: 3000,
+            showConfirmButton: false
+        });
+        return;
+    }
+
+    // Optional: Add Confirmation Prompt
+    Swal.fire({
+        title: 'Confirm Appointment',
+        text: "Are you sure you want to add this appointment?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#00d1ff',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, add it!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Disable the Add Appointment Button to Prevent Multiple Clicks
+            addButton.disabled = true;
+            addButton.style.cursor = 'not-allowed';
+            addButton.style.opacity = '0.6';
+
+            // Show Loading SweetAlert
             Swal.fire({
-                icon: 'error',
-                title: 'Validation Error',
-                text: 'Please select an appointment date.',
-                timer: 3000,
-                showConfirmButton: false
+                title: 'Submitting...',
+                text: 'Please wait while your appointment is being added.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
             });
-            return;
-        }
 
-        if (!appointmentTime) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Validation Error',
-                text: 'Please select an appointment time.',
-                timer: 3000,
-                showConfirmButton: false
-            });
-            return;
-        }
+            // Prepare FormData
+            const formData = new FormData(form);
 
-        if (!doctorId) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Doctor Not Selected',
-                text: 'Please select a doctor before adding an appointment.',
-                timer: 3000,
-                showConfirmButton: false
-            });
-            return;
-        }
+            fetch('{{ route("doctor.appointment.add") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.close(); // Close the loading SweetAlert
+                addButton.disabled = false; // Re-enable the button
+                addButton.style.cursor = 'pointer';
+                addButton.style.opacity = '1';
 
-        const formData = new FormData(form);
-
-        fetch('{{ route("doctor.appointment.add") }}', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: data.success,
-                    timer: 3000,
-                    showConfirmButton: false
-                });
-                setTimeout(() => {
-                    location.reload();
-                }, 3000);
-            } else {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: data.success,
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                    setTimeout(() => {
+                        location.reload();
+                    }, 3000);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error || 'Error adding appointment',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.close(); // Close the loading SweetAlert
+                addButton.disabled = false; // Re-enable the button
+                addButton.style.cursor = 'pointer';
+                addButton.style.opacity = '1';
+                console.error('Error:', error);
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: data.error || 'Error adding appointment',
+                    text: 'Unexpected error occurred.',
                     timer: 3000,
                     showConfirmButton: false
                 });
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Unexpected error occurred.',
-                timer: 3000,
-                showConfirmButton: false
             });
-        });
-    }
+        }
+    });
+}
 
     // Confirm Delete Function
     function confirmDelete(id) {
@@ -1438,99 +1537,184 @@
 
     // Populate Edit Doctors Dropdown (Auto-select the logged-in doctor)
     function populateEditDoctorsDropdown() {
-        const doctorId = "{{ $doctors->first()->id ?? '' }}";
-        const doctorName = "{{ $doctors->first()->user->first_name ?? '' }} {{ $doctors->first()->user->last_name ?? '' }} ({{ $doctors->first()->specialization ?? '' }})";
-        const doctorSelect = document.getElementById('edit-doctor-id');
-        // Since the doctor is auto-selected and the dropdown is disabled, no action needed
-        // If you plan to have a dropdown in the future, you can populate it here
+    if (userRole === 'doctor') {
+        // Doctors cannot change the assigned doctor, no action needed
+        return;
     }
 
-    // Update Appointment Function with Front-end Validation
-    function updateAppointment() {
-        const form = document.getElementById('edit-form');
-        const doctorId = document.getElementById('edit-doctor-id').value;
-        const appointmentDate = document.getElementById('edit-appointment-date').value;
-        const appointmentTime = document.getElementById('edit-appointment-time').value;
-
-        // Front-end Validation
-        if (!appointmentDate) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Validation Error',
-                text: 'Please select an appointment date.',
-                timer: 3000,
-                showConfirmButton: false
-            });
-            return;
-        }
-
-        if (!appointmentTime) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Validation Error',
-                text: 'Please select an appointment time.',
-                timer: 3000,
-                showConfirmButton: false
-            });
-            return;
-        }
-
-        if (!doctorId) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Doctor Not Selected',
-                text: 'Please select a doctor before updating the appointment.',
-                timer: 3000,
-                showConfirmButton: false
-            });
-            return;
-        }
-
-        const formData = new FormData(form);
-        const id = document.getElementById('edit-appointment-id').value;
-        const data = {};
-
-        formData.forEach((value, key) => {
-            data[key] = value;
-        });
-
-        fetch(`/doctor/appointment/update/${id}`, {
-            method: 'PUT',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
+    fetch('{{ route("doctor.appointment.getApprovedDoctors") }}')
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                showNotification('Appointment Rescheduled Successfully');
-                setTimeout(() => {
-                    location.reload();
-                }, 3000);
+            const doctorSelect = document.getElementById('edit-doctor-id');
+            if (!doctorSelect) return; // Exit if doctor select doesn't exist
+
+            doctorSelect.innerHTML = '<option value="" disabled selected>Select Doctor</option>';
+
+            if (data.available_doctors.length > 0) {
+                data.available_doctors.forEach(doctor => {
+                    const option = document.createElement('option');
+                    option.value = doctor.id;
+                    option.textContent = `${doctor.user.first_name} ${doctor.user.last_name} (${doctor.specialization})`;
+                    doctorSelect.appendChild(option);
+                });
             } else {
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Error rescheduling appointment',
+                    icon: 'warning',
+                    title: 'No Doctors Available',
+                    text: 'No doctors are available on the selected date. Please choose another date.',
                     timer: 3000,
                     showConfirmButton: false
                 });
+                document.getElementById('edit-appointment-date').value = ''; // Clear date input
+                doctorSelect.innerHTML = '<option value="" disabled selected>No Doctors Available</option>';
             }
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Error fetching approved doctors:', error);
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Unexpected error occurred.',
+                text: 'Failed to load doctors.',
                 timer: 3000,
                 showConfirmButton: false
             });
         });
+}
+
+
+    // Update Appointment Function with Front-end Validation
+    function updateAppointment() {
+    const form = document.getElementById('edit-form');
+    const doctorSelect = document.getElementById('edit-doctor-id');
+    const doctorId = doctorSelect ? doctorSelect.value : document.getElementById('edit-doctor-id').value;
+    const appointmentDate = document.getElementById('edit-appointment-date').value;
+    const appointmentTime = document.getElementById('edit-appointment-time').value;
+    const updateButton = form.querySelector('.add-appointment-btn');
+
+    // Front-end Validation
+    if (!appointmentDate) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            text: 'Please select an appointment date.',
+            timer: 3000,
+            showConfirmButton: false
+        });
+        return;
     }
+
+    if (!appointmentTime) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            text: 'Please select an appointment time.',
+            timer: 3000,
+            showConfirmButton: false
+        });
+        return;
+    }
+
+    if (!doctorId) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Doctor Not Selected',
+            text: 'Please select a doctor before updating the appointment.',
+            timer: 3000,
+            showConfirmButton: false
+        });
+        return;
+    }
+
+    // Confirmation Prompt
+    Swal.fire({
+        title: 'Confirm Update',
+        text: "Are you sure you want to update this appointment?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#00d1ff',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, update it!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Disable the button
+            updateButton.disabled = true;
+            updateButton.style.cursor = 'not-allowed';
+            updateButton.style.opacity = '0.6';
+
+            // Show loading
+            Swal.fire({
+                title: 'Updating...',
+                text: 'Please wait while your appointment is being updated.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Prepare FormData
+            const formData = new FormData(form);
+
+            // For debugging: Log all FormData entries
+            for (let pair of formData.entries()) {
+                console.log(`${pair[0]}: ${pair[1]}`);
+            }
+
+            // Change method to POST and ensure _method=PUT is present
+            fetch(`/doctor/appointment/update/${formData.get('id')}`, {
+                method: 'POST', // Changed from 'PUT' to 'POST'
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.close(); // Close the loading SweetAlert
+                updateButton.disabled = false; // Re-enable the button
+                updateButton.style.cursor = 'pointer';
+                updateButton.style.opacity = '1';
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: data.success,
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                    setTimeout(() => {
+                        location.reload();
+                    }, 3000);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error || 'Error updating appointment',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.close(); // Close the loading SweetAlert
+                updateButton.disabled = false; // Re-enable the button
+                updateButton.style.cursor = 'pointer';
+                updateButton.style.opacity = '1';
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Unexpected error occurred.',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            });
+        }
+    });
+}
+
 
     // Open Preview Modal Function
     function openPreviewModal(date, month, year) {

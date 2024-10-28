@@ -18,6 +18,7 @@ class CreateTeethTable extends Migration
             $table->json('dental_pictures')->nullable(); // Path to dental pictures
             $table->boolean('is_current')->default(true); // Indicates if this is the current record
             $table->boolean('is_approved')->default(false); // Indicates if the record is approved
+            $table->boolean('is_new')->default(true); // Indicates if the record is new
             $table->timestamps(); // Created at and updated at timestamps
 
             // Foreign key constraint

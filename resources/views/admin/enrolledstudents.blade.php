@@ -1,4 +1,13 @@
-<x-app-layout>
+<x-app-layout :pageTitle="'Manage Students'">   
+    <head>
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
+<script type="text/javascript" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+<!-- DataTables FixedHeader CSS and JS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/fixedheader/3.1.9/css/fixedHeader.dataTables.min.css">
+<script type="text/javascript" src="https://cdn.datatables.net/fixedheader/3.1.9/js/dataTables.fixedHeader.min.js"></script>
+
+</head>
     <style>
         /* Import Poppins Font */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
@@ -273,6 +282,14 @@
             top: 0;
             z-index: 1;
         }
+/* Additional style for sticky header row */
+.students-table thead th {
+    background-color: #00d2ff;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
 
         .students-table td {
             background-color: #fff;
@@ -575,55 +592,53 @@
         <div id="students-tab" class="tab-content">
             <div class="students-section">
                 <h2><i class="fas fa-users"></i> Enrolled Students</h2>
-                <div class="search-container">
-                    <input type="text" id="student-search" placeholder="Search by ID, Name, or Grade/Course">
-                </div>
+              
                 @if($students->isEmpty())
                     <p>No students enrolled yet.</p>
                 @else
                     <div class="students-table-container">
-                        <table class="students-table" id="students-table">
-                            <thead>
-                                <tr>
-                                    <th><i class="fas fa-id-card"></i> ID</th>
-                                    <th><i class="fas fa-user"></i> First Name</th>
-                                    <th><i class="fas fa-user"></i> Last Name</th>
-                                    <th><i class="fas fa-graduation-cap"></i> Grade/Course</th>
-                                    <th><i class="fas fa-info-circle"></i> Status</th>
-                                    <th><i class="fas fa-toggle-on"></i> Toggle Status</th>
-                                    <th><i class="fas fa-tools"></i> Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="students-table-body">
-                                @foreach($students as $student)
-                                    <tr id="student-row-{{ $student->id }}">
-                                        <td>{{ $student->id_number }}</td>
-                                        <td>{{ $student->first_name }}</td>
-                                        <td>{{ $student->last_name }}</td>
-                                        <td>{{ $student->grade_or_course }}</td>
-                                        <td>
-                                            <button class="preview-button status-button" style="background-color: {{ $student->approved ? '#28a745' : '#dc3545' }};">
-                                                {{ $student->approved ? 'Active' : 'Inactive' }}
-                                            </button>
-                                        </td>
-                                        <td>
-                                            <label class="switch">
-                                                <input type="checkbox" class="toggle-approval" data-student-id="{{ $student->id }}" {{ $student->approved ? 'checked' : '' }}>
-                                                <span class="slider"></span>
-                                            </label>
-                                        </td>
-                                        <td>
-                                            <button class="edit-button" data-student-id="{{ $student->id }}">
-                                                <i class="fas fa-edit"></i> Edit
-                                            </button>
-                                            <button class="delete-button" onclick="deleteStudent({{ $student->id }})">
-                                                <i class="fas fa-trash-alt"></i> Delete
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                    <table class="students-table" id="students-table">
+    <thead>
+        <tr>
+            <th><i class="fas fa-id-card"></i> ID</th>
+            <th><i class="fas fa-user"></i> First Name</th>
+            <th><i class="fas fa-user"></i> Last Name</th>
+            <th><i class="fas fa-graduation-cap"></i> Grade/Course</th>
+            <th><i class="fas fa-info-circle"></i> Status</th>
+            <th><i class="fas fa-toggle-on"></i> Toggle Status</th>
+            <th><i class="fas fa-tools"></i> Actions</th>
+        </tr>
+    </thead>
+    <tbody id="students-table-body">
+        @foreach($students as $student)
+            <tr id="student-row-{{ $student->id }}">
+                <td>{{ $student->id_number }}</td>
+                <td>{{ $student->first_name }}</td>
+                <td>{{ $student->last_name }}</td>
+                <td>{{ $student->grade_or_course }}</td>
+                <td>
+                    <button class="preview-button status-button" style="background-color: {{ $student->approved ? '#28a745' : '#dc3545' }};">
+                        {{ $student->approved ? 'Active' : 'Inactive' }}
+                    </button>
+                </td>
+                <td>
+                    <label class="switch">
+                        <input type="checkbox" class="toggle-approval" data-student-id="{{ $student->id }}" {{ $student->approved ? 'checked' : '' }}>
+                        <span class="slider"></span>
+                    </label>
+                </td>
+                <td>
+                    <button class="edit-button" data-student-id="{{ $student->id }}">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="delete-button" onclick="deleteStudent({{ $student->id }})">
+                        <i class="fas fa-trash-alt"></i> Delete
+                    </button>
+                </td>
+            </tr>
+        @endforeach
+    </tbody>
+</table>
                     </div>
                 @endif
             </div>
@@ -746,8 +761,18 @@
 
             document.addEventListener('DOMContentLoaded', function() {
                 // Initialize modal
-                document.getElementById('edit-student-modal').style.display = 'none';
+                $('#students-table').DataTable({
+            "paging": true,
+            "searching": true,
+            "ordering": true,
+            "info": true,
+            "autoWidth": false,
+            "responsive": true,
+            "fixedHeader": true  // Enable fixed header for sticky header
 
+        });
+                document.getElementById('edit-student-modal').style.display = 'none';
+              
                 // File selection feedback
                 document.getElementById('file').addEventListener('change', function(event) {
                     if(event.target.files.length > 0){
@@ -759,38 +784,7 @@
                 });
 
                 // Toggle upload section
-                const toggleButton = document.getElementById('toggle-upload');
-                const uploadSection = document.getElementById('upload-section');
-                toggleButton.addEventListener('click', function() {
-                    if (uploadSection.classList.contains('hidden')) {
-                        uploadSection.classList.remove('hidden');
-                        toggleButton.innerHTML = '<i class="fas fa-toggle-off"></i> Hide Upload Section';
-                    } else {
-                        uploadSection.classList.add('hidden');
-                        toggleButton.innerHTML = '<i class="fas fa-toggle-on"></i> Show Upload Section';
-                    }
-                });
-
-                // Search functionality
-                const searchInput = document.getElementById('student-search');
-                searchInput.addEventListener('input', function() {
-                    const searchValue = this.value.toLowerCase();
-                    const tableRows = document.querySelectorAll('#students-table tbody tr');
-
-                    tableRows.forEach(row => {
-                        const id = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
-                        const firstName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                        const lastName = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-                        const gradeOrCourse = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
-
-                        // Show the row if any of the fields match the search value
-                        if (id.includes(searchValue) || firstName.includes(searchValue) || lastName.includes(searchValue) || gradeOrCourse.includes(searchValue)) {
-                            row.style.display = '';
-                        } else {
-                            row.style.display = 'none';
-                        }
-                    });
-                });
+     
 
                 // Upload form submission
                 document.getElementById('upload-form').addEventListener('submit', function(event) {
@@ -1029,16 +1023,24 @@
 
                             // Fetch student data and open the modal
                             fetch(`/admin/students/${studentId}`)
-                                .then(response => response.json())
-                                .then(student => {
-                                    openEditModal(student); // Open the modal with the student data
-                                })
-                                .catch(error => {
-                                    console.error('Error fetching student data:', error);
-                                    Swal.fire('Error', 'Unable to fetch student data', 'error');
-                                });
-                        });
-                    });
+                .then(response => response.json())
+                .then(student => {
+                    // Populate modal with student data
+                    document.getElementById('edit-student-id').value = student.id;
+                    document.getElementById('edit-id-number').value = student.id_number;
+                    document.getElementById('edit-first-name').value = student.first_name;
+                    document.getElementById('edit-last-name').value = student.last_name;
+                    document.getElementById('edit-grade-course').value = student.grade_or_course;
+
+                    // Open the modal
+                    document.getElementById('edit-student-modal').style.display = 'flex';
+                })
+                .catch(error => {
+                    console.error('Error fetching student data:', error);
+                    Swal.fire('Error', 'Unable to fetch student data', 'error');
+                });
+        });
+    });
                 }
 
                 // Form submission inside the modal

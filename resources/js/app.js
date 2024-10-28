@@ -1,61 +1,19 @@
 // resources/js/app.js
 
+// Import dependencies
 import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
+import 'sweetalert2/dist/sweetalert2.min.css'; // Import SweetAlert2 CSS
+import 'toastr/build/toastr.min.css'; // Import Toastr CSS
 
 // Assign Pusher to the window object
-window.Pusher = Pusher;
 
-// Initialize Laravel Echo with Pusher
-window.Echo = new Echo({
-    broadcaster: 'pusher',
-    key: window.PUSHER_APP_KEY, // Use global variable
-    cluster: window.PUSHER_APP_CLUSTER, // Use global variable
-    forceTLS: true, // Use TLS for secure connections
-    encrypted: true,
-});
+// Configure Toastr options globally
+toastr.options = {
+    "closeButton": true,
+    "progressBar": true,
+    "positionClass": "toast-top-right",
+    "timeOut": "5000"
+};
 
-// Listen for specific events
-// Listen for specific events
-window.Echo.channel('inventory-channel')
-    .listen('.inventory-expiring', (data) => {
-        console.log('Notification Received:', data);
-        
-        // Update notification count badge
-        let badge = document.querySelector('#notification-icon .badge'); // Corrected selector
-        if (badge) {
-            let currentCount = parseInt(badge.innerText) || 0;
-            badge.innerText = currentCount + 1;
-            badge.style.display = 'inline'; // Ensure it's visible
-        }
+// Function to Perform AJAX Fetch Notifications
 
-        // Prepend new notification to the dropdown
-        let dropdownMenu = document.querySelector('#notification-dropdown');
-        if (dropdownMenu) {
-            // Remove the "No new notifications" message if it exists
-            let noNotifications = dropdownMenu.querySelector('.dropdown-item');
-            if (noNotifications && noNotifications.textContent === 'No new notifications') {
-                noNotifications.remove();
-            }
-
-            let newNotification = document.createElement('div');
-            newNotification.classList.add('dropdown-item');
-            newNotification.innerHTML = `
-                <a href="#" class="dropdown-item">
-                    ${data.title}: ${data.message} on ${new Date(data.expiry_date).toLocaleDateString()}.
-                </a>
-            `;
-            dropdownMenu.prepend(newNotification);
-        }
-
-        // Display SweetAlert notification
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'info',
-                title: 'Inventory Alert',
-                text: `${data.title}: ${data.message}`,
-                timer: 5000,
-                showConfirmButton: false
-            });
-        }
-    });

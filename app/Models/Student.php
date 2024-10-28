@@ -14,8 +14,9 @@ class Student extends Model
         'first_name',
         'last_name',
         'grade_or_course',
-        'approved' // Adjust this field name as needed
+        'approved',
     ];
+
     public function dentalRecords()
     {
         return $this->hasMany(DentalRecord::class, 'id_number', 'id_number');
@@ -25,8 +26,25 @@ class Student extends Model
     {
         return $this->belongsTo(User::class, 'id_number', 'id_number');
     }
+
     public function parents()
     {
-        return $this->hasMany(ParentModel::class, 'student_id', 'id_number');
+        return $this->belongsToMany(User::class, 'parents', 'student_id', 'id_number');
+    }
+    
+
+    public function information()
+    {
+        return $this->hasOne(Information::class, 'id_number', 'id_number');
+    }
+
+    public function medicalRecords()
+    {
+        return $this->hasMany(MedicalRecord::class, 'id_number', 'id_number');
+    }
+
+    public function healthExaminations()
+    {
+        return $this->hasMany(HealthExamination::class, 'id_number', 'id_number');
     }
 }

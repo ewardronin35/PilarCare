@@ -4,10 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\DentalExamination;
 use App\Models\DentalRecord;
+use App\Models\User;
+use App\Models\Notification;
+use App\Models\Parents;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NewDentalExaminationNotification;
+use App\Mail\NewDentalExaminationParentNotification;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
+use Illuminate\Validation\ValidationException;
+use Barryvdh\Snappy\Facades\SnappyPdf as PDF; // Import SnappyPDF Facade
+
 
 class DentalExaminationController extends Controller
 {
@@ -49,7 +59,6 @@ class DentalExaminationController extends Controller
 
     // Constructor with middleware (optional)
 
-
     // Show the form to create a new Dental Examination
     public function create()
     {
@@ -61,12 +70,39 @@ class DentalExaminationController extends Controller
     // Store the Dental Examination data
     public function store(Request $request)
     {
-        Log::info('Incoming request data:', $request->all());
+        Log::info('Incoming Dental Examination request data:', $request->all());
 
-        // Database Transaction to ensure atomicity
+        // Start a database transaction
         DB::beginTransaction();
 
         try {
+            // Preprocess the request data to remove nulls from arrays
+            $input = $request->all();
+
+            $arrayFields = [
+                'sealant_tooth',
+                'filling_tooth',
+                'extraction_tooth',
+                'endodontic_tooth',
+                'radiograph_tooth',
+                'prosthesis_tooth'
+            ];
+
+            foreach ($arrayFields as $field) {
+                if (isset($input[$field]) && is_array($input[$field])) {
+                    // Remove nulls and non-integer values
+                    $input[$field] = array_filter($input[$field], function ($value) {
+                        return is_numeric($value);
+                    });
+
+                    // Reindex the array to prevent gaps
+                    $input[$field] = array_values($input[$field]);
+                }
+            }
+
+            // Update the request with the sanitized input
+            $request->merge($input);
+
             // Validate the data
             $validatedData = $request->validate([
                 'id_number' => 'required|string',
@@ -146,31 +182,13 @@ class DentalExaminationController extends Controller
             $dentalExamination->gum_treatment = $request->gum_treatment ?? false;
             $dentalExamination->ortho_consultation = $request->ortho_consultation ?? false;
 
-            // Function to map tooth numbers to names
-            $mapTeeth = function ($toothNumbers) {
-                if (!$toothNumbers) {
-                    return null;
-                }
-                $toothNames = [];
-                foreach ($toothNumbers as $number) {
-                    if (isset($this->teethData[$number])) {
-                        $toothNames[] = $this->teethData[$number];
-                    }
-                }
-                return $toothNames;
-            };
-
-            // Map and store tooth selections as JSON (handled by model casting)
-      // Remove the mapTeeth function since we won't use it anymore
-
-// Map and store tooth selections as arrays (handled by model casting)
-$dentalExamination->sealant_tooth = $request->sealant_tooth;
-$dentalExamination->filling_tooth = $request->filling_tooth;
-$dentalExamination->extraction_tooth = $request->extraction_tooth;
-$dentalExamination->endodontic_tooth = $request->endodontic_tooth;
-$dentalExamination->radiograph_tooth = $request->radiograph_tooth;
-$dentalExamination->prosthesis_tooth = $request->prosthesis_tooth;
-
+            // Map and store tooth selections as arrays (handled by model casting)
+            $dentalExamination->sealant_tooth = $request->sealant_tooth;
+            $dentalExamination->filling_tooth = $request->filling_tooth;
+            $dentalExamination->extraction_tooth = $request->extraction_tooth;
+            $dentalExamination->endodontic_tooth = $request->endodontic_tooth;
+            $dentalExamination->radiograph_tooth = $request->radiograph_tooth;
+            $dentalExamination->prosthesis_tooth = $request->prosthesis_tooth;
 
             $dentalExamination->medical_clearance = $request->medical_clearance ?? false;
             $dentalExamination->other_recommendation = $request->other_recommendation;
@@ -194,13 +212,80 @@ $dentalExamination->prosthesis_tooth = $request->prosthesis_tooth;
                 $dentalExamination->dentist_name = 'Unknown Dentist';
                 Log::warning('Authenticated user does not have first_name, last_name, or name. Assigned "Unknown Dentist".');
             }
+            $dentalExamination->is_downloaded = 0;
 
             // Save the Dental Examination
             $dentalExamination->save();
 
             Log::info('Saved dental examination:', $dentalExamination->toArray());
 
-            DB::commit(); // Commit the transaction
+            // **Send Emails and Create Notifications**
+
+            // Fetch the user (patient)
+            $user = User::where('id_number', $request->id_number)->first();
+            if (!$user) {
+                Log::error('User not found for id_number: ' . $request->id_number);
+                DB::rollBack();
+                return redirect()->back()->with('error', 'User not found.');
+            }
+
+            // Fetch the parents of the user
+            $parents = $user->parents; // Ensure this relationship is correctly defined
+
+            // **Check for User Role**
+            // Assuming you have a roles table and a relationship defined
+            if (!$user->role) {
+                Log::error('No matching role for id_number: ' . $user->id_number);
+                DB::rollBack();
+                return redirect()->back()->with('error', 'User role not defined.');
+            }
+
+            // **Send email to the user (patient)**
+            Mail::to($user->email)->send(new NewDentalExaminationNotification($user, $dentalExamination, $this->teethData));
+
+            Log::info('Sent NewDentalExaminationNotification email to user: ' . $user->email);
+
+            // **Create Notification entry for user (patient)**
+            Notification::create([
+                'user_id' => $user->id_number, // Ensure this references the correct field
+                'title' => 'New Dental Examination Recorded',
+                'message' => "A new dental examination has been recorded for you.",
+                'scheduled_time' => now(),
+                'role' => $user->role, // Fetch role from User
+            ]);
+
+            Log::info("Notification created for user ID Number {$user->id_number}");
+
+            // **Send emails to each parent and create notifications**
+            foreach ($parents as $parent) {
+                // Check if the parent has an associated User and email
+                if ($parent->user && $parent->user->email) {
+                    // Pass the User instance to the Mailable
+                    Mail::to($parent->user->email)->send(new NewDentalExaminationParentNotification($parent->user, $user, $dentalExamination, $this->teethData));
+                    Log::info('Sent NewDentalExaminationParentNotification email to parent: ' . $parent->user->email);
+
+                    // Create Notification entry for parent
+                    Notification::create([
+                        'user_id' => $parent->id_number, // Assuming 'user_id' references 'id_number'
+                        'title' => 'Child\'s Dental Examination Recorded',
+                        'message' => "A new dental examination has been recorded for your child, {$user->first_name} {$user->last_name}.",
+                        'scheduled_time' => now(),
+                        'role' => $parent->user->role, // Fetch role from associated User
+                    ]);
+
+                    Log::info("Notification created for parent ID Number {$parent->id_number}");
+                } else {
+                    // Detailed warning if User or email is missing
+                    if (!$parent->user) {
+                        Log::warning('No associated User found for parent ID Number: ' . $parent->id_number);
+                    } elseif (!$parent->user->email) {
+                        Log::warning('Parent User does not have an email address: ' . $parent->id_number);
+                    }
+                }
+            }
+
+            // Commit the transaction
+            DB::commit();
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -211,7 +296,29 @@ $dentalExamination->prosthesis_tooth = $request->prosthesis_tooth;
             }
 
             return redirect()->back()->with('success', 'Dental Examination saved successfully!');
-        } catch (QueryException $e) {
+        }
+
+        catch (ValidationException $e) {
+            // Roll back the transaction
+            DB::rollBack();
+
+            // Log the validation errors
+            Log::error('Validation Exception:', [
+                'errors' => $e->errors(),
+            ]);
+
+            // Return with validation errors
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation errors occurred.',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        }
+        catch (QueryException $e) {
             DB::rollBack(); // Roll back the transaction
 
             Log::error('Database Query Exception:', [
@@ -220,7 +327,8 @@ $dentalExamination->prosthesis_tooth = $request->prosthesis_tooth;
             ]);
 
             return redirect()->back()->with('error', 'A database error occurred while saving the dental examination.');
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             DB::rollBack(); // Roll back the transaction
 
             Log::error('General Exception:', [
@@ -231,23 +339,5 @@ $dentalExamination->prosthesis_tooth = $request->prosthesis_tooth;
             return redirect()->back()->with('error', 'An unexpected error occurred while saving the dental examination.');
         }
     }
-    public function downloadDentalExamPdf($id)
-    {
-        // Fetch the Dental Examination by ID
-        $dentalExamination = DentalExamination::find($id);
-    
-        // Check if the examination exists
-        if (!$dentalExamination) {
-            return redirect()->back()->with('error', 'Dental Examination not found.');
-        }
-    
-        // Generate the PDF using Snappy PDF with the Blade template
-        $pdf = SnappyPdf::loadView('dental_examination_report', [
-            'dentalExamination' => $dentalExamination,
-        ]);
-    
-        // Return the PDF download with a custom file name
-        return $pdf->download('dental_examination_' . $dentalExamination->id . '.pdf');
-    }
-    
+
 }

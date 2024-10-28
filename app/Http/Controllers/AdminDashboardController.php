@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Notification;
 use App\Models\HealthExamination;
 use App\Models\Teeth;
+use App\Models\SchoolYear;
 use App\Models\MedicalRecord;
 use App\Models\DentalRecord;
 use Illuminate\Support\Facades\Auth;
@@ -32,7 +33,8 @@ class AdminDashboardController extends Controller
     $pendingMedicalApprovals = MedicalRecord::where('is_approved', false)->count();
         // Fetch low stock notifications
         $notifications = Notification::where('user_id', 'admin')->get();
-    
+        $schoolYears = SchoolYear::orderBy('year', 'desc')->pluck('year');
+
         // Fetch all users by role
         $students = User::where('role', 'Student')->get();
         $staff = User::where('role', 'Staff')->get();
@@ -73,13 +75,19 @@ class AdminDashboardController extends Controller
             'teachers',
             'doctors',
             'nurses',
-            'monthlyUserData'
+            'monthlyUserData',
+            'schoolYears' // Pass $schoolYears to the view
+
         ));
     }
     
     public function pendingApprovals()
     {
         $pendingApprovals = HealthExamination::where('is_approved', false)->get();
-        return view('admin.uploadHealthExamination', compact('pendingApprovals'));
+        
+        // Fetch $schoolYears similar to the index method
+        $schoolYears = SchoolYear::orderBy('year', 'desc')->pluck('year');
+        
+        return view('admin.uploadHealthExamination', compact('pendingApprovals', 'schoolYears'));
     }
 }

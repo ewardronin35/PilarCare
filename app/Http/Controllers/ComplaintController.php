@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ComplaintReceived;
 use App\Mail\ParentComplaintNotification;
+use App\Mail\ParentGoHomeNotification;
 use Carbon\Carbon;
 
 use PDF; // Assuming you're using barryvdh/laravel-dompdf or similar
@@ -36,7 +37,19 @@ class ComplaintController extends Controller
         $filter = $request->input('filter'); // 'past' or 'present'
     
         // Initialize the query with eager loading
-        $query = Complaint::with('user')->where('id_number', $idNumber);
+        if ($role === 'parent') {
+            // Fetch the parent record(s)
+            $parentRecords = Parents::where('id_number', $idNumber)->get();
+    
+            // Collect the child id_numbers
+            $childIdNumbers = $parentRecords->pluck('student_id');
+    
+            // Initialize the query with eager loading
+            $query = Complaint::with('user')->whereIn('id_number', $childIdNumbers);
+        } else {
+            // For other roles, use the user's own id_number
+            $query = Complaint::with('user')->where('id_number', $idNumber);
+        }
     
         // Apply filter based on 'filter' parameter
         if ($filter) {
@@ -64,37 +77,56 @@ class ComplaintController extends Controller
             });
         }
     
-        // Log the query for debugging
-        \Log::info('Complaint Query:', [
-            'sql' => $query->toSql(),
-            'bindings' => $query->getBindings(),
-        ]);
-    
         // Fetch complaints with pagination (10 per page)
         $complaints = $query->orderBy('created_at', 'desc')->paginate(10);
     
         // Fetch the most common complaint and most used medicine
-        $mostCommonComplaint = Complaint::where('id_number', $idNumber)
-            ->select('sickness_description')
-            ->groupBy('sickness_description')
-            ->orderByRaw('COUNT(*) DESC')
-            ->limit(1)
-            ->value('sickness_description');
+        // Adjusted for parent role to consider children's complaints
+        if ($role === 'parent') {
+            $mostCommonComplaint = Complaint::whereIn('id_number', $childIdNumbers)
+                ->select('sickness_description')
+                ->groupBy('sickness_description')
+                ->orderByRaw('COUNT(*) DESC')
+                ->limit(1)
+                ->value('sickness_description');
     
-        $commonComplaintCount = Complaint::where('id_number', $idNumber)
-            ->where('sickness_description', $mostCommonComplaint)
-            ->count();
+            $commonComplaintCount = Complaint::whereIn('id_number', $childIdNumbers)
+                ->where('sickness_description', $mostCommonComplaint)
+                ->count();
     
-        $mostUsedMedicine = Complaint::where('id_number', $idNumber)
-            ->select('medicine_given')
-            ->groupBy('medicine_given')
-            ->orderByRaw('COUNT(*) DESC')
-            ->limit(1)
-            ->value('medicine_given');
+            $mostUsedMedicine = Complaint::whereIn('id_number', $childIdNumbers)
+                ->select('medicine_given')
+                ->groupBy('medicine_given')
+                ->orderByRaw('COUNT(*) DESC')
+                ->limit(1)
+                ->value('medicine_given');
     
-        $mostUsedMedicineCount = Complaint::where('id_number', $idNumber)
-            ->where('medicine_given', $mostUsedMedicine)
-            ->count();
+            $mostUsedMedicineCount = Complaint::whereIn('id_number', $childIdNumbers)
+                ->where('medicine_given', $mostUsedMedicine)
+                ->count();
+        } else {
+            $mostCommonComplaint = Complaint::where('id_number', $idNumber)
+                ->select('sickness_description')
+                ->groupBy('sickness_description')
+                ->orderByRaw('COUNT(*) DESC')
+                ->limit(1)
+                ->value('sickness_description');
+    
+            $commonComplaintCount = Complaint::where('id_number', $idNumber)
+                ->where('sickness_description', $mostCommonComplaint)
+                ->count();
+    
+            $mostUsedMedicine = Complaint::where('id_number', $idNumber)
+                ->select('medicine_given')
+                ->groupBy('medicine_given')
+                ->orderByRaw('COUNT(*) DESC')
+                ->limit(1)
+                ->value('medicine_given');
+    
+            $mostUsedMedicineCount = Complaint::where('id_number', $idNumber)
+                ->where('medicine_given', $mostUsedMedicine)
+                ->count();
+        }
     
         // Pass the data to the appropriate view based on role
         switch ($role) {
@@ -137,201 +169,253 @@ class ComplaintController extends Controller
         }
     }
     
+    public function store(Request $request)
+    {
+        \Log::info('Received request data:', $request->all());
     
-public function store(Request $request)
-{
-    \Log::info('Received request data:', $request->all());
-
-    // Validate incoming request data
-    $validator = Validator::make($request->all(), [
-        'id_number' => 'required|string|max:255',
-        'first_name' => 'required|string|max:255',
-        'last_name' => 'required|string|max:255',
-        'age' => 'required|integer',
-        'birthdate' => 'required|date',
-        'year' => 'required|string|max:255',
-        'personal_contact_number' => 'required|string|max:255',
-        'pain_assessment' => 'required|integer|min:1|max:10',
-        'sickness_description' => 'required|string|max:1000',
-        'role' => 'required|string|max:255',
-        'medicine_given' => 'required|string|max:255',
-        'confine_status' => 'required|string|in:confined,not_confined',
-        'go_home' => 'required|string|in:yes,no',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
-    }
-
-    try {
-        // Create the complaint
-        $complaint = Complaint::create([
-            'id_number' => $request->id_number,
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'age' => $request->age,
-            'birthdate' => $request->birthdate,
-            'year' => $request->year,
-            'personal_contact_number' => $request->personal_contact_number,
-            'pain_assessment' => $request->pain_assessment,
-            'sickness_description' => $request->sickness_description,
-            'role' => $request->role,
-            'medicine_given' => $request->medicine_given,
-            'confine_status' => $request->confine_status,
-            'go_home' => $request->go_home,
+        // Validate incoming request data
+        $validator = Validator::make($request->all(), [
+            'id_number' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'age' => 'required|integer',
+            'birthdate' => 'required|date',
+            'year' => 'required|string|max:255',
+            'personal_contact_number' => 'required|string|max:255',
+            'pain_assessment' => 'required|integer|min:1|max:10',
+            'sickness_description' => 'required|string|max:1000',
+            'role' => 'required|string|max:255',
+            'medicine_given' => 'required|string|max:255',
+            'confine_status' => 'required|string|in:confined,not_confined',
+            'go_home' => 'required|string|in:yes,no',
         ]);
-
-        // Reduce inventory quantity
-        $inventory = Inventory::where('item_name', $request->medicine_given)->first();
-        if ($inventory) {
-            $inventory->quantity -= 1;
-            $inventory->save();
-        } else {
-            return response()->json(['success' => false, 'message' => 'Medicine not found in inventory'], 404);
+    
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
-
-        // Send notification to the user
-        $user = User::where('id_number', $request->id_number)->first();
-        if ($user) {
-            Notification::create([
-                'user_id' => $user->id_number,
-                'title' => 'Complaint Received',
-                'message' => 'You have a new complaint added',
-                'status' => 'unread'
+    
+        try {
+            // Create the complaint
+            $complaint = Complaint::create([
+                'id_number' => $request->id_number,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'age' => $request->age,
+                'birthdate' => $request->birthdate,
+                'year' => $request->year,
+                'personal_contact_number' => $request->personal_contact_number,
+                'pain_assessment' => $request->pain_assessment,
+                'sickness_description' => $request->sickness_description,
+                'role' => $request->role,
+                'medicine_given' => $request->medicine_given,
+                'confine_status' => $request->confine_status,
+                'go_home' => $request->go_home,
             ]);
-        }
-
-        \Log::info('Complaint and notification successfully saved:', ['complaint' => $complaint->toArray(), 'user_id' => $user->id ?? 'N/A']);
-
-        // Generate PDF if go_home is "yes"
-        if ($complaint->go_home == 'yes') {
-            $data = [
-                'date' => now()->format('Y-m-d'),
-                'name' => $complaint->first_name . ' ' . $complaint->last_name,
-                'sickness_description' => $complaint->sickness_description,
-                'medicine_given' => $complaint->medicine_given,
-                'logoBase64' => base64_encode(file_get_contents(public_path('images/pilarLogo.png'))),
-                'complaint' => $complaint,
-                'role' => $complaint->role,
-            ];
-
-            // Fetch additional data based on role
-            if ($complaint->role == 'student') {
-                $student = Student::where('id_number', $complaint->id_number)->first();
-                if ($student) {
-                    $data['grade'] = $student->grade;
-                    $data['section'] = $student->section;
-                }
-            } elseif ($complaint->role == 'staff') {
-                $staff = Staff::where('id_number', $complaint->id_number)->first();
-                if ($staff) {
-                    $data['position'] = $staff->position;
-                }
-            } elseif ($complaint->role == 'teacher') {
-                $teacher = Teacher::where('id_number', $complaint->id_number)->first();
-                if ($teacher) {
-                    $data['bed_or_hed'] = $teacher->bed_or_hed;
-                }
+    
+            // Reduce inventory quantity
+            $inventory = Inventory::where('item_name', $request->medicine_given)->first();
+            if ($inventory) {
+                $inventory->quantity -= 1;
+                $inventory->save();
+            } else {
+                return response()->json(['success' => false, 'message' => 'Medicine not found in inventory'], 404);
             }
-
-            // Load the Blade view and pass the data
-            $pdf = PDF::loadView('pdf.single_complaint_report', $data);
-
-            // Define the file name using complaint ID for uniqueness
-            $fileName = 'complaint_' . $complaint->id . '.pdf';
-
-            // Save the PDF to storage
-            $pdf->save(storage_path('app/public/reports/' . $fileName));
-            $reportUrl = asset('storage/reports/' . $fileName);
-
-            // Save the report URL to the complaint record
-            $complaint->report_url = $reportUrl;
-            $complaint->save();
-
-            // Include the report URL in the response
-            $response['report_url'] = $reportUrl;
-        }
-
-        // **Send email notification to the user regardless of 'go_home' status**
-        if ($user) {
-            Mail::to($user->email)->send(new ComplaintReceived($complaint));
-        }
-
-        // **Notify Parents if the role is 'student'**
-        if (strtolower($complaint->role) === 'student') {
-            // Fetch the student record
-            $student = Student::where('id_number', $complaint->id_number)->first();
-
-            if ($student) {
-                // Fetch parents linked to the student
-                $parents = Parents::where('student_id', $student->id_number)->get();
-
-                foreach ($parents as $parent) {
-                    // Fetch the parent user to get the email
-                    $parentUser = User::where('id_number', $parent->id_number)->first();
-
-                    if ($parentUser) {
-                        // Create a notification for the parent
-                        Notification::create([
-                            'user_id' => $parentUser->id,
-                            'title' => 'Student Complaint Submitted',
-                            'message' => 'Your child has submitted a new complaint.',
-                            'status' => 'unread'
-                        ]);
-
-                        // Send an email notification to the parent
-                        Mail::to($parentUser->email)->send(new ParentComplaintNotification($complaint, $student));
+    
+            // Send notification to the user
+            $user = User::where('id_number', $request->id_number)->first();
+            if ($user) {
+                Notification::create([
+                    'user_id' => $user->id_number,
+                    'title' => 'Complaint Received',
+                    'message' => 'You have a new complaint added',
+                    'status' => 'unread'
+                ]);
+            }
+    
+            \Log::info('Complaint and notification successfully saved:', ['complaint' => $complaint->toArray(), 'user_id' => $user->id ?? 'N/A']);
+    
+            // Generate PDF if go_home is "yes"
+            if ($complaint->go_home == 'yes') {
+                $data = [
+                    'date' => now()->format('Y-m-d'),
+                    'name' => $complaint->first_name . ' ' . $complaint->last_name,
+                    'sickness_description' => $complaint->sickness_description,
+                    'medicine_given' => $complaint->medicine_given,
+                    'logoBase64' => base64_encode(file_get_contents(public_path('images/pilarLogo.png'))),
+                    'complaint' => $complaint,
+                    'role' => $complaint->role,
+                ];
+    
+                // Fetch additional data based on role
+                if ($complaint->role == 'student') {
+                    $student = Student::where('id_number', $complaint->id_number)->first();
+                    if ($student) {
+                        $data['grade'] = $student->grade;
+                        $data['section'] = $student->section;
+                    }
+                } elseif ($complaint->role == 'staff') {
+                    $staff = Staff::where('id_number', $complaint->id_number)->first();
+                    if ($staff) {
+                        $data['position'] = $staff->position;
+                    }
+                } elseif ($complaint->role == 'teacher') {
+                    $teacher = Teacher::where('id_number', $complaint->id_number)->first();
+                    if ($teacher) {
+                        $data['bed_or_hed'] = $teacher->bed_or_hed;
+                    }
+                }
+    
+                // Load the Blade view and pass the data
+                $pdf = PDF::loadView('pdf.single_complaint_report', $data);
+    
+                // Define the file name using complaint ID for uniqueness
+                $fileName = 'complaint_' . $complaint->id . '.pdf';
+    
+                // Save the PDF to storage
+                $pdf->save(storage_path('app/public/reports/' . $fileName));
+                $reportUrl = asset('storage/reports/' . $fileName);
+    
+                // Save the report URL to the complaint record
+                $complaint->report_url = $reportUrl;
+                $complaint->save();
+    
+                // Include the report URL in the response
+                $response['report_url'] = $reportUrl;
+            }
+    
+            // **Send email notification to the user regardless of 'go_home' status**
+            if ($user) {
+                Mail::to($user->email)->send(new ComplaintReceived($complaint));
+            }
+    
+            // **Notify Parents if the role is 'student'**
+            if (strtolower($complaint->role) === 'student') {
+                // Fetch the student record
+                $student = Student::where('id_number', $complaint->id_number)->first();
+    
+                if ($student) {
+                    // Fetch parents linked to the student
+                    $parents = Parents::where('student_id', $student->id_number)->get();
+    
+                    foreach ($parents as $parent) {
+                        // Fetch the parent user to get the email
+                        $parentUser = User::where('id_number', $parent->id_number)->first();
+    
+                        if ($parentUser) {
+                            // Create a notification for the parent
+                            Notification::create([
+                                'user_id' => $parentUser->id_number,
+                                'title' => 'Student Complaint Submitted',
+                                'message' => 'Your child has submitted a new complaint.',
+                                'status' => 'unread'
+                            ]);
+    
+                            // Send an email notification to the parent
+                            Mail::to($parentUser->email)->send(new ParentComplaintNotification($complaint, $student));
+                        }
                     }
                 }
             }
+    
+            // **Additional Notification and Email for 'go_home' == 'yes'**
+            if ($complaint->go_home == 'yes' && strtolower($complaint->role) === 'student') {
+                // Fetch the student record
+                $student = Student::where('id_number', $complaint->id_number)->first();
+    
+                if ($student) {
+                    // Fetch parents linked to the student
+                    $parents = Parents::where('student_id', $student->id_number)->get();
+    
+                    foreach ($parents as $parent) {
+                        // Fetch the parent user to get the email
+                        $parentUser = User::where('id_number', $parent->id_number)->first();
+    
+                        if ($parentUser) {
+                            // Create a notification for the parent about going home
+                            Notification::create([
+                                'user_id' => $parentUser->id_number,
+                                'title' => 'Student Going Home',
+                                'message' => 'Your child is required to go home. Please make necessary arrangements.',
+                                'status' => 'unread'
+                            ]);
+    
+                            // Send an email notification to the parent about going home
+                            Mail::to($parentUser->email)->send(new ParentGoHomeNotification($complaint, $student));
+                        }
+                    }
+                }
+            }
+    
+            // Prepare the response data with all necessary fields
+            $response = [
+                'success' => true,
+                'message' => 'Complaint and notifications successfully saved',
+                'complaint_id' => $complaint->id,
+                'first_name' => $complaint->first_name,
+                'last_name' => $complaint->last_name,
+                'sickness_description' => $complaint->sickness_description,
+                'pain_assessment' => $complaint->pain_assessment,
+                'medicine_given' => $complaint->medicine_given,
+                'report_url' => $complaint->report_url ?? null,
+                'role' => $complaint->role // Include the role for dynamic table insertion
+            ];
+    
+            return response()->json($response);
+    
+        } catch (\Exception $e) {
+            \Log::error('Error while saving complaint:', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while saving the complaint. Please try again.',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        // Prepare the response data with all necessary fields
-        $response = [
-            'success' => true,
-            'message' => 'Complaint and notifications successfully saved',
-            'complaint_id' => $complaint->id,
-            'first_name' => $complaint->first_name,
-            'last_name' => $complaint->last_name,
-            'sickness_description' => $complaint->sickness_description,
-            'pain_assessment' => $complaint->pain_assessment,
-            'medicine_given' => $complaint->medicine_given,
-            'report_url' => $complaint->report_url ?? null,
-            'role' => $complaint->role // Include the role for dynamic table insertion
-        ];
-
-        return response()->json($response);
-
-    } catch (\Exception $e) {
-        \Log::error('Error while saving complaint:', ['error' => $e->getMessage()]);
-        return response()->json(['success' => false, 'message' => 'An error occurred while saving the complaint. Please try again.', 'error' => $e->getMessage()], 500);
+        
     }
+
+    
+    
+    
+    
+public function show($id)
+{
+    $user = Auth::user();
+    $role = strtolower($user->role);
+
+    $complaint = Complaint::with('doctor.user')->findOrFail($id);
+
+    if ($role === 'parent') {
+        // Fetch the parent's children
+        $childIdNumbers = Parents::where('id_number', $user->id_number)->pluck('student_id');
+
+        // Check if the complaint belongs to one of the children
+        if (!$childIdNumbers->contains($complaint->id_number)) {
+            abort(403, 'Unauthorized action.');
+        }
+    } else {
+        // Implement additional role-based access controls if necessary
+        // For example, doctors might access all complaints, etc.
+    }
+
+    $formattedConfineStatus = ucwords(str_replace('_', ' ', $complaint->confine_status));
+
+    return response()->json([
+        'first_name' => $complaint->first_name,
+        'last_name' => $complaint->last_name,
+        'sickness_description' => $complaint->sickness_description,
+        'pain_assessment' => $complaint->pain_assessment,
+        'confine_status' => $formattedConfineStatus, // Use formatted value
+        'medicine_given' => $complaint->medicine_given,
+        'status' => $complaint->status,
+        'pdf_url' => $complaint->report_url ?? null, // Include the PDF URL
+    ]);
 }
 
-
-
-
-    
-    
-    
-    
-    public function show($id)
-    {
-        $complaint = Complaint::findOrFail($id);
-        $formattedConfineStatus = ucwords(str_replace('_', ' ', $complaint->confine_status));
-    
-        return response()->json([
-            'first_name' => $complaint->first_name,
-            'last_name' => $complaint->last_name,
-            'sickness_description' => $complaint->sickness_description,
-            'pain_assessment' => $complaint->pain_assessment,
-            'confine_status' => $formattedConfineStatus, // Use formatted value
-            'medicine_given' => $complaint->medicine_given,
-            'status' => $complaint->status,
-            'pdf_url' => $complaint->report_url ?? null, // Include the PDF URL
-        ]);
-    }
-    
     
     public function edit($id)
     {
@@ -567,7 +651,7 @@ public function getStatistics()
     $user = Auth::user();
     $role = strtolower($user->role);
 
-    if ($role === 'admin') {
+    if (in_array($role, ['admin', 'nurse', 'doctor'])) {
         // **Admin**: Fetch **global** statistics across all complaints
         $mostCommonComplaint = Complaint::select('sickness_description')
             ->groupBy('sickness_description')
@@ -620,5 +704,134 @@ public function getStatistics()
         'mostUsedMedicineCount' => $mostUsedMedicineCount ?? 0,
     ]);
 }
+public function downloadPdf($id)
+{
+    $user = Auth::user();
+    $role = strtolower($user->role);
 
+    $complaint = Complaint::findOrFail($id);
+
+    if ($role === 'parent') {
+        // Fetch the parent's children
+        $childIdNumbers = Parents::where('id_number', $user->id_number)->pluck('student_id');
+
+        // Check if the complaint belongs to one of the children
+        if (!$childIdNumbers->contains($complaint->id_number)) {
+            abort(403, 'Unauthorized action.');
+        }
+    } else {
+        // Implement additional role-based access controls if necessary
+    }
+
+    if (!$complaint->report_url) {
+        return response()->json(['error' => 'PDF not available for this complaint.'], 404);
+    }
+
+    // Extract the file path from the report_url
+    $filePath = str_replace(asset(''), '', $complaint->report_url);
+    $fullPath = public_path($filePath);
+
+    if (!File::exists($fullPath)) {
+        return response()->json(['error' => 'PDF file not found.'], 404);
+    }
+
+    return response()->download($fullPath, basename($fullPath));
+}
+public function generateComplaintStatisticsReport(Request $request)
+{
+    // Validate the incoming request parameters
+    $validator = Validator::make($request->all(), [
+        'report_period' => 'required|in:daily,weekly,monthly',
+        'report_date' => 'required|date',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid input data.',
+            'errors' => $validator->errors(),
+        ], 422);
+    }
+
+    $reportPeriod = $request->input('report_period');
+    $reportDate = Carbon::parse($request->input('report_date'));
+
+    // Determine the date range based on the selected period
+    switch ($reportPeriod) {
+        case 'daily':
+            $startDate = $reportDate->copy()->startOfDay();
+            $endDate = $reportDate->copy()->endOfDay();
+            $periodLabel = 'Daily';
+            break;
+
+        case 'weekly':
+            // Assuming week starts on Monday
+            $startDate = $reportDate->copy()->startOfWeek();
+            $endDate = $reportDate->copy()->endOfWeek();
+            $periodLabel = 'Weekly';
+            break;
+
+        case 'monthly':
+            $startDate = $reportDate->copy()->startOfMonth();
+            $endDate = $reportDate->copy()->endOfMonth();
+            $periodLabel = 'Monthly';
+            break;
+
+        default:
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid report period selected.',
+            ], 400);
+    }
+
+    // Fetch complaints within the date range based on 'created_at'
+    $complaints = Complaint::whereBetween('created_at', [$startDate, $endDate])->get();
+
+    if ($complaints->isEmpty()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'No complaints found for the selected period.',
+        ], 404);
+    }
+
+    // Determine the most used medicine in the selected period
+    $mostUsedMedicine = $complaints->groupBy('medicine_given')
+        ->map(function ($group) {
+            return count($group);
+        })
+        ->sortDesc()
+        ->keys()
+        ->first();
+
+    $mostUsedMedicineCount = $complaints->where('medicine_given', $mostUsedMedicine)->count();
+
+    // Prepare data for the PDF
+    $data = [
+        'report_period' => $periodLabel,
+        'report_date' => $reportDate->format('Y-m-d'),
+        'complaints' => $complaints,
+        'mostUsedMedicine' => $mostUsedMedicine,
+        'mostUsedMedicineCount' => $mostUsedMedicineCount,
+        'logoBase64' => base64_encode(file_get_contents(public_path('images/pilarLogo.png'))),
+    ];
+
+    // Generate the PDF using a Blade view
+    $pdf = PDF::loadView('pdf.complaint_statistics_report', $data);
+
+    // Define the file name
+    $fileName = 'complaints_report_' . strtolower($periodLabel) . '_' . $reportDate->format('Ymd') . '.pdf';
+
+    // Save the PDF to storage
+    $pdf->save(storage_path('app/public/reports/' . $fileName));
+
+    // Generate the report URL
+    $reportUrl = asset('storage/reports/' . $fileName);
+
+    // Return the report URL in the response
+    return response()->json([
+        'success' => true,
+        'report_url' => $reportUrl,
+        'message' => 'Report generated successfully.',
+    ], 200);
+}
 }

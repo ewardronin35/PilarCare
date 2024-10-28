@@ -1,6 +1,6 @@
 
 
-<x-app-layout>
+<x-app-layout :pageTitle="'Profile Management'">
     <style>
         body {
             font-family: 'Poppins', sans-serif;

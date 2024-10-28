@@ -1,5 +1,7 @@
-<x-app-layout>
+<x-app-layout :pageTitle="' Appointments'">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
     <style>
 /* Legend Styling */
 .calendar-legend {
@@ -261,33 +263,7 @@
             border-bottom: 1px solid #eee;
         }
 
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-
-        .action-buttons button {
-            background-color: #00d1ff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.3s;
-            transform-origin: center;
-            font-size: 1rem;
-        }
-
-        .action-buttons button:hover {
-            background-color: #00b8e6;
-            transform: scale(1.05);
-        }
-
-        .action-buttons button:active {
-            transform: scale(0.95);
-        }
-
+     
         .calendar-container {
             background-color: #ffffff;
             padding: 20px;
@@ -680,20 +656,7 @@
         align-self: center;
     }
 
-    @media (max-width: 768px) {
-        .stats-and-table-container {
-            flex-direction: column;
-        }
-
-        .calendar-container,
-        .form-container,
-        .chart-container,
-        .appointment-list-container,
-        .generate-report-container {
-            width: 100%;
-            margin-left: 0;
-        }
-    }
+   
     #edit-form .form-group {
     margin-bottom: 20px;
 }
@@ -730,7 +693,392 @@
 .input-row .input-column {
     flex: 1;
 }
+.add-appointment-btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+/* Large Desktops and Smaller (max-width: 1200px) */
+@media (max-width: 1200px) {
+    .container {
+        flex-direction: column;
+        padding: 10px;
+    }
+
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+        padding: 15px;
+    }
+
+    .forms-container {
+        flex-direction: column;
+        gap: 15px;
+        width: 100%;
+        height: auto;
+    }
+
+    .form-container {
+        max-height: none;
+        height: auto;
+    }
+
+    .tabs {
+        flex-wrap: wrap;
+    }
+
+    .tab-buttons button {
+        flex: 1 1 45%;
+        margin-bottom: 10px;
+    }
+
+    .search-bar input[type="text"] {
+        width: 100%;
+        max-width: none;
+    }
+
+    .search-bar button {
+        width: 100%;
+        margin-left: 0;
+        margin-top: 10px;
+    }
+
+    .history-table th,
+    .history-table td {
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+
+    .styled-textarea {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .file-input-container {
+        max-width: 100%;
+    }
+
+    .custom-picture-previews img {
+        width: 80px;
+        height: 80px;
+    }
+
+    /* Calendar Legend Adjustments */
+    .calendar-legend {
+        justify-content: center;
+        gap: 15px;
+    }
+
+    .legend-item {
+        font-size: 0.85rem;
+    }
+}
+
+/* Tablets and Small Desktops (max-width: 992px) */
+@media (max-width: 992px) {
+    .tab-buttons button {
+        flex: 1 1 100%;
+    }
+
+    .forms-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .form-group-inline {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        font-size: 0.9rem;
+        padding: 10px;
+    }
+
+    .form-group button {
+        font-size: 1rem;
+        padding: 8px 16px;
+    }
+
+    .search-bar input[type="text"] {
+        font-size: 0.9rem;
+        padding: 8px;
+    }
+
+    .search-bar button {
+        font-size: 0.9rem;
+        padding: 8px 16px;
+    }
+
+    .history-table th,
+    .history-table td {
+        padding: 8px;
+        font-size: 0.85rem;
+    }
+
+    .custom-picture-previews img {
+        width: 70px;
+        height: 70px;
+    }
+
+    .styled-textarea {
+        font-size: 0.9rem;
+        padding: 10px 12px;
+    }
+
+    /* Calendar Legend Adjustments */
+    .calendar-legend {
+        gap: 10px;
+    }
+
+    .legend-item {
+        font-size: 0.8rem;
+    }
+}
+
+/* Mobile Devices and Small Tablets (max-width: 768px) */
+@media (max-width: 768px) {
+    .forms-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .form-container {
+        padding: 20px;
+    }
+
+    .tab-buttons button {
+        font-size: 1rem;
+        padding: 8px 16px;
+    }
+
+    .form-group-inline {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        font-size: 0.85rem;
+        padding: 8px;
+    }
+
+    .form-group button {
+        font-size: 0.95rem;
+        padding: 8px 14px;
+    }
+
+    .search-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-bar input[type="text"] {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .search-bar button {
+        width: 100%;
+        margin-left: 0;
+        padding: 8px 14px;
+    }
+
+    .history-table th,
+    .history-table td {
+        padding: 6px;
+        font-size: 0.8rem;
+    }
+
+    .custom-picture-previews img {
+        width: 60px;
+        height: 60px;
+    }
+
+    .styled-textarea {
+        font-size: 0.85rem;
+        padding: 8px 10px;
+    }
+
+    /* Calendar Legend Adjustments */
+    .calendar-legend {
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .legend-item {
+        font-size: 0.75rem;
+    }
+}
+
+/* Small Mobile Devices (max-width: 576px) */
+@media (max-width: 576px) {
+    .main-content {
+        padding: 10px;
+    }
+
+    .tab-buttons button {
+        font-size: 0.9rem;
+        padding: 6px 12px;
+    }
+
+    .form-group-inline {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        font-size: 0.8rem;
+        padding: 6px;
+    }
+
+    .form-group button {
+        font-size: 0.9rem;
+        padding: 6px 12px;
+    }
+
+    .search-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-bar input[type="text"] {
+        font-size: 0.8rem;
+        padding: 6px;
+    }
+
+    .search-bar button {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+    }
+
+    .history-table th,
+    .history-table td {
+        padding: 4px;
+        font-size: 0.75rem;
+    }
+
+    .custom-picture-previews img {
+        width: 50px;
+        height: 50px;
+    }
+
+    .styled-textarea {
+        font-size: 0.75rem;
+        padding: 6px 8px;
+    }
+
+    .file-input-label {
+        font-size: 0.9rem;
+        padding: 8px;
+    }
+
+    #profile-picture-preview {
+        width: 120px;
+        height: 120px;
+    }
+
+    /* Calendar Legend Adjustments */
+    .calendar-legend {
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .legend-item {
+        font-size: 0.7rem;
+    }
+}
+/* Specific Styles for Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 10px; /* Adjust the gap size as needed */
+}
+/* Confirm Button Styles */
+.confirm-btn {
+    background-color: #28a745; /* Green */
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    gap: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.confirm-btn:hover {
+    background-color: #218838; /* Darker Green */
+    transform: scale(1.05);
+}
+
+.confirm-btn:active {
+    transform: scale(0.95);
+}
+
+/* Reschedule Button Styles */
+.reschedule-btn {
+    background-color: #ffc107; /* Yellow */
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.reschedule-btn:hover {
+    background-color: #e0a800; /* Darker Yellow */
+    transform: scale(1.05);
+}
+
+.reschedule-btn:active {
+    transform: scale(0.95);
+}
+
+/* Delete Button Styles */
+.delete-btn {
+    background-color: #dc3545; /* Red */
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.delete-btn:hover {
+    background-color: #c82333; /* Darker Red */
+    transform: scale(1.05);
+}
+
+.delete-btn:active {
+    transform: scale(0.95);
+}
+
+/* Disabled State Styling (Optional) */
+.confirm-btn:disabled,
+.reschedule-btn:disabled,
+.delete-btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+
     </style>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
 
     <main class="main-content">
         <div class="tabs">
@@ -756,18 +1104,18 @@
                         </div>
                         <div class="form-group">
                             <label for="patient-name">Patient Name</label>
-                            <input type="text" id="patient-name" name="patient_name" required>
-                        </div>
+                            <input type="text" id="patient-name" name="patient_name" required readonly>
+                            </div>
                         <div class="form-group input-row">
                             <div>
                                 <label for="appointment-date">Appointment Date</label>
                                 <input type="date" id="appointment-date" name="appointment_date" required>
                             </div>
                             <div>
-                                <label for="appointment-time">Appointment Time</label>
-                                <input type="time" id="appointment-time" name="appointment_time" required>
+        <label for="appointment-time">Appointment Time</label>
+        <input type="time" id="appointment-time" name="appointment_time" required min="08:00" max="16:00" step="3600">
+    </div>
                             </div>
-                        </div>
                         <div class="form-group">
             <label for="appointment-type">Appointment Type</label>
             <select id="appointment-type" name="appointment_type" required>
@@ -813,7 +1161,7 @@
     </select>
 </div>
                         <div class="form-group">
-                            <button type="button" class="add-appointment-btn" onclick="addAppointment()">Add Appointment</button>
+                        <button type="button" class="add-appointment-btn" onclick="addAppointment()">Add Appointment</button>
                         </div>
                     </form>
                 </div>
@@ -909,8 +1257,8 @@
                         </select>
                     </div>
                     <!-- Existing Appointment Table -->
-                    <table class="appointment-table">
-                        <thead>
+                    <table id="appointment-table" class="appointment-table">
+                    <thead>
                             <tr>
                                 <th>ID Number</th>
                                 <th>Patient Name</th>
@@ -938,7 +1286,17 @@
                                             <span style="color: orange; font-weight: bold;">Pending</span>
                                         @endif
                                     </td>
-                                
+                                    <td>
+                                    <div class="action-buttons">
+            
+                
+                <button id="reschedule-btn-{{ $appointment->id }}" class="reschedule-btn" onclick="openEditModal({{ $appointment->id }})">
+                    Reschedule
+                </button>
+
+                <button id="delete-btn-{{ $appointment->id }}" class="delete-btn" onclick="confirmDelete({{ $appointment->id }})">Delete</button>
+            </div>
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -1001,10 +1359,10 @@
                     <input type="date" id="edit-appointment-date" name="appointment_date" required>
                 </div>
                 <div>
-                    <label for="edit-appointment-time">Appointment Time</label>
-                    <input type="time" id="edit-appointment-time" name="appointment_time" required>
-                </div>
-            </div>
+        <label for="edit-appointment-time">Appointment Time</label>
+        <input type="time" id="edit-appointment-time" name="appointment_time" required min="08:00" max="16:00" step="3600">
+    </div>
+                        </div>
             <div class="form-group">
                 <label for="edit-appointment-type">Appointment Type</label>
                 <select id="edit-appointment-type" name="appointment_type" required>
@@ -1067,10 +1425,14 @@
     </main>
 
     <!-- Include SweetAlert2 and Chart.js Libraries -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
     <script>
+
         // Tab Switching Function
         function showTab(tabId) {
             const tabContents = document.querySelectorAll('.tab-content');
@@ -1159,12 +1521,13 @@
     document.getElementById('edit-appointment-id').value = id;
     document.getElementById('edit-id-number').value = appointment.children[0].innerText;
     document.getElementById('edit-patient-name').value = appointment.children[1].innerText;
-    document.getElementById('edit-appointment-date').value = appointment.children[2].innerText;
-    document.getElementById('edit-appointment-time').value = appointment.children[3].innerText;
+    document.getElementById('edit-appointment-date').value = formatDateForInput(appointment.children[2].innerText);
+    document.getElementById('edit-appointment-time').value = formatTimeForInput(appointment.children[3].innerText);
     document.getElementById('edit-appointment-type').value = appointment.children[4].innerText;
     
     // Populate doctors dropdown
-    populateEditDoctorsDropdown();
+    const selectedDate = document.getElementById('edit-appointment-date').value;
+    fetchAvailableDoctorsForEdit(selectedDate, id);
     
     // Select the current doctor
     const doctorName = appointment.children[5].innerText.trim(); // Assuming the 6th column is Doctor
@@ -1190,14 +1553,14 @@
             document.getElementById('preview-modal').style.display = 'none';
         }
 
-        // Add Appointment Function
        // Add Appointment Function with Front-end Validation
-function addAppointment() {
+       function addAppointment() {
     const form = document.getElementById('add-form');
     const doctorSelect = document.getElementById('doctor');
     const doctorId = doctorSelect.value;
     const appointmentDate = document.getElementById('appointment-date').value;
     const appointmentTime = document.getElementById('appointment-time').value;
+    const addButton = form.querySelector('.add-appointment-btn');
 
     // Front-end Validation
     if (!appointmentDate) {
@@ -1233,50 +1596,191 @@ function addAppointment() {
         return;
     }
 
-    const formData = new FormData(form);
+    // Optional: Add Confirmation Prompt
+    Swal.fire({
+        title: 'Confirm Appointment',
+        text: "Are you sure you want to add this appointment?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#00d1ff',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, add it!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Disable the Add Appointment Button to Prevent Multiple Clicks
+            addButton.disabled = true;
+            addButton.style.cursor = 'not-allowed';
+            addButton.style.opacity = '0.6';
 
-    fetch('{{ route("nurse.appointment.add") }}', {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
+            // Show Loading SweetAlert
             Swal.fire({
-                icon: 'success',
-                title: 'Success',
-                text: data.success,
-                timer: 3000,
-                showConfirmButton: false
+                title: 'Submitting...',
+                text: 'Please wait while your appointment is being added.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
             });
-            setTimeout(() => {
-                location.reload();
-            }, 3000);
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data.error || 'Error adding appointment',
-                timer: 3000,
-                showConfirmButton: false
+
+            // Prepare FormData
+            const formData = new FormData(form);
+
+            fetch('{{ route("nurse.appointment.add") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.close(); // Close the loading SweetAlert
+                addButton.disabled = false; // Re-enable the button
+                addButton.style.cursor = 'pointer';
+                addButton.style.opacity = '1';
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: data.success,
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                    setTimeout(() => {
+                        location.reload();
+                    }, 3000);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error || 'Error adding appointment',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.close(); // Close the loading SweetAlert
+                addButton.disabled = false; // Re-enable the button
+                addButton.style.cursor = 'pointer';
+                addButton.style.opacity = '1';
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Unexpected error occurred.',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
             });
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Unexpected error occurred.',
-            timer: 3000,
-            showConfirmButton: false
-        });
     });
 }
 
+
+
+document.getElementById('appointment-date').addEventListener('change', function() {
+        const selectedDate = this.value;
+        if (!selectedDate) {
+            return;
+        }
+
+        fetchAvailableDoctors(selectedDate);
+    });
+
+    function fetchAvailableDoctors(date) {
+    fetch(`${availableDoctorsRoute}?date=${date}`)
+        .then(response => response.json())
+        .then(data => {
+            const doctorSelect = document.getElementById('doctor');
+            doctorSelect.innerHTML = '<option value="" disabled selected>Select Doctor</option>';
+
+            if (data.available_doctors.length > 0) {
+                data.available_doctors.forEach(doctor => {
+                    const option = document.createElement('option');
+                    option.value = doctor.id;
+                    option.textContent = `${doctor.user.first_name} ${doctor.user.last_name} (${doctor.specialization})`;
+                    doctorSelect.appendChild(option);
+                });
+            } else {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Doctors Available',
+                    text: 'No doctors are available on the selected date. Please choose another date.',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+                document.getElementById('appointment-date').value = ''; // Clear date input
+                doctorSelect.innerHTML = '<option value="" disabled selected>No Doctors Available</option>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching available doctors:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to fetch available doctors. Please try again.',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        });
+}
+
+    // Existing JavaScript code...
+
+function fetchAvailableDoctorsForEdit(date, appointmentId) {
+    fetch(`${availableDoctorsRoute}?date=${date}&exclude_appointment_id=${appointmentId}`)
+        .then(response => response.json())
+        .then(data => {
+            const doctorSelect = document.getElementById('edit-doctor');
+            doctorSelect.innerHTML = '<option value="" disabled selected>Select Doctor</option>';
+
+            if (data.available_doctors.length > 0) {
+                data.available_doctors.forEach(doctor => {
+                    const option = document.createElement('option');
+                    option.value = doctor.id;
+                    option.textContent = `${doctor.user.first_name} ${doctor.user.last_name} (${doctor.specialization})`;
+                    doctorSelect.appendChild(option);
+                });
+            } else {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Doctors Available',
+                    text: 'No doctors are available on the selected date. Please choose another date.',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+                document.getElementById('edit-appointment-date').value = ''; // Clear date input
+                doctorSelect.innerHTML = '<option value="" disabled selected>No Doctors Available</option>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching available doctors for edit:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to fetch available doctors. Please try again.',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        });
+}
+
+
+// Add Event Listener for Edit Appointment Date Change
+document.getElementById('edit-appointment-date').addEventListener('change', function() {
+    const selectedDate = this.value;
+    const appointmentId = document.getElementById('edit-appointment-id').value;
+    if (!selectedDate) {
+        return;
+    }
+
+    fetchAvailableDoctorsForEdit(selectedDate, appointmentId);
+});
+
+// Existing JavaScript code...
 
         // Confirm Delete Function
         function confirmDelete(id) {
@@ -1431,6 +1935,17 @@ function renderCalendarDays(month, year, appointmentsByDate) {
 
     // Initialize Calendar on Page Load
     document.addEventListener('DOMContentLoaded', function () {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('appointment-date').setAttribute('min', today);
+        $('#appointment-table').DataTable({
+            paging: true,
+            searching: true,
+            ordering: true,
+            order: [[2, 'asc']], // Order by Appointment Date
+            columnDefs: [
+                { orderable: false, targets: 7 } // Disable ordering on the Actions column
+            ]
+        });
         renderCalendar(currentMonth, currentYear);
     });
 
@@ -1470,86 +1985,38 @@ function renderCalendarDays(month, year, appointmentsByDate) {
             }
         });
         // Confirm Appointment Function
-     // Confirm Appointment Function
-function confirmAppointment(id) {
-    const formData = new FormData();
-    formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
-    formData.append('status', 'confirmed'); // Set status to confirmed
-
-    fetch(`/nurse/appointment/confirm/${id}`, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Appointment Confirmed',
-                text: data.message,
-                timer: 3000,
-                showConfirmButton: false
-            });
-
-            // Reload the page to update calendar and table
-            setTimeout(() => {
-                location.reload();
-            }, 3000);
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Could not confirm appointment.',
-                timer: 3000,
-                showConfirmButton: false
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'An unexpected error occurred.',
-            timer: 3000,
-            showConfirmButton: false
-        });
-    });
-}
-
+     
 function populateEditDoctorsDropdown() {
-    fetch('{{ route("nurse.appointment.getApprovedDoctors") }}')
-        .then(response => response.json())
-        .then(data => {
-            const doctorSelect = document.getElementById('edit-doctor');
-            doctorSelect.innerHTML = '<option value="" disabled selected>Select Doctor</option>'; // Reset options
-            data.doctors.forEach(doctor => {
-                const option = document.createElement('option');
-                option.value = doctor.id;
-                option.textContent = `${doctor.user.first_name} ${doctor.user.last_name} (${doctor.specialization})`;
-                doctorSelect.appendChild(option);
-            });
-        })
-        .catch(error => {
-            console.error('Error fetching doctors:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Failed to load doctors.',
-                timer: 3000,
-                showConfirmButton: false
-            });
-        });
-}
-
-        // Update Appointment Function
-      // Update Appointment Function with Front-end Validation
-function updateAppointment() {
+            fetch('{{ route("nurse.appointment.getApprovedDoctors") }}')
+                .then(response => response.json())
+                .then(data => {
+                    const doctorSelect = document.getElementById('edit-doctor');
+                    doctorSelect.innerHTML = '<option value="" disabled selected>Select Doctor</option>'; // Reset options
+                    data.doctors.forEach(doctor => {
+                        const option = document.createElement('option');
+                        option.value = doctor.id;
+                        option.textContent = `${doctor.user.first_name} ${doctor.user.last_name} (${doctor.specialization})`;
+                        doctorSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching doctors:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to load doctors.',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                });
+        }
+        function updateAppointment() {
     const form = document.getElementById('edit-form');
     const doctorSelect = document.getElementById('edit-doctor');
     const doctorId = doctorSelect.value;
     const appointmentDate = document.getElementById('edit-appointment-date').value;
     const appointmentTime = document.getElementById('edit-appointment-time').value;
+    const updateButton = form.querySelector('.add-appointment-btn');
 
     // Front-end Validation
     if (!appointmentDate) {
@@ -1585,51 +2052,94 @@ function updateAppointment() {
         return;
     }
 
-    const formData = new FormData(form);
-    const id = document.getElementById('edit-appointment-id').value;
-    const data = {};
+    // Optional: Add Confirmation Prompt
+    Swal.fire({
+        title: 'Confirm Update',
+        text: "Are you sure you want to update this appointment?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#00d1ff',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, update it!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Disable the Update Appointment Button to Prevent Multiple Clicks
+            updateButton.disabled = true;
+            updateButton.style.cursor = 'not-allowed';
+            updateButton.style.opacity = '0.6';
 
-    formData.forEach((value, key) => {
-        data[key] = value;
-    });
-
-    fetch(`/nurse/appointment/update/${id}`, {
-        method: 'PUT',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('Appointment Rescheduled Successfully');
-            setTimeout(() => {
-                location.reload();
-            }, 3000);
-        } else {
+            // Show Loading SweetAlert
             Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Error rescheduling appointment',
-                timer: 3000,
-                showConfirmButton: false
+                title: 'Updating...',
+                text: 'Please wait while your appointment is being updated.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Prepare FormData
+            const formData = new FormData(form);
+
+            const id = document.getElementById('edit-appointment-id').value;
+
+            fetch(`/nurse/appointment/update/${id}`, {
+                method: 'POST', // Change from 'PUT' to 'POST'
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.close(); // Close the loading SweetAlert
+                updateButton.disabled = false; // Re-enable the button
+                updateButton.style.cursor = 'pointer';
+                updateButton.style.opacity = '1';
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: data.success,
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                    setTimeout(() => {
+                        location.reload();
+                    }, 3000);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error || 'Error updating appointment',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.close(); // Close the loading SweetAlert
+                updateButton.disabled = false; // Re-enable the button
+                updateButton.style.cursor = 'pointer';
+                updateButton.style.opacity = '1';
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Unexpected error occurred.',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
             });
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Unexpected error occurred.',
-            timer: 3000,
-            showConfirmButton: false
-        });
     });
 }
+
+
+
 
         // Get Appointments by Date URL
         const getAppointmentsByDateUrl = `{{ route('nurse.appointments.by-date') }}`;
@@ -1676,6 +2186,41 @@ function updateAppointment() {
                 });
             });
     }
+    function formatDateForInput(displayDate) {
+    const date = new Date(displayDate);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+document.getElementById('edit-appointment-time').addEventListener('input', function() {
+    const appointmentTime = this.value;
+    const [hours, minutes] = appointmentTime.split(':').map(Number);
+
+    if (hours < 8 || (hours === 17 && minutes > 0) || hours > 17) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Invalid Time',
+            text: 'Please select a time between 08:00 and 17:00.',
+            timer: 3000,
+            showConfirmButton: false
+        });
+        this.value = ''; // Clear invalid input
+    }
+});
+
+function formatTimeForInput(displayTime) {
+    // Assuming displayTime is in 'h:i A' format, e.g., '02:30 PM'
+    const [time, modifier] = displayTime.split(' ');
+    let [hours, minutes] = time.split(':');
+    if (modifier === 'PM' && hours !== '12') {
+        hours = parseInt(hours, 10) + 12;
+    }
+    if (modifier === 'AM' && hours === '12') {
+        hours = '00';
+    }
+    return `${String(hours).padStart(2, '0')}:${minutes}`;
+}
 
         // Helper function to format time to 12-hour AM/PM
         function formatTimeTo12Hour(timeString) {
@@ -1701,6 +2246,7 @@ function updateAppointment() {
         }
     });
 }
+
 // Generate Statistics Report Function with Enhanced Features
 function generateStatisticsReport() {
     const form = document.getElementById('report-form');
@@ -1816,4 +2362,10 @@ function generateStatisticsReport() {
 }
 
     </script>
+    <script>
+    const availableDoctorsRoute = "{{ route('nurse.appointment.availableDoctors') }}";
+    const addAppointmentRoute = "{{ route('nurse.appointment.add') }}";
+    const updateAppointmentRoute = "{{ url('/nurse/appointment/update') }}"; // Adjust if you have a named route
+</script>
+
 </x-app-layout>

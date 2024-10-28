@@ -1,13 +1,16 @@
-<x-app-layout>
+<x-app-layout :pageTitle="'Dental Approval'">   
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    
+<head>
     <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+
     <!-- SweetAlert2 for Alerts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+</head>
     <style>
         /* General Styling */
         body {
@@ -87,8 +90,6 @@
 
         /* Table Container */
         .table-container {
-            max-height: 500px; /* Adjust as needed */
-            overflow-y: auto;
             border: 1px solid #ddd;
             border-radius: 10px;
             padding: 10px;
@@ -327,23 +328,10 @@
         @endif
 
         <!-- Search Bar -->
-        <div class="search-bar">
-            <input type="text" id="search-input" placeholder="Search by patient name or tooth number..." />
-            <button onclick="searchRecords()">Search</button>
-        </div>
-
+       
+<h2> Teeth Approvals</h2>
         <!-- Tab Navigation -->
-        <div class="tabs">
-            <button class="tab-btn active" data-role="student" onclick="switchTab('student')">
-                <i class="fas fa-user-graduate"></i> Students
-            </button>
-            <button class="tab-btn" data-role="teacher" onclick="switchTab('teacher')">
-                <i class="fas fa-chalkboard-teacher"></i> Teachers
-            </button>
-            <button class="tab-btn" data-role="staff" onclick="switchTab('staff')">
-                <i class="fas fa-users-cog"></i> Staff
-            </button>
-        </div>
+  
 
         <!-- Dental Records Table -->
         <div class="table-container">
@@ -422,6 +410,95 @@
     <script>
         // CSRF Token Setup
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+
+
+        // Fetch dental records based on selected role
+        
+    function fetchDentalRecords(role) {
+        const tableBody = document.querySelector('#dental-records-table tbody');
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #555;">Loading...</td></tr>';
+        showSpinner();
+
+        fetch(`/admin/dental-records?role=${encodeURIComponent(role)}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken
+            }
+        })
+        .then(response => {
+            hideSpinner();
+            if (!response.ok) {
+                throw new Error(`Server responded with status ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            tableBody.innerHTML = ''; // Clear table
+
+            if (data.length > 0) {
+                data.forEach(tooth => {
+                    let imagesHtml = '';
+                    if (tooth.dental_pictures && tooth.dental_pictures.length > 0) {
+                        imagesHtml = `<div class="image-previews">`;
+                        tooth.dental_pictures.forEach(picture => {
+                            imagesHtml += `<img src="${picture}" alt="Tooth Image" onclick="openImageModal('${picture}')" />`;
+                        });
+                        imagesHtml += `</div>`;
+                    } else {
+                        imagesHtml = 'No images';
+                    }
+
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td>${escapeHtml(tooth.patient_name || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.user_type || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.tooth_number || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.status || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.notes || 'N/A')}</td>
+                            <td>${imagesHtml}</td>
+                            <td>
+                                <button type="button" class="btn btn-success" onclick="approveRecord(${tooth.id})">
+                                    <i class="fas fa-check"></i> Approve
+                                </button>
+                                <button type="button" class="btn btn-danger" onclick="rejectRecord(${tooth.id})">
+                                    <i class="fas fa-times"></i> Reject
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #888;">No records found for this role.</td>
+                    </tr>
+                `;
+            }
+
+            // Initialize DataTable after a slight delay to stabilize DOM
+            setTimeout(() => {
+                $('#dental-records-table').DataTable({
+                    paging: true,
+                    searching: true,
+                    ordering: true,
+                    info: true,
+                    responsive: true,
+                    autoWidth: false,
+                    destroy: true // Ensures any previous instance is cleared
+                });
+            }, 200); // Adjust delay as needed
+        })
+        .catch(error => {
+            hideSpinner();
+            console.error('Error fetching dental records:', error);
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; color: #dc3545;">Failed to load dental records. Please try again later.</td>
+                </tr>
+            `;
+        });
+    }
 
         // Function to open image modal
         function openImageModal(src) {
@@ -542,91 +619,8 @@
         }
 
         // Function to switch tabs
-        function switchTab(role) {
-            // Remove 'active' class from all tab buttons
-            const tabButtons = document.querySelectorAll('.tab-btn');
-            tabButtons.forEach(button => button.classList.remove('active'));
-
-            // Add 'active' class to the clicked tab
-            const activeTab = document.querySelector(`.tab-btn[data-role="${role}"]`);
-            if (activeTab) {
-                activeTab.classList.add('active');
-            }
-
-            // Fetch dental records based on selected role
-            fetchDentalRecords(role, document.getElementById('search-input').value);
-        }
-
-        function fetchDentalRecords(role, searchQuery = '') {
-            const tableBody = document.querySelector('#dental-records-table tbody');
-            tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #555;">Loading...</td></tr>';
-            showSpinner();
-
-            fetch(`/admin/dental-records?role=${encodeURIComponent(role)}&search=${encodeURIComponent(searchQuery)}`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': csrfToken
-                }
-            })
-            .then(response => {
-                hideSpinner();
-                if (!response.ok) {
-                    throw new Error(`Server responded with status ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-        tableBody.innerHTML = '';
-
-        if (data.length > 0) {
-            data.forEach(tooth => {
-                let imagesHtml = '';
-                if (tooth.dental_pictures && tooth.dental_pictures.length > 0) {
-                    imagesHtml = `<div class="image-previews">`;
-                    tooth.dental_pictures.forEach(picture => {
-                        imagesHtml += `<img src="${picture}" alt="Tooth Image" onclick="openImageModal('${picture}')" />`;
-                    });
-                    imagesHtml += `</div>`;
-                } else {
-                    imagesHtml = 'No images';
-                }
-
-                tableBody.innerHTML += `
-                    <tr>
-                        <td>${escapeHtml(tooth.patient_name || 'N/A')}</td>
-                        <td>${escapeHtml(tooth.user_type || 'N/A')}</td>
-                        <td>${escapeHtml(tooth.tooth_number || 'N/A')}</td> <!-- Corrected -->
-                        <td>${escapeHtml(tooth.status || 'N/A')}</td>
-                        <td>${escapeHtml(tooth.notes || 'N/A')}</td>
-                        <td>${imagesHtml}</td>
-                        <td>
-                            <button type="button" class="btn btn-success" onclick="approveRecord(${tooth.id})">
-                                <i class="fas fa-check"></i> Approve
-                            </button>
-                            <button type="button" class="btn btn-danger" onclick="rejectRecord(${tooth.id})">
-                                <i class="fas fa-times"></i> Reject
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-        } else {
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="7" style="text-align: center; color: #888;">No pending dental records found.</td>
-                </tr>
-            `;
-        }
-    });
-}
-
-        // Function to handle search
-        function searchRecords() {
-            const searchQuery = document.getElementById('search-input').value.trim();
-            const activeTab = document.querySelector('.tab-btn.active');
-            const role = activeTab ? activeTab.getAttribute('data-role') : 'students';
-            fetchDentalRecords(role, searchQuery);
-        }
+     
+      
 
         // Helper Function to Escape HTML (Prevent XSS)
         function escapeHtml(text) {
@@ -651,9 +645,24 @@
 
         // Initialize with default tab and fetch records
         document.addEventListener('DOMContentLoaded', function () {
-            const defaultRole = 'student';
-            fetchDentalRecords(defaultRole);
-        });
+        // Load the default records and then initialize DataTables
+        const defaultRole = 'student';
+        fetchDentalRecords(defaultRole);
+        switchTab('student'); // Load 'student' records by default
+
+        // Initialize DataTables after table content is fully loaded
+        setTimeout(() => {
+            $('#dental-records-table').DataTable({
+                paging: true,
+                searching: true,
+                ordering: true,
+                info: true,
+                responsive: true,
+                autoWidth: false,
+                destroy: true // Ensures any previous instances are cleared
+            });
+        }, 500); // Add a delay to allow content to load; adjust as needed
+    });
 
         // Close modal when clicking outside of the modal content
         window.onclick = function(event) {
@@ -662,5 +671,76 @@
                 imageModal.style.display = 'none';
             }
         }
+        function refreshDentalRecords() {
+        const activeTab = document.querySelector('.tab-btn.active');
+        const role = activeTab ? activeTab.getAttribute('data-role') : 'student';
+        const searchQuery = document.getElementById('search-input').value.trim();
+
+        fetch(`/admin/dental-records?role=${encodeURIComponent(role)}&search=${encodeURIComponent(searchQuery)}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Server responded with status ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const tableBody = document.querySelector('#dental-records-table tbody');
+            tableBody.innerHTML = '';
+
+            if (data.length > 0) {
+                data.forEach(tooth => {
+                    let imagesHtml = '';
+                    if (tooth.dental_pictures && tooth.dental_pictures.length > 0) {
+                        imagesHtml = `<div class="image-previews">`;
+                        tooth.dental_pictures.forEach(picture => {
+                            imagesHtml += `<img src="${picture}" alt="Tooth Image" onclick="openImageModal('${picture}')"/>`;
+                        });
+                        imagesHtml += `</div>`;
+                    } else {
+                        imagesHtml = 'No images';
+                    }
+
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td>${escapeHtml(tooth.patient_name || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.user_type || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.tooth_number || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.status || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.notes || 'N/A')}</td>
+                            <td>${imagesHtml}</td>
+                            <td>
+                                <button type="button" class="btn btn-success" onclick="approveRecord(${tooth.id})">
+                                    <i class="fas fa-check"></i> Approve
+                                </button>
+                                <button type="button" class="btn btn-danger" onclick="rejectRecord(${tooth.id})">
+                                    <i class="fas fa-times"></i> Reject
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #888;">No pending dental records found.</td>
+                    </tr>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching dental records:', error);
+            // Optionally, display an error message to the user
+        });
+    }
+
+    // Set an interval to refresh dental records every 30 seconds
+    setInterval(refreshDentalRecords, 30000); // 30000 milliseconds = 30 seconds
+
+
     </script>
 </x-app-layout>

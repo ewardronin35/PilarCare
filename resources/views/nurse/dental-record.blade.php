@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :pageTitle="' Dental Record'">
 
     <link rel="stylesheet" href="{{ asset('css/dental.css') }}">
     
@@ -15,6 +15,8 @@
 <!-- SweetAlert2 CSS and JS (if used) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
 <!-- Your Custom JS File -->
 <script src="{{ asset('js/admindental.js') }}"></script>
@@ -1015,7 +1017,6 @@
 </div>
         </div>
 
-        <!-- Right side: Dental Examination Form -->
         <div class="dental-examination-form">
     <div class="form-section">
     <h2 class="form-title">Dental History</h2>
@@ -1043,8 +1044,8 @@
         </table>
 
         <!-- Previous Examinations -->
-        <table class="history-table">
-            <thead>
+        <table id="dental-examination-history-table" class="history-table">
+        <thead>
                 <tr>
                     <th colspan="3">Dental Examinations History</th>
                 </tr>
@@ -1055,8 +1056,8 @@
         </table>
 
         <!-- Tooth History Table -->
-        <table class="history-table">
-            <caption>Tooth History</caption>
+        <table id="tooth-history-table" class="history-table">
+        <caption>Tooth History</caption>
             <thead>
                 <tr>
                     <th>Tooth Number</th>

@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :pageTitle="'Manage Teachers'">   
     <style>
         /* Import Poppins Font */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
@@ -243,7 +243,6 @@
 
         /* Teachers (Teachers) Table */
         .teachers-section {
-            max-height: 600px;
             overflow-y: auto;
             margin-top: 20px;
         }
@@ -479,6 +478,7 @@
             font-size: 18px; /* Slightly larger icon */
         }
     </style>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
 
     <div class="main-content">
         <!-- Tabs -->
@@ -541,9 +541,7 @@
         <div id="teachers-tab" class="tab-content">
             <div class="teachers-section">
                 <h2>Enrolled Teachers</h2>
-                <div class="search-container">
-                    <input type="text" id="teacher-search" placeholder="Search by ID, Name, or Subject/Department">
-                </div>
+                
                 @if($teachers->isEmpty())
                     <p>No teachers enrolled yet.</p>
                 @else
@@ -556,7 +554,9 @@
                                     <th>Last Name</th>
                                     <th>Subject/Department</th>
                                     <th>Status</th>
+                                    <th>Toggle Status</th>
                                     <th>Actions</th>
+
                                 </tr>
                             </thead>
                             <tbody id="teacher-table-body">
@@ -567,22 +567,25 @@
                                         <td>{{ $teacher->last_name }}</td>
                                         <td>{{ $teacher->bed_or_hed }}</td>
                                         <td>
-                                            <label class="switch">
-                                                <input type="checkbox" class="toggle-approval" data-teacher-id="{{ $teacher->id }}" {{ $teacher->approved ? 'checked' : '' }}>
-                                                <span class="slider"></span>
-                                            </label>
-                                            <span class="status-text" style="margin-left: 8px; color: {{ $teacher->approved ? '#28a745' : '#dc3545' }};">
-                                                {{ $teacher->approved ? 'Active' : 'Inactive' }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <button class="edit-button" data-teacher-id="{{ $teacher->id }}">
-                                                <i class="fas fa-edit"></i> Edit
-                                            </button>
-                                            <button class="delete-button" onclick="deleteTeacher({{ $teacher->id }})">
-                                                <i class="fas fa-trash-alt"></i> Delete
-                                            </button>
-                                        </td>
+    <button class="preview-button status-button" style="background-color: {{ $teacher->approved ? '#28a745' : '#dc3545' }};">
+        {{ $teacher->approved ? 'Active' : 'Inactive' }}
+    </button>
+</td>
+<td>
+    <label class="switch">
+        <input type="checkbox" class="toggle-approval" data-teacher-id="{{ $teacher->id }}" {{ $teacher->approved ? 'checked' : '' }}>
+        <span class="slider"></span>
+    </label>
+</td>
+<td>
+    <button class="edit-button" data-teacher-id="{{ $teacher->id }}">
+        <i class="fas fa-edit"></i> Edit
+    </button>
+    <button class="delete-button" onclick="deleteTeacher({{ $teacher->id }})">
+        <i class="fas fa-trash-alt"></i> Delete
+    </button>
+</td>
+
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -621,565 +624,197 @@
         <!-- SweetAlert2 -->
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <!-- Font Awesome -->
-        <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
         <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                // Tab functionality
-                document.querySelectorAll('.tab').forEach(tab => {
-                    tab.addEventListener('click', function() {
-                        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-                        this.classList.add('active');
-                        document.getElementById(this.getAttribute('data-tab')).classList.add('active');
-                    });
+        document.addEventListener('DOMContentLoaded', function() {
+            $('#teachers-table').DataTable({
+                "pageLength": 10,
+                "searching": true,
+                "ordering": true,
+                "lengthChange": true
+            })
+    // Tab functionality
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById(this.getAttribute('data-tab')).classList.add('active');
+        });
+    });
+
+    // File selection feedback
+    document.getElementById('file').addEventListener('change', function(event) {
+        if(event.target.files.length > 0){
+            const fileName = event.target.files[0].name;
+            document.getElementById('file-name').textContent = fileName;
+        } else {
+            document.getElementById('file-name').textContent = 'No file chosen';
+        }
+    });
+
+    // Search functionality for Teachers
+  
+
+    // Upload form submission
+    document.getElementById('upload-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        var formData = new FormData(this);
+
+        fetch('{{ route('admin.teachers.import') }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: data.message,
+                    showConfirmButton: false,
+                    timer: 1500
                 });
-
-                // Toggle Upload Section
-                const toggleButton = document.getElementById('toggle-upload');
-                const uploadSection = document.getElementById('upload-section');
-                toggleButton.addEventListener('click', function() {
-                    if (uploadSection.classList.contains('hidden')) {
-                        uploadSection.classList.remove('hidden');
-                        toggleButton.textContent = 'Hide Upload Section';
-                    } else {
-                        uploadSection.classList.add('hidden');
-                        toggleButton.textContent = 'Show Upload Section';
-                    }
+                fetchAndUpdateTeacherTable(); // Re-fetch and update the table
+                document.getElementById('upload-form').reset();
+                document.getElementById('file-name').textContent = 'No file chosen';
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    html: data.errors.join('<br>'),
+                    showConfirmButton: true,
                 });
-
-                // File selection feedback
-                document.getElementById('file').addEventListener('change', function(event) {
-                    if(event.target.files.length > 0){
-                        const fileName = event.target.files[0].name;
-                        document.getElementById('file-name').textContent = fileName;
-                    } else {
-                        document.getElementById('file-name').textContent = 'No file chosen';
-                    }
-                });
-
-                // Search functionality for Teachers
-                const searchInput = document.getElementById('teacher-search');
-                searchInput.addEventListener('input', function() {
-                    const searchValue = this.value.toLowerCase();
-                    const tableRows = document.querySelectorAll('#teachers-table tbody tr');
-
-                    tableRows.forEach(row => {
-                        const id = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
-                        const firstName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                        const lastName = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-                        const subjectOrDepartment = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
-
-                        // Show the row if any of the fields match the search value
-                        if (id.includes(searchValue) || firstName.includes(searchValue) || lastName.includes(searchValue) || subjectOrDepartment.includes(searchValue)) {
-                            row.style.display = '';
-                        } else {
-                            row.style.display = 'none';
-                        }
-                    });
-                });
-
-                // Upload form submission
-                document.getElementById('upload-form').addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    var formData = new FormData(this);
-
-                    fetch('{{ route('admin.teachers.import') }}', {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: data.message,
-                                showConfirmButton: false,
-                                timer: 1500
-                            });
-                            fetchAndUpdateTeacherTable(); // Re-fetch and update the table
-                            document.getElementById('upload-form').reset();
-                            document.getElementById('file-name').textContent = 'No file chosen';
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                html: data.errors.join('<br>'),
-                                showConfirmButton: true,
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'There was a problem uploading the file.',
-                            showConfirmButton: true,
-                        });
-                    });
-                });
-
-                // Add late teacher form submission
-                document.getElementById('late-teacher-form').addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    var formData = new FormData(this);
-
-                    fetch('{{ route('admin.teachers.add') }}', {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: data.message,
-                                showConfirmButton: false,
-                                timer: 1500
-                            });
-                            fetchAndUpdateTeacherTable(); // Re-fetch and update the table
-                            document.getElementById('late-teacher-form').reset();
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                html: data.errors.join('<br>'),
-                                showConfirmButton: true,
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'There was a problem adding the teacher.',
-                            showConfirmButton: true,
-                        });
-                    });
-                });
-
-                // Fetch updated teacher table
-                function fetchAndUpdateTeacherTable() {
-                    fetch('{{ route('admin.teachers.enrolled') }}', {
-                        method: 'GET',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(teachers => {
-                        updateTeacherTable(teachers);
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                    });
-                }
-
-                // Update teacher table
-                function updateTeacherTable(teachers) {
-                    var tbody = document.getElementById('teacher-table-body');
-                    if (!tbody) {
-                        console.error("Element with ID 'teacher-table-body' not found.");
-                        return;
-                    }
-                    tbody.innerHTML = '';
-                    teachers.forEach(teacher => {
-                        var row = document.createElement('tr');
-                        row.id = 'teacher-row-' + teacher.id;
-
-                        row.innerHTML = 
-                            `<td>${teacher.id_number}</td>
-                            <td>${teacher.first_name}</td>
-                            <td>${teacher.last_name}</td>
-                            <td>${teacher.bed_or_hed}</td>
-                            <td>
-                                <label class="switch">
-                                    <input type="checkbox" class="toggle-approval" data-teacher-id="${teacher.id}" ${teacher.approved ? 'checked' : ''}>
-                                    <span class="slider"></span>
-                                </label>
-                                <span class="status-text" style="margin-left: 8px; color: ${teacher.approved ? '#28a745' : '#dc3545'};">
-                                    ${teacher.approved ? 'Active' : 'Inactive'}
-                                </span>
-                            </td>
-                            <td>
-                                <button class="edit-button" data-teacher-id="${teacher.id}"><i class="fas fa-edit"></i> Edit</button>
-                                <button class="delete-button" onclick="deleteTeacher(${teacher.id})"><i class="fas fa-trash-alt"></i> Delete</button>
-                            </td>`;
-                        tbody.appendChild(row);
-                    });
-                    attachToggleApprovalEvents();
-                    attachEditEvents();
-                }
-
-                // Toggle approval events
-                function attachToggleApprovalEvents() {
-                    document.querySelectorAll('.toggle-approval').forEach(input => {
-                        input.addEventListener('change', function() {
-                            var teacherId = this.getAttribute('data-teacher-id');
-                            var approved = this.checked ? 1 : 0;
-
-                            var formData = new FormData();
-                            formData.append('approved', approved);
-
-                            var actionUrl = `/admin/teachers/${teacherId}/toggle-approval`;
-
-                            fetch(actionUrl, {
-                                method: 'POST',
-                                body: formData,
-                                headers: {
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                }
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Success',
-                                        text: data.message,
-                                        showConfirmButton: false,
-                                        timer: 1500
-                                    });
-                                    updateTeacherRow(teacherId, data.teacher);
-                                } else {
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Error',
-                                        text: 'There was a problem updating the teacher status.',
-                                        showConfirmButton: true,
-                                    });
-                                    // Revert the checkbox state
-                                    this.checked = !approved;
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error:', error);
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: 'There was a problem updating the teacher status.',
-                                    showConfirmButton: true,
-                                });
-                                // Revert the checkbox state
-                                this.checked = !approved;
-                            });
-                        });
-                    });
-                }
-
-                // Update teacher row
-                function updateTeacherRow(teacherId, teacher) {
-                    var row = document.getElementById('teacher-row-' + teacherId);
-                    if (!row) {
-                        console.error(`Row for teacherId ${teacherId} not found`);
-                        return;
-                    }
-
-                    var statusText = row.querySelector('.status-text');
-                    statusText.textContent = teacher.approved ? 'Active' : 'Inactive';
-                    statusText.style.color = teacher.approved ? '#28a745' : '#dc3545';
-                }
-
-                // Delete teacher function
-                window.deleteTeacher = function(teacherId) {
-                    Swal.fire({
-                        title: 'Are you sure?',
-                        text: "You won't be able to revert this!",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#3085d6',
-                        cancelButtonColor: '#d33',
-                        confirmButtonText: 'Yes, delete it!'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            fetch(`/admin/teachers/${teacherId}`, {
-                                method: 'POST',
-                                headers: {
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    _method: 'DELETE'
-                                })
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    Swal.fire('Deleted!', data.message, 'success');
-                                    document.getElementById('teacher-row-' + teacherId).remove();
-                                } else {
-                                    Swal.fire('Error!', 'There was a problem deleting the teacher.', 'error');
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error:', error);
-                                Swal.fire('Error!', 'There was a problem deleting the teacher.', 'error');
-                            });
-                        }
-                    });
-                }
-
-                // Edit button events
-                function attachEditEvents() {
-                    document.querySelectorAll('.edit-button').forEach(button => {
-                        button.addEventListener('click', function() {
-                            var teacherId = this.getAttribute('data-teacher-id');
-
-                            // Fetch teacher data and open the modal
-                            fetch(`/admin/teachers/${teacherId}`)
-                                .then(response => response.json())
-                                .then(teacher => {
-                                    openEditModal(teacher); // Open the modal with the teacher data
-                                })
-                                .catch(error => {
-                                    console.error('Error fetching teacher data:', error);
-                                    Swal.fire('Error', 'Unable to fetch teacher data', 'error');
-                                });
-                        });
-                    });
-                }
-
-                // Function to open the modal and populate it with teacher data
-                function openEditModal(teacher) {
-                    document.getElementById('edit-teacher-id').value = teacher.id;
-                    document.getElementById('edit-id-number').value = teacher.id_number;
-                    document.getElementById('edit-first-name').value = teacher.first_name;
-                    document.getElementById('edit-last-name').value = teacher.last_name;
-                    document.getElementById('edit-subject-or-department').value = teacher.bed_or_hed;
-
-                    // Display the modal
-                    document.getElementById('edit-teacher-modal').style.display = 'flex';
-                }
-
-                // Close the modal when clicking the 'X' button
-                document.querySelector('.close').addEventListener('click', function() {
-                    document.getElementById('edit-teacher-modal').style.display = 'none';
-                });
-
-                // Form submission inside the modal
-                document.getElementById('edit-teacher-form').addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    var formData = new FormData(this);
-                    var teacherId = document.getElementById('edit-teacher-id').value;
-
-                    fetch(`/admin/teachers/${teacherId}/edit`, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: data.message,
-                                showConfirmButton: false,
-                                timer: 1500
-                            });
-                            fetchAndUpdateTeacherTable(); // Re-fetch and update the table
-                            document.getElementById('edit-teacher-modal').style.display = 'none'; // Close the modal
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                html: data.errors.join('<br>'),
-                                showConfirmButton: true,
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'There was a problem updating the teacher.',
-                            showConfirmButton: true,
-                        });
-                    });
-                });
-
-                // Initial fetch of teachers on page load
-                fetchAndUpdateTeacherTable();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'There was a problem uploading the file.',
+                showConfirmButton: true,
             });
+        });
+    });
 
-            // Fetch enrolled teachers
-            function fetchAndUpdateTeacherTable() {
-                fetch('{{ route('admin.teachers.enrolled') }}', {
-                    method: 'GET',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    }
-                })
-                .then(response => response.json())
-                .then(teachers => {
-                    updateTeacherTable(teachers);
-                })
-                .catch(error => {
-                    console.error('Error:', error);
+    // Add late teacher form submission
+    document.getElementById('late-teacher-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        var formData = new FormData(this);
+
+        fetch('{{ route('admin.teachers.add') }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: data.message,
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                fetchAndUpdateTeacherTable(); // Re-fetch and update the table
+                document.getElementById('late-teacher-form').reset();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    html: data.errors.join('<br>'),
+                    showConfirmButton: true,
                 });
             }
-
-            // Update teacher table
-            function updateTeacherTable(teachers) {
-                var tbody = document.getElementById('teacher-table-body');
-                if (!tbody) {
-                    console.error("Element with ID 'teacher-table-body' not found.");
-                    return;
-                }
-                tbody.innerHTML = '';
-                teachers.forEach(teacher => {
-                    var row = document.createElement('tr');
-                    row.id = 'teacher-row-' + teacher.id;
-
-                    row.innerHTML = 
-                        `<td>${teacher.id_number}</td>
-                        <td>${teacher.first_name}</td>
-                        <td>${teacher.last_name}</td>
-                        <td>${teacher.bed_or_hed}</td>
-                        <td>
-                            <label class="switch">
-                                <input type="checkbox" class="toggle-approval" data-teacher-id="${teacher.id}" ${teacher.approved ? 'checked' : ''}>
-                                <span class="slider"></span>
-                            </label>
-                            <span class="status-text" style="margin-left: 8px; color: ${teacher.approved ? '#28a745' : '#dc3545'};">
-                                ${teacher.approved ? 'Active' : 'Inactive'}
-                            </span>
-                        </td>
-                        <td>
-                            <button class="edit-button" data-teacher-id="${teacher.id}"><i class="fas fa-edit"></i> Edit</button>
-                            <button class="delete-button" onclick="deleteTeacher(${teacher.id})"><i class="fas fa-trash-alt"></i> Delete</button>
-                        </td>`;
-                    tbody.appendChild(row);
-                });
-                attachToggleApprovalEvents();
-                attachEditEvents();
-            }
-
-            // Toggle approval events
-            function attachToggleApprovalEvents() {
-                document.querySelectorAll('.toggle-approval').forEach(input => {
-                    input.addEventListener('change', function() {
-                        var teacherId = this.getAttribute('data-teacher-id');
-                        var approved = this.checked ? 1 : 0;
-
-                        var formData = new FormData();
-                        formData.append('approved', approved);
-
-                        var actionUrl = `/admin/teachers/${teacherId}/toggle-approval`;
-
-                        fetch(actionUrl, {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            }
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Success',
-                                    text: data.message,
-                                    showConfirmButton: false,
-                                    timer: 1500
-                                });
-                                updateTeacherRow(teacherId, data.teacher);
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: 'There was a problem updating the teacher status.',
-                                    showConfirmButton: true,
-                                });
-                                // Revert the checkbox state
-                                this.checked = !approved;
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: 'There was a problem updating the teacher status.',
-                                showConfirmButton: true,
-                            });
-                            // Revert the checkbox state
-                            this.checked = !approved;
-                        });
-                    });
-                });
-            }
-
-            // Update teacher row
-            function updateTeacherRow(teacherId, teacher) {
-                var row = document.getElementById('teacher-row-' + teacherId);
-                if (!row) {
-                    console.error(`Row for teacherId ${teacherId} not found`);
-                    return;
-                }
-
-                var statusText = row.querySelector('.status-text');
-                statusText.textContent = teacher.approved ? 'Active' : 'Inactive';
-                statusText.style.color = teacher.approved ? '#28a745' : '#dc3545';
-            }
-
-            // Edit button events
-            function attachEditEvents() {
-                document.querySelectorAll('.edit-button').forEach(button => {
-                    button.addEventListener('click', function() {
-                        var teacherId = this.getAttribute('data-teacher-id');
-
-                        // Fetch teacher data and open the modal
-                        fetch(`/admin/teachers/${teacherId}`)
-                            .then(response => response.json())
-                            .then(teacher => {
-                                openEditModal(teacher); // Open the modal with the teacher data
-                            })
-                            .catch(error => {
-                                console.error('Error fetching teacher data:', error);
-                                Swal.fire('Error', 'Unable to fetch teacher data', 'error');
-                            });
-                    });
-                });
-            }
-
-            // Function to open the modal and populate it with teacher data
-            function openEditModal(teacher) {
-                document.getElementById('edit-teacher-id').value = teacher.id;
-                document.getElementById('edit-id-number').value = teacher.id_number;
-                document.getElementById('edit-first-name').value = teacher.first_name;
-                document.getElementById('edit-last-name').value = teacher.last_name;
-                document.getElementById('edit-subject-or-department').value = teacher.bed_or_hed;
-
-                // Display the modal
-                document.getElementById('edit-teacher-modal').style.display = 'flex';
-            }
-
-            // Close the modal when clicking the 'X' button
-            document.querySelector('.close').addEventListener('click', function() {
-                document.getElementById('edit-teacher-modal').style.display = 'none';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'There was a problem adding the teacher.',
+                showConfirmButton: true,
             });
+        });
+    });
 
-            // Form submission inside the modal
-            document.getElementById('edit-teacher-form').addEventListener('submit', function(event) {
-                event.preventDefault();
-                var formData = new FormData(this);
-                var teacherId = document.getElementById('edit-teacher-id').value;
+    // Fetch updated teacher table
+    function fetchAndUpdateTeacherTable() {
+        fetch('{{ route('admin.teachers.enrolled') }}', {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(teachers => {
+            updateTeacherTable(teachers);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
 
-                fetch(`/admin/teachers/${teacherId}/edit`, {
+    // Update teacher table
+    function updateTeacherTable(teachers) {
+        var tbody = document.getElementById('teacher-table-body');
+        if (!tbody) {
+            console.error("Element with ID 'teacher-table-body' not found.");
+            return;
+        }
+        tbody.innerHTML = '';
+        teachers.forEach(teacher => {
+            var row = document.createElement('tr');
+            row.id = 'teacher-row-' + teacher.id;
+
+            row.innerHTML = 
+                `<td>${teacher.id_number}</td>
+                <td>${teacher.first_name}</td>
+                <td>${teacher.last_name}</td>
+                <td>${teacher.bed_or_hed}</td>
+                <td>
+                    <button class="preview-button status-button" style="background-color: ${teacher.approved ? '#28a745' : '#dc3545'};">
+                        ${teacher.approved ? 'Active' : 'Inactive'}
+                    </button>
+                </td>
+                <td>
+                    <label class="switch">
+                        <input type="checkbox" class="toggle-approval" data-teacher-id="${teacher.id}" ${teacher.approved ? 'checked' : ''}>
+                        <span class="slider"></span>
+                    </label>
+                </td>
+                <td>
+                    <button class="edit-button" data-teacher-id="${teacher.id}"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="delete-button" onclick="deleteTeacher(${teacher.id})"><i class="fas fa-trash-alt"></i> Delete</button>
+                </td>`;
+            tbody.appendChild(row);
+        });
+        attachToggleApprovalEvents();
+        attachEditEvents();
+    }
+
+    // Toggle approval events
+    function attachToggleApprovalEvents() {
+        document.querySelectorAll('.toggle-approval').forEach(input => {
+            input.addEventListener('change', function() {
+                var teacherId = this.getAttribute('data-teacher-id');
+                var approved = this.checked ? 1 : 0;
+
+                var formData = new FormData();
+                formData.append('approved', approved);
+
+                var actionUrl = `/admin/teachers/${teacherId}/toggle-approval`;
+
+                fetch(actionUrl, {
                     method: 'POST',
                     body: formData,
                     headers: {
@@ -1196,15 +831,16 @@
                             showConfirmButton: false,
                             timer: 1500
                         });
-                        fetchAndUpdateTeacherTable(); // Re-fetch and update the table
-                        document.getElementById('edit-teacher-modal').style.display = 'none'; // Close the modal
+                        updateTeacherRow(teacherId, data.teacher);
                     } else {
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            html: data.errors.join('<br>'),
+                            text: 'There was a problem updating the teacher status.',
                             showConfirmButton: true,
                         });
+                        // Revert the checkbox state
+                        this.checked = !approved;
                     }
                 })
                 .catch(error => {
@@ -1212,10 +848,412 @@
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'There was a problem updating the teacher.',
+                        text: 'There was a problem updating the teacher status.',
                         showConfirmButton: true,
                     });
+                    // Revert the checkbox state
+                    this.checked = !approved;
                 });
             });
+        });
+    }
+
+    // Update teacher row
+    function updateTeacherRow(teacherId, teacher) {
+        var row = document.getElementById('teacher-row-' + teacherId);
+        if (!row) {
+            console.error(`Row for teacherId ${teacherId} not found`);
+            return;
+        }
+
+        var statusButton = row.querySelector('.status-button');
+
+        // Update button text and background color
+        if (teacher.approved == 1) {
+            statusButton.textContent = 'Active';
+            statusButton.style.backgroundColor = '#28a745';
+        } else {
+            statusButton.textContent = 'Inactive';
+            statusButton.style.backgroundColor = '#dc3545';
+        }
+    }
+
+    // Delete teacher function
+    window.deleteTeacher = function(teacherId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/admin/teachers/${teacherId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        _method: 'DELETE'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Deleted!', data.message, 'success');
+                        document.getElementById('teacher-row-' + teacherId).remove();
+                    } else {
+                        Swal.fire('Error!', 'There was a problem deleting the teacher.', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error!', 'There was a problem deleting the teacher.', 'error');
+                });
+            }
+        });
+    }
+
+    // Edit button events
+    function attachEditEvents() {
+        document.querySelectorAll('.edit-button').forEach(button => {
+            button.addEventListener('click', function() {
+                var teacherId = this.getAttribute('data-teacher-id');
+
+                // Fetch teacher data and open the modal
+                fetch(`/admin/teachers/${teacherId}`)
+                    .then(response => response.json())
+                    .then(teacher => {
+                        openEditModal(teacher); // Open the modal with the teacher data
+                    })
+                    .catch(error => {
+                        console.error('Error fetching teacher data:', error);
+                        Swal.fire('Error', 'Unable to fetch teacher data', 'error');
+                    });
+            });
+        });
+    }
+
+    // Function to open the modal and populate it with teacher data
+    function openEditModal(teacher) {
+        document.getElementById('edit-teacher-id').value = teacher.id;
+        document.getElementById('edit-id-number').value = teacher.id_number;
+        document.getElementById('edit-first-name').value = teacher.first_name;
+        document.getElementById('edit-last-name').value = teacher.last_name;
+        document.getElementById('edit-subject-or-department').value = teacher.bed_or_hed;
+
+        // Display the modal
+        document.getElementById('edit-teacher-modal').style.display = 'flex';
+    }
+
+    // Close the modal when clicking the 'X' button
+    document.querySelector('.close').addEventListener('click', function() {
+        document.getElementById('edit-teacher-modal').style.display = 'none';
+    });
+
+    // Form submission inside the modal
+    document.getElementById('edit-teacher-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        var formData = new FormData(this);
+        var teacherId = document.getElementById('edit-teacher-id').value;
+
+        fetch(`/admin/teachers/${teacherId}/edit`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: data.message,
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                fetchAndUpdateTeacherTable(); // Re-fetch and update the table
+                document.getElementById('edit-teacher-modal').style.display = 'none'; // Close the modal
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    html: data.errors.join('<br>'),
+                    showConfirmButton: true,
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'There was a problem updating the teacher.',
+                showConfirmButton: true,
+            });
+        });
+    });
+
+    // Initial fetch of teachers on page load
+    fetchAndUpdateTeacherTable();
+});
+
+// Fetch enrolled teachers
+function fetchAndUpdateTeacherTable() {
+    fetch('{{ route('admin.teachers.enrolled') }}', {
+        method: 'GET',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(teachers => {
+        updateTeacherTable(teachers);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+// Update teacher table
+function updateTeacherTable(teachers) {
+    var tbody = document.getElementById('teacher-table-body');
+    if (!tbody) {
+        console.error("Element with ID 'teacher-table-body' not found.");
+        return;
+    }
+    tbody.innerHTML = '';
+    teachers.forEach(teacher => {
+        var row = document.createElement('tr');
+        row.id = 'teacher-row-' + teacher.id;
+
+        row.innerHTML = 
+            `<td>${teacher.id_number}</td>
+            <td>${teacher.first_name}</td>
+            <td>${teacher.last_name}</td>
+            <td>${teacher.bed_or_hed}</td>
+            <td>
+                <button class="preview-button status-button" style="background-color: ${teacher.approved ? '#28a745' : '#dc3545'};">
+                    ${teacher.approved ? 'Active' : 'Inactive'}
+                </button>
+            </td>
+            <td>
+                <label class="switch">
+                    <input type="checkbox" class="toggle-approval" data-teacher-id="${teacher.id}" ${teacher.approved ? 'checked' : ''}>
+                    <span class="slider"></span>
+                </label>
+            </td>
+            <td>
+                <button class="edit-button" data-teacher-id="${teacher.id}"><i class="fas fa-edit"></i> Edit</button>
+                <button class="delete-button" onclick="deleteTeacher(${teacher.id})"><i class="fas fa-trash-alt"></i> Delete</button>
+            </td>`;
+        tbody.appendChild(row);
+    });
+    attachToggleApprovalEvents();
+    attachEditEvents();
+}
+
+// Toggle approval events
+function attachToggleApprovalEvents() {
+    document.querySelectorAll('.toggle-approval').forEach(input => {
+        input.addEventListener('change', function() {
+            var teacherId = this.getAttribute('data-teacher-id');
+            var approved = this.checked ? 1 : 0;
+
+            var formData = new FormData();
+            formData.append('approved', approved);
+
+            var actionUrl = `/admin/teachers/${teacherId}/toggle-approval`;
+
+            fetch(actionUrl, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: data.message,
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    updateTeacherRow(teacherId, data.teacher);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'There was a problem updating the teacher status.',
+                        showConfirmButton: true,
+                    });
+                    // Revert the checkbox state
+                    this.checked = !approved;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'There was a problem updating the teacher status.',
+                    showConfirmButton: true,
+                });
+                // Revert the checkbox state
+                this.checked = !approved;
+            });
+        });
+    });
+}
+
+// Update teacher row
+function updateTeacherRow(teacherId, teacher) {
+    var row = document.getElementById('teacher-row-' + teacherId);
+    if (!row) {
+        console.error(`Row for teacherId ${teacherId} not found`);
+        return;
+    }
+
+    var statusButton = row.querySelector('.status-button');
+
+    // Update button text and background color
+    if (teacher.approved == 1) {
+        statusButton.textContent = 'Active';
+        statusButton.style.backgroundColor = '#28a745';
+    } else {
+        statusButton.textContent = 'Inactive';
+        statusButton.style.backgroundColor = '#dc3545';
+    }
+}
+
+// Delete teacher function
+window.deleteTeacher = function(teacherId) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/admin/teachers/${teacherId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    _method: 'DELETE'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Deleted!', data.message, 'success');
+                    document.getElementById('teacher-row-' + teacherId).remove();
+                } else {
+                    Swal.fire('Error!', 'There was a problem deleting the teacher.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error!', 'There was a problem deleting the teacher.', 'error');
+            });
+        }
+    });
+}
+
+// Edit button events
+function attachEditEvents() {
+    document.querySelectorAll('.edit-button').forEach(button => {
+        button.addEventListener('click', function() {
+            var teacherId = this.getAttribute('data-teacher-id');
+
+            // Fetch teacher data and open the modal
+            fetch(`/admin/teachers/${teacherId}`)
+                .then(response => response.json())
+                .then(teacher => {
+                    openEditModal(teacher); // Open the modal with the teacher data
+                })
+                .catch(error => {
+                    console.error('Error fetching teacher data:', error);
+                    Swal.fire('Error', 'Unable to fetch teacher data', 'error');
+                });
+        });
+    });
+}
+
+// Function to open the modal and populate it with teacher data
+function openEditModal(teacher) {
+    document.getElementById('edit-teacher-id').value = teacher.id;
+    document.getElementById('edit-id-number').value = teacher.id_number;
+    document.getElementById('edit-first-name').value = teacher.first_name;
+    document.getElementById('edit-last-name').value = teacher.last_name;
+    document.getElementById('edit-subject-or-department').value = teacher.bed_or_hed;
+
+    // Display the modal
+    document.getElementById('edit-teacher-modal').style.display = 'flex';
+}
+
+// Close the modal when clicking the 'X' button
+document.querySelector('.close').addEventListener('click', function() {
+    document.getElementById('edit-teacher-modal').style.display = 'none';
+});
+
+// Form submission inside the modal
+document.getElementById('edit-teacher-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+    var formData = new FormData(this);
+    var teacherId = document.getElementById('edit-teacher-id').value;
+
+    fetch(`/admin/teachers/${teacherId}/edit`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: data.message,
+                showConfirmButton: false,
+                timer: 1500
+            });
+            fetchAndUpdateTeacherTable(); // Re-fetch and update the table
+            document.getElementById('edit-teacher-modal').style.display = 'none'; // Close the modal
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                html: data.errors.join('<br>'),
+                showConfirmButton: true,
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'There was a problem updating the teacher.',
+            showConfirmButton: true,
+        });
+    });
+});
+
         </script>
     </x-app-layout>

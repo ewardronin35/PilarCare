@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :pageTitle="'Manage Staffs'">   
     <style>
         /* Import Poppins Font */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
@@ -242,7 +242,6 @@
 
         /* Staff Table */
         .staff-section {
-            max-height: 600px;
             overflow-y: auto;
             margin-top: 20px;
         }
@@ -507,6 +506,7 @@
             font-size: 18px; /* Slightly larger icon */
         }
     </style>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
 
     <div class="main-content">
         <!-- Tabs -->
@@ -572,9 +572,7 @@
         <div id="staff-tab" class="tab-content">
             <div class="staff-section">
                 <h2><i class="fas fa-users"></i> Enrolled Staff</h2>
-                <div class="search-container">
-                    <input type="text" id="staff-search" placeholder="Search by ID, Name, or Department">
-                </div>
+               
                 @if($staff->isEmpty())
                     <p>No staff enrolled yet.</p>
                 @else
@@ -650,6 +648,8 @@
 
         <!-- SweetAlert2 -->
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
         <!-- Font Awesome -->
         <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
         <script>
@@ -744,6 +744,12 @@
 
             document.addEventListener('DOMContentLoaded', function() {
                 // Initialize modal
+                $('#staff-table').DataTable({
+                "pageLength": 10, // Set default page length
+                "searching": true, // Enable search
+                "ordering": true,  // Enable column ordering
+                "lengthChange": true // Enable changing the number of rows displayed
+            });
                 document.getElementById('edit-staff-modal').style.display = 'none';
 
                 // File selection feedback
@@ -754,28 +760,10 @@
                     } else {
                         document.getElementById('file-name').textContent = 'No file chosen';
                     }
+                    
                 });
 
-                // Search functionality for Staff
-                const searchInput = document.getElementById('staff-search');
-                searchInput.addEventListener('input', function() {
-                    const searchValue = this.value.toLowerCase();
-                    const tableRows = document.querySelectorAll('#staff-table tbody tr');
-
-                    tableRows.forEach(row => {
-                        const id = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
-                        const firstName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                        const lastName = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-                        const department = row.querySelector('td:nth-child(4)') ? row.querySelector('td:nth-child(4)').textContent.toLowerCase() : '';
-
-                        // Show the row if any of the fields match the search value
-                        if (id.includes(searchValue) || firstName.includes(searchValue) || lastName.includes(searchValue) || department.includes(searchValue)) {
-                            row.style.display = '';
-                        } else {
-                            row.style.display = 'none';
-                        }
-                    });
-                });
+             
 
                 // Upload form submission
                 document.getElementById('upload-form').addEventListener('submit', function(event) {

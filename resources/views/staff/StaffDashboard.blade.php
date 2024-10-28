@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :pageTitle="'Dashboard'">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.css">
@@ -18,30 +18,47 @@
         overflow-y: auto;
     }
 
+ 
     .profile-box {
-        display: flex;
-        align-items: center;
-        padding: 20px;
-        background-image: url('{{ asset('images/bg.jpg') }}');
-        background-size: cover;
-        background-position: center;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px;
-        color: white;
-    }
+            position: relative; /* Required for the overlay */
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background-image: url('{{ asset('images/bg.jpg') }}');
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            color: white;
+            overflow: hidden; /* Clip the overlay within the border-radius */
+        }
 
-    .profile-box img {
-        border-radius: 50%;
-        width: 80px;
-        height: 80px;
-        margin-right: 20px;
-    }
+        .profile-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5); /* 50% opacity black overlay */
+            z-index: 1; /* Place behind the profile content */
+        }
 
-    .profile-info {
-        display: flex;
-        flex-direction: column;
-    }
+        .profile-box img {
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            margin-right: 20px;
+            z-index: 2; /* Ensure the profile image is above the overlay */
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            z-index: 2; /* Ensure text content is above the overlay */
+        }
+
 
     .profile-info h2 {
         margin: 0;
@@ -548,6 +565,16 @@
         .modal-content::-webkit-scrollbar-thumb:hover {
             background-color: #888;
         }
+        .phone-input {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.phone-input span {
+    font-weight: bold;
+    color: #333;
+}
 </style>
 
 
@@ -714,17 +741,21 @@
                 </div>
                 </div>
                 <div class="row">
-                <div class="form-group">
+    <div class="form-group">
         <label for="emergency_contact_number"><i class="fas fa-phone-alt"></i> Emergency Contact Number</label>
         <input type="text" id="emergency_contact_number" name="emergency_contact_number" required 
-       maxlength="11" oninput="validateNumbers(this)" onblur="validateNumbers(this)" onpaste="validateNumbers(this)" pattern="\d{11}">
+            maxlength="11" placeholder="09123456789"
+            oninput="validatePhilippineNumber(this)" 
+            pattern="09\d{9}" title="Must be 11 digits starting with 09">
     </div>
     <div class="form-group">
         <label for="personal_contact_number"><i class="fas fa-phone"></i> Personal Contact Number</label>
         <input type="text" id="personal_contact_number" name="personal_contact_number" required 
-       maxlength="11" oninput="validateNumbers(this)" onblur="validateNumbers(this)" onpaste="validateNumbers(this)" pattern="\d{11}">
+            maxlength="11" placeholder="09123456789"
+            oninput="validatePhilippineNumber(this)" 
+            pattern="09\d{9}" title="Must be 11 digits starting with 09">
     </div>
-                </div>
+</div>
                 <div class="row">
     <div class="form-group">
         <label for="guardian_first_name"><i class="fas fa-user"></i> Guardian First Name</label>
@@ -834,7 +865,14 @@ function isValidDate(year, month, day) {
     const date = new Date(year, month - 1, day); // JS months are 0-indexed
     return date.getFullYear() === year && date.getMonth() + 1 === month && date.getDate() === day;
 }
-
+function validatePhilippineNumber(input) {
+    setTimeout(() => {
+        input.value = input.value.replace(/[^0-9]/g, ''); // Allow only numbers
+        if (input.value.length > 11) { // Limit to 11 digits
+            input.value = input.value.slice(0, 11);
+        }
+    }, 1);
+}
 // Function to render the calendar
 function renderCalendar(month, year) {
     const calendarBody = document.getElementById('calendar-body');

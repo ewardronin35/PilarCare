@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :pageTitle="'View All Profiles'">   
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- Include Font Awesome -->
     <link

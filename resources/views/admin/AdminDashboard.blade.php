@@ -1,5 +1,5 @@
-<x-app-layout>
-    <style>
+<x-app-layout :pageTitle="'Dashboard'">   
+     <style>
         body {
             background-color: #f8f9fa;
             font-family: 'Poppins', sans-serif;
@@ -14,6 +14,7 @@
         }
 
         .profile-box {
+            position: relative; /* Required for the overlay */
             display: flex;
             align-items: center;
             padding: 20px;
@@ -24,6 +25,18 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
             color: white;
+            overflow: hidden; /* Clip the overlay within the border-radius */
+        }
+
+        .profile-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5); /* 50% opacity black overlay */
+            z-index: 1; /* Place behind the profile content */
         }
 
         .profile-box img {
@@ -31,12 +44,15 @@
             width: 80px;
             height: 80px;
             margin-right: 20px;
+            z-index: 2; /* Ensure the profile image is above the overlay */
         }
 
         .profile-info {
             display: flex;
             flex-direction: column;
+            z-index: 2; /* Ensure text content is above the overlay */
         }
+
 
         .profile-info h2 {
             margin: 0;
@@ -218,6 +234,263 @@
                 transform: translateY(0);
             }
         }
+           /* Responsive Styles */
+    @media (max-width: 1200px) {
+        .main-content {
+            max-width: 1000px;
+        }
+
+        .statistics .stat-box {
+            width: calc(33.333% - 10px);
+            flex: 1 1 calc(33.333% - 10px);
+        }
+
+        .chart-container,
+        .data-table-wrapper {
+            width: 100%;
+        }
+    }
+    * Very Small Mobile Devices (max-width: 480px) */
+@media (max-width: 480px) {
+    /* Adjust main-content */
+    .main-content {
+        margin-top: 20px;
+        padding: 10px;
+    }
+
+    /* Profile Box */
+    .profile-box {
+        flex-direction: column;
+        align-items: center;
+        padding: 10px;
+    }
+
+    .profile-box img {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 10px;
+    }
+
+    .profile-info h2 {
+        font-size: 1em;
+    }
+
+    .profile-info p {
+        font-size: 0.9em;
+    }
+
+    .edit-profile-btn {
+        padding: 8px 16px;
+        font-size: 0.9em;
+    }
+
+    /* Statistics */
+    .statistics {
+        flex-direction: column;
+    }
+
+    .statistics .stat-box {
+        width: 100%;
+        flex: 1 1 100%;
+        margin-bottom: 10px;
+    }
+
+    .stat-box img {
+        width: 40px;
+        height: 40px;
+    }
+
+    /* Content Row */
+    .content-row {
+        flex-direction: column;
+    }
+
+    /* Chart Container and Data Table Wrapper */
+    .chart-container,
+    .data-table-wrapper {
+        width: 100%;
+    }
+
+    /* Data Table */
+    .data-table th, .data-table td {
+        padding: 8px;
+        font-size: 0.9em;
+    }
+
+    /* Nav Tabs */
+    .nav-tabs {
+        flex-direction: column;
+    }
+
+    .nav-tabs .nav-link {
+        width: 100%;
+        font-size: 0.9em;
+        padding: 8px 12px;
+    }
+
+    /* Tab Content */
+    .tab-content {
+        padding: 15px;
+    }
+
+    /* Forms Container */
+    .forms-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .form-wrapper {
+        padding: 15px;
+        max-width: 100%;
+    }
+
+    /* Download Template Button */
+    .download-template-button {
+        font-size: 13px;
+        padding: 8px 14px;
+        width: 100%;
+    }
+
+    /* Doctors Table */
+    .doctors-table th,
+    .doctors-table td {
+        padding: 6px;
+        font-size: 0.9em;
+    }
+
+    /* Search Container */
+    .search-container input[type="text"] {
+        max-width: 100%;
+        width: 100%;
+        font-size: 14px;
+        padding: 6px;
+    }
+
+    .search-container button {
+        width: 100%;
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+
+    /* Calendar Legend */
+    .calendar-legend {
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .legend-item {
+        font-size: 0.7rem;
+    }
+}
+    @media (max-width: 992px) {
+        .statistics .stat-box {
+            width: calc(50% - 10px);
+            flex: 1 1 calc(50% - 10px);
+        }
+
+        .profile-box {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .profile-box img {
+            margin-right: 0;
+            margin-bottom: 10px;
+        }
+
+        .edit-profile-btn {
+            align-self: stretch;
+            text-align: center;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .statistics .stat-box {
+            width: 100%;
+            flex: 1 1 100%;
+        }
+
+        .content-row {
+            flex-direction: column;
+        }
+
+        .chart-container,
+        .data-table-wrapper {
+            width: 100%;
+        }
+
+        .nav-tabs {
+            flex-direction: column;
+        }
+
+        .nav-tabs .nav-link {
+            width: 100%;
+        }
+
+        .profile-box {
+            padding: 15px;
+        }
+
+        .profile-info h2 {
+            font-size: 1.2em;
+        }
+
+        .profile-info p {
+            font-size: 0.9em;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .main-content {
+            margin: 20px 10px;
+            padding: 0 10px;
+        }
+
+        .profile-box {
+            padding: 10px;
+        }
+
+        .profile-box img {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 10px;
+        }
+
+        .profile-info h2 {
+            font-size: 1em;
+        }
+
+        .edit-profile-btn {
+            padding: 8px 16px;
+            font-size: 0.9em;
+        }
+
+        .statistics .stat-box {
+            padding: 15px;
+        }
+
+        .stat-box img {
+            width: 40px;
+            height: 40px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 8px;
+            font-size: 0.9em;
+        }
+
+        .nav-tabs .nav-link {
+            padding: 8px 12px;
+            font-size: 0.9em;
+        }
+
+        .tab-content {
+            padding: 15px;
+        }
+    }
     </style>
 
     <div class="main-content">
@@ -253,7 +526,7 @@
                 </a>
             </div>
             <div class="stat-box">
-                <a href="{{ route('admin.pendingApproval') }}">
+                <a href="{{ route('admin.uploadHealthExamination') }}">
                     <img src="https://img.icons8.com/?size=100&id=10247&format=png&color=000000" alt="Pending Approval Icon">
                     <h2>{{ $pendingApprovalCount }}</h2>
                     <p>Pending Approvals</p>
@@ -309,8 +582,8 @@
                 <div class="tab-content" id="myTabContent">
                     <div class="tab-pane fade show active" id="student" role="tabpanel" aria-labelledby="student-tab">
                         
-                        <table class="data-table">
-                            <thead>
+                    <table class="data-table" id="studentsTable">
+                    <thead>
                                 <tr>
                                     <th>ID No.</th>
                                     <th>First Name</th>
@@ -331,7 +604,7 @@
                         </table>
                     </div>
                     <div class="tab-pane fade" id="staff" role="tabpanel" aria-labelledby="staff-tab">
-                        <table class="data-table">
+                    <table class="data-table" id="staffTable">
                             <thead>
                                 <tr>
                                     <th>ID No.</th>
@@ -353,7 +626,7 @@
                         </table>
                     </div>
                     <div class="tab-pane fade" id="parent" role="tabpanel" aria-labelledby="parent-tab">
-                        <table class="data-table">
+                    <table class="data-table" id="parentTable">
                             <thead>
                                 <tr>
                                 <th>ID No.</th>
@@ -375,7 +648,7 @@
                         </table>
                     </div>
                     <div class="tab-pane fade" id="teacher" role="tabpanel" aria-labelledby="teacher-tab">
-                        <table class="data-table">
+                    <table class="data-table" id="teacherTable">
                             <thead>
                                 <tr>
                                 <th>ID No.</th>
@@ -397,7 +670,7 @@
                         </table>
                     </div>
                     <div class="tab-pane fade" id="doctor" role="tabpanel" aria-labelledby="doctor-tab">
-                        <table class="data-table">
+                    <table class="data-table" id="doctorTable">
                             <thead>
                                 <tr>
                                     <th>ID No.</th>
@@ -420,7 +693,7 @@
                     </div>
                     <!-- Nurse Tab -->
                     <div class="tab-pane fade" id="nurse" role="tabpanel" aria-labelledby="nurse-tab">
-                        <table class="data-table">
+                    <table class="data-table" id="nurseTable">
                             <thead>
                                 <tr>
                                     <th>ID No.</th>
@@ -446,9 +719,27 @@
         </div>
     </div>
 
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css">
+
+<!-- DataTables JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+         $(document).ready(function() {
+        // Initialize all tables with the class 'data-table'
+        $('.data-table').DataTable({
+            // Optional: Customize DataTables options here
+            "paging": true,
+            "searching": true,
+            "ordering": true,
+            "info": true,
+            "autoWidth": false,
+            "responsive": true
+        });
+    });
             const monthlyUserData = @json($monthlyUserData);
         const ctx = document.getElementById('monthlyUsersChart').getContext('2d');
         const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

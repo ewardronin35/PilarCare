@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :pageTitle="'Health Examination'">
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -448,7 +448,7 @@
                 title: 'Approved',
                 text: 'Your submission has been approved. Proceed to the next step.',
             }).then(() => {
-                window.location.href = '{{ route('staff.medical-record.create') }}';
+                window.location.href = '{{ route('staff.dashboard') }}';
             });
         } else {
             // Submission exists and is pending approval

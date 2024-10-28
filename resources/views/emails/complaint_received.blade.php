@@ -1,25 +1,29 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title> New Complaint Alert </title>
-</head>
-<body>
-    <h2>Dear {{ $complaint->first_name }} {{ $complaint->last_name }},</h2>
-    <p>We have received your complaint submitted on {{ $complaint->created_at->format('Y-m-d') }}.</p>
+@component('mail::message')
+# New Complaint Alert
 
-    <p><strong>Description of Sickness:</strong> {{ $complaint->sickness_description }}</p>
-    <p><strong>Pain Assessment:</strong> {{ $complaint->pain_assessment }}</p>
-    <p><strong>Confine Status:</strong> {{ ucwords(str_replace('_', ' ', $complaint->confine_status)) }}</p>
-    <p><strong>Medicine Given:</strong> {{ $complaint->medicine_given }}</p>
-    <p><strong>Status:</strong> {{ ucfirst($complaint->status) }}</p>
+Dear {{ $complaint->first_name }} {{ $complaint->last_name }},
 
-    @if($complaint->report_url)
-        <p>You can view or download your clinic slip here:</p>
-        <p><a href="{{ $complaint->report_url }}" target="_blank">View PDF</a></p>
-    @endif
+We have received your complaint submitted on {{ $complaint->created_at->format('Y-m-d') }}.
 
-    <p>Thank you for reaching out to us.</p>
+**Description of Sickness:** {{ $complaint->sickness_description }}
 
-    <p>Best regards,<br>Clinic Team</p>
-</body>
-</html>
+**Pain Assessment:** {{ $complaint->pain_assessment }}
+
+**Confine Status:** {{ ucwords(str_replace('_', ' ', $complaint->confine_status)) }}
+
+**Medicine Given:** {{ $complaint->medicine_given }}
+
+
+@if($complaint->report_url)
+You can view or download your clinic slip here:
+
+@component('mail::button', ['url' => $complaint->report_url])
+View PDF
+@endcomponent
+@endif
+
+Thank you for reaching out to us.
+
+Best regards,  
+Clinic Team
+@endcomponent

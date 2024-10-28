@@ -1,5 +1,4 @@
-<!-- resources/views/student/uploadHealthExamination.blade.php -->
-<x-app-layout>
+<x-app-layout :pageTitle="'Health Examination Uploads'">
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -449,7 +448,7 @@
                 title: 'Approved',
                 text: 'Your submission has been approved. Proceed to the next step.',
             }).then(() => {
-                window.location.href = '{{ route('student.medical-record.create') }}';
+                window.location.href = '{{ route('student.dashboard') }}';
             });
         } else {
             // Submission exists and is pending approval

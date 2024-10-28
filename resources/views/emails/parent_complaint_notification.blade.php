@@ -11,9 +11,14 @@ We would like to inform you that your child, **{{ $studentName }}**, has submitt
 - **Pain Assessment:** {{ $painAssessment }}/10
 - **Medicine Given:** {{ $medicineGiven }}
 
-@component('mail::button', ['url' => url('/complaints')])
-View Complaints
-@endcomponent
+@if($complaint->report_url)
+        <p>You can view or download your clinic slip here:</p>
+        <p><a href="{{ $complaint->report_url }}" target="_blank">View PDF</a></p>
+    @endif
+
+    <p>Thank you for reaching out to us.</p>
+
+    <p>Best regards,<br>Clinic Team</p>
 
 Thank you for your attention.
 

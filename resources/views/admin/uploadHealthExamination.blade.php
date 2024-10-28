@@ -1,14 +1,17 @@
-<!-- resources/views/admin-health-examinations.blade.php -->
-<x-app-layout>
+<x-app-layout :pageTitle="' Approval Health Examination'">   
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <!-- Font Awesome for Icons -->
+    <!-- CSS Links -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- SweetAlert2 for Alerts -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/fixedheader/3.1.9/css/fixedHeader.dataTables.min.css">
+    
+    <!-- JS Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Ensure jQuery is loaded first -->
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/fixedheader/3.1.9/js/dataTables.fixedHeader.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <style>
         /* General Styling */
         body {
@@ -88,13 +91,26 @@
 
         /* Table Container */
         .table-container {
-            max-height: 600px; /* Adjust as needed */
             overflow-y: auto;
             border: 1px solid #ddd;
             border-radius: 10px;
             padding: 10px;
             background-color: #fff;
         }
+/* Table Image Styling */
+.table-image {
+    width: 100px;        /* Set desired width */
+    height: 100px;        /* Height adjusts to maintain aspect ratio */
+    object-fit: cover;   /* Adjust image to cover the container */
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 0 5px 5px 0;
+    transition: transform 0.3s;
+}
+
+.table-image:hover {
+    transform: scale(1.05);
+}
 
         /* Table Styling */
         table {
@@ -154,67 +170,78 @@
         }
 
         /* Modal Styling */
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.6);
-            animation: fadeIn 0.3s ease-in-out;
-            justify-content: center;
-            align-items: center;
-        }
+     /* Modal Styling */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    animation: fadeIn 0.3s ease-in-out;
+    justify-content: center;
+    align-items: center;
+}
 
-        .modal-content {
-            background-color: #fefefe;
-            margin: 5% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 90%;
-            max-width: 800px;
-            border-radius: 10px;
-            animation: slideIn 0.3s ease-in-out;
-            position: relative;
-        }
+.modal-content {
+    background-color: #fefefe;
+    padding: 20px;
+    border-radius: 10px;
+    animation: slideIn 0.3s ease-in-out;
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
 
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
-        }
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+}
 
-        .modal-header h2 {
-            margin: 0;
-            font-size: 1.8rem;
-            color: #007bff;
-        }
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: #007bff;
+}
 
-        .close {
-            color: #aaa;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: color 0.3s;
-        }
+.close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s;
+}
 
-        .close:hover,
-        .close:focus {
-            color: #000;
-            text-decoration: none;
-        }
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+}
 
-        .modal-body img {
-            width: 100%;
-            height: auto;
-            border-radius: 5px;
-        }
+.modal-body {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-body img {
+    max-width: 50%;
+    max-height: 50%;
+    width: auto;
+    height: auto;
+    border-radius: 5px;
+}
+
 
         /* Image Previews */
         .image-previews img {
@@ -279,7 +306,17 @@
                 opacity: 1;
             }
         }
-
+        table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: #f2f2f2; /* Matches the header background */
+    color: #333;
+}
+table thead th { 
+            position: sticky; top: 0; z-index: 2;
+            background-color: #f2f2f2; /* Background for sticky header */
+        }
         /* Responsive Design */
         @media (max-width: 768px) {
             .tabs {
@@ -352,6 +389,10 @@
     </style>
 
 
+ <!-- resources/views/admin-health-examinations.blade.php -->
+
+
+
     <div class="main-content">
         <!-- Success Message -->
         @if(session('success'))
@@ -359,12 +400,6 @@
                 {{ session('success') }}
             </div>
         @endif
-
-        <!-- Search Bar -->
-        <div class="search-bar">
-            <input type="text" id="search-input" placeholder="Search by patient name or examination ID..." />
-            <button onclick="searchExaminations()">Search</button>
-        </div>
 
         <!-- Tab Navigation -->
         <div class="tabs">
@@ -378,7 +413,7 @@
 
         <!-- Pending Approvals Tab Content -->
         <div class="table-container tab-content" id="pending-approvals">
-            <table id="health-examinations-table">
+            <table id="health-examinations-table" class="display nowrap" style="width:100%">
                 <thead>
                     <tr>
                         <th>Patient Name</th>
@@ -390,59 +425,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($pendingExaminations as $examination)
-                        <tr data-id="{{ $examination->id }}">
-                            <td>{{ $examination->user->first_name }} {{ $examination->user->last_name }}</td>
-                            <td>{{ $examination->school_year }}</td>
-
-                            <!-- Health Examination Pictures -->
-                            <td>
-                                <div class="image-previews">
-                                    @forelse(($examination->health_examination_picture ?? []) as $healthPic)
-                                        <img src="{{ asset('storage/' . $healthPic) }}" alt="Health Examination Picture" onclick="openImageModal('{{ asset('storage/' . $healthPic) }}')">
-                                    @empty
-                                        <p>No Health Examination pictures uploaded.</p>
-                                    @endforelse
-                                </div>
-                            </td>
-
-                            <!-- X-ray Pictures -->
-                            <td>
-                                <div class="image-previews">
-                                    @forelse(($examination->xray_picture ?? []) as $xray)
-                                        <img src="{{ asset('storage/' . $xray) }}" alt="X-ray Picture" onclick="openImageModal('{{ asset('storage/' . $xray) }}')">
-                                    @empty
-                                        <p>No X-ray pictures uploaded.</p>
-                                    @endforelse
-                                </div>
-                            </td>
-
-                            <!-- Lab Result Pictures -->
-                            <td>
-                                <div class="image-previews">
-                                    @forelse(($examination->lab_result_picture ?? []) as $lab)
-                                        <img src="{{ asset('storage/' . $lab) }}" alt="Lab Result Picture" onclick="openImageModal('{{ asset('storage/' . $lab) }}')">
-                                    @empty
-                                        <p>No Lab Result pictures uploaded.</p>
-                                    @endforelse
-                                </div>
-                            </td>
-
-                            <!-- Actions (Approve/Reject) -->
-                            <td>
-                                <button type="button" class="btn btn-success" onclick="approveExamination({{ $examination->id }})">
-                                    <i class="fas fa-check"></i> Approve
-                                </button>
-                                <button type="button" class="btn btn-danger" onclick="rejectExamination({{ $examination->id }})">
-                                    <i class="fas fa-times"></i> Reject
-                                </button>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" style="text-align: center; color: #888;">No pending examinations available.</td>
-                        </tr>
-                    @endforelse
+                    <!-- Data will be loaded via AJAX -->
                 </tbody>
             </table>
         </div>
@@ -478,6 +461,7 @@
         <div class="spinner"></div>
     </div>
 
+    <!-- Your JavaScript -->
     <script>
         // CSRF Token Setup
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -497,60 +481,64 @@
         }
 
         // Function to approve a health examination
-        function approveExamination(id) {
+        function approveRecord(id) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You want to approve this medical record!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, approve it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
             Swal.fire({
-                title: 'Are you sure?',
-                text: "You want to approve this health examination!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#28a745',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, approve it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    showSpinner();
-                    fetch(`/admin/health-examination/${id}/approve`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        hideSpinner();
-                        if (data.success) {
-                            Swal.fire(
-                                'Approved!',
-                                data.message || 'The examination has been approved.',
-                                'success'
-                            ).then(() => {
-                                // Remove the approved row without reloading
-                                const row = document.querySelector(`tr[data-id="${id}"]`);
-                                if (row) {
-                                    row.remove();
-                                }
-                            });
-                        } else {
-                            Swal.fire(
-                                'Error!',
-                                data.message || 'The examination could not be approved.',
-                                'error'
-                            );
-                        }
-                    })
-                    .catch(error => {
-                        hideSpinner();
-                        console.error('Error:', error);
-                        Swal.fire(
-                            'Error!',
-                            'There was a problem with the approval process.',
-                            'error'
-                        );
-                    });
+                title: 'Approving...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading()
                 }
             });
+
+            fetch(`/admin/medical-record/${id}/approve`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.close();
+                if (data.success) {
+                    Swal.fire(
+                        'Approved!',
+                        'The medical record has been approved.',
+                        'success'
+                    ).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire(
+                        'Error!',
+                        data.message || 'The medical record could not be approved.',
+                        'error'
+                    );
+                }
+            })
+            .catch(error => {
+                Swal.close();
+                console.error('Error:', error);
+                Swal.fire(
+                    'Error!',
+                    'An unexpected error occurred while approving the record.',
+                    'error'
+                );
+            });
         }
+    });
+}
+
 
         // Function to reject a health examination
         function rejectExamination(id) {
@@ -581,11 +569,8 @@
                                 data.message || 'The examination has been rejected.',
                                 'success'
                             ).then(() => {
-                                // Remove the rejected row without reloading
-                                const row = document.querySelector(`tr[data-id="${id}"]`);
-                                if (row) {
-                                    row.remove();
-                                }
+                                // Reload DataTable to reflect changes
+                                $('#health-examinations-table').DataTable().ajax.reload(null, false);
                             });
                         } else {
                             Swal.fire(
@@ -640,135 +625,8 @@
 
             // Optionally, refresh data based on the active tab
             if (tabId === 'pending-approvals') {
-                fetchPendingExaminations(); // Fetch pending approvals
+                $('#health-examinations-table').DataTable().ajax.reload(null, false); // Reload DataTable via AJAX
             }
-        }
-
-        // Function to fetch pending examinations based on search query
-        function fetchPendingExaminations(searchQuery = '', showSpinnerOption = true) {
-            const tableBody = document.querySelector('#health-examinations-table tbody');
-            tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #555;">Loading...</td></tr>';
-
-            if (showSpinnerOption) {
-                showSpinner();
-            }
-
-            fetch(`/admin/health-examinations/pending-data?search=${encodeURIComponent(searchQuery)}`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': csrfToken
-                }
-            })
-            .then(response => {
-                if (showSpinnerOption) {
-                    hideSpinner();
-                }
-                if (!response.ok) {
-                    throw new Error(`Server responded with status ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                tableBody.innerHTML = '';
-
-                if (data.length > 0) {
-                    data.forEach(examination => {
-                        // Generate HTML for Health Examination Pictures
-                        let healthPicsHtml = '';
-                        if (examination.health_examination_pictures.length > 0) {
-                            healthPicsHtml = `<div class="image-previews">`;
-                            examination.health_examination_pictures.forEach(picUrl => {
-                                healthPicsHtml += `<img src="${picUrl}" alt="Health Examination Picture" onclick="openImageModal('${picUrl}')"/>`;
-                            });
-                            healthPicsHtml += `</div>`;
-                        } else {
-                            healthPicsHtml = `<p>No Health Examination pictures uploaded.</p>`;
-                        }
-
-                        // Generate HTML for X-ray Pictures
-                        let xrayPicsHtml = '';
-                        if (examination.xray_pictures.length > 0) {
-                            xrayPicsHtml = `<div class="image-previews">`;
-                            examination.xray_pictures.forEach(xrayUrl => {
-                                xrayPicsHtml += `<img src="${xrayUrl}" alt="X-ray Picture" onclick="openImageModal('${xrayUrl}')"/>`;
-                            });
-                            xrayPicsHtml += `</div>`;
-                        } else {
-                            xrayPicsHtml = `<p>No X-ray pictures uploaded.</p>`;
-                        }
-
-                        // Generate HTML for Lab Result Pictures
-                        let labPicsHtml = '';
-                        if (examination.lab_result_pictures.length > 0) {
-                            labPicsHtml = `<div class="image-previews">`;
-                            examination.lab_result_pictures.forEach(labUrl => {
-                                labPicsHtml += `<img src="${labUrl}" alt="Lab Result Picture" onclick="openImageModal('${labUrl}')"/>`;
-                            });
-                            labPicsHtml += `</div>`;
-                        } else {
-                            labPicsHtml = `<p>No Lab Result pictures uploaded.</p>`;
-                        }
-
-                        // Append the row to the table
-                        tableBody.innerHTML += `
-                            <tr data-id="${examination.id}">
-                                <td>${escapeHtml(examination.user_name)}</td>
-                                <td>${escapeHtml(examination.school_year)}</td>
-                                <td>
-                                    ${healthPicsHtml}
-                                </td>
-                                <td>
-                                    ${xrayPicsHtml}
-                                </td>
-                                <td>
-                                    ${labPicsHtml}
-                                </td>
-                                <td>
-                                    <button type="button" class="btn btn-success" onclick="approveExamination(${examination.id})">
-                                        <i class="fas fa-check"></i> Approve
-                                    </button>
-                                    <button type="button" class="btn btn-danger" onclick="rejectExamination(${examination.id})">
-                                        <i class="fas fa-times"></i> Reject
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                } else {
-                    tableBody.innerHTML = `
-                        <tr>
-                            <td colspan="6" style="text-align: center; color: #888;">No pending examinations found.</td>
-                        </tr>
-                    `;
-                }
-            })
-            .catch(error => {
-                if (showSpinnerOption) {
-                    hideSpinner();
-                }
-                console.error('Error fetching pending examinations:', error);
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="6" style="text-align: center; color: #dc3545;">Failed to load pending examinations. Please try again later.</td>
-                    </tr>
-                `;
-            });
-        }
-
-        // Function to handle search
-        function searchExaminations() {
-            const searchQuery = document.getElementById('search-input').value.trim();
-            fetchPendingExaminations(searchQuery); // Spinner will show by default
-        }
-
-        // Helper Function to Escape HTML (Prevent XSS)
-        function escapeHtml(text) {
-            if (!text) return '';
-            return text.replace(/&/g, "&amp;")
-                       .replace(/</g, "&lt;")
-                       .replace(/>/g, "&gt;")
-                       .replace(/"/g, "&quot;")
-                       .replace(/'/g, "&#039;");
         }
 
         // Spinner Functions
@@ -780,36 +638,111 @@
             document.getElementById('spinner-overlay').style.display = 'none';
         }
 
+        // Initialize DataTables with AJAX
+        $(document).ready(function () {
+            const healthExaminationsTable = $('#health-examinations-table').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: '/admin/health-examinations/pending-data',
+                    type: 'GET',
+                    data: function (d) {
+                        // You can add additional parameters here if needed
+                        // Example: d.searchQuery = $('#search-input').val();
+                    },
+                    error: function (xhr, error, thrown) {
+                        hideSpinner();
+                        console.error('Error fetching pending examinations:', xhr.responseText);
+                        Swal.fire(
+                            'Error!',
+                            'Failed to load pending examinations. Please try again later.',
+                            'error'
+                        );
+                    }
+                },
+                columns: [
+                    { data: 'user_name', name: 'user_name' },
+                    { data: 'school_year', name: 'school_year' },
+                    {
+                        data: 'health_examination_pictures',
+                        name: 'health_examination_pictures',
+                        render: function(data) {
+    if (data.length > 0) {
+        return data.map(pic => `<img src="${pic}" alt="Health Examination Picture" onclick="openImageModal('${pic}')" class="table-image">`).join('');
+    }
+    return 'No Health Examination pictures uploaded.';
+},
+
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'xray_pictures',
+                        name: 'xray_pictures',
+                        render: function(data) {
+                            if (data.length > 0) {
+                                return data.map(pic => `<img src="${pic}" alt="X-ray Picture" onclick="openImageModal('${pic}')" class="table-image">`).join('');
+                            }
+                            return 'No X-ray pictures uploaded.';
+                        },
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'lab_result_pictures',
+                        name: 'lab_result_pictures',
+                        render: function(data) {
+                            if (data.length > 0) {
+                                return data.map(pic => `<img src="${pic}" alt="Lab Result Picture" onclick="openImageModal('${pic}')" class="table-image">`).join('');
+                            }
+                            return 'No Lab Result pictures uploaded.';
+                        },
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'id',
+                        name: 'actions',
+                        render: function(data) {
+                            return `
+                                <button type="button" class="btn btn-success" onclick="approveExamination(${data})">
+                                    <i class="fas fa-check"></i> Approve
+                                </button>
+                                <button type="button" class="btn btn-danger" onclick="rejectExamination(${data})">
+                                    <i class="fas fa-times"></i> Reject
+                                </button>
+                            `;
+                        },
+                        orderable: false,
+                        searchable: false
+                    }
+                ],
+                fixedHeader: true,
+                responsive: true,
+                language: {
+                    emptyTable: "No pending examinations available."
+                }
+            });
+
+            // Switch to default tab and load data
+            const defaultRole = 'pending-approvals';
+            switchTab(defaultRole); // Switch to the default tab
+            healthExaminationsTable.ajax.reload(null, false); // Load data via AJAX
+            startRealTimeRefresh(); // Start real-time refresh
+        });
+
         // Real-Time Refresh Function
         function startRealTimeRefresh() {
             // Fetch and update the table every 10 seconds (10000 milliseconds)
             setInterval(() => {
                 const activeTab = document.querySelector('.tab-btn.active');
                 const role = activeTab ? activeTab.getAttribute('data-role') : 'pending-approvals';
-                const searchQuery = document.getElementById('search-input').value.trim();
+                // const searchQuery = document.getElementById('search-input').value.trim(); // Uncomment if you have a search input
                 if (role === 'pending-approvals') {
-                    fetchPendingExaminations(searchQuery, false); // Do not show spinner during real-time refresh
+                    $('#health-examinations-table').DataTable().ajax.reload(null, false); // Reload DataTable via AJAX without resetting pagination
                 }
                 // Add additional conditions if other tabs require periodic refresh
             }, 10000);
-        }
-
-        // Initialize with default tab and fetch records
-        document.addEventListener('DOMContentLoaded', function () {
-            const defaultRole = 'pending-approvals';
-            switchTab(defaultRole); // Switch to the default tab
-            fetchPendingExaminations(); // Spinner will show by default
-            startRealTimeRefresh(); // Start real-time refresh
-        });
-
-        // Close modal when clicking outside of the modal content
-        window.onclick = function(event) {
-            const modals = document.querySelectorAll('.modal');
-            modals.forEach(modal => {
-                if (event.target == modal) {
-                    modal.style.display = 'none';
-                }
-            });
         }
 
         // Function to reset school year
@@ -849,8 +782,8 @@
                                 data.message || `The school year has been reset to ${selectedYear}. Users can now upload new health examinations.`,
                                 'success'
                             ).then(() => {
-                                // Optionally, perform additional actions like reloading the page or updating UI
-                                location.reload(); // Reload to reflect changes
+                                // Reload to reflect changes
+                                location.reload(); // Reload the page
                             });
                         } else {
                             Swal.fire(
@@ -872,6 +805,16 @@
                 }
             });
         });
+
+        // Close modal when clicking outside of the modal content
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
     </script>
 
 </x-app-layout>

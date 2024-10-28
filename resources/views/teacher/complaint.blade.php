@@ -1,25 +1,36 @@
-<x-app-layout>
+<x-app-layout :pageTitle="'Complaints'">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    
     <!-- Font Awesome for Icons -->
-<!-- Font Awesome for Icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-yH6jIwETnIsIv+J8bGZ1CST5Q3gqLbG3Ehj3FdJ9VqgqkrFuzqfY1JIDxr2VDYfv4pZwU6yD/WHx3Q+5GfYbQg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-yH6jIwETnIsIv+J8bGZ1CST5Q3gqLbG3Ehj3FdJ9VqgqkrFuzqfY1JIDxr2VDYfv4pZwU6yD/WHx3Q+5GfYbQg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
     <!-- SweetAlert2 for Alerts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+    
+    <!-- jQuery CDN -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+            integrity="sha256-/xUj+3OJ+Y5e3U6IY+PffyONVfQK3rWZ6+P1Rrz4jAE="
+            crossorigin="anonymous"></script>
+    
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    
     <style>
         /* Existing Styles */
 
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Arial', sans-serif;
+            font-family: 'Poppins', sans-serif;
             animation: fadeInBackground 1s ease-in-out;
             background-color: #f5f7fa;
         }
 
         .main-content {
-            margin-top: 50px;
-            padding: 0 20px; /* Added padding for better responsiveness */
+            margin-top: 30px;
         }
 
         .alert {
@@ -31,6 +42,7 @@
         }
 
         .complaints-section {
+            margin-right: 50px;
             padding: 20px;
             background-color: #fff;
             border-radius: 10px;
@@ -47,7 +59,6 @@
 
         /* Scrollable Table Container */
         .table-container {
-            max-height: 500px; /* Adjust as needed */
             overflow-y: auto;
             border: 1px solid #ddd;
             border-radius: 10px;
@@ -278,6 +289,7 @@
         /* Search Form Styles */
         .search-form {
             margin-bottom: 20px;
+            text-align: center;
         }
 
         .search-bar input[type="text"] {
@@ -351,25 +363,14 @@
         </div>
 
         <!-- Search Form -->
-        <div class="search-form" style="text-align: center;">
-            <form method="GET" action="{{ route('teacher.complaint') }}" class="search-bar">
-                <!-- Preserve the 'filter' parameter if set -->
-                <input type="text" name="search" placeholder="Search complaints..." value="{{ request('search') }}">
-                <button type="submit"><i class="fas fa-search"></i> Search</button>
-                <!-- Hidden input to preserve filter -->
-                @if(request('filter'))
-                    <input type="hidden" name="filter" value="{{ request('filter') }}">
-                @endif
-            </form>
-        </div>
-
+      
         <!-- Complaints Section -->
         <div class="complaints-section">
-            <h2>Student Complaint History</h2>
+            <h2>Teacher Complaint History</h2>
 
             <!-- Complaints Table -->
             <div class="table-container">
-                <table class="complaints-table">
+                <table class="complaints-table" id="complaints-table">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -377,7 +378,7 @@
                             <th>Pain Assessment</th>
                             <th>Confine Status</th>
                             <th>Medicine Given</th>
-                            <th>Status</th>
+                            <th>Record Date</th> <!-- Added Record Date -->
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -390,7 +391,7 @@
                                 <td>{{ $complaint->pain_assessment }}</td>
                                 <td>{{ ucwords(str_replace('_', ' ', $complaint->confine_status)) }}</td>
                                 <td>{{ $complaint->medicine_given }}</td>
-                                <td>{{ ucfirst($complaint->status) }}</td>
+                                <td>{{ $complaint->created_at->format('M d, Y') }}</td> <!-- Record Date Based on created_at -->
                                 <td>
                                     <div class="action-buttons">
                                         <button class="preview-button" onclick="openPreviewModal({{ $complaint->id }})">
@@ -415,15 +416,10 @@
                                 </td>
                             </tr>
                         @empty
-                        <td colspan="7" style="text-align: center; color: #888;">
-            {{ request('filter') === 'past' ? 'No past complaints found.' : 'No present complaints found.' }}
-        </td>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-
-       
 
         </div>
     </div>
@@ -442,6 +438,24 @@
     </div>
 
     <script>
+        $(document).ready(function() {
+            // Initialize DataTables for Complaints Table
+            $('#complaints-table').DataTable({
+                "paging": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "autoWidth": false,
+                "responsive": true,
+                "language": {
+                    "emptyTable": "No complaints found."
+                }
+            });
+
+            // Handle Submenu Toggles (if any)
+            // Since this template doesn't have a sidebar, this part can be omitted or adjusted based on your actual layout
+        });
+
         // Function to open modal and load complaint details
         function openPreviewModal(complaintId) {
             fetch(`/teacher/complaint/${complaintId}`)
@@ -459,7 +473,7 @@
                         <p><strong>Pain Assessment:</strong> ${data.pain_assessment}</p>
                         <p><strong>Confine Status:</strong> ${data.confine_status}</p>
                         <p><strong>Medicine Given:</strong> ${data.medicine_given}</p>
-                        <p><strong>Status:</strong> ${data.status}</p>
+                        <p><strong>Record Date:</strong> ${data.created_at ? new Date(data.created_at).toLocaleDateString() : 'N/A'}</p>
                         ${data.pdf_url ? `
                             <a href="${data.pdf_url}" target="_blank" class="pdf-link">
                                 <i class="fas fa-file-pdf"></i> View PDF

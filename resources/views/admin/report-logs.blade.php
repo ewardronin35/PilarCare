@@ -1,4 +1,12 @@
-<x-app-layout>
+<x-app-layout :pageTitle="'Audit Logs'">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <!-- Chart.js for Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         /* Existing styles remain unchanged */
         body {
@@ -31,9 +39,10 @@
             font-weight: bold;
             font-size: 16px;
             text-align: center;
-            width: 100%;
+            flex: 1; /* Allow tabs to evenly distribute */
             background-color: #e0e0e0;
             border-radius: 10px 10px 0 0;
+            margin: 0 5px;
         }
 
         .tab:hover {
@@ -61,35 +70,38 @@
         .table-container {
             margin-top: 20px;
             overflow-x: auto;
-    max-height: 500px; /* Adjust as needed for vertical scroll */
-    overflow-y: auto; 
+            max-height: 500px; /* Adjust as needed for vertical scroll */
+            overflow-y: auto;
         }
 
         .table-container table {
             width: 100%;
-    border-collapse: collapse;
-    background-color: white;
-    margin-top: 10px;
-    border-radius: 10px;
-    overflow: hidden;
-    table-layout: fixed; /* Ensures fixed table layout */
+            border-collapse: collapse;
+            background-color: white;
+            margin-top: 10px;
+            border-radius: 10px;
+            overflow: hidden;
+            table-layout: fixed; /* Ensures fixed table layout */
         }
+
         .table-container thead th {
-    position: sticky;
-    top: 0;
-    background-color: #007bff;
-    z-index: 1; /* Ensures headers stay above table rows */
-}
-        table th, table td {
+            position: sticky;
+            top: 0;
+            background-color: #007bff;
+            z-index: 1; /* Ensures headers stay above table rows */
+            color: white;
+        }
+
+        table th,
+        table td {
             padding: 15px;
             text-align: left;
             border-bottom: 1px solid #f0f0f0;
             color: #333;
+            word-wrap: break-word;
         }
 
         table th {
-            background-color: #007bff;
-            color: white;
             font-weight: 600;
         }
 
@@ -120,8 +132,8 @@
             color: #333;
         }
 
-        .form-group input, 
-        .form-group select, 
+        .form-group input,
+        .form-group select,
         .form-group textarea {
             padding: 12px;
             border: 1px solid #ddd;
@@ -139,6 +151,7 @@
             cursor: pointer;
             font-size: 16px;
             margin-top: 10px;
+            transition: background-color 0.3s ease;
         }
 
         .form-group button:hover {
@@ -168,6 +181,7 @@
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -218,71 +232,34 @@
         .sub-tab-content.active {
             display: block;
         }
+
         @media (max-width: 768px) {
-    .table-container {
-        max-height: 300px; /* Reduce height for smaller screens */
-    }
+            .table-container {
+                max-height: 300px; /* Reduce height for smaller screens */
+            }
 
-    .sub-tab {
-        font-size: 12px; /* Reduce font size */
-        padding: 6px 12px; /* Reduce padding */
-    }
+            .sub-tab {
+                font-size: 12px; /* Reduce font size */
+                padding: 6px 12px; /* Reduce padding */
+            }
 
-    table th, table td {
-        padding: 10px; /* Reduce cell padding */
-        font-size: 14px; /* Reduce font size */
-    }
-}
-
+            table th,
+            table td {
+                padding: 10px; /* Reduce cell padding */
+                font-size: 14px; /* Reduce font size */
+            }
+        }
     </style>
 
     <main class="main-content">
         <!-- Tabs for different sections -->
         <div class="tabs">
-            <div class="tab active" onclick="showTab('emergency-notifications')"><i class="fas fa-bell"></i> Emergency Notifications</div>
-            <div class="tab" onclick="showTab('logs')"><i class="fas fa-clipboard-list"></i> All Logs</div>
+            <div class="tab active" onclick="showTab('logs')"><i class="fas fa-clipboard-list"></i> All Logs</div>
             <div class="tab" onclick="showTab('statistics')"><i class="fas fa-chart-bar"></i> Statistics</div>
         </div>
 
-        <!-- Emergency Notifications Tab Content -->
-        <div id="emergency-notifications" class="tab-content active">
-            <h2><i class="fas fa-exclamation-triangle"></i> Emergency Notifications</h2>
-            <div class="form-container">
-                <h3>Release Notification</h3>
-                <form method="POST" action="{{ route('admin.notifications.store') }}">
-                    @csrf
-                    <div class="form-group">
-                        <label for="school_id"><i class="fas fa-id-card"></i> School ID/Staff ID</label>
-                        <input type="text" id="school_id" name="school_id" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="name"><i class="fas fa-user"></i> Full Name</label>
-                        <input type="text" id="name" name="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="notification_info"><i class="fas fa-info-circle"></i> Notification Information</label>
-                        <input type="text" id="notification_info" name="notification_info" required>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-bell"></i> Notification for:</label>
-                        <div>
-                            <input type="radio" id="student" name="notification_for" value="student" required>
-                            <label for="student" class="inline">Student</label>
-                            <input type="radio" id="parent" name="notification_for" value="parent">
-                            <label for="parent" class="inline">Parent</label>
-                            <input type="radio" id="staff" name="notification_for" value="staff">
-                            <label for="staff" class="inline">Staff/Teachers</label>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <button type="submit"><i class="fas fa-paper-plane"></i> Notify</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
         <!-- All Logs Tab Content with Sub-Tabs -->
-        <div id="logs" class="tab-content">
+        <div id="logs" class="tab-content active">
             <h2><i class="fas fa-clipboard-list"></i> All Logs</h2>
 
             <!-- Sub-Tabs for different log modules -->
@@ -297,10 +274,11 @@
             </div>
 
             <!-- Sub-Tab Content Sections -->
+            <!-- Medical Record Logs -->
             <div id="medical-record-log" class="sub-tab-content active">
                 <h3>Medical Record Logs</h3>
                 <div class="table-container">
-                    <table>
+                    <table id="medical-records-table" class="logs-table">
                         <thead>
                             <tr>
                                 <th>Module</th>
@@ -328,10 +306,11 @@
                 </div>
             </div>
 
+            <!-- Appointment Logs -->
             <div id="appointment-log" class="sub-tab-content">
                 <h3>Appointment Logs</h3>
                 <div class="table-container">
-                    <table>
+                    <table id="appointments-table" class="logs-table">
                         <thead>
                             <tr>
                                 <th>Module</th>
@@ -344,11 +323,12 @@
                             @foreach($appointmentLogs as $log)
                                 <tr>
                                     <td>Appointments</td>
-<td>
-           Appointment for
-            {{ optional($log->user)->first_name ?? 'Unknown' }} 
-            {{ optional($log->user)->last_name ?? 'User' }}
-        </td>                                    <td>{{ $log->created_at->format('M d, Y h:i A') }}</td>
+                                    <td>
+                                        Appointment for
+                                        {{ optional($log->user)->first_name ?? 'Unknown' }}
+                                        {{ optional($log->user)->last_name ?? 'User' }}
+                                    </td>
+                                    <td>{{ $log->created_at->format('M d, Y h:i A') }}</td>
                                     <td>{{ $log->status }}</td>
                                 </tr>
                             @endforeach
@@ -362,10 +342,11 @@
                 </div>
             </div>
 
+            <!-- Complaint Logs -->
             <div id="complaint-log" class="sub-tab-content">
                 <h3>Complaint Logs</h3>
                 <div class="table-container">
-                    <table>
+                    <table id="complaint-log-table" class="logs-table">
                         <thead>
                             <tr>
                                 <th>Module</th>
@@ -392,38 +373,42 @@
                     </table>
                 </div>
             </div>
+
+            <!-- Registration Logs -->
             <div id="registration-log" class="sub-tab-content">
-    <h3>Registration Logs</h3>
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Module</th>
-                    <th>Details</th>
-                    <th>Date & Time</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($registrationLogs as $user)
-                    <tr>
-                        <td>Registrations</td>
-                        <td>{{ $user->first_name }} {{ $user->last_name }} registered</td>
-                        <td>{{ $user->created_at->format('M d, Y h:i A') }}</td>
-                    </tr>
-                @endforeach
-                @if($registrationLogs->isEmpty())
-                    <tr>
-                        <td colspan="3" class="text-center">No Registration Logs Found.</td>
-                    </tr>
-                @endif
-            </tbody>
-        </table>
-    </div>
-</div>
+                <h3>Registration Logs</h3>
+                <div class="table-container">
+                    <table id="registration-log-table" class="logs-table">
+                        <thead>
+                            <tr>
+                                <th>Module</th>
+                                <th>Details</th>
+                                <th>Date & Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($registrationLogs as $user)
+                                <tr>
+                                    <td>Registrations</td>
+                                    <td>{{ $user->first_name }} {{ $user->last_name }} registered</td>
+                                    <td>{{ $user->created_at->format('M d, Y h:i A') }}</td>
+                                </tr>
+                            @endforeach
+                            @if($registrationLogs->isEmpty())
+                                <tr>
+                                    <td colspan="3" class="text-center">No Registration Logs Found.</td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Login Logs -->
             <div id="login-log" class="sub-tab-content">
                 <h3>Login Logs</h3>
                 <div class="table-container">
-                    <table>
+                    <table id="login-log-table" class="logs-table">
                         <thead>
                             <tr>
                                 <th>Module</th>
@@ -451,10 +436,11 @@
                 </div>
             </div>
 
+            <!-- Dental Record Logs -->
             <div id="dental-record-log" class="sub-tab-content">
                 <h3>Dental Record Logs</h3>
                 <div class="table-container">
-                    <table>
+                    <table id="dental-records-table" class="logs-table">
                         <thead>
                             <tr>
                                 <th>Module</th>
@@ -482,10 +468,11 @@
                 </div>
             </div>
 
+            <!-- Physical & Dental Exam Logs -->
             <div id="physical-dental-exam-log" class="sub-tab-content">
-                <h3>Physical Exam Logs</h3>
+                <h3>Physical & Dental Exam Logs</h3>
                 <div class="table-container">
-                    <table>
+                    <table id="physical-dental-exam-log-table" class="logs-table">
                         <thead>
                             <tr>
                                 <th>Module</th>
@@ -525,9 +512,75 @@
         </div>
     </main>
 
-    <!-- Include Chart.js Library -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Include jQuery and DataTables JS -->
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
     <script>
+        $(document).ready(function () {
+            // Initialize DataTables for each table in the logs section
+            $('#medical-records-table').DataTable({
+                responsive: true,
+                paging: true,
+                info: true,
+                searching: true,
+                ordering: true
+            });
+
+            $('#appointments-table').DataTable({
+                responsive: true,
+                paging: true,
+                info: true,
+                searching: true,
+                ordering: true
+            });
+
+            $('#complaint-log-table').DataTable({
+                responsive: true,
+                paging: true,
+                info: true,
+                searching: true,
+                ordering: true
+            });
+
+            $('#registration-log-table').DataTable({
+                responsive: true,
+                paging: true,
+                info: true,
+                searching: true,
+                ordering: true
+            });
+
+            $('#login-log-table').DataTable({
+                responsive: true,
+                paging: true,
+                info: true,
+                searching: true,
+                ordering: true
+            });
+
+            $('#dental-records-table').DataTable({
+                responsive: true,
+                paging: true,
+                info: true,
+                searching: true,
+                ordering: true
+            });
+
+            $('#physical-dental-exam-log-table').DataTable({
+                responsive: true,
+                paging: true,
+                info: true,
+                searching: true,
+                ordering: true
+            });
+
+            // Initialize Chart.js for Statistics
+            initializeChart();
+        });
+
         // Function to handle main tab switching
         function showTab(tabId) {
             const tabContents = document.querySelectorAll('.tab-content');
@@ -564,69 +617,71 @@
             document.querySelector(`.sub-tab[onclick="showSubTab('${subTabId}')"]`).classList.add('active');
         }
 
-        // Statistics chart for logs
-        const chartData = {
-            labels: {!! json_encode([
-                'Accounts',
-                'Registrations',
-                'Logins',
-                'Appointments',
-                'Complaints',
-                'Dental Records',
-                'Medical Records',
-                'Physical & Dental Exams',
-            ]) !!},
-            datasets: [{
-                label: 'Number of Logs',
-                data: {!! json_encode([
-                    $accountLogsCount ?? 0,
-                    $registrationLogsCount ?? 0,
-                    $loginLogsCount ?? 0,
-                    $appointmentLogsCount ?? 0,
-                    $complaintLogsCount ?? 0,
-                    $dentalRecordLogsCount ?? 0,
-                    $medicalRecordLogsCount ?? 0,
-                    $physicalDentalExamLogsCount ?? 0,
+        // Function to initialize Chart.js for Statistics
+        function initializeChart() {
+            const chartData = {
+                labels: {!! json_encode([
+                    'Accounts',
+                    'Registrations',
+                    'Logins',
+                    'Appointments',
+                    'Complaints',
+                    'Dental Records',
+                    'Medical Records',
+                    'Physical & Dental Exams',
                 ]) !!},
-                backgroundColor: [
-                    'rgba(75, 192, 192, 0.2)',    // Accounts
-                    'rgba(54, 162, 235, 0.2)',    // Registrations
-                    'rgba(255, 206, 86, 0.2)',    // Logins
-                    'rgba(153, 102, 255, 0.2)',   // Appointments
-                    'rgba(255, 99, 132, 0.2)',    // Complaints
-                    'rgba(255, 159, 64, 0.2)',    // Dental Records
-                    'rgba(255, 205, 86, 0.2)',    // Medical Records
-                    'rgba(201, 203, 207, 0.2)'    // Physical & Dental Exams
-                ],
-                borderColor: [
-                    'rgba(75, 192, 192, 1)',      // Accounts
-                    'rgba(54, 162, 235, 1)',      // Registrations
-                    'rgba(255, 206, 86, 1)',      // Logins
-                    'rgba(153, 102, 255, 1)',     // Appointments
-                    'rgba(255, 99, 132, 1)',      // Complaints
-                    'rgba(255, 159, 64, 1)',      // Dental Records
-                    'rgba(255, 205, 86, 1)',      // Medical Records
-                    'rgba(201, 203, 207, 1)'      // Physical & Dental Exams
-                ],
-                borderWidth: 1
-            }]
-        };
+                datasets: [{
+                    label: 'Number of Logs',
+                    data: {!! json_encode([
+                        $accountLogsCount ?? 0,
+                        $registrationLogsCount ?? 0,
+                        $loginLogsCount ?? 0,
+                        $appointmentLogsCount ?? 0,
+                        $complaintLogsCount ?? 0,
+                        $dentalRecordLogsCount ?? 0,
+                        $medicalRecordLogsCount ?? 0,
+                        $physicalDentalExamLogsCount ?? 0,
+                    ]) !!},
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.2)',    // Accounts
+                        'rgba(54, 162, 235, 0.2)',    // Registrations
+                        'rgba(255, 206, 86, 0.2)',    // Logins
+                        'rgba(153, 102, 255, 0.2)',   // Appointments
+                        'rgba(255, 99, 132, 0.2)',    // Complaints
+                        'rgba(255, 159, 64, 0.2)',    // Dental Records
+                        'rgba(255, 205, 86, 0.2)',    // Medical Records
+                        'rgba(201, 203, 207, 0.2)'    // Physical & Dental Exams
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',      // Accounts
+                        'rgba(54, 162, 235, 1)',      // Registrations
+                        'rgba(255, 206, 86, 1)',      // Logins
+                        'rgba(153, 102, 255, 1)',     // Appointments
+                        'rgba(255, 99, 132, 1)',      // Complaints
+                        'rgba(255, 159, 64, 1)',      // Dental Records
+                        'rgba(255, 205, 86, 1)',      // Medical Records
+                        'rgba(201, 203, 207, 1)'      // Physical & Dental Exams
+                    ],
+                    borderWidth: 1
+                }]
+            };
 
-        const ctx = document.getElementById('logStatisticsChart').getContext('2d');
-        const logStatisticsChart = new Chart(ctx, {
-            type: 'bar',
-            data: chartData,
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            precision: 0
+            const ctx = document.getElementById('logStatisticsChart').getContext('2d');
+            const logStatisticsChart = new Chart(ctx, {
+                type: 'bar',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
     </script>
 </x-app-layout>

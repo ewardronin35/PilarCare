@@ -118,7 +118,7 @@ class StudentDashboardController extends Controller
                 'id_number' => $parentIdNumber,
                 'first_name' => $request->guardian_first_name,
                 'last_name' => $request->guardian_last_name,
-                'Student_ID' => $studentIdNumber,
+                'student_id' => $studentIdNumber,
                 'approved' => 1, // Automatically approved
             ]);
 

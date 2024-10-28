@@ -18,7 +18,7 @@ class CreateMedicineIntakeTable extends Migration
             $table->string('id_number'); // id_number field
             $table->string('medicine_name');
             $table->string('dosage');
-            $table->time('intake_time');
+            $table->time('intake_time')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps(); // created_at and updated_at fields
         });

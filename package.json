@@ -23,6 +23,7 @@
         "@fullcalendar/interaction": "^6.1.15",
         "jquery": "^3.7.1",
         "laravel-echo": "^1.16.1",
-        "pusher-js": "^8.4.0-rc2"
+        "sweetalert2": "^11.14.4",
+        "toastr": "^2.1.4"
     }
 }

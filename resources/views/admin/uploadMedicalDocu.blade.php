@@ -1,6 +1,7 @@
-<x-app-layout>
+<x-app-layout :pageTitle="'Medical Record Approval'">   
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* General Styles */
         body {
@@ -10,8 +11,13 @@
 
         .container {
             display: flex;
-           
-         
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .main-content {
+            margin-top: 20px;
+        
         }
 
         .tab-buttons {
@@ -231,6 +237,16 @@
             color: white;
         }
 
+        .badge-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .badge-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+
         /* Information Card Styles */
         .info-card {
             background-color: #e9f7ef;
@@ -244,24 +260,44 @@
         .info-card strong {
             font-weight: bold;
         }
+
+        /* Search Bar Styles */
+        .search-bar {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .search-bar input {
+            width: 100%;
+            max-width: 400px;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            outline: none;
+            font-size: 1rem;
+            transition: box-shadow 0.3s;
+        }
+
+        .search-bar input:focus {
+            box-shadow: 0 0 5px rgba(81, 203, 238, 1);
+            border-color: rgba(81, 203, 238, 1);
+        }
     </style>
 
     <div class="container">
         <main class="main-content">
             <!-- Tab Buttons -->
-            <div class="tab-buttons">
-                <button id="pending-approvals-tab" class="active" onclick="showTab('pending-approvals')">
-                    <i class="fas fa-user-clock"></i> Pending Approvals
-                </button>
-                <!-- Add more tabs if needed -->
-            </div>
-
+         
             <!-- Tab Content -->
             <div id="pending-approvals" class="tab-content active">
                 <h1>Pending Medical Record Approvals</h1>
+
+              
                 <div class="table-container">
                     @if(isset($pendingMedicalRecords) && $pendingMedicalRecords->isNotEmpty())
-                        <table>
+                        <table id="medicalRecordsTable">
+                            <!-- Table Headers -->
                             <thead>
                                 <tr>
                                     <th>Record Date</th>
@@ -270,37 +306,59 @@
                                     <th>Age</th>
                                     <th>Address</th>
                                     <th>Contact Number</th>
-                                    <th>Profile Picture</th>
                                     <th>Medicines</th>
+                                    <th>Past Illness</th>
+                                    <th>Chronic Conditions</th>
+                                    <th>Surgical History</th>
+                                    <th>Family Medical History</th>
+                                    <th>Allergies</th>
+                                    <th>Medical Condition</th>
+                                    <th>Health Documents</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
+
+                            <!-- Table Rows -->
+                            <tbody id="medicalRecordsTbody">
                                 @foreach($pendingMedicalRecords as $medicalRecord)
-                                    <tr>
+                                    <tr data-id="{{ $medicalRecord->id }}">
                                         <td>{{ \Carbon\Carbon::parse($medicalRecord->record_date)->format('Y-m-d') }}</td>
                                         <td>{{ $medicalRecord->name }}</td>
                                         <td>{{ \Carbon\Carbon::parse($medicalRecord->birthdate)->format('Y-m-d') }}</td>
                                         <td>{{ $medicalRecord->age }}</td>
                                         <td>{{ $medicalRecord->address }}</td>
                                         <td>{{ $medicalRecord->personal_contact_number }}</td>
+                                        
                                         <td>
-                                            <div class="image-container">
-                                                <img src="{{ asset('storage/' . $medicalRecord->profile_picture) }}" alt="Profile Picture" onclick="openModal('{{ asset('storage/' . $medicalRecord->profile_picture) }}')">
-                                            </div>
-                                        </td>
-                                        <td>
-                                            @if(isset($medicalRecord->medicines))
-                                                @php
-                                                    $medicines = json_decode($medicalRecord->medicines, true);
-                                                @endphp
-                                                @foreach($medicines as $medicine)
+                                            @if(is_array($medicalRecord->medicines) && count($medicalRecord->medicines) > 0)
+                                                @foreach($medicalRecord->medicines as $medicine)
                                                     <span class="badge badge-primary">{{ $medicine }}</span>
                                                 @endforeach
                                             @else
                                                 <span class="badge badge-secondary">N/A</span>
                                             @endif
                                         </td>
+                                        
+                                        <!-- Additional Fields -->
+                                        <td>{{ $medicalRecord->past_illness }}</td>
+                                        <td>{{ $medicalRecord->chronic_conditions }}</td>
+                                        <td>{{ $medicalRecord->surgical_history }}</td>
+                                        <td>{{ $medicalRecord->family_medical_history }}</td>
+                                        <td>{{ $medicalRecord->allergies }}</td>
+                                        <td>{{ $medicalRecord->medical_condition }}</td>
+                                        <td>
+                                            @if(is_array($medicalRecord->health_documents) && count($medicalRecord->health_documents) > 0)
+                                                @foreach($medicalRecord->health_documents as $doc)
+                                                    <a href="{{ asset('storage/' . $doc) }}" target="_blank" class="badge badge-info">
+                                                        <i class="fas fa-file"></i> View Document
+                                                    </a>
+                                                @endforeach
+                                            @else
+                                                <span class="badge badge-secondary">N/A</span>
+                                            @endif
+                                        </td>
+                                        
+                                        <!-- Action Buttons -->
                                         <td>
                                             <button type="button" class="btn btn-success" onclick="approveRecord({{ $medicalRecord->id }})">
                                                 <i class="fas fa-check-circle"></i> Approve
@@ -314,6 +372,7 @@
                             </tbody>
                         </table>
                         <!-- Pagination (if applicable) -->
+                        {{ $pendingMedicalRecords->links() }}
                     @else
                         <!-- Display a friendly message with a modal trigger -->
                         <div class="info-card">
@@ -332,7 +391,7 @@
     <!-- Modal for Image Preview -->
     <div id="previewModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
+            <span class="close" onclick="closePreviewModal()">&times;</span>
             <img id="modal-image" src="" alt="Image Preview">
         </div>
     </div>
@@ -350,10 +409,53 @@
         </div>
     </div>
 
+    <!-- Modal for Medical Record Details -->
+    <div id="medicalRecordModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeMedicalRecordModal()">&times;</span>
+            <div class="modal-header">
+                <h2>Medical Record Details</h2>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Details will be injected here via JavaScript -->
+            </div>
+        </div>
+    </div>
+
     <!-- SweetAlert2 Library -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- jQuery (required for DataTables) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- DataTables Library -->
+    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
 
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const medicalRecordsTbody = document.getElementById('medicalRecordsTbody');
+            initializeDataTable();
+
+            // Initialize DataTable
+            function initializeDataTable() {
+                $('#medicalRecordsTable').DataTable({
+                    paging: true,
+                    searching: true,
+                    ordering: true,
+                    info: true,
+                    autoWidth: false
+                });
+            }
+
+            // Search functionality (Optional)
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('keyup', function() {
+                    const table = $('#medicalRecordsTable').DataTable();
+                    table.search(this.value).draw();
+                });
+            }
+        });
+
         // Function to switch between tabs
         function showTab(tabId) {
             const tabContents = document.querySelectorAll('.tab-content');
@@ -373,7 +475,7 @@
         }
 
         // Function to open image modal
-        function openModal(src) {
+        function openPreviewModal(src) {
             const modal = document.getElementById('previewModal');
             const modalImg = document.getElementById('modal-image');
             modalImg.src = src;
@@ -381,12 +483,177 @@
         }
 
         // Function to close image modal
-        function closeModal() {
+        function closePreviewModal() {
             const modal = document.getElementById('previewModal');
             modal.style.display = 'none';
         }
 
-        // Function to approve medical record
+        // Function to open medical record modal
+        function openMedicalRecordModal(medicalRecordId) {
+            Swal.fire({
+                title: 'Loading...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading()
+                }
+            });
+
+            fetch(`/admin/medical-record/${medicalRecordId}`)
+                .then(response => response.json())
+                .then(data => {
+                    Swal.close(); // Close the loading spinner
+                    if (data.success) {
+                        const record = data.medicalRecord;
+                        const medicines = record.medicines ? JSON.parse(record.medicines) : [];
+                        const healthDocuments = record.health_documents ? JSON.parse(record.health_documents) : [];
+
+                        let modalContent = `
+                            <p><strong>Record Date:</strong> ${new Date(record.record_date).toLocaleDateString()}</p>
+                            <p><strong>Name:</strong> ${record.name}</p>
+                            <p><strong>Birthdate:</strong> ${new Date(record.birthdate).toLocaleDateString()}</p>
+                            <p><strong>Age:</strong> ${record.age}</p>
+                            <p><strong>Address:</strong> ${record.address}</p>
+                            <p><strong>Contact Number:</strong> ${record.personal_contact_number}</p>
+                            <p><strong>Past Illness:</strong> ${record.past_illness}</p>
+                            <p><strong>Chronic Conditions:</strong> ${record.chronic_conditions}</p>
+                            <p><strong>Surgical History:</strong> ${record.surgical_history}</p>
+                            <p><strong>Family Medical History:</strong> ${record.family_medical_history}</p>
+                            <p><strong>Allergies:</strong> ${record.allergies}</p>
+                            <p><strong>Medical Condition:</strong> ${record.medical_condition}</p>
+                            <p><strong>Medicines:</strong> ${medicines.join(', ')}</p>
+                            <p><strong>Health Documents:</strong> 
+                        `;
+
+                        if (healthDocuments.length > 0) {
+                            healthDocuments.forEach(doc => {
+                                modalContent += `<a href="${window.location.origin}/storage/${doc}" target="_blank" class="badge badge-info"><i class="fas fa-file"></i> View Document</a> `;
+                            });
+                        } else {
+                            modalContent += `<span class="badge badge-secondary">N/A</span>`;
+                        }
+
+                        modalContent += `</p>`;
+
+                        if (record.profile_picture) {
+                            modalContent += `
+                                <p><strong>Profile Picture:</strong></p>
+                                <img src="${window.location.origin}/storage/${record.profile_picture}" alt="Profile Picture" style="max-width: 100%; height: auto;">
+                            `;
+                        }
+
+                        document.getElementById('modal-body').innerHTML = modalContent;
+                        document.getElementById('medicalRecordModal').style.display = 'block';
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Failed to fetch medical record details.'
+                        });
+                    }
+                })
+                .catch(error => {
+                    Swal.close(); // Close the loading spinner
+                    console.error('Error fetching medical record details:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An unexpected error occurred.'
+                    });
+                });
+        }
+
+        // Function to close medical record modal
+        function closeMedicalRecordModal() {
+            const modal = document.getElementById('medicalRecordModal');
+            modal.style.display = 'none';
+        }
+
+        // Function to fetch new records (Polling)
+        function fetchNewRecords() {
+            fetch('/admin/medical-records/pending', {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('AJAX Response:', data); // Debugging
+
+                if (data.success && Array.isArray(data.records) && data.records.length > 0) {
+                    data.records.forEach(record => {
+                        console.log('Processing Record:', record); // Debugging
+
+                        // Handle medicines safely
+                        let medicinesHTML = '<span class="badge badge-secondary">N/A</span>';
+                        if (Array.isArray(record.medicines) && record.medicines.length > 0) {
+                            medicinesHTML = record.medicines.map(med => `<span class="badge badge-primary">${med}</span>`).join(' ');
+                        }
+
+                        // Handle health_documents safely
+                        let healthDocumentsHTML = '<span class="badge badge-secondary">N/A</span>';
+                        if (Array.isArray(record.health_documents) && record.health_documents.length > 0) {
+                            healthDocumentsHTML = record.health_documents.map(doc => `<a href="${window.location.origin}/storage/${doc}" target="_blank" class="badge badge-info"><i class="fas fa-file"></i> View Document</a>`).join(' ');
+                        }
+
+                        // Check if the record already exists in the table
+                        if (!document.querySelector(`tr[data-id='${record.id}']`)) {
+                            // Create a new table row
+                            const newRow = document.createElement('tr');
+                            newRow.setAttribute('data-id', record.id);
+
+                            newRow.innerHTML = `
+                                <td>${new Date(record.record_date).toLocaleDateString()}</td>
+                                <td>${record.name}</td>
+                                <td>${new Date(record.birthdate).toLocaleDateString()}</td>
+                                <td>${record.age}</td>
+                                <td>${record.address}</td>
+                                <td>${record.personal_contact_number}</td>
+                                <td>
+                                    ${medicinesHTML}
+                                </td>
+                                <td>${record.past_illness}</td>
+                                <td>${record.chronic_conditions}</td>
+                                <td>${record.surgical_history}</td>
+                                <td>${record.family_medical_history}</td>
+                                <td>${record.allergies}</td>
+                                <td>${record.medical_condition}</td>
+                                <td>
+                                    ${healthDocumentsHTML}
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-success" onclick="approveRecord(${record.id})">
+                                        <i class="fas fa-check-circle"></i> Approve
+                                    </button>
+                                    <button type="button" class="btn btn-danger" onclick="rejectRecord(${record.id})">
+                                        <i class="fas fa-times-circle"></i> Reject
+                                    </button>
+                                </td>
+                            `;
+
+                            medicalRecordsTbody.appendChild(newRow);
+                        }
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching new records:', error);
+            });
+        }
+
+        // Initial fetch
+        fetchNewRecords();
+
+        // Set interval for polling (e.g., every 30 seconds)
+        setInterval(fetchNewRecords, 30000); // 30000 milliseconds = 30 seconds
+
+        // Function to approve medical record with spinner
         function approveRecord(id) {
             Swal.fire({
                 title: 'Are you sure?',
@@ -398,6 +665,15 @@
                 confirmButtonText: 'Yes, approve it!'
             }).then((result) => {
                 if (result.isConfirmed) {
+                    // Show spinner
+                    Swal.fire({
+                        title: 'Approving...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading()
+                        }
+                    });
+
                     fetch(`/admin/medical-record/${id}/approve`, {
                         method: 'POST',
                         headers: {
@@ -407,6 +683,7 @@
                     })
                     .then(response => response.json())
                     .then(data => {
+                        Swal.close(); // Close the spinner
                         if (data.success) {
                             Swal.fire(
                                 'Approved!',
@@ -424,6 +701,7 @@
                         }
                     })
                     .catch(error => {
+                        Swal.close(); // Close the spinner
                         console.error('Error:', error);
                         Swal.fire(
                             'Error!',
@@ -435,7 +713,7 @@
             });
         }
 
-        // Function to reject medical record
+        // Function to reject medical record with spinner
         function rejectRecord(id) {
             Swal.fire({
                 title: 'Are you sure?',
@@ -447,6 +725,15 @@
                 confirmButtonText: 'Yes, reject it!'
             }).then((result) => {
                 if (result.isConfirmed) {
+                    // Show spinner
+                    Swal.fire({
+                        title: 'Rejecting...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading()
+                        }
+                    });
+
                     fetch(`/admin/medical-record/${id}/reject`, {
                         method: 'POST',
                         headers: {
@@ -458,6 +745,7 @@
                     })
                     .then(response => response.json())
                     .then(data => {
+                        Swal.close(); // Close the spinner
                         if (data.success) {
                             Swal.fire(
                                 'Rejected!',
@@ -475,6 +763,7 @@
                         }
                     })
                     .catch(error => {
+                        Swal.close(); // Close the spinner
                         console.error('Error:', error);
                         Swal.fire(
                             'Error!',
@@ -503,15 +792,25 @@
             modal.style.display = 'none';
         }
 
+        // Function to close medical record modal
+        function closeMedicalRecordModal() {
+            const modal = document.getElementById('medicalRecordModal');
+            modal.style.display = 'none';
+        }
+
         // Event listener to close modals when clicking outside the modal content
         window.onclick = function(event) {
             const previewModal = document.getElementById('previewModal');
             const noRecordModal = document.getElementById('noRecordModal');
+            const medicalRecordModal = document.getElementById('medicalRecordModal');
             if (event.target == previewModal) {
                 previewModal.style.display = 'none';
             }
             if (event.target == noRecordModal) {
                 noRecordModal.style.display = 'none';
+            }
+            if (event.target == medicalRecordModal) {
+                medicalRecordModal.style.display = 'none';
             }
         }
     </script>

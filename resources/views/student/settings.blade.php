@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :pageTitle="'Profile Management'">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         /* Global Styles */

@@ -5,8 +5,6 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\BroadcastMessage;
-use Illuminate\Broadcasting\Channel;
 
 class InventoryExpiringNotification extends Notification implements ShouldQueue
 {
@@ -20,7 +18,6 @@ class InventoryExpiringNotification extends Notification implements ShouldQueue
      *
      * @param string $itemName
      * @param string $expiryDate
-     * @return void
      */
     public function __construct($itemName, $expiryDate)
     {
@@ -36,11 +33,12 @@ class InventoryExpiringNotification extends Notification implements ShouldQueue
      */
     public function via($notifiable)
     {
-        return ['database', 'broadcast'];
+        return ['database']; // Use database channel
+        // To add email notifications, include 'mail' here
     }
 
     /**
-     * Get the array representation of the notification for the database channel.
+     * Get the array representation of the notification for the database.
      *
      * @param  mixed  $notifiable
      * @return array
@@ -48,59 +46,28 @@ class InventoryExpiringNotification extends Notification implements ShouldQueue
     public function toDatabase($notifiable)
     {
         return [
+            'title' => 'Item Expiry Alert',
+            'message' => "The item '{$this->itemName}' is expiring on {$this->expiryDate}.",
             'item_name' => $this->itemName,
             'expiry_date' => $this->expiryDate,
-            'message' => "The item '{$this->itemName}' is expiring on {$this->expiryDate}. Please take necessary actions.",
+            'timestamp' => now(),
         ];
     }
 
     /**
-     * Get the broadcastable representation of the notification.
+     * (Optional) If you want to send email notifications as well.
      *
-     * @param  mixed  $notifiable
-     * @return BroadcastMessage
+     * Uncomment and configure the following method.
      */
-    public function toBroadcast($notifiable)
+    
+    public function toMail($notifiable)
     {
-        return new BroadcastMessage([
-            'item_name' => $this->itemName,
-            'expiry_date' => $this->expiryDate,
-            'message' => "The item '{$this->itemName}' is expiring on {$this->expiryDate}. Please take necessary actions.",
-        ]);
+        return (new MailMessage)
+                    ->subject('Inventory Expiry Alert')
+                    ->greeting('Hello ' . $notifiable->first_name . ',')
+                    ->line("The item '{$this->itemName}' is expiring on {$this->expiryDate}.")
+                    ->action('View Inventory', url('/admin/inventory'))
+                    ->line('Please take necessary actions.');
     }
-
-    /**
-     * Specify the channels the notification should broadcast on.
-     *
-     * @return Channel|array
-     */
-    public function broadcastOn()
-    {
-        return new Channel('inventory-channel');
-    }
-
-    /**
-     * Define the broadcast event name.
-     *
-     * @return string
-     */
-    public function broadcastAs()
-    {
-        return 'inventory-expiring';
-    }
-
-    /**
-     * Get the notification's representation as an array (optional, for other channels).
-     *
-     * @param  mixed  $notifiable
-     * @return array
-     */
-    public function toArray($notifiable)
-    {
-        return [
-            'item_name' => $this->itemName,
-            'expiry_date' => $this->expiryDate,
-            'message' => "The item '{$this->itemName}' is expiring on {$this->expiryDate}. Please take necessary actions.",
-        ];
-    }
+    
 }

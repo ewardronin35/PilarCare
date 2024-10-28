@@ -5,7 +5,6 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\BroadcastMessage;
 
 class LowStockNotification extends Notification implements ShouldQueue
 {
@@ -19,7 +18,6 @@ class LowStockNotification extends Notification implements ShouldQueue
      *
      * @param string $itemName
      * @param int $quantity
-     * @return void
      */
     public function __construct($itemName, $quantity)
     {
@@ -35,11 +33,12 @@ class LowStockNotification extends Notification implements ShouldQueue
      */
     public function via($notifiable)
     {
-        return ['database', 'broadcast'];
+        return ['database']; // Use database channel
+        // To add email notifications, include 'mail' here
     }
 
     /**
-     * Get the array representation of the notification for the database channel.
+     * Get the array representation of the notification for the database.
      *
      * @param  mixed  $notifiable
      * @return array
@@ -47,39 +46,23 @@ class LowStockNotification extends Notification implements ShouldQueue
     public function toDatabase($notifiable)
     {
         return [
+            'title' => 'Low Stock Alert',
+            'message' => "The item '{$this->itemName}' is low in stock with only {$this->quantity} left.",
             'item_name' => $this->itemName,
             'quantity' => $this->quantity,
-            'message' => "The item '{$this->itemName}' is low in stock with only {$this->quantity} left.",
+            'timestamp' => now(),
         ];
     }
 
-    /**
-     * Get the broadcastable representation of the notification.
-     *
-     * @param  mixed  $notifiable
-     * @return BroadcastMessage
-     */
-    public function toBroadcast($notifiable)
+ 
+    public function toMail($notifiable)
     {
-        return new BroadcastMessage([
-            'item_name' => $this->itemName,
-            'quantity' => $this->quantity,
-            'message' => "The item '{$this->itemName}' is low in stock with only {$this->quantity} left.",
-        ]);
+        return (new MailMessage)
+                    ->subject('Low Stock Alert')
+                    ->greeting('Hello ' . $notifiable->first_name . ' (' . $notifiable->role . '),') // Correct: role accessed as property
+                    ->line("The item '{$this->itemName}' is low in stock with only {$this->quantity} left.")
+                    ->action('View Inventory', url('/admin/inventory'))
+                    ->line('Please replenish the stock as soon as possible.');
     }
-
-    /**
-     * Get the notification's representation as an array (optional, for other channels).
-     *
-     * @param  mixed  $notifiable
-     * @return array
-     */
-    public function toArray($notifiable)
-    {
-        return [
-            'item_name' => $this->itemName,
-            'quantity' => $this->quantity,
-            'message' => "The item '{$this->itemName}' is low in stock with only {$this->quantity} left.",
-        ];
-    }
+    
 }
