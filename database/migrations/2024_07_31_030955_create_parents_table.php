@@ -17,9 +17,13 @@ class CreateParentsTable extends Migration
             $table->string('id_number')->unique();
             $table->string('first_name');
             $table->string('last_name');
-            $table->string('Student_ID');
+            $table->string('student_id');
             $table->boolean('approved')->default(0);
             $table->timestamps();
+            $table->foreign('student_id')
+            ->references('id_number')
+            ->on('students')
+            ->onDelete('cascade');
         });
     }
 

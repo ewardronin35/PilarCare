@@ -179,7 +179,7 @@
 
         <!-- Logout Button -->
         <div class="logout-button">
-            <form method="POST" action="{{ route('logout') }}">
+            <form method="POST" action="{{ route('custom.logout') }}">
                 @csrf
                 <button type="submit">
                     {{ __('Log Out') }}
@@ -187,4 +187,7 @@
             </form>
         </div>
     </div>
+
+    <!-- Optional: Include Bootstrap JS if needed -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </x-guest-layout>

@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :pageTitle="' Dashboard'">
     <style>
         body {
             background-color: #f8f9fa;
@@ -220,16 +220,18 @@
         }
     </style>
 
-    <div class="main-content">
+<div class="main-content">
+        <!-- Profile Box -->
         <div class="profile-box">
             <img src="{{ asset('images/pilarLogo.jpg') }}" alt="Profile Image">
             <div class="profile-info">
                 <h2>{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</h2>
-                <p>{{ Auth::user()->role }}</p>
+                <p>{{ ucfirst(Auth::user()->role) }}</p>
                 <a href="{{ route('profile.edit') }}" class="edit-profile-btn">Edit Profile</a>
             </div>
         </div>
 
+        <!-- Statistics Section -->
         <div class="statistics">
             <div class="stat-box">
                 <a href="{{ route('nurse.appointment') }}">
@@ -259,251 +261,250 @@
                     <p>Pending Approvals</p>
                 </a>
             </div>
-  
-    <!-- New Stat Boxes -->
-    <div class="stat-box">
-        <a href="{{ route('nurse.uploadMedicalDocu') }}">
-            <img src="https://img.icons8.com/ios-filled/50/000000/medical-doctor.png" alt="Medical Records Icon">
-            <h2>{{ $medicalRecordCount }}</h2>
-            <p>Medical Records</p>
-        </a>
+            <div class="stat-box">
+                <a href="{{ route('nurse.uploadMedicalDocu') }}">
+                    <img src="https://img.icons8.com/ios-filled/50/000000/medical-doctor.png" alt="Medical Records Icon">
+                    <h2>{{ $medicalRecordCount }}</h2>
+                    <p>Medical Records</p>
+                </a>
+            </div>
+            <div class="stat-box">
+                <a href="{{ route('nurse.uploadDentalDocu') }}">
+                    <img src="https://img.icons8.com/ios-filled/50/000000/tooth.png" alt="Dental Records Icon">
+                    <h2>{{ $dentalRecordCount }}</h2>
+                    <p>Dental Records</p>
+                </a>
+            </div>
+        </div>
 
-    </div>
-    <div class="stat-box">
-        <a href="{{ route('nurse.uploadDentalDocu') }}">
-            <img src="https://img.icons8.com/ios-filled/50/000000/tooth.png" alt="Dental Records Icon">
-            <h2>{{ $dentalRecordCount }}</h2>
-            <p>Dental Records</p>
-        </a>
-    </div>
-    </div>
-
+        <!-- Charts Section -->
         <div class="content-row">
+            <!-- Submissions per Role Chart -->
             <div class="chart-container">
-                <h3>Monthly Registered Users</h3>
-                <canvas id="monthlyUsersChart"></canvas>
+                <h3>Submissions per Role</h3>
+                <canvas id="submissionsChart"></canvas>
             </div>
 
-            <div class="data-table-wrapper">
-            <h1>Registered Users</h1>
-                <ul class="nav nav-tabs" id="myTab" role="tablist">
-                    <li class="nav-item">
-                        <a class="nav-link active" id="student-tab" data-toggle="tab" href="#student" role="tab" aria-controls="student" aria-selected="true">Student</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" id="staff-tab" data-toggle="tab" href="#staff" role="tab" aria-controls="staff" aria-selected="false">Staff</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" id="parent-tab" data-toggle="tab" href="#parent" role="tab" aria-controls="parent" aria-selected="false">Parent</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" id="teacher-tab" data-toggle="tab" href="#teacher" role="tab" aria-controls="teacher" aria-selected="false">Teacher</a>
-                    </li>
-                    <li class="nav-item">
-    <a class="nav-link" id="doctor-tab" data-toggle="tab" href="#doctor" role="tab" aria-controls="doctor" aria-selected="false">Doctor</a>
-</li>
-<li class="nav-item">
-    <a class="nav-link" id="nurse-tab" data-toggle="tab" href="#nurse" role="tab" aria-controls="nurse" aria-selected="false">Nurse</a>
-</li>
-                </ul>
-                <div class="tab-content" id="myTabContent">
-                    <div class="tab-pane fade show active" id="student" role="tabpanel" aria-labelledby="student-tab">
-                        
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>ID No.</th>
-                                    <th>First Name</th>
-                                    <th>Last Name</th>
-                                    <th>Email</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($students as $student)
-                                    <tr>
-                                        <td>{{ $student->id_number }}</td>
-                                        <td>{{ $student->first_name }}</td>
-                                        <td>{{ $student->last_name }}</td>
-                                        <td>{{ $student->email }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="tab-pane fade" id="staff" role="tabpanel" aria-labelledby="staff-tab">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>ID No.</th>
-                                    <th>First Name</th>
-                                    <th>Last Name</th>
-                                    <th>Email</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($staff as $staffMember)
-                                    <tr>
-                                    <td>{{ $staffMember->id_number }}</td>
-                                        <td>{{ $staffMember->first_name }}</td>
-                                        <td>{{ $staffMember->last_name }}</td>
-                                        <td>{{ $staffMember->email }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="tab-pane fade" id="parent" role="tabpanel" aria-labelledby="parent-tab">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                <th>ID No.</th>
-                                    <th>First Name</th>
-                                    <th>Last Name</th>
-                                    <th>Email</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($parents as $parent)
-                                    <tr>
-                                        <td>{{ $parent->id_number }}</td>
-                                        <td>{{ $parent->first_name }}</td>
-                                        <td>{{ $parent->last_name }}</td>
-                                        <td>{{ $parent->email }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="tab-pane fade" id="teacher" role="tabpanel" aria-labelledby="teacher-tab">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                <th>ID No.</th>
-                                    <th>First Name</th>
-                                    <th>Last Name</th>
-                                    <th>Email</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($teachers as $teacher)
-                                    <tr>
-                                    <td>{{ $teacher->id_number }}</td>
-                                        <td>{{ $teacher->first_name }}</td>
-                                        <td>{{ $teacher->last_name }}</td>
-                                        <td>{{ $teacher->email }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="tab-pane fade" id="doctor" role="tabpanel" aria-labelledby="doctor-tab">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>ID No.</th>
-                                    <th>First Name</th>
-                                    <th>Last Name</th>
-                                    <th>Email</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($doctors as $doctor)
-                                    <tr>
-                                        <td>{{ $doctor->id_number }}</td>
-                                        <td>{{ $doctor->first_name }}</td>
-                                        <td>{{ $doctor->last_name }}</td>
-                                        <td>{{ $doctor->email }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    <!-- Nurse Tab -->
-                    <div class="tab-pane fade" id="nurse" role="tabpanel" aria-labelledby="nurse-tab">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>ID No.</th>
-                                    <th>First Name</th>
-                                    <th>Last Name</th>
-                                    <th>Email</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($nurses as $nurse)
-                                    <tr>
-                                        <td>{{ $nurse->id_number }}</td>
-                                        <td>{{ $nurse->first_name }}</td>
-                                        <td>{{ $nurse->last_name }}</td>
-                                        <td>{{ $nurse->email }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+          <!-- Complaints by Confine Status and Go Home Chart -->
+          <div class="chart-container">
+                <h3>Complaints by Confine Status and Go Home</h3>
+                <canvas id="complaintsChart" aria-label="Complaints by Confine Status and Go Home Chart" role="img"></canvas>
+            </div>
+
+            <!-- Inventory by Category Chart -->
+            <div class="chart-container">
+                <h3>Inventory by Category</h3>
+                <canvas id="inventoryChart"></canvas>
             </div>
         </div>
     </div>
 
-
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-            const monthlyUserData = @json($monthlyUserData);
-        const ctx = document.getElementById('monthlyUsersChart').getContext('2d');
-        const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const roles = ['Student', 'Teacher', 'Staff', 'Parent', 'Doctor', 'Nurse'];
-        const colors = {
-            'Student': 'rgba(75, 192, 192, 0.2)',
-            'Teacher': 'rgba(255, 99, 132, 0.2)',
-            'Staff': 'rgba(54, 162, 235, 0.2)',
-            'Parent': 'rgba(255, 206, 86, 0.2)',
-            'Doctor': 'rgba(153, 102, 255, 0.2)',
-            'Nurse': 'rgba(255, 159, 64, 0.2)'
-        };
+        // Submissions per Role Chart
+        const submissionsData = @json($submissionsPerRole);
+        const roles = Object.keys(submissionsData);
+        const healthExams = roles.map(role => submissionsData[role].health_examinations);
+        const dentalRecords = roles.map(role => submissionsData[role].dental_records);
+        const medicalRecords = roles.map(role => submissionsData[role].medical_records);
 
-        const borderColors = {
-            'Student': 'rgba(75, 192, 192, 1)',
-            'Teacher': 'rgba(255, 99, 132, 1)',
-            'Staff': 'rgba(54, 162, 235, 1)',
-            'Parent': 'rgba(255, 206, 86, 1)',
-            'Doctor': 'rgba(153, 102, 255, 1)',
-            'Nurse': 'rgba(255, 159, 64, 1)'
-        };
+        const ctxSubmissions = document.getElementById('submissionsChart').getContext('2d');
 
-        const datasets = roles.map(role => ({
-            label: role + 's',
-            data: monthlyUserData[role],
-            backgroundColor: colors[role],
-            borderColor: borderColors[role],
-            borderWidth: 1
-        }));
-        const monthlyUsersChart = new Chart(ctx, {
+        const submissionsChart = new Chart(ctxSubmissions, {
             type: 'bar',
             data: {
-                labels: labels,
-                datasets: datasets
+                labels: roles,
+                datasets: [
+                    {
+                        label: 'Health Examinations',
+                        data: healthExams,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)', // Teal
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Dental Records',
+                        data: dentalRecords,
+                        backgroundColor: 'rgba(255, 206, 86, 0.2)', // Yellow
+                        borderColor: 'rgba(255, 206, 86, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Medical Records',
+                        data: medicalRecords,
+                        backgroundColor: 'rgba(153, 102, 255, 0.2)', // Purple
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 1
+                    }
+                ]
             },
             options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Submissions per Role'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                },
                 scales: {
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Submissions'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Roles'
+                        }
                     }
                 }
             }
         });
 
+        // Complaints by Confine Status and Go Home Chart (Grouped Bar Chart)
+        const complaintsConfineData = @json($complaintsByConfineStatus);
+        const confineStatuses = Object.keys(complaintsConfineData);
+        const confineCounts = Object.values(complaintsConfineData);
 
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', function (event) {
-                event.preventDefault();
-                document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-                document.querySelectorAll('.tab-pane').forEach(tab => tab.classList.remove('active', 'show'));
+        const complaintsGoHomeData = @json($complaintsByGoHome);
+        const goHomeStatuses = Object.keys(complaintsGoHomeData);
+        const goHomeCounts = Object.values(complaintsGoHomeData);
 
-                this.classList.add('active');
-                const tabId = this.getAttribute('href').substring(1);
-                document.getElementById(tabId).classList.add('active', 'show');
-            });
+        // Combine the labels (unique)
+        const combinedLabels = [...new Set([...confineStatuses, ...goHomeStatuses])];
+
+        // Map counts to labels, defaulting to 0 if the category doesn't exist
+        const confineData = combinedLabels.map(label => confineCounts[confineStatuses.indexOf(label)] || 0);
+        const goHomeData = combinedLabels.map(label => goHomeCounts[goHomeStatuses.indexOf(label)] || 0);
+
+        const ctxComplaints = document.getElementById('complaintsChart').getContext('2d');
+
+        const complaintsChart = new Chart(ctxComplaints, {
+            type: 'bar',
+            data: {
+                labels: combinedLabels,
+                datasets: [
+                    {
+                        label: 'Confine Status',
+                        data: confineData,
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)', // Red
+                        borderColor: 'rgba(255, 99, 132, 1)',       // Red
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Go Home',
+                        data: goHomeData,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)', // Blue
+                        borderColor: 'rgba(54, 162, 235, 1)',       // Blue
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Complaints by Confine Status and Go Home'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Complaints'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Categories'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Inventory by Category Chart (Bar Chart)
+        const inventoryData = @json($inventoryByCategory);
+        const inventoryCategories = Object.keys(inventoryData);
+        const inventoryCounts = Object.values(inventoryData);
+
+        const ctxInventory = document.getElementById('inventoryChart').getContext('2d');
+
+        const inventoryChart = new Chart(ctxInventory, {
+            type: 'bar',
+            data: {
+                labels: inventoryCategories,
+                datasets: [{
+                    label: 'Inventory Items',
+                    data: inventoryCounts,
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)', // Blue
+                    borderColor: 'rgba(54, 162, 235, 1)',       // Blue
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Inventory by Category'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    legend: {
+                        display: false,
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Items'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Categories'
+                        }
+                    }
+                }
+            }
         });
     </script>
 </x-app-layout>

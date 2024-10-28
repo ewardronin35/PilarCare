@@ -98,7 +98,9 @@
 <body>
     <!-- Header Section -->
     <div class="header">
-        <img src="{{ $logoBase64 }}" alt="Pilar College Logo">
+        @if($logoBase64)
+            <img src="{{ $logoBase64 }}" alt="Pilar College Logo">
+        @endif
         <h1>PILAR COLLEGE OF ZAMBOANGA CITY, INC.</h1>
         <p>R. T. Lim Boulevard, Zamboanga City</p>
         <p>Clinic Health Examination Documents</p>
@@ -129,7 +131,9 @@
     <div class="image-section">
         <h2 class="section-title">Health Examination</h2>
         <div class="grid-container">
-            <img src="{{ $images['Health Examination'] }}" alt="Health Examination Picture">
+            @foreach($images['Health Examination'] as $healthExam)
+                <img src="{{ $healthExam }}" alt="Health Examination Picture">
+            @endforeach
         </div>
     </div>
     @endif

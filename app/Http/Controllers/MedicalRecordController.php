@@ -7,12 +7,18 @@ use App\Models\Information;
 use App\Models\PhysicalExamination;
 use App\Models\HealthExamination;
 use App\Models\User;
-use App\Models\Nutse;
+use App\Models\Student;
+
+use App\Models\Nurse;
 use App\Models\Doctor;
-
-
+use App\Models\Parents;
+use App\Mail\MedicalRecordApproved;
+use App\Mail\ChildMedicalRecordApproved;
+use App\Mail\MedicalRecordRejected;
+use App\Mail\ChildMedicalRecordRejected;
 use App\Models\MedicineIntake;
-
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -211,7 +217,7 @@ class MedicalRecordController extends Controller
             // Fetch related data
             $information = Information::where('id_number', $idNumber)->first();
             $physicalExaminations = PhysicalExamination::where('id_number', $idNumber)->get();
-            $healthExamination = HealthExamination::where('id_number', $idNumber)->first();
+            $healthExaminations = HealthExamination::where('id_number', $idNumber)->get(); // Fetch all records
             $medicineIntakes = MedicineIntake::where('id_number', $idNumber)->get();
     
             return response()->json([
@@ -220,7 +226,7 @@ class MedicalRecordController extends Controller
                 'medicalRecords' => $medicalRecords,
                 'information' => $information,
                 'physicalExaminations' => $physicalExaminations,
-                'healthExamination' => $healthExamination,
+                'healthExaminations' => $healthExaminations, // Updated key
                 'medicineIntakes' => $medicineIntakes,
                 'debug_query' => $idNumber,
             ]);
@@ -233,34 +239,35 @@ class MedicalRecordController extends Controller
         }
     }
     
-    
-    
-    
-    
-    public function history($id_number)
-    {
-        // Fetch all related records based on the provided id_number
-        $medicalRecords = MedicalRecord::where('id_number', $id_number)->get();
-        $physicalExaminations = PhysicalExamination::where('id_number', $id_number)->get();
-        $healthExamination = HealthExamination::where('id_number', $id_number)->first();
-        $medicineIntakes = MedicineIntake::where('id_number', $id_number)->get();
-    
-        if ($medicalRecords->isEmpty() && $physicalExaminations->isEmpty() && !$healthExamination) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No records found.'
-            ]);
-        }
-    
+    public function history()
+{
+    $id_number = Auth::user()->id_number;
+
+    // Fetch all related records based on the id_number
+    $medicalRecords = MedicalRecord::where('id_number', $id_number)->get();
+    $physicalExaminations = PhysicalExamination::where('id_number', $id_number)->get();
+    $healthExaminations = HealthExamination::where('id_number', $id_number)->get();
+    $medicineIntakes = MedicineIntake::where('id_number', $id_number)->get();
+    $information = Information::where('id_number', $id_number)->first();
+
+    // Check if any records exist
+    if ($medicalRecords->isEmpty() && $physicalExaminations->isEmpty() && $healthExaminations->isEmpty()) {
         return response()->json([
-            'success' => true,
-            'medicalRecords' => $medicalRecords,
-            'physicalExaminations' => $physicalExaminations,
-            'healthExamination' => $healthExamination,
-            'medicineIntakes' => $medicineIntakes
+            'success' => false,
+            'message' => 'No records found.'
         ]);
     }
-    
+
+    return response()->json([
+        'success' => true,
+        'medicalRecords' => $medicalRecords,
+        'physicalExaminations' => $physicalExaminations,
+        'healthExaminations' => $healthExaminations,
+        'medicineIntakes' => $medicineIntakes,
+        'information' => $information,
+    ]);
+}
+
 
     
     public function downloadPdf($id)
@@ -334,6 +341,28 @@ class MedicalRecordController extends Controller
         'physicalExamination' => $physicalExamination, // Return the physical examination data
     ]);
 }
+public function getPendingRecords()
+{
+    try {
+        // Fetch pending medical records (is_approved = false)
+        $pendingMedicalRecords = MedicalRecord::where('is_approved', false)
+            ->with(['user', 'nurse', 'doctor']) // Adjust relationships as needed
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'records' => $pendingMedicalRecords
+        ], 200);
+    } catch (\Exception $e) {
+        \Log::error('Error fetching pending medical records: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to fetch pending medical records.'
+        ], 500);
+    }
+}
+
+
 public function getBMIData($id_number)
 {
     // Fetch physical examinations for the user
@@ -371,142 +400,195 @@ private function calculateBMI($height, $weight)
     $bmi = $weight / ($heightInMeters * $heightInMeters);
     return round($bmi, 2);  // Return rounded BMI value
 }
-// In your MedicalRecordController or relevant controller
-
 public function approve($id)
-{
-    try {
-        DB::beginTransaction();
+    {
+        try {
+            DB::beginTransaction();
 
-        $medicalRecord = MedicalRecord::findOrFail($id);
+            $medicalRecord = MedicalRecord::findOrFail($id);
 
-        if ($medicalRecord->is_approved) {
-            return response()->json(['error' => 'Medical Record is already approved.'], 400);
+            if ($medicalRecord->is_approved) {
+                return response()->json(['error' => 'Medical Record is already approved.'], 400);
+            }
+
+            $medicalRecord->is_approved = true;
+            $medicalRecord->save();
+
+            // Fetch the user by id_number
+            $user = User::where('id_number', $medicalRecord->id_number)->first();
+
+            if ($user) {
+                // Create a notification for the user
+                Notification::create([
+                    'user_id' => $user->id_number, // Assuming 'user_id' is the primary key 'id'
+                    'title' => 'Medical Record Approved',
+                    'message' => 'Your medical record has been approved.',
+                    'scheduled_time' => now(),
+                ]);
+
+                // Send Email Notification to User
+                Mail::to($user->email)->send(new MedicalRecordApproved($medicalRecord));
+
+                // Notify Parents
+                $student = Student::where('id_number', $medicalRecord->id_number)->first();
+
+                if ($student) {
+                    $parents = $student->parents; // Using the relationship
+
+                    foreach ($parents as $parent) {
+                        $parentUser = $parent->user;
+
+                        if ($parentUser) {
+                            // Create a notification for each parent
+                            Notification::create([
+                                'user_id' => $parentUser->id_number, // Assuming 'user_id' is the primary key 'id'
+                                'title' => 'Child\'s Medical Record Approved',
+                                'message' => 'Your child\'s medical record has been approved.',
+                                'scheduled_time' => now(),
+                            ]);
+
+                            // Send Email Notification to Parent
+                            Mail::to($parentUser->email)->send(new ChildMedicalRecordApproved($medicalRecord, $student, $parentUser));
+                        }
+                    }
+                }
+
+                DB::commit();
+                return response()->json(['success' => 'Medical Record approved successfully.']);
+            } else {
+                Log::error('User not found for id_number: ' . $medicalRecord->id_number);
+                return response()->json(['error' => 'User not found.'], 404);
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error approving medical record: ' . $e->getMessage());
+            return response()->json(['error' => 'Error approving the medical record.'], 500);
         }
+    }
 
-        $medicalRecord->is_approved = true;
-        $medicalRecord->save();
+    public function reject($id)
+    {
+        try {
+            DB::beginTransaction();
 
-        // Fetch the user by id_number
-        $user = User::where('id_number', $medicalRecord->id_number)->first();
+            $medicalRecord = MedicalRecord::findOrFail($id);
 
-        if ($user) {
-            // Create a notification using 'id_number'
-            Notification::create([
-                'user_id' => $user->id_number, // Use 'id_number' here
-                'title' => 'Medical Record Approved',
-                'message' => 'Your medical record has been approved.',
-                'scheduled_time' => now(),
-            ]);
+            // Only allow rejection if not already approved
+            if ($medicalRecord->is_approved) {
+                return response()->json(['error' => 'Cannot reject an approved medical record.'], 400);
+            }
+
+            // Fetch the user by id_number before deleting
+            $user = User::where('id_number', $medicalRecord->id_number)->first();
+
+            $medicalRecord->delete();
+
+            if ($user) {
+                // Create a notification for the user
+                Notification::create([
+                    'user_id' => $user->id_number, // Assuming 'user_id' is the primary key 'id'
+                    'title' => 'Medical Record Rejected',
+                    'message' => 'Your medical record has been rejected and deleted.',
+                    'scheduled_time' => now(),
+                ]);
+
+                // Send Email Notification to User
+                Mail::to($user->email)->send(new MedicalRecordRejected($medicalRecord));
+
+                // Notify Parents
+                $student = Student::where('id_number', $medicalRecord->id_number)->first();
+
+                if ($student) {
+                    $parents = $student->parents; // Using the relationship
+
+                    foreach ($parents as $parent) {
+                        $parentUser = $parent->user;
+
+                        if ($parentUser) {
+                            // Create a notification for each parent
+                            Notification::create([
+                                'user_id' => $parentUser->id_number, // Assuming 'user_id' is the primary key 'id'
+                                'title' => 'Child\'s Medical Record Rejected',
+                                'message' => 'Your child\'s medical record has been rejected and deleted.',
+                                'scheduled_time' => now(),
+                            ]);
+
+                            // Send Email Notification to Parent
+                            Mail::to($parentUser->email)->send(new ChildMedicalRecordRejected($medicalRecord, $student, $parentUser));
+                        }
+                    }
+                }
+            } else {
+                Log::error('User not found for id_number: ' . $medicalRecord->id_number);
+            }
 
             DB::commit();
-            return response()->json(['success' => 'Medical Record approved successfully.']);
-        } else {
-            Log::error('User not found for id_number: ' . $medicalRecord->id_number);
-            return response()->json(['error' => 'User not found.'], 404);
+            return response()->json(['success' => 'Medical Record rejected and deleted successfully.'], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error rejecting medical record: ' . $e->getMessage());
+            return response()->json(['error' => 'Error rejecting the medical record.'], 400);
         }
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('Error approving medical record: ' . $e->getMessage());
-        return response()->json(['error' => 'Error approving the medical record.'], 500);
-    }
-}
-
-public function reject($id)
-{
-    try {
-        DB::beginTransaction();
-
-        $medicalRecord = MedicalRecord::findOrFail($id);
-
-        // Only allow rejection if not already approved
-        if ($medicalRecord->is_approved) {
-            return response()->json(['error' => 'Cannot reject an approved medical record.'], 400);
-        }
-
-        $medicalRecord->delete();
-
-        // Fetch the user by id_number
-        $user = User::where('id_number', $medicalRecord->id_number)->first();
-
-        if ($user) {
-            // Create a notification using 'id' instead of 'id_number'
-            Notification::create([
-                'user_id' => $user->id, // Use 'id' here
-                'title' => 'Medical Record Rejected',
-                'message' => 'Your medical record has been rejected and deleted.',
-                'scheduled_time' => now(),
-            ]);
-        } else {
-            Log::error('User not found for id_number: ' . $medicalRecord->id_number);
-        }
-
-        DB::commit();
-        return response()->json(['success' => 'Medical Record rejected and deleted successfully.'], 200);
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('Error rejecting medical record: ' . $e->getMessage());
-        return response()->json(['error' => 'Error rejecting the medical record.'], 400);
-    }
-}
-
-public function viewAllRecords()
-{
-    $user = Auth::user();
-    $role = strtolower($user->role); // Ensure the role is in lowercase
-
-    // Define allowed roles and their corresponding views
-    $allowedRoles = ['admin', 'nurse', 'doctor'];
-
-    if (!in_array($role, $allowedRoles)) {
-        Log::warning("Unauthorized role attempted to access viewAllRecords: {$role}");
-        abort(403, 'Unauthorized action.');
     }
 
-    // Fetch pending medical records based on role
-    switch ($role) {
-        case 'admin':
-            // Admin can see all pending medical records
-            $pendingMedicalRecords = MedicalRecord::where('is_approved', false)
-                ->with(['user', 'nurse', 'doctor'])
-                ->paginate(10); // Adjust as needed
-            break;
-
-        case 'nurse':
-            // Nurse can see pending medical records assigned to them
-            $pendingMedicalRecords = MedicalRecord::where('is_approved', false)
-                ->where('nurse_id', $user->id)
-                ->with(['user', 'nurse', 'doctor'])
-                ->paginate(10);
-            break;
-
-        case 'doctor':
-            // Doctor can see pending medical records assigned to them
-            $pendingMedicalRecords = MedicalRecord::where('is_approved', false)
-                ->where('doctor_id', $user->id)
-                ->with(['user', 'nurse', 'doctor'])
-                ->paginate(10);
-            break;
-
-        default:
-            // This case should be unreachable due to the earlier check
+    public function viewAllRecords() 
+    {
+        $user = Auth::user();
+        $role = strtolower($user->role); // Ensure the role is in lowercase
+    
+        // Define allowed roles and their corresponding views
+        $allowedRoles = ['admin', 'nurse', 'doctor'];
+    
+        if (!in_array($role, $allowedRoles)) {
+            Log::warning("Unauthorized role attempted to access viewAllRecords: {$role}");
             abort(403, 'Unauthorized action.');
+        }
+    
+        // Fetch pending medical records based on role
+        switch ($role) {
+            case 'admin':
+                // Admin can see all pending medical records
+                $pendingMedicalRecords = MedicalRecord::where('is_approved', 0) // Changed from false to 0
+                    ->with(['user', 'nurse', 'doctor'])
+                    ->paginate(10); // Adjust as needed
+                break;
+    
+            case 'nurse':
+                // Nurse can see pending medical records assigned to them
+                $pendingMedicalRecords = MedicalRecord::where('is_approved', 0) // Changed from false to 0
+                    ->where('id_number', $user->id_number)
+                    ->with(['user', 'nurse', 'doctor'])
+                    ->paginate(10);
+                break;
+    
+            case 'doctor':
+                // Doctor can see pending medical records assigned to them
+                $pendingMedicalRecords = MedicalRecord::where('is_approved', 0) // Changed from false to 0
+                ->where('id_number', $user->id_number)
+                ->with(['user', 'nurse', 'doctor'])
+                    ->paginate(10);
+                break;
+    
+            default:
+                // This case should be unreachable due to the earlier check
+                abort(403, 'Unauthorized action.');
+        }
+    
+        Log::info("Fetched pending medical records for role: {$role}");
+    
+        // Construct the view path dynamically
+        $viewPath = "{$role}.uploadMedicalDocu";
+    
+        // Check if the view exists
+        if (!view()->exists($viewPath)) {
+            Log::error("View not found: {$viewPath}");
+            abort(404, 'View not found.');
+        }
+    
+        // Return the dynamically determined view with the data
+        return view($viewPath, compact('pendingMedicalRecords'));
     }
-
-    Log::info("Fetched pending medical records for role: {$role}");
-
-    // Construct the view path dynamically
-    $viewPath = "{$role}.uploadMedicalDocu";
-
-    // Check if the view exists
-    if (!view()->exists($viewPath)) {
-        Log::error("View not found: {$viewPath}");
-        abort(404, 'View not found.');
-    }
-
-    // Return the dynamically determined view with the data
-    return view($viewPath, compact('pendingMedicalRecords'));
-}
+    
     public function checkApprovalStatus(Request $request)
     {
         // Retrieve the medical record by id_number
@@ -522,6 +604,111 @@ public function viewAllRecords()
             'is_approved' => $record->is_approved // Boolean indicating if the record is approved
         ]);
     }
-    
+    public function parentDownloadPdf($studentIdNumber)
+{
+    $user = Auth::user();
+
+    // Check if the authenticated user is a parent
+    if (strtolower($user->role) !== 'parent') {
+        abort(403, 'Unauthorized action.');
+    }
+
+    // Find the parent record
+    $parent = Parents::where('id_number', $user->id_number)->first();
+
+    if (!$parent) {
+        abort(403, 'Parent record not found.');
+    }
+
+    // Fetch the student using id_number
+    $student = Student::where('id_number', $studentIdNumber)->first();
+
+    if (!$student) {
+        abort(404, 'Student not found.');
+    }
+
+
+
+    // Fetch the latest approved medical record
+    $medicalRecord = MedicalRecord::where('id_number', $student->id_number)
+        ->where('is_approved', true)
+        ->orderBy('created_at', 'desc')
+        ->first();
+
+    if (!$medicalRecord) {
+        return redirect()->back()->with('error', 'No approved medical record found for this student.');
+    }
+
+    // Proceed to generate the PDF as in your existing downloadPdf method
+    $information = Information::where('id_number', $medicalRecord->id_number)->first();
+
+    // Handle profile picture
+    $profilePictureBase64 = null;
+    if ($information->profile_picture) {
+        $profilePicturePath = storage_path('app/public/' . $information->profile_picture);
+        if (file_exists($profilePicturePath)) {
+            $profilePictureBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($profilePicturePath));
+        }
+    }
+
+    $logoPath = public_path('images/pilarLogo.jpg');
+    $logoBase64 = 'data:image/jpg;base64,' . base64_encode(file_get_contents($logoPath));
+
+    $pdf = PDF::loadView('pdf.medical-record', [
+        'medicalRecord' => $medicalRecord,
+        'information' => $information,
+        'physicalExamination' => PhysicalExamination::where('id_number', $medicalRecord->id_number)->first(),
+        'profilePictureBase64' => $profilePictureBase64,
+        'logoBase64' => $logoBase64
+    ]);
+
+    return $pdf->download('medical_record_' . $medicalRecord->name . '.pdf');
+}
+public function parentGetBMIData($studentIdNumber)
+{
+    $user = Auth::user();
+
+    // Check if the authenticated user is a parent
+    if (strtolower($user->role) !== 'parent') {
+        abort(403, 'Unauthorized action.');
+    }
+
+    // Find the parent record
+    $parent = Parents::where('id_number', $user->id_number)->first();
+
+    if (!$parent) {
+        abort(403, 'Parent record not found.');
+    }
+
+    // Fetch the student
+    $student = Student::where('id_number', $studentIdNumber)->first();
+
+    if (!$student) {
+        abort(404, 'Student not found.');
+    }
+
+    // Fetch physical examinations for the student
+    $physicalExaminations = PhysicalExamination::where('id_number', $student->id_number)->get();
+
+    // Prepare data for the BMI chart
+    $bmiData = [
+        'dates' => [],
+        'bmis' => []
+    ];
+
+    foreach ($physicalExaminations as $examination) {
+        $date = $examination->created_at->format('Y-m-d');
+        $heightInMeters = $examination->height / 100;
+        $bmi = $examination->weight / ($heightInMeters * $heightInMeters);
+
+        if ($bmi) {
+            $bmiData['dates'][] = $date;
+            $bmiData['bmis'][] = round($bmi, 2);
+        }
+    }
+
+    return response()->json(['bmiData' => $bmiData]);
+}
+
 }
 

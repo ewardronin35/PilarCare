@@ -23,8 +23,17 @@
             font-family: 'Arial', sans-serif;
             animation: fadeInBackground 1s ease-in-out;
             overflow: hidden;
+            position: relative; /* Necessary for overlay */
         }
-
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Dark overlay with 50% opacity */
+            z-index: 1; /* Behind the container but above the background */
+        }
         /* Container Styling */
         .container {
             background-color: #fff;
@@ -34,8 +43,9 @@
             max-width: 400px;
             width: 100%;
             animation: fadeInContainer 1s ease-in-out;
+            z-index: 2; /* Above the overlay */
+            position: relative;
         }
-
         /* Logo Styling */
         .logo-container {
             display: flex;
@@ -248,6 +258,7 @@
             }
         }
     </style>
+    <div class="overlay"></div>
 
     <!-- Loading Overlay -->
     <div id="loading-overlay">
@@ -314,7 +325,7 @@
             <!-- Login Button -->
             <div class="d-grid mt-3">
                 <button type="submit" class="btn btn-primary log-in-button">
-                    {{ __('Log in') }}
+                    {{ __('Sign in') }}
                 </button>
             </div>
 

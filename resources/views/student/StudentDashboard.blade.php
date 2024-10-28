@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :pageTitle="'Dashboard'">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.css">
@@ -8,6 +8,39 @@
         background-color: #f5f7fa;
         font-family: 'Poppins', sans-serif;
     }
+ /* Calendar Cell Animations */
+        .calendar td.green,
+        .calendar td.yellow,
+        .calendar td.red {
+            position: relative;
+            overflow: hidden;
+            z-index: 1; /* Ensure cell content is above the ::after */
+        }
+
+        .calendar td.green::after,
+        .calendar td.yellow::after,
+        .calendar td.red::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            animation: fadeInScale 0.5s ease-in-out;
+            z-index: -1;
+        }
+
+        .calendar td.green::after {
+            background-color: rgba(40, 167, 69, 0.3);
+        }
+
+        .calendar td.yellow::after {
+            background-color: rgba(255, 193, 7, 0.3);
+        }
+
+        .calendar td.red::after {
+            background-color: rgba(220, 53, 69, 0.3);
+        }
 
     .main-content {
         flex-grow: 1;
@@ -18,52 +51,70 @@
         overflow-y: auto;
     }
 
+   
     .profile-box {
-        display: flex;
-        align-items: center;
-        padding: 20px;
-        background-image: url('{{ asset('images/bg.jpg') }}');
-        background-size: cover;
-        background-position: center;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px;
-        color: white;
-    }
+            position: relative; /* Required for the overlay */
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background-image: url('{{ asset('images/bg.jpg') }}');
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            color: white;
+            overflow: hidden; /* Clip the overlay within the border-radius */
+        }
 
-    .profile-box img {
-        border-radius: 50%;
-        width: 80px;
-        height: 80px;
-        margin-right: 20px;
-    }
+        .profile-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5); /* 50% opacity black overlay */
+            z-index: 1; /* Place behind the profile content */
+        }
 
-    .profile-info {
-        display: flex;
-        flex-direction: column;
-    }
+        .profile-box img {
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            margin-right: 20px;
+            z-index: 2; /* Ensure the profile image is above the overlay */
+        }
 
-    .profile-info h2 {
-        margin: 0;
-        font-size: 1.5em;
-    }
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            z-index: 2; /* Ensure text content is above the overlay */
+        }
 
-    .profile-info p {
-        margin: 0;
-    }
 
-    .edit-profile-btn {
-        background-color: #007bff;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s ease-in-out;
-        text-align: center;
-        text-decoration: none;
-        margin-top: 10px;
-    }
+        .profile-info h2 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .profile-info p {
+            margin: 0;
+        }
+
+        .edit-profile-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+            text-align: center;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+
 
     .edit-profile-btn:hover {
         background-color: #0056b3;
@@ -374,13 +425,14 @@
     } 
 }
 .calendar-container {
-            width: 90%;
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin-top: 20px;
-        }
+    width: 100%;
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    transition: background-color 0.3s ease-in-out;
+}
 
         .calendar-container h2 {
             text-align: center;
@@ -458,13 +510,6 @@
             margin-right: 10px;
         }
 
-        .legend-color.free {
-            background-color: #66ff66;
-        }
-
-        .legend-color.appointed {
-            background-color: #ff4d4d;
-        }
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -548,6 +593,88 @@
         .modal-content::-webkit-scrollbar-thumb:hover {
             background-color: #888;
         }
+        /* Status Text Colors */
+.status-approved {
+    background-color: #28a745;
+    font-weight: bold;
+}
+
+.status-pending {
+    background-color: #ffc107;
+    font-weight: bold;
+}
+
+.status-no-record {
+    background-color: #dc3545;
+    font-weight: bold;
+}
+
+/* Calendar Cell Status Colors */
+
+/* Calendar Cell Status Colors */
+.calendar-cell-free {
+    background-color: #28a745; /* Green */
+    color: #fff;
+}
+
+.calendar-cell-pending {
+    background-color: #ffc107; /* Yellow */
+    color: #fff;
+}
+
+.calendar-cell-confirmed {
+    background-color: #dc3545; /* Red */
+
+}
+
+/* Legend Colors */
+.legend-color.free {
+    background-color: #28a745; /* Green */
+}
+
+.legend-color.pending {
+    background-color: #ffc107; /* Yellow */
+}
+
+.legend-color.confirmed {
+    background-color: #dc3545; /* Red */
+}
+
+/* Status Text Colors */
+.status-free {
+    background-color: #28a745;
+    font-weight: bold;
+}
+
+.status-pending {
+    background-color: #ffc107;
+    font-weight: bold;
+}
+
+.status-confirmed {
+    background-color: #dc3545;
+    font-weight: bold;
+}
+.phone-input {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.phone-input span {
+    font-weight: bold;
+    color: #333;
+}
+.form-group select {
+    padding: 8px; /* Same padding as input fields */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 0.9rem; /* Match font size */
+    font-family: 'Poppins', sans-serif;
+}
+
 </style>
 
 
@@ -634,15 +761,22 @@
                 </tbody>
             </table>
             <!-- Legend Section -->
-            <div class="legend">
-                <div class="legend-item">
-                    <div class="legend-color free"></div>
-                    <span>Free</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color appointed"></div>
-                    <span>Appointed</span>
-                </div>
+          <!-- Legend Section in Student Dashboard -->
+<div class="legend">
+    <div class="legend-item">
+        <div class="legend-color free"></div>
+        <span>Free</span>
+    </div>
+    <div class="legend-item">
+        <div class="legend-color pending"></div>
+        <span>Pending</span>
+    </div>
+    <div class="legend-item">
+        <div class="legend-color confirmed"></div>
+        <span>Confirmed</span>
+    </div>
+</div>
+
             </div>
         </div>
 
@@ -714,19 +848,23 @@
                             <textarea id="address" name="address" rows="2" required></textarea>
                         </div>
                     </div>
-
                     <div class="row">
-                        <div class="form-group">
-                            <label for="emergency_contact_number"><i class="fas fa-phone-alt"></i> Emergency Contact Number</label>
-                            <input type="text" id="emergency_contact_number" name="emergency_contact_number" required 
-                                maxlength="11" oninput="validateNumbers(this)" onblur="validateNumbers(this)" onpaste="validateNumbers(this)" pattern="\d{11}" title="11 digits only">
-                        </div>
-                        <div class="form-group">
-                            <label for="personal_contact_number"><i class="fas fa-phone"></i> Personal Contact Number</label>
-                            <input type="text" id="personal_contact_number" name="personal_contact_number" required 
-                                maxlength="11" oninput="validateNumbers(this)" onblur="validateNumbers(this)" onpaste="validateNumbers(this)" pattern="\d{11}" title="11 digits only">
-                        </div>
-                    </div>
+    <div class="form-group">
+        <label for="emergency_contact_number"><i class="fas fa-phone-alt"></i> Emergency Contact Number</label>
+        <input type="text" id="emergency_contact_number" name="emergency_contact_number" required 
+            maxlength="11" placeholder="09123456789"
+            oninput="validatePhilippineNumber(this)" 
+            pattern="09\d{9}" title="Must be 11 digits starting with 09">
+    </div>
+    <div class="form-group">
+        <label for="personal_contact_number"><i class="fas fa-phone"></i> Personal Contact Number</label>
+        <input type="text" id="personal_contact_number" name="personal_contact_number" required 
+            maxlength="11" placeholder="09123456789"
+            oninput="validatePhilippineNumber(this)" 
+            pattern="09\d{9}" title="Must be 11 digits starting with 09">
+    </div>
+</div>
+
 
                     <div class="row">
                         <div class="form-group">
@@ -742,11 +880,21 @@
                     </div>
 
                     <div class="row">
-                        <div class="form-group">
-                            <label for="guardian_relationship"><i class="fas fa-users"></i> Guardian Relationship</label>
-                            <input type="text" id="guardian_relationship" name="guardian_relationship" required>
-                        </div>
-                    </div>
+    <div class="form-group">
+        <label for="guardian_relationship"><i class="fas fa-users"></i> Guardian Relationship</label>
+        <select id="guardian_relationship" name="guardian_relationship" required>
+            <option value="">Select Relationship</option>
+            <option value="Mother">Mother</option>
+            <option value="Father">Father</option>
+            <option value="Sibling">Sibling</option>
+            <option value="Grandparent">Grandparent</option>
+            <option value="Aunt/Uncle">Aunt/Uncle</option>
+            <option value="Guardian">Guardian</option>
+            <option value="Other">Other</option>
+        </select>
+    </div>
+</div>
+
 
                     <div class="form-group">
                         <label>
@@ -767,9 +915,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
     // Global variables and functions
     let currentMonth;
@@ -784,12 +929,7 @@
     }
 
     // Validation for numbers only in contact numbers
-    function validateNumbers(input) {
-        setTimeout(() => {
-            input.value = input.value.replace(/[^0-9]/g, '');
-        }, 1);
-    }
-
+  
     // Function to enable the beforeunload prompt
     function enableBeforeUnload() {
         window.addEventListener('beforeunload', preventFormClose);
@@ -914,31 +1054,51 @@
     });
 
     // Fetch and mark appointments
-    function fetchAppointmentMarkers(day, month, year, cell) {
-        const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+ // Fetch and mark appointments
+function fetchAppointmentMarkers(day, month, year, cell) {
+    const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-        fetch(`/student/appointments/by-date?date=${formattedDate}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken.getAttribute('content')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.appointments && data.appointments.length > 0) {
-                // If there are appointments, mark the cell as red
-                cell.style.backgroundColor = '#ff4d4d'; // Red for appointments
-                cell.style.color = '#fff';
-            } else {
-                // If no appointments, mark the cell as green
-                cell.style.backgroundColor = '#66ff66'; // Green for free
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching appointment markers:', error);
-        });
-    }
+    fetch(`/student/appointments/by-date?date=${formattedDate}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken.getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Remove existing marker classes to prevent duplication
+        cell.classList.remove('calendar-cell-free', 'calendar-cell-appointed', 'calendar-cell-pending');
+
+        // Reset the cell's content to only display the day
+        cell.innerHTML = day;
+
+        if (data.appointments && data.appointments.length > 0) {
+            // Loop through all appointments for the day
+            data.appointments.forEach(appointment => {
+                const status = appointment.status.toLowerCase(); // Ensure consistency
+
+                if (status === 'approved') {
+                    // Add 'appointed' class and append status
+                    cell.classList.add('calendar-cell-appointed');
+                    cell.innerHTML += ' <span class="status-approved">(Approved)</span>';
+                } else if (status === 'pending') {
+                    // Add 'pending' class and append status
+                    cell.classList.add('calendar-cell-pending');
+                    cell.innerHTML += ' <span class="status-pending">(Pending)</span>';
+                }
+            });
+        } else {
+            // If no appointments, mark the cell as free
+            cell.classList.add('calendar-cell-free');
+            cell.innerHTML += ' <span class="status-free">(Free)</span>';
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching appointment markers:', error);
+    });
+}
+
 
     const getAppointmentsByDateUrl = `{{ route('student.appointments.by-date') }}`;
 
@@ -990,6 +1150,16 @@
             });
         });
     }
+// Validation for Philippine mobile number standard (+63 format)
+function validatePhilippineNumber(input) {
+    setTimeout(() => {
+        input.value = input.value.replace(/[^0-9]/g, ''); // Allow only numbers
+        if (input.value.length > 11) { // Limit to 11 digits
+            input.value = input.value.slice(0, 11);
+        }
+    }, 1);
+}
+
 
     document.addEventListener('DOMContentLoaded', function() {
         const modal = document.getElementById("welcomeModal");

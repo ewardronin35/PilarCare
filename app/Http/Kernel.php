@@ -1,7 +1,9 @@
 <?php
+
 namespace App\Http;
 
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
+use App\Console\Commands\CheckExpiringInventory;
 
 
 class Kernel extends HttpKernel
@@ -11,11 +13,10 @@ class Kernel extends HttpKernel
         \Illuminate\Http\Middleware\HandleCors::class,
         \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
-        
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
     ];
-
+    
     protected $middlewareGroups = [
         'web' => [
             \App\Http\Middleware\EncryptCookies::class,
@@ -31,14 +32,15 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
+
     protected $commands = [
         Commands\FixNullToothNumbers::class,
         Commands\PopulateMissingTeeth::class,
+        Commands\CheckExpiringInventory::class,
 
     ];
-    
+
     protected $routeMiddleware = [
-        
         'auth' => \App\Http\Middleware\Authenticate::class,
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
         'auth.session' => \Illuminate\Session\Middleware\AuthenticateSession::class,
@@ -48,14 +50,17 @@ class Kernel extends HttpKernel
         'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
-        'check.approval' => \App\Http\Middleware\CheckApproval::class, // This should be correct
-        'test.middleware' => \App\Http\Middleware\TestMiddleware::class,
+        'check.approval' => \App\Http\Middleware\CheckApproval::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-        'role' => \App\Http\Middleware\RoleMiddleware::class,
-        
+        'check.role' => \App\Http\Middleware\CheckRoleMiddleware::class, // This alias should be present
+        'test' => \App\Http\Middleware\TestMiddleware::class,
+        'basic.test' => \App\Http\Middleware\BasicTestMiddleware::class,
+
+
     ];
-    public function getRouteMiddleware()
+    protected function schedule(Schedule $schedule)
     {
-        dd($this->routeMiddleware);
+        // Schedule the command to run daily at midnight
+        $schedule->command('inventory:check-expiring')->dailyAt('00:00');
     }
 }

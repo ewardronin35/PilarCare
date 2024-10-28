@@ -1,13 +1,20 @@
-<x-app-layout>
+<x-app-layout :pageTitle="'Appointments'">
+    <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+
+    <!-- Custom CSS -->
     <style>
+        /* Your existing CSS */
         body {
             background-color: #f4f6f9;
             font-family: 'Poppins', sans-serif; 
         }
 
         .main-content {
-            margin-top: 80px;
+            margin-top: 30px;
         }
 
         .form-container {
@@ -138,6 +145,7 @@
             border: 1px solid #ddd;
             cursor: pointer;
             height: 100%; /* Adjust to fill the cell */
+            position: relative; /* For appointment markers */
         }
 
         .calendar td.active {
@@ -162,7 +170,9 @@
             width: 10px;
             height: 10px;
             display: inline-block;
-            margin-left: 5px;
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
         }
 
         /* Modal Styles */
@@ -287,68 +297,77 @@
             }
         }
 
+        /* DataTables Overrides (Optional) */
+        table.dataTable thead th,
+        table.dataTable thead td {
+            border-bottom: 1px solid #ddd;
+        }
+
+        table.dataTable.no-footer {
+            border-bottom: 1px solid #ddd;
+        }
+
+        /* Responsive Table Styling */
+        @media (max-width: 768px) {
+            .appointment-section, .calendar-container {
+                width: 100%;
+            }
+        }
     </style>
 
-    <div class="form-container">
-        <div class="appointment-section">
-            <!-- Upcoming Appointments -->
-            <div class="appointment-list">
-                <h2>Your Upcoming Appointments</h2>
-                <div style="overflow-y: auto; max-height: calc(50% - 40px);">
-                    <table class="appointment-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Time</th>
-                                <th>Type</th>
-                                <th>Status</th>
-                                <th>Doctor</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-    @if($upcomingAppointments->isNotEmpty())
-        @foreach($upcomingAppointments as $appointment)
-            <tr>
-                <td>{{ \Carbon\Carbon::parse($appointment->appointment_date)->format('Y-m-d') }}</td>
-                <td>{{ \Carbon\Carbon::parse($appointment->appointment_time)->format('g:i A') }}</td>
-                <td>{{ $appointment->appointment_type }}</td>
-                <td>{{ ucfirst($appointment->status) }}</td>
-                <td>
-                    @if($appointment->doctor)
-                        {{ $appointment->doctor->first_name ?? '' }} {{ $appointment->doctor->last_name ?? '' }}
-                    @else
-                        N/A
-                    @endif
-                </td>
-            </tr>
-        @endforeach
-    @else
-        <tr>
-            <td colspan="5">No upcoming appointments</td>
-        </tr>
-    @endif
-</tbody>
-
-                    </table>
+    <div class="main-content">
+        <div class="form-container">
+            <div class="appointment-section">
+                <!-- Upcoming Appointments -->
+                <div class="appointment-list">
+                    <h2>Your Upcoming Appointments</h2>
+                    <div>
+                        <table class="appointment-table" id="upcoming-appointments-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Doctor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($upcomingAppointments as $appointment)
+                                    <tr>
+                                        <td>{{ \Carbon\Carbon::parse($appointment->appointment_date)->format('Y-m-d') }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($appointment->appointment_time)->format('g:i A') }}</td>
+                                        <td>{{ $appointment->appointment_type }}</td>
+                                        <td>{{ ucfirst($appointment->status) }}</td>
+                                        <td>
+                                            @if($appointment->doctor && $appointment->doctor->user)
+                                                {{ $appointment->doctor->user->first_name ?? '' }} {{ $appointment->doctor->user->last_name ?? '' }}
+                                            @else
+                                                N/A
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Appointment History -->
-            <div class="history-list">
-                <h2>Appointment History</h2>
-                <div style="overflow-y: auto; max-height: calc(50% - 40px);">
-                    <table class="appointment-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Time</th>
-                                <th>Type</th>
-                                <th>Status</th>
-                                <th>Doctor</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if($completedAppointments->isNotEmpty())
+                <!-- Appointment History -->
+                <div class="history-list">
+                    <h2>Appointment History</h2>
+                    <div style="max-height: calc(50% - 40px);">
+                        <table class="appointment-table" id="appointment-history-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Doctor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
                                 @foreach($completedAppointments as $appointment)
                                     <tr>
                                         <td>{{ \Carbon\Carbon::parse($appointment->appointment_date)->format('Y-m-d') }}</td>
@@ -356,261 +375,303 @@
                                         <td>{{ $appointment->appointment_type }}</td>
                                         <td>{{ ucfirst($appointment->status) }}</td>
                                         <td>
-                    @if($appointment->doctor)
-                        {{ $appointment->doctor->first_name ?? '' }} {{ $appointment->doctor->last_name ?? '' }}
-                    @else
-                        N/A
-                    @endif
-                </td>                                    </tr>
+                                            @if($appointment->doctor && $appointment->doctor->user)
+                                                {{ $appointment->doctor->user->first_name ?? '' }} {{ $appointment->doctor->user->last_name ?? '' }}
+                                            @else
+                                                N/A
+                                            @endif
+                                        </td>
+                                    </tr>
                                 @endforeach
-                            @else
-                                <tr>
-                                    <td colspan="5">No appointment history</td>
-                                </tr>
-                            @endif
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar Section -->
+            <div class="calendar-container">
+                <h2>Appointment Calendar</h2>
+                <div class="calendar-controls">
+                    <button onclick="changeMonth(-1)">&#8249; Previous</button>
+                    <span id="calendar-month-year"></span>
+                    <button onclick="changeMonth(1)">Next &#8250;</button>
+                </div>
+                <table class="calendar" id="calendar">
+                    <thead>
+                        <tr>
+                            <th>Sun</th>
+                            <th>Mon</th>
+                            <th>Tue</th>
+                            <th>Wed</th>
+                            <th>Thu</th>
+                            <th>Fri</th>
+                            <th>Sat</th>
+                        </tr>
+                    </thead>
+                    <tbody id="calendar-body">
+                        <!-- Calendar will be dynamically generated by JS -->
+                    </tbody>
+                </table>
+                <!-- Legend Section -->
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #66ff66;"></div>
+                        <div class="legend-label">No Appointments</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #ffcc00;"></div>
+                        <div class="legend-label">Pending Appointments</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #ff4d4d;"></div>
+                        <div class="legend-label">Confirmed Appointments</div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Calendar Section -->
-        <div class="calendar-container">
-            <h2>Appointment Calendar</h2>
-            <div class="calendar-controls">
-                <button onclick="changeMonth(-1)">&#8249; Previous</button>
-                <span id="calendar-month-year"></span>
-                <button onclick="changeMonth(1)">Next &#8250;</button>
-            </div>
-            <table class="calendar" id="calendar">
-                <thead>
-                    <tr>
-                        <th>Sun</th>
-                        <th>Mon</th>
-                        <th>Tue</th>
-                        <th>Wed</th>
-                        <th>Thu</th>
-                        <th>Fri</th>
-                        <th>Sat</th>
-                    </tr>
-                </thead>
-                <tbody id="calendar-body">
-                    <!-- Calendar will be dynamically generated by JS -->
-                </tbody>
-            </table>
-            <!-- Legend Section -->
-            <div class="legend">
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #66ff66;"></div>
-                    <div class="legend-label">No Appointments</div>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #ffcc00;"></div>
-                    <div class="legend-label">Pending Appointments</div>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #ff4d4d;"></div>
-                    <div class="legend-label">Confirmed Appointments</div>
-                </div>
+        <!-- Appointment Modal -->
+        <div id="preview-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closePreviewModal()">&times;</span>
+                <h2>Appointments on <span id="preview-date"></span></h2>
+                <ul id="appointments-list">
+                    <!-- Appointments will be dynamically inserted here -->
+                </ul>
             </div>
         </div>
-    </div>
 
-    <!-- Appointment Modal -->
-    <div id="preview-modal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closePreviewModal()">&times;</span>
-            <h2>Appointments on <span id="preview-date"></span></h2>
-            <ul id="appointments-list">
-                <!-- Appointments will be dynamically inserted here -->
-            </ul>
-        </div>
-    </div>
+        <!-- Scripts -->
+        <!-- jQuery (Ensure it's loaded before DataTables) -->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+                integrity="sha256-/xUj+3OJ+Y5e3U6IY+PffyONVfQK3rWZ6+P1Rrz4jAE="
+                crossorigin="anonymous"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <!-- DataTables JS (Use the latest stable version) -->
+        <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 
-    <script>
-        // JavaScript code to handle the calendar and appointments
+        <!-- SweetAlert JS -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-        let currentMonth = new Date().getMonth();
-        let currentYear = new Date().getFullYear();
-
-        document.addEventListener('DOMContentLoaded', function() {
-            renderCalendar(currentMonth, currentYear);
-        });
-
-        function changeMonth(delta) {
-            currentMonth += delta;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            } else if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            }
-            renderCalendar(currentMonth, currentYear);
-        }
-
-        function renderCalendar(month, year) {
-            const calendarBody = document.getElementById('calendar-body');
-            calendarBody.innerHTML = ''; // Clear previous calendar
-
-            const firstDay = new Date(year, month, 1).getDay(); // Get the first day of the month
-            const daysInMonth = new Date(year, month + 1, 0).getDate(); // Number of days in the month
-
-            // Update the calendar month and year display
-            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September",
-                                "October", "November", "December"];
-            document.getElementById('calendar-month-year').innerText = `${monthNames[month]} ${year}`;
-
-            let date = 1;
-            for (let i = 0; i < 6; i++) { // 6 rows (weeks)
-                const row = document.createElement('tr');
-                for (let j = 0; j < 7; j++) { // 7 columns (days)
-                    const cell = document.createElement('td');
-                    if (i === 0 && j < firstDay) {
-                        cell.innerHTML = ''; // Empty cells before the first day
-                    } else if (date > daysInMonth) {
-                        break; // Exit when exceeding days in the month
-                    } else {
-                        let day = date; // Capture the current date
-                        cell.innerHTML = day;
-                        const currentDate = new Date(year, month, day);
-
-                        // Mark today's date
-                        const today = new Date();
-                        if (currentDate.toDateString() === today.toDateString()) {
-                            cell.classList.add('today');
-                        }
-
-                        // Only add click event for valid dates
-                        if (isValidDate(year, month + 1, day)) {
-                            cell.onclick = function () {
-                                openPreviewModal(day, month + 1, year); // Pass adjusted month
-                            };
-
-                            // Add appointment markers
-                            fetchAppointmentMarkers(day, month + 1, year, cell);
-                        }
-
-                        row.appendChild(cell);
-                        date++;
+        <script>
+            $(document).ready(function () {
+                // Initialize DataTables for appointment tables
+                $('#upcoming-appointments-table').DataTable({
+                    "paging": true,
+                    "searching": true,
+                    "ordering": true,
+                    "info": true,
+                    "autoWidth": false,
+                    "responsive": true,
+                    "language": {
+                        "emptyTable": "No upcoming appointments available"
                     }
-                }
-                calendarBody.appendChild(row);
-            }
-        }
-
-        function isValidDate(year, month, day) {
-            const date = new Date(year, month - 1, day); // JS months are 0-indexed
-            return date.getFullYear() === year && date.getMonth() + 1 === month && date.getDate() === day;
-        }
-
-        function fetchAppointmentMarkers(day, month, year, cell) {
-            const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-
-            fetch(`/student/appointments/by-date?date=${formattedDate}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.appointments && data.appointments.length > 0) {
-                    // Check appointment status to determine color
-                    const appointmentStatus = data.appointments[0].status.toLowerCase();
-                    if (appointmentStatus === 'pending') {
-                        cell.style.backgroundColor = '#ffcc00'; // Yellow for pending
-                    } else if (appointmentStatus === 'confirmed') {
-                        cell.style.backgroundColor = '#ff4d4d'; // Red for confirmed
-                    } else {
-                        cell.style.backgroundColor = '#66ff66'; // Green for others
-                    }
-                } else {
-                    // If no appointments, mark the cell as green
-                    cell.style.backgroundColor = '#66ff66'; // Green for free
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching appointment markers:', error);
-            });
-        }
-
-        const getAppointmentsByDateUrl = `{{ route('student.appointments.by-date') }}`;
-
-        function openPreviewModal(day, month, year) {
-            const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-
-            document.getElementById('preview-date').innerText = formattedDate;
-
-            fetch(`${getAppointmentsByDateUrl}?date=${formattedDate}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                const appointmentsList = document.getElementById('appointments-list');
-                appointmentsList.innerHTML = ''; // Clear previous appointments
-
-                if (data.appointments && data.appointments.length > 0) {
-                    data.appointments.forEach(appointment => {
-                        // Convert appointment_time to 12-hour AM/PM format
-                        const timeString = appointment.appointment_time;
-                        const timeFormatted = formatTimeTo12Hour(timeString);
-
-                        const li = document.createElement('li');
-                        li.innerHTML = `<p><span>${timeFormatted}</span> - ${appointment.appointment_type} with Dr. ${appointment.doctor_name}</p>`;
-                        appointmentsList.appendChild(li);
-                    });
-                } else {
-                    const li = document.createElement('li');
-                    li.innerText = 'No appointments for this day.';
-                    appointmentsList.appendChild(li);
-                }
-
-                const modal = document.getElementById('preview-modal');
-                modal.style.display = 'flex'; // Show the modal
-            })
-            .catch(error => {
-                console.error('Error fetching appointments:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Failed to load appointments.',
-                    timer: 3000,
-                    showConfirmButton: false
                 });
+
+                $('#appointment-history-table').DataTable({
+                    "paging": true,
+                    "searching": true,
+                    "ordering": true,
+                    "info": true,
+                    "autoWidth": false,
+                    "responsive": true,
+                    "language": {
+                        "emptyTable": "No appointment history available"
+                    }
+                });
+
+                // Initialize Calendar
+                renderCalendar(currentMonth, currentYear);
             });
-        }
 
-        // Helper function to format time to 12-hour AM/PM
-        function formatTimeTo12Hour(timeString) {
-            // Assume timeString is in "HH:mm:ss" or "HH:mm" format
-            const [hoursStr, minutesStr] = timeString.split(':');
-            let hours = parseInt(hoursStr, 10);
-            const minutes = minutesStr;
-            const ampm = hours >= 12 ? 'PM' : 'AM';
+            let currentMonth = new Date().getMonth();
+            let currentYear = new Date().getFullYear();
 
-            hours = hours % 12 || 12; // Convert '0' to '12' for 12 AM
-            return `${hours}:${minutes} ${ampm}`;
-        }
-
-        function closePreviewModal() {
-            const modal = document.getElementById('preview-modal');
-            modal.style.display = 'none';
-        }
-
-        document.addEventListener('keydown', function(event) {
-            if (event.key === "Escape") {
-                closePreviewModal();
+            function changeMonth(delta) {
+                currentMonth += delta;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                } else if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+                renderCalendar(currentMonth, currentYear);
             }
-        });
 
-    </script>
+            function renderCalendar(month, year) {
+                const calendarBody = document.getElementById('calendar-body');
+                calendarBody.innerHTML = ''; // Clear previous calendar
 
+                const firstDay = new Date(year, month, 1).getDay(); // Get the first day of the month
+                const daysInMonth = new Date(year, month + 1, 0).getDate(); // Number of days in the month
+
+                // Update the calendar month and year display
+                const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September",
+                                    "October", "November", "December"];
+                document.getElementById('calendar-month-year').innerText = `${monthNames[month]} ${year}`;
+
+                let date = 1;
+                for (let i = 0; i < 6; i++) { // 6 rows (weeks)
+                    const row = document.createElement('tr');
+                    for (let j = 0; j < 7; j++) { // 7 columns (days)
+                        const cell = document.createElement('td');
+                        if (i === 0 && j < firstDay) {
+                            cell.innerHTML = ''; // Empty cells before the first day
+                        } else if (date > daysInMonth) {
+                            cell.innerHTML = ''; // Empty cells after the last day
+                        } else {
+                            let day = date; // Capture the current date
+                            cell.innerHTML = day;
+                            const currentDate = new Date(year, month, day);
+
+                            // Mark today's date
+                            const today = new Date();
+                            if (currentDate.toDateString() === today.toDateString()) {
+                                cell.classList.add('today');
+                            }
+
+                            // Only add click event for valid dates
+                            if (isValidDate(year, month + 1, day)) {
+                                cell.onclick = function () {
+                                    openPreviewModal(day, month + 1, year); // Pass adjusted month
+                                };
+
+                                // Add appointment markers
+                                fetchAppointmentMarkers(day, month + 1, year, cell);
+                            }
+
+                            row.appendChild(cell);
+                            date++;
+                        }
+                    }
+                    calendarBody.appendChild(row);
+                }
+            }
+
+            function isValidDate(year, month, day) {
+                const date = new Date(year, month - 1, day); // JS months are 0-indexed
+                return date.getFullYear() === year && date.getMonth() + 1 === month && date.getDate() === day;
+            }
+
+            function fetchAppointmentMarkers(day, month, year, cell) {
+                const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const getAppointmentsByDateUrl = `{{ route('student.appointments.by-date') }}`;
+
+                fetch(`${getAppointmentsByDateUrl}?date=${formattedDate}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.appointments && data.appointments.length > 0) {
+                        // Check appointment statuses to determine color
+                        const statuses = data.appointments.map(app => app.status.toLowerCase());
+                        if (statuses.includes('confirmed')) {
+                            cell.style.backgroundColor = '#ff4d4d'; // Red for confirmed
+                        } else if (statuses.includes('pending')) {
+                            cell.style.backgroundColor = '#ffcc00'; // Yellow for pending
+                        } else {
+                            cell.style.backgroundColor = '#66ff66'; // Green for others
+                        }
+
+                        // Add an appointment marker
+                        const marker = document.createElement('span');
+                        marker.classList.add('appointment-marker');
+                        cell.appendChild(marker);
+                    } else {
+                        // If no appointments, mark the cell as green
+                        cell.style.backgroundColor = '#66ff66'; // Green for free
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching appointment markers:', error);
+                });
+            }
+
+            const getAppointmentsByDateUrl = `{{ route('student.appointments.by-date') }}`;
+
+            function openPreviewModal(day, month, year) {
+                const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+                document.getElementById('preview-date').innerText = formattedDate;
+
+                fetch(`${getAppointmentsByDateUrl}?date=${formattedDate}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const appointmentsList = document.getElementById('appointments-list');
+                    appointmentsList.innerHTML = ''; // Clear previous appointments
+
+                    if (data.appointments && data.appointments.length > 0) {
+                        data.appointments.forEach(appointment => {
+                            // Convert appointment_time to 12-hour AM/PM format
+                            const timeString = appointment.appointment_time;
+                            const timeFormatted = formatTimeTo12Hour(timeString);
+
+                            const li = document.createElement('li');
+                            li.innerHTML = `<p><span>${timeFormatted}</span> - ${appointment.appointment_type} for ${appointment.child_name} with Dr. ${appointment.doctor_name}</p>`;
+                            appointmentsList.appendChild(li);
+                        });
+                    } else {
+                        const li = document.createElement('li');
+                        li.innerText = 'No appointments for this day.';
+                        appointmentsList.appendChild(li);
+                    }
+
+                    const modal = document.getElementById('preview-modal');
+                    modal.style.display = 'flex'; // Show the modal
+                })
+                .catch(error => {
+                    console.error('Error fetching appointments:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to load appointments.',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                });
+            }
+
+            // Helper function to format time to 12-hour AM/PM
+            function formatTimeTo12Hour(timeString) {
+                // Assume timeString is in "HH:mm:ss" or "HH:mm" format
+                const [hoursStr, minutesStr] = timeString.split(':');
+                let hours = parseInt(hoursStr, 10);
+                const minutes = minutesStr;
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+
+                hours = hours % 12 || 12; // Convert '0' to '12' for 12 AM
+                return `${hours}:${minutes} ${ampm}`;
+            }
+
+            function closePreviewModal() {
+                const modal = document.getElementById('preview-modal');
+                modal.style.display = 'none';
+            }
+
+            document.addEventListener('keydown', function(event) {
+                if (event.key === "Escape") {
+                    closePreviewModal();
+                }
+            });
+
+            // Close modal when clicking outside the modal content
+            window.onclick = function(event) {
+                const modal = document.getElementById('preview-modal');
+                if (event.target == modal) {
+                    closePreviewModal();
+                }
+            }
+        </script>
 </x-app-layout>

@@ -11,7 +11,7 @@ $(document).ready(function () {
     // -------------------------------
     // 2. Initialize Variables
     // -------------------------------
-    let dentalRecordId = $('#dental-record-id').val(); // Get the dental_record_id from the hidden input
+    let dentalRecordId = $('#dental-record-id').val(); // Get the dental_record_id from the main hidden input
     let teethStatuses = {}; // This will store the status and approval of each tooth
 
     const teethNumbers = [
@@ -93,7 +93,7 @@ $(document).ready(function () {
             },
             success: function(response) {
                 if (response.dental_record_id) {
-                    // Set the dental_record_id in the hidden input
+                    // Set the dental_record_id in the main hidden input
                     dentalRecordId = response.dental_record_id;
                     $('#dental-record-id').val(dentalRecordId);
 
@@ -151,18 +151,29 @@ $(document).ready(function () {
             },
             success: function (response) {
                 let status = response.status || 'Healthy'; // Default to Healthy if not found
-                let isApproved = response.is_approved !== undefined ? response.is_approved : true; // Default to true for new entries
-
+                let isApproved = typeof response.is_approved === 'boolean' ? response.is_approved : true;
+                let isNew = typeof response.is_new === 'boolean' ? response.is_new : true;
+            
                 // Store the status and approval in teethStatuses
                 teethStatuses[toothNumber] = {
                     status: status,
-                    isApproved: isApproved
+                    isApproved: isApproved,
+                    isNew: isNew
                 };
-
+            
                 let fillColor = getColorBasedOnStatus(status);
                 $(parentClass).css('fill', fillColor);
                 console.log(`Initial color set for Tooth ${toothNumber}: ${status}`);
-
+            
+                // Show or hide the Upload Dental Pictures section based on isNew
+                if (isNew) { 
+                    // First submission: hide upload section
+                    $(parentClass).data('is-first-submission', true); // Attach data attribute
+                } else {
+                    // Update submission: show upload section
+                    $(parentClass).data('is-first-submission', false); // Attach data attribute
+                }
+            
                 // Modify the condition to allow interactions if there's no pending update
                 if (!isApproved) {
                     $(parentClass)
@@ -178,11 +189,20 @@ $(document).ready(function () {
                         .removeAttr('title');
                     console.log(`Tooth ${toothNumber} is active and can be updated.`);
                 }
+            
+                // Attach or reattach event handlers based on submission type
+                attachToothEventHandlers(toothNumber, isNew);
             },
+            
             error: function (xhr) {
                 console.error(`Error fetching status for Tooth ${toothNumber}:`, xhr.responseText);
             }
         });
+    }
+
+    // Function to attach event handlers to each tooth
+    function attachToothEventHandlers(toothNumber, isFirstSubmission) {
+        var parentClass = `.tooth-${toothNumber}`;
 
         // Remove any existing event handlers to prevent duplicates
         $(parentClass).off('mouseover mouseleave click');
@@ -237,16 +257,38 @@ $(document).ready(function () {
                 },
                 success: function (response) {
                     let status = response.status || 'Healthy'; // Default status if none is found
-                    let isApproved = response.is_approved || false; // true or false
+                    let isApproved = typeof response.is_approved === 'boolean' ? response.is_approved : true;
+                    let isNew = typeof response.is_new === 'boolean' ? response.is_new : true;
+                    
 
-                    // Set the value of #modal-is-first-submission based on is_approved
-                    $('#modal-is-first-submission').val(isApproved ? 'true' : 'false'); // true if approved, false if pending
+                    console.log(`Tooth ${toothNumberExtracted} - Status: ${status}, Is Approved: ${isApproved}, Is New: ${isNew}`);
+
+                    // Show or hide the Upload Dental Pictures section based on isNew
+                    if (isNew) { 
+                        // First submission: hide upload section
+                        $('#upload-images-section').hide();
+                        $('#upload-images-section label[for="modal-upload-images"]').html('Upload Dental Pictures:');
+                        $('#modal-upload-images').removeAttr('title');
+
+                        console.log('Upload Images Section is now hidden');
+                    } else {
+                        // Update submission: show upload section
+                        $('#upload-images-section').show();
+
+                        // Add an asterisk to indicate required fields
+                        $('#upload-images-section label[for="modal-upload-images"]').html('Upload Dental Pictures:<span style="color: red;"> *</span>');
+                        $('#modal-upload-images').attr('title', 'Please upload images as proof for the update.');
+
+                        console.log('Upload Images Section is now visible');
+                    }
+
+                    // Set the value of #modal-is-first-submission
+                    $('#modal-is-first-submission').val(isNew ? 'true' : 'false');
 
                     // Show modal with the correct information
-                    $('#modal-tooth').val('Tooth ' + toothNumberExtracted);
+                    $('#modal-tooth').val('Tooth ' + toothNumberExtracted + ': ' + description);
                     $('#modal-status').val(status);
                     $('#modal-notes').val(description);
-                    // $('#modal-svg-path').val(svgPath); // Already set above
 
                     // Show modal with animation
                     $('#previewModal').css({ 'display': 'flex', 'opacity': 0 }).animate({ 'opacity': 1 }, 300);
@@ -413,10 +455,9 @@ $(document).ready(function () {
         }
 
         // Capture values from the form
-        var toothNumber = $('#modal-tooth').val().split(' ')[1]; // Extract the tooth number
+        var toothNumber = parseInt($('#modal-tooth').val().split(' ')[1], 10); // Convert to integer
         var status = $('#modal-status').val();
         var notes = $('#modal-notes').val();
-        var updateImages = $('#modal-upload-images')[0].files; // Get selected images
         var isFirstSubmission = $('#modal-is-first-submission').val() === 'true'; // Check if this is a first submission
 
         // Debugging logs to check variables
@@ -424,18 +465,22 @@ $(document).ready(function () {
         console.log(`Before submission - isFirstSubmission: ${isFirstSubmission}`);
         console.log(`dentalRecordId: ${dentalRecordId}, toothNumber: ${toothNumber}`);
         console.log(`status: ${status}, notes: ${notes}`);
-        console.log(`updateImages length: ${updateImages.length}`);
         console.log(`SVG Path: ${$('#modal-svg-path').val()}`); // Log the svg_path
 
+        var uploadImages = $('#modal-upload-images');
+        console.log('uploadImages length:', uploadImages.length);
+        var updateImages = uploadImages[0]?.files; // Optional chaining to prevent errors
+        console.log(`Number of files selected: ${updateImages ? updateImages.length : '0'}`);
+
         // Validation: First submission does not require images, but subsequent submissions do
-        if (!isFirstSubmission && updateImages.length === 0) {
+        if (!isFirstSubmission && (!updateImages || updateImages.length === 0)) {
             console.log('Image upload required for update but none provided.');
 
             // Show error message and stop form submission
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'You must upload images for the second submission.',
+                text: 'You must upload images for the Proof.',
                 timer: 3000,
                 showConfirmButton: false
             });
@@ -456,8 +501,8 @@ $(document).ready(function () {
         formData.append('notes', notes);
         formData.append('svg_path', $('#modal-svg-path').val()); // Include svg_path
 
-        // Append image files to FormData
-        if (updateImages.length > 0) {
+        // Append image files to FormData if not first submission
+        if (!isFirstSubmission && updateImages && updateImages.length > 0) {
             console.log(`Appending ${updateImages.length} images.`);
             for (let i = 0; i < updateImages.length; i++) {
                 formData.append('update_images[]', updateImages[i]);
@@ -489,7 +534,8 @@ $(document).ready(function () {
                     // Update the teethStatuses to reflect the pending update
                     teethStatuses[toothNumber] = {
                         status: status,
-                        isApproved: false
+                        isApproved: false,
+                        isNew: false
                     };
 
                     // Disable further interactions for this tooth
@@ -515,8 +561,13 @@ $(document).ready(function () {
                     // Update the teethStatuses to reflect the approved status
                     teethStatuses[toothNumber] = {
                         status: status,
-                        isApproved: true
+                        isApproved: true,
+                        isNew: false
                     };
+
+                    // Update the fill color of the tooth SVG based on the new status
+                    let fillColor = getColorBasedOnStatus(status);
+                    $(`.tooth-${toothNumber}`).css('fill', fillColor);
 
                     // Keep the tooth enabled since it's approved
                     $(`.tooth-${toothNumber}`)
@@ -558,6 +609,7 @@ $(document).ready(function () {
         });
     });
 
+
     // -------------------------------------------------
     // 11. Event Listener: Handle Image Uploads and Previews
     // -------------------------------------------------
@@ -598,7 +650,7 @@ $(document).ready(function () {
         Swal.fire({
             title: 'Image Preview',
             imageUrl: src,
-            imageAlt: 'Preview Image',
+            imageAlt: 'Dental Picture',
             showConfirmButton: false,
             showCloseButton: true,
         });
@@ -640,6 +692,11 @@ $(document).ready(function () {
             return;
         }
     
+        // Destroy existing DataTable instance if exists to prevent re-initialization errors
+        if ($.fn.DataTable.isDataTable('#dental-examination-history-table')) {
+            $('#dental-examination-history-table').DataTable().clear().destroy();
+        }
+
         data.forEach(exam => {
             let examHtml = `
                 <tr>
@@ -647,7 +704,7 @@ $(document).ready(function () {
                     <td><strong>Dentist Name:</strong> ${exam.dentist_name || 'N/A'}</td>
                 </tr>
             `;
-    
+
             // Define the fields to display
             const fields = [
                 { key: 'findings', label: 'Findings' },
@@ -670,9 +727,8 @@ $(document).ready(function () {
                 { key: 'medical_clearance', label: 'Medical Clearance' },
                 { key: 'other_recommendation', label: 'Other Recommendation' },
             ];
-    
+
             let fieldCount = 0; // To check if any fields are displayed
-    
             fields.forEach(field => {
                 let value = exam[field.key];
                 if (value !== null && value !== '' && value !== 0) {
@@ -681,6 +737,13 @@ $(document).ready(function () {
                     if (typeof value === 'number' && (value === 0 || value === 1)) {
                         value = value === 1 ? 'Yes' : 'No';
                     }
+                    // If the field is an array (e.g., tooth numbers), map to tooth names
+                    else if (Array.isArray(value)) {
+                        value = value.map(toothNum => {
+                            const toothName = teethData[toothNum.toString()] || 'Unknown Tooth';
+                            return `${toothNum}: ${toothName}`;
+                        }).join(', ');
+                    }
                     examHtml += `
                         <tr>
                             <td colspan="3"><strong>${field.label}:</strong> ${value}</td>
@@ -688,7 +751,7 @@ $(document).ready(function () {
                     `;
                 }
             });
-    
+
             if (fieldCount === 0) {
                 examHtml += `
                     <tr>
@@ -696,15 +759,29 @@ $(document).ready(function () {
                     </tr>
                 `;
             }
-    
+
             // Add a separator row
             examHtml += `
                 <tr>
                     <td colspan="3"><hr></td>
                 </tr>
             `;
-    
+
             tableBody.append(examHtml);
+        });
+
+        // Initialize DataTables on Dental Examinations History Table
+
+        // Attach click event to dental picture previews
+        $('.dental-picture-preview').off('click').on('click', function () {
+            const src = $(this).attr('src');
+            Swal.fire({
+                title: 'Dental Picture Preview',
+                imageUrl: src,
+                imageAlt: 'Dental Picture',
+                showConfirmButton: false,
+                showCloseButton: true,
+            });
         });
     }
     
@@ -746,33 +823,39 @@ $(document).ready(function () {
             return;
         }
     
+        // Destroy existing DataTable instance if exists to prevent re-initialization errors
+        if ($.fn.DataTable.isDataTable('#tooth-history-table')) {
+            $('#tooth-history-table').DataTable().clear().destroy();
+        }
+
         data.forEach(tooth => {
             console.log('Processing tooth:', tooth); // Debugging
             const toothNumber = tooth.tooth_number ? tooth.tooth_number : 'N/A';
+            const toothName = teethData[toothNumber] ? teethData[toothNumber] : 'Unknown Tooth';
             const status = tooth.status ? tooth.status : 'N/A';
             const notes = tooth.notes ? tooth.notes : 'N/A';
             const updatedAt = tooth.updated_at ? new Date(tooth.updated_at).toLocaleDateString() : 'N/A';
     
             let dentalPicturesHtml = '';
-    
+
             if (tooth.dental_pictures && tooth.dental_pictures.length > 0) {
                 dentalPicturesHtml = '<div class="dental-pictures">';
-    
+
                 tooth.dental_pictures.forEach(picturePath => {
                     const pictureUrl = `/storage/${picturePath}`; // Ensure this path is correct
                     dentalPicturesHtml += `
-                        <img src="${pictureUrl}" alt="Dental Picture" class="dental-picture-preview">
+                        <img src="${pictureUrl}" alt="Dental Picture" class="dental-picture-preview" style="max-width: 100px; margin-right: 10px;">
                     `;
                 });
-    
+
                 dentalPicturesHtml += '</div>';
             } else {
                 dentalPicturesHtml = 'None';
             }
-    
+
             tableBody.append(`
                 <tr>
-                    <td>Tooth ${toothNumber}</td>
+                    <td>Tooth ${toothNumber}: ${toothName}</td>
                     <td>${status}</td>
                     <td>${notes}</td>
                     <td>${dentalPicturesHtml}</td>
@@ -780,7 +863,17 @@ $(document).ready(function () {
                 </tr>
             `);
         });
-    
+
+        // Initialize DataTables on Tooth History Table
+        $('#tooth-history-table').DataTable({
+            "paging": true,
+            "searching": true,
+            "ordering": true,
+            "info": true,
+            "autoWidth": false,
+            "responsive": true
+        });
+
         // Attach click event to dental picture previews
         $('.dental-picture-preview').off('click').on('click', function () {
             const src = $(this).attr('src');
@@ -809,4 +902,12 @@ $(document).ready(function () {
     // -------------------------------------------------
     // Automatically initialize dental record on page load
     initializeDentalRecord();
+
+    // -------------------------------------------------
+    // 18. Initialize DataTables for Static Tables (Optional)
+    // -------------------------------------------------
+    // If you have any static tables that don't get populated via AJAX, initialize DataTables here
+ 
+
+
 });

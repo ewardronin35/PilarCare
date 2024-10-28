@@ -20,7 +20,7 @@ class DentalRecord extends Model
     }
     public function user()
     {
-        return $this->morphTo(null, 'user_type', 'id_number', 'id_number');
+        return $this->belongsTo(User::class, 'id_number', 'id_number');
     }
     
 
@@ -28,4 +28,5 @@ class DentalRecord extends Model
     {
         return $this->hasMany(DentalExamination::class, 'dental_record_id', 'dental_record_id');
     }
+    
 }

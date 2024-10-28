@@ -1,13 +1,16 @@
-<x-app-layout>
+<x-app-layout :pageTitle="'Dental Approval'">   
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    
+<head>
     <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+
     <!-- SweetAlert2 for Alerts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+</head>
     <style>
         /* General Styling */
         body {
@@ -87,8 +90,6 @@
 
         /* Table Container */
         .table-container {
-            max-height: 500px; /* Adjust as needed */
-            overflow-y: auto;
             border: 1px solid #ddd;
             border-radius: 10px;
             padding: 10px;
@@ -327,82 +328,69 @@
         @endif
 
         <!-- Search Bar -->
-        <div class="search-bar">
-            <input type="text" id="search-input" placeholder="Search by patient name or tooth number..." />
-            <button onclick="searchRecords()">Search</button>
-        </div>
-
+       
+<h2> Teeth Approvals</h2>
         <!-- Tab Navigation -->
-        <div class="tabs">
-            <button class="tab-btn active" data-role="students" onclick="switchTab('students')">
-                <i class="fas fa-user-graduate"></i> Students
-            </button>
-            <button class="tab-btn" data-role="teachers" onclick="switchTab('teachers')">
-                <i class="fas fa-chalkboard-teacher"></i> Teachers
-            </button>
-            <button class="tab-btn" data-role="nurses" onclick="switchTab('nurses')">
-                <i class="fas fa-stethoscope"></i> Nurses
-            </button>
-            <button class="tab-btn" data-role="doctors" onclick="switchTab('doctors')">
-                <i class="fas fa-user-md"></i> Doctors
-            </button>
-            <button class="tab-btn" data-role="staff" onclick="switchTab('staff')">
-                <i class="fas fa-users-cog"></i> Staff
-            </button>
-            <button class="tab-btn" data-role="parents" onclick="switchTab('parents')">
-                <i class="fas fa-user-friends"></i> Parents
-            </button>
-        </div>
+  
 
         <!-- Dental Records Table -->
         <div class="table-container">
-            <table id="dental-records-table">
-                <thead>
-                    <tr>
-                        <th>Patient Name</th>
-                        <th>User Type</th>
-                        <th>Tooth Number</th>
-                        <th>Status</th>
-                        <th>Notes</th>
-                        <th>Teeth Images</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($pendingDentalRecords as $dentalRecord)
-                        <tr>
-                            <td>{{ $dentalRecord->dentalRecord->patient_name ?? 'N/A' }}</td>
-                            <td>{{ ucfirst($dentalRecord->dentalRecord->user_type) ?? 'N/A' }}</td>
-                            <td>{{ $dentalRecord->tooth_number }}</td>
-                            <td>{{ ucfirst($dentalRecord->status) }}</td>
-                            <td>{{ $dentalRecord->notes ?? 'N/A' }}</td>
-                            <td>
-                                @if($dentalRecord->dental_pictures)
-                                    <div class="image-previews">
-                                        @foreach($dentalRecord->dental_pictures as $picture)
-                                            <img src="{{ asset('storage/' . $picture) }}" alt="Tooth Image" onclick="openImageModal('{{ asset('storage/' . $picture) }}')" />
-                                        @endforeach
-                                    </div>
-                                @else
-                                    No images
-                                @endif
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-success" onclick="approveRecord({{ $dentalRecord->id }})">
-                                    <i class="fas fa-check"></i> Approve
-                                </button>
-                                <button type="button" class="btn btn-danger" onclick="rejectRecord({{ $dentalRecord->id }})">
-                                    <i class="fas fa-times"></i> Reject
-                                </button>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" style="text-align: center; color: #888;">No pending dental records available.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+      <!-- Table Headers -->
+<table id="dental-records-table">
+    <thead>
+        <tr>
+            <th>Patient Name</th>
+            <th>User Type</th>
+            <th>Tooth Number</th>
+            <th>Status</th>
+            <th>Notes</th>
+            <th>Teeth Images</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @forelse($teethData as $tooth)
+            <tr>
+                <td>{{ $tooth['patient_name'] }}</td>
+                <td>{{ $tooth['user_type'] }}</td>
+                <td>{{ $tooth['tooth_number'] }}</td> <!-- Corrected -->
+                <td>{{ $tooth['status'] }}</td>
+                <td>{{ $tooth['notes'] }}</td>
+                <td>
+    @php
+        // Ensure dental_pictures is an array
+        $pictures = is_array($tooth['dental_pictures']) ? $tooth['dental_pictures'] : json_decode($tooth['dental_pictures'], true) ?? [];
+    @endphp
+
+    @if(count($pictures) > 0)
+        <div class="image-previews">
+        @foreach($pictures as $picture)
+    <img src="{{ $picture }}" alt="Tooth Image" onclick="openImageModal('{{ $picture }}')" />
+@endforeach
+
+        </div>
+    @else
+        No images
+    @endif
+</td>
+
+                <td>
+                    <button type="button" class="btn btn-success" onclick="approveRecord({{ $tooth['id'] }})">
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="rejectRecord({{ $tooth['id'] }})">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                </td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="7" style="text-align: center; color: #888;">No pending dental records available.</td>
+            </tr>
+        @endforelse
+    </tbody>
+</table>
+
         </div>
     </div>
 
@@ -422,6 +410,95 @@
     <script>
         // CSRF Token Setup
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+
+
+        // Fetch dental records based on selected role
+        
+    function fetchDentalRecords(role) {
+        const tableBody = document.querySelector('#dental-records-table tbody');
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #555;">Loading...</td></tr>';
+        showSpinner();
+
+        fetch(`/admin/dental-records?role=${encodeURIComponent(role)}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken
+            }
+        })
+        .then(response => {
+            hideSpinner();
+            if (!response.ok) {
+                throw new Error(`Server responded with status ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            tableBody.innerHTML = ''; // Clear table
+
+            if (data.length > 0) {
+                data.forEach(tooth => {
+                    let imagesHtml = '';
+                    if (tooth.dental_pictures && tooth.dental_pictures.length > 0) {
+                        imagesHtml = `<div class="image-previews">`;
+                        tooth.dental_pictures.forEach(picture => {
+                            imagesHtml += `<img src="${picture}" alt="Tooth Image" onclick="openImageModal('${picture}')" />`;
+                        });
+                        imagesHtml += `</div>`;
+                    } else {
+                        imagesHtml = 'No images';
+                    }
+
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td>${escapeHtml(tooth.patient_name || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.user_type || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.tooth_number || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.status || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.notes || 'N/A')}</td>
+                            <td>${imagesHtml}</td>
+                            <td>
+                                <button type="button" class="btn btn-success" onclick="approveRecord(${tooth.id})">
+                                    <i class="fas fa-check"></i> Approve
+                                </button>
+                                <button type="button" class="btn btn-danger" onclick="rejectRecord(${tooth.id})">
+                                    <i class="fas fa-times"></i> Reject
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #888;">No records found for this role.</td>
+                    </tr>
+                `;
+            }
+
+            // Initialize DataTable after a slight delay to stabilize DOM
+            setTimeout(() => {
+                $('#dental-records-table').DataTable({
+                    paging: true,
+                    searching: true,
+                    ordering: true,
+                    info: true,
+                    responsive: true,
+                    autoWidth: false,
+                    destroy: true // Ensures any previous instance is cleared
+                });
+            }, 200); // Adjust delay as needed
+        })
+        .catch(error => {
+            hideSpinner();
+            console.error('Error fetching dental records:', error);
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; color: #dc3545;">Failed to load dental records. Please try again later.</td>
+                </tr>
+            `;
+        });
+    }
 
         // Function to open image modal
         function openImageModal(src) {
@@ -542,110 +619,20 @@
         }
 
         // Function to switch tabs
-        function switchTab(role) {
-            // Remove 'active' class from all tab buttons
-            const tabButtons = document.querySelectorAll('.tab-btn');
-            tabButtons.forEach(button => button.classList.remove('active'));
-
-            // Add 'active' class to the clicked tab
-            const activeTab = document.querySelector(`.tab-btn[data-role="${role}"]`);
-            if (activeTab) {
-                activeTab.classList.add('active');
-            }
-
-            // Fetch dental records based on selected role
-            fetchDentalRecords(role, document.getElementById('search-input').value);
-        }
-
-        // Function to fetch dental records based on role and search query
-        function fetchDentalRecords(role, searchQuery = '') {
-            const tableBody = document.querySelector('#dental-records-table tbody');
-            tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #555;">Loading...</td></tr>';
-            showSpinner();
-
-            fetch(`/admin/dental-records?role=${encodeURIComponent(role)}&search=${encodeURIComponent(searchQuery)}`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': csrfToken
-                }
-            })
-            .then(response => {
-                hideSpinner();
-                if (!response.ok) {
-                    throw new Error(`Server responded with status ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                tableBody.innerHTML = '';
-
-                if (data.length > 0) {
-                    data.forEach(record => {
-                        let imagesHtml = '';
-                        if (record.dental_pictures && record.dental_pictures.length > 0) {
-                            imagesHtml = `<div class="image-previews">`;
-                            record.dental_pictures.forEach(picture => {
-                                imagesHtml += `<img src="${picture}" alt="Tooth Image" onclick="openImageModal('${picture}')" />`;
-                            });
-                            imagesHtml += `</div>`;
-                        } else {
-                            imagesHtml = 'No images';
-                        }
-
-                        tableBody.innerHTML += `
-                            <tr>
-                                <td>${escapeHtml(record.dentalRecord.patient_name || 'N/A')}</td>
-                                <td>${escapeHtml(record.dentalRecord.user_type ? record.dentalRecord.user_type.charAt(0).toUpperCase() + record.dentalRecord.user_type.slice(1) : 'N/A')}</td>
-                                <td>${escapeHtml(record.tooth_number)}</td>
-                                <td>${escapeHtml(record.status ? record.status.charAt(0).toUpperCase() + record.status.slice(1) : 'N/A')}</td>
-                                <td>${escapeHtml(record.notes || 'N/A')}</td>
-                                <td>${imagesHtml}</td>
-                                <td>
-                                    <button type="button" class="btn btn-success" onclick="approveRecord(${record.id})">
-                                        <i class="fas fa-check"></i> Approve
-                                    </button>
-                                    <button type="button" class="btn btn-danger" onclick="rejectRecord(${record.id})">
-                                        <i class="fas fa-times"></i> Reject
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                } else {
-                    tableBody.innerHTML = `
-                        <tr>
-                            <td colspan="7" style="text-align: center; color: #888;">No pending dental records found.</td>
-                        </tr>
-                    `;
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching dental records:', error);
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="7" style="text-align: center; color: #dc3545;">Failed to load dental records. Please try again later.</td>
-                    </tr>
-                `;
-            });
-        }
-
-        // Function to handle search
-        function searchRecords() {
-            const searchQuery = document.getElementById('search-input').value.trim();
-            const activeTab = document.querySelector('.tab-btn.active');
-            const role = activeTab ? activeTab.getAttribute('data-role') : 'students';
-            fetchDentalRecords(role, searchQuery);
-        }
+     
+      
 
         // Helper Function to Escape HTML (Prevent XSS)
         function escapeHtml(text) {
-            if (!text) return '';
-            return text.replace(/&/g, "&amp;")
-                       .replace(/</g, "&lt;")
-                       .replace(/>/g, "&gt;")
-                       .replace(/"/g, "&quot;")
-                       .replace(/'/g, "&#039;");
-        }
+    if (text === null || text === undefined) return '';
+    text = text.toString(); // Convert to string
+    return text.replace(/&/g, "&amp;")
+               .replace(/</g, "&lt;")
+               .replace(/>/g, "&gt;")
+               .replace(/"/g, "&quot;")
+               .replace(/'/g, "&#039;");
+}
+
 
         // Spinner Functions
         function showSpinner() {
@@ -658,9 +645,24 @@
 
         // Initialize with default tab and fetch records
         document.addEventListener('DOMContentLoaded', function () {
-            const defaultRole = 'students';
-            fetchDentalRecords(defaultRole);
-        });
+        // Load the default records and then initialize DataTables
+        const defaultRole = 'student';
+        fetchDentalRecords(defaultRole);
+        switchTab('student'); // Load 'student' records by default
+
+        // Initialize DataTables after table content is fully loaded
+        setTimeout(() => {
+            $('#dental-records-table').DataTable({
+                paging: true,
+                searching: true,
+                ordering: true,
+                info: true,
+                responsive: true,
+                autoWidth: false,
+                destroy: true // Ensures any previous instances are cleared
+            });
+        }, 500); // Add a delay to allow content to load; adjust as needed
+    });
 
         // Close modal when clicking outside of the modal content
         window.onclick = function(event) {
@@ -669,5 +671,76 @@
                 imageModal.style.display = 'none';
             }
         }
+        function refreshDentalRecords() {
+        const activeTab = document.querySelector('.tab-btn.active');
+        const role = activeTab ? activeTab.getAttribute('data-role') : 'student';
+        const searchQuery = document.getElementById('search-input').value.trim();
+
+        fetch(`/admin/dental-records?role=${encodeURIComponent(role)}&search=${encodeURIComponent(searchQuery)}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Server responded with status ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const tableBody = document.querySelector('#dental-records-table tbody');
+            tableBody.innerHTML = '';
+
+            if (data.length > 0) {
+                data.forEach(tooth => {
+                    let imagesHtml = '';
+                    if (tooth.dental_pictures && tooth.dental_pictures.length > 0) {
+                        imagesHtml = `<div class="image-previews">`;
+                        tooth.dental_pictures.forEach(picture => {
+                            imagesHtml += `<img src="${picture}" alt="Tooth Image" onclick="openImageModal('${picture}')"/>`;
+                        });
+                        imagesHtml += `</div>`;
+                    } else {
+                        imagesHtml = 'No images';
+                    }
+
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td>${escapeHtml(tooth.patient_name || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.user_type || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.tooth_number || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.status || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.notes || 'N/A')}</td>
+                            <td>${imagesHtml}</td>
+                            <td>
+                                <button type="button" class="btn btn-success" onclick="approveRecord(${tooth.id})">
+                                    <i class="fas fa-check"></i> Approve
+                                </button>
+                                <button type="button" class="btn btn-danger" onclick="rejectRecord(${tooth.id})">
+                                    <i class="fas fa-times"></i> Reject
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #888;">No pending dental records found.</td>
+                    </tr>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching dental records:', error);
+            // Optionally, display an error message to the user
+        });
+    }
+
+    // Set an interval to refresh dental records every 30 seconds
+    setInterval(refreshDentalRecords, 30000); // 30000 milliseconds = 30 seconds
+
+
     </script>
 </x-app-layout>

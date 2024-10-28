@@ -17,10 +17,14 @@ class Teeth extends Model
         'dental_pictures',
         'is_current',
         'is_approved',
+        'is_new',
         
         
     ];
     protected $casts = [
+        'is_approved' => 'boolean',
+        'is_current' => 'boolean',
+        'is_new' => 'boolean',
         'dental_pictures' => 'array',
     ];
 

@@ -1,15 +1,34 @@
-<x-app-layout>
+<x-app-layout :pageTitle="'Complaints'">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- SweetAlert2 for Alerts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Chart.js for Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
     <style>
+        /* Existing Styles */
+        body{
+            font-family: 'Poppins', sans-serif;
+        }
+
         .main-content {
             margin-top: 40px;
+            position: relative; /* To contain absolutely positioned elements */
         }
 
         .container {
             display: flex;
             font-family: 'Poppins', sans-serif;
             justify-content: space-between;
-            min-height: 100vh;
+            flex-wrap: wrap;
         }
 
         /* Styling for the Form */
@@ -18,8 +37,9 @@
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            width: 45%;
+            width: 48%;
             box-sizing: border-box;
+            margin-bottom: 20px;
         }
 
         .form-group {
@@ -31,16 +51,17 @@
 
         .form-group label {
             display: flex;
-    align-items: center;
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 5px;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
         }
+
         .form-group label i {
-    margin-right: 8px;
-    color: #007bff;
-    font-size: 18px;
-}
+            margin-right: 8px;
+            color: #007bff;
+            font-size: 18px;
+        }
 
         .form-group .input-wrapper {
             flex: 1;
@@ -86,16 +107,18 @@
             align-items: center;
             justify-content: space-between;
             margin-bottom: 20px;
+            position: relative; /* To contain absolute elements if any */
         }
+
         .search-input {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 15px;
-    border-radius: 25px;
-    border: 1px solid #ddd;
-    font-size: 16px;
-    transition: all 0.3s ease;
-}
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 25px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
 
         .search-container .input-wrapper {
             flex: 1;
@@ -107,10 +130,13 @@
             padding: 8px 15px;
             border: none;
             border-radius: 50px;
-            margin-right: 250px;
+            margin-right: 300px;
             margin-bottom: 20px;
             cursor: pointer;
             font-size: 14px;
+            right: 0;
+            top: 0;
+            height: 100%;
         }
 
         .search-container button:hover {
@@ -125,8 +151,8 @@
             border-radius: 10px;
             border: 1px solid #ddd;
             padding: 20px;
-            margin-top: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+            margin-bottom: 20px;
         }
 
         .complaints-table {
@@ -137,74 +163,143 @@
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
+
         .complaints-table th,
         .complaints-table td {
             padding: 15px;
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
+
         .complaints-table th {
             background-color: #f5f5f5;
             font-weight: bold;
             text-transform: uppercase;
         }
+
         .complaints-table tr:hover {
             background-color: #f1f1f1;
         }
-
 
         .complaints-table td {
             background-color: #fff;
         }
 
-        .preview-button {
+        .preview-button,
+        .pdf-button,
+        .download-button {
             background-color: #00d1ff;
             color: white;
             padding: 5px 10px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none; /* For anchor tags */
         }
 
-        .preview-button:hover {
+        .preview-button:hover,
+        .pdf-button:hover,
+        .download-button:hover {
             background-color: #00b8e6;
         }
 
+        .pdf-button[disabled],
+        .pdf-button[disabled]:hover,
+        .download-button[disabled],
+        .download-button[disabled]:hover {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
         /* Tabs */
-        .tabs {
+        .tabs.main-tabs {
             display: flex;
             border-bottom: 2px solid #ddd;
             margin-bottom: 20px;
             justify-content: space-around;
         }
 
-        .tab {
+        .tab.main-tab {
             padding: 10px 20px;
             cursor: pointer;
             transition: background-color 0.3s ease-in-out;
             font-weight: bold;
             font-size: 16px;
             text-align: center;
-            width: 100%;
+            flex: 1; /* Allow tabs to evenly distribute */
             background-color: #e0e0e0;
             border-radius: 10px 10px 0 0;
+            margin: 0 5px;
         }
 
-        .tab:hover {
+        .tab.main-tab:hover {
             background-color: #c9d1d9;
         }
 
-        .tab.active {
+        .tab.main-tab.active {
             background-color: #007bff;
             color: white;
         }
 
-        .tab-content {
-            display: none;
+        .tabs.inner-tabs {
+            display: flex;
+            border-bottom: 2px solid #ddd;
+            margin-bottom: 20px;
+            justify-content: space-around;
         }
 
-        .tab-content.active {
+        .tab.inner-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+            font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+            width: 25%;
+            background-color: #e0e0e0;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .tab.inner-tab:hover {
+            background-color: #c9d1d9;
+        }
+
+        .tab.inner-tab.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .main-tab-content,
+        .inner-tab-content {
+            display: none;
+
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            width: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none; /* Prevent interaction when not active */
+        }
+
+        .main-tab-content.active,
+        .inner-tab-content.active {
+            opacity: 1;
+            transform: translateX(0);
+            position: relative;
+            pointer-events: auto;
             display: block;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* Modal Styling */
@@ -227,6 +322,12 @@
             border: 1px solid #888;
             width: 60%;
             border-radius: 10px;
+            animation: slideDown 0.5s ease-in-out;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         .close {
@@ -243,96 +344,232 @@
             text-decoration: none;
             cursor: pointer;
         }
+
         .input-container {
-        position: relative;
-        width: 100%;
-        max-width: 400px;
-        margin-bottom: 20px;
-    }
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 20px;
+        }
 
-    /* Styling for the input field */
-    .input-container input {
-    width: 100%;
-    padding: 10px 15px;
-    border: 1px solid #ccc;
-    border-radius: 30px;
-    font-size: 14px;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+        /* Styling for the input field */
+        .input-container input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ccc;
+            border-radius: 30px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
 
-.input-container input:focus {
-    border-color: #007bff;
-    outline: none;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-}
+        .input-container input:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
 
-/* Placeholder styling */
-.input-container input::placeholder {
-    color: #aaa;
-    font-size: 14px;
-}
+        /* Placeholder styling */
+        .input-container input::placeholder {
+            color: #aaa;
+            font-size: 14px;
+        }
 
-    /* Styling for the icon */
-    .input-container i {
-    position: absolute;
-    top: 50%;
-    left: 15px;
-    transform: translateY(-50%);
-    color: #007bff;
-    font-size: 18px;
-}
+        /* Styling for the icon */
+        .input-container i {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            transform: translateY(-50%);
+            color: #007bff;
+            font-size: 18px;
+        }
 
-.confine-status-wrapper {
-    margin-top: 15px;
-}
+        .confine-status-wrapper {
+            margin-top: 15px;
+        }
 
-.radio-group {
-    display: flex;
-    gap: 20px;
-    margin-top: 10px;
-}
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
 
-.radio-group label {
-    font-size: 14px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
+        .radio-group label {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
 
-.radio-group input[type="radio"] {
-    margin-right: 5px;
-}
+        .radio-group input[type="radio"] {
+            margin-right: 5px;
+        }
+
+        /* Generate Report Button Styling */
+        .generate-report-btn {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s, transform 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .generate-report-btn:hover {
+            background-color: #218838;
+            transform: scale(1.05);
+        }
+
+        .generate-report-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Spinner Overlay */
+        #spinner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #007bff;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .form-container {
+                width: 100%;
+            }
+
+            .form-group {
+                flex-direction: column;
+            }
+
+            .form-group label {
+                width: 100%;
+            }
+
+            .search-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-container button {
+                margin-right: 0;
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            .radio-group {
+                flex-direction: column;
+            }
+
+            .tabs.main-tabs,
+            .tabs.inner-tabs {
+                flex-direction: column;
+            }
+
+            .tab.main-tab,
+            .tab.inner-tab {
+                width: 100%;
+                text-align: center;
+            }
+
+            .generate-report-btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .spinner {
+                width: 40px;
+                height: 40px;
+                border-width: 6px;
+            }
+
+            .search-container button {
+                margin-right: 200px;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                flex-direction: row;
+            }
+
+            .form-container {
+                width: 48%;
+            }
+
+            .search-container button {
+                margin-right: 200px;
+            }
+        }
+
+        .complaint-list-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            margin-top: -25px;
+        }
     </style>
 
+
     <main class="main-content">
-        <!-- Tabs for switching between Add Complaint and Complaint List -->
-        <div class="tabs">
-            <div class="tab active" onclick="showTab('add-complaint')">
+        <!-- Main Tabs for Add Complaint and Complaint List -->
+        <div class="tabs main-tabs">
+            <div class="tab main-tab active" onclick="showTab('add-complaint', this)">
                 <i class="fas fa-plus-circle"></i> Add Complaint
             </div>
-            <div class="tab" onclick="showTab('complaint-table')">
+            <div class="tab main-tab" onclick="showTab('complaint-table', this)">
                 <i class="fas fa-list-alt"></i> Complaint List
             </div>
+      
+
+
         </div>
 
-        <!-- Add Complaint Form Tab Content -->
-        <div id="add-complaint" class="tab-content active">
+        <!-- Main Tab Contents -->
+        <div id="add-complaint" class="main-tab-content active">
             <div class="container">
                 <div class="form-container">
                     <h2>Add Complaint</h2>
 
                     <!-- Search section -->
                     <div class="search-container">
-                    <div class="form-group">
-    <label for="id_number">
-        <i class="fas fa-id-card"></i> ID Number
-    </label>
-    <div class="input-container">
-    <input type="text" id="id_number" name="id_number" placeholder="Enter ID Number" maxlength="7">
-    </div>
-</div>
+                        <div class="form-group">
+                            <label for="id_number">
+                                <i class="fas fa-id-card"></i> ID Number
+                            </label>
+                            <div class="input-container">
+                                <input type="text" id="id_number" name="id_number" placeholder="Enter ID Number" maxlength="7">
+                            </div>
+                        </div>
 
                         <button type="button" onclick="fetchPersonData()">
                             <i class="fas fa-search"></i> Search
@@ -389,30 +626,46 @@
                         <div class="form-group">
                             <div class="input-wrapper">
                                 <label for="medicine_given"><i class="fas fa-pills"></i> Medicine Given</label>
-                                <select id="medicine_given" name="medicine_given" required></select>
+                                <select id="medicine_given" name="medicine_given" required>
+                                    <option value="">Select Medicine</option>
+                                    <!-- Options will be populated via AJAX -->
+                                </select>
                             </div>
                         </div>
 
-                        <!-- Description of Sickness field -->
+                        <!-- Description of Sickness and Confine Status fields -->
                         <div class="form-group">
-    <div class="textarea-wrapper">
-        <label for="sickness_description"><i class="fas fa-notes-medical"></i> Description of Sickness</label>
-        <textarea id="sickness_description" name="sickness_description" rows="4" required></textarea>
-    </div>
+                            <div class="textarea-wrapper">
+                                <label for="sickness_description"><i class="fas fa-notes-medical"></i> Description of Sickness</label>
+                                <textarea id="sickness_description" name="sickness_description" rows="4" required></textarea>
+                            </div>
 
-    <!-- Confine Status -->
-    <div class="confine-status-wrapper">
-        <label for="confine_status"><i class="fas fa-bed"></i> Confine Status</label>
-        <div class="radio-group">
-            <label>
-                <input type="radio" name="confine_status" value="confined" required> Confined
-            </label>
-            <label>
-                <input type="radio" name="confine_status" value="not_confined" required> Not Confined
-            </label>
-        </div>
-    </div>
-</div>
+                            <!-- Confine Status -->
+                            <div class="confine-status-wrapper">
+                                <label for="confine_status"><i class="fas fa-bed"></i> Confine Status</label>
+                                <div class="radio-group">
+                                    <label>
+                                        <input type="radio" name="confine_status" value="confined" required> Confined
+                                    </label>
+                                    <label>
+                                        <input type="radio" name="confine_status" value="not_confined" required> Not Confined
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Go Home Status -->
+                        <div class="form-group">
+                            <label for="go_home"><i class="fas fa-home"></i> Go Home Status</label>
+                            <div class="radio-group">
+                                <label>
+                                    <input type="radio" name="go_home" value="yes" required> Yes
+                                </label>
+                                <label>
+                                    <input type="radio" name="go_home" value="no" required> No
+                                </label>
+                            </div>
+                        </div>
 
                         <!-- Submit button -->
                         <div class="form-group">
@@ -437,150 +690,202 @@
                             </div>
                         </div>
                     </div>
+                     <!-- Generate Report -->
+                     <div class="generate-report-container">
+                                <h2>Generate Complaint Statistics Report</h2>
+                                <form id="report-form" method="GET" action="{{ route('nurse.complaint.statisticsReport') }}">
+                                @csrf
+                                <div class="form-group">
+    <label for="report-period">Select Report Period</label>
+    <select id="report-period" name="report_period" required>
+        <option value="">-- Select Period --</option>
+        <option value="daily">Daily</option>
+        <option value="weekly">Weekly</option> <!-- Corrected -->
+        <option value="monthly">Monthly</option> <!-- Corrected -->
+    </select>
+</div>
+                                    <div class="form-group">
+                                        <label for="report-date">Select Date</label>
+                                        <input type="date" id="report-date" name="report_date" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <button type="button" class="generate-report-btn" onclick="generateComplaintsReport()">Generate Report</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-    <!-- Tabs for switching between Add Complaint and Complaint List -->
-    <div class="tabs">
-        <div class="tab active" onclick="showInnerTab('student-complaints')">Student Complaints</div>
-        <div class="tab" onclick="showInnerTab('staff-complaints')">Staff Complaints</div>
-        <div class="tab" onclick="showInnerTab('parent-complaints')">Parent Complaints</div>
-        <div class="tab" onclick="showInnerTab('teacher-complaints')">Teacher Complaints</div>
-    </div>
+        <!-- Main Complaint List Tab Content -->
+        <div id="complaint-table" class="main-tab-content">
+            <div class="complaint-list-container">
+                <!-- Inner Tabs for Complaint Roles -->
+                <div class="tabs inner-tabs">
+                    <div class="tab inner-tab active" onclick="showInnerTab('student-complaints', this)">Student Complaints</div>
+                    <div class="tab inner-tab" onclick="showInnerTab('staff-complaints', this)">Staff Complaints</div>
+                    <div class="tab inner-tab" onclick="showInnerTab('teacher-complaints', this)">Teacher Complaints</div>
+                </div>
 
-    <!-- Complaint List Tab Content -->
-    <div id="complaint-table" class="tab-content">
-        <!-- Student Complaints Tab -->
-        <div id="student-complaints" class="tab-content active">
-            <h2>Student Complaints</h2>
-            <!-- Search bar for student complaints -->
-            <input type="text" id="student-search" class="search-input" onkeyup="searchTable('student-search', 'student-complaints-table')" placeholder="Search for complaints..">
-            <div class="table-container">
-                <table class="complaints-table" id="student-complaints-table">
-                    <thead>
-                        <tr>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>Description of Sickness</th>
-                            <th>Pain Assessment</th>
-                            <th>Medicine Given</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($studentComplaints as $complaint)
-                            <tr>
-                                <td>{{ $complaint->first_name }}</td>
-                                <td>{{ $complaint->last_name }}</td>
-                                <td>{{ $complaint->sickness_description }}</td>
-                                <td>{{ $complaint->pain_assessment }}</td>
-                                <td>{{ $complaint->medicine_given }}</td>
-                                <td><button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button></td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                <!-- Inner Tab Contents -->
+                <!-- Student Complaints Tab -->
+                <div id="student-complaints" class="inner-tab-content active">
+                    <h2>Student Complaints</h2>
+                    <!-- Search bar for student complaints -->
+                    <div class="table-container">
+                        <table class="complaints-table" id="student-complaints-table">
+                            <thead>
+                                <tr>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Complaint Date</th> <!-- New Column -->
+                    <th>Confine Status</th> <!-- New Column -->
+                    <th>Go Home Status</th> <!-- New Column -->
+                                    <th>Description of Sickness</th>
+                                    <th>Pain Assessment</th>
+                                    <th>Medicine Given</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($studentComplaints as $complaint)
+                                    <tr id="complaint-row-{{ $complaint->id }}">
+                                        <td>{{ $complaint->first_name }}</td>
+                                        <td>{{ $complaint->last_name }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($complaint->created_at)->format('Y-m-d') }}</td> <!-- Updated -->
+                        <td>{{ ucfirst($complaint->confine_status) }}</td> <!-- Confine Status -->
+                        <td>{{ ucfirst($complaint->go_home ?? 'N/A') }}</td> <!-- Go Home Status -->
+                                        <td>{{ $complaint->sickness_description }}</td>
+                                        <td>{{ $complaint->pain_assessment }}</td>
+                                        <td>{{ $complaint->medicine_given }}</td>
+                                        <td>
+                                            <button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button>
+                                            @if($complaint->report_url)
+                                                <a href="{{ $complaint->report_url }}" target="_blank" class="pdf-button">
+                                                    <i class="fas fa-file-pdf"></i> View PDF
+                                                </a>
+                                             
+                                            @else
+                                                <button class="pdf-button" disabled title="PDF not available">
+                                                    <i class="fas fa-file-pdf"></i> View PDF
+                                                </button>
+                                               
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-        <!-- Staff Complaints Tab -->
-        <div id="staff-complaints" class="tab-content">
-            <h2>Staff Complaints</h2>
-            <input type="text" id="staff-search" class="search-input" onkeyup="searchTable('staff-search', 'staff-complaints-table')" placeholder="Search for complaints..">
-            <div class="table-container">
-                <table class="complaints-table" id="staff-complaints-table">
-                    <thead>
-                        <tr>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>Description of Sickness</th>
-                            <th>Pain Assessment</th>
-                            <th>Medicine Given</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($staffComplaints as $complaint)
-                            <tr>
-                                <td>{{ $complaint->first_name }}</td>
-                                <td>{{ $complaint->last_name }}</td>
-                                <td>{{ $complaint->sickness_description }}</td>
-                                <td>{{ $complaint->pain_assessment }}</td>
-                                <td>{{ $complaint->medicine_given }}</td>
-                                <td><button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button></td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                <!-- Staff Complaints Tab -->
+                <div id="staff-complaints" class="inner-tab-content">
+                    <h2>Staff Complaints</h2>
+                    <div class="table-container">
+                        <table class="complaints-table" id="staff-complaints-table">
+                            <thead>
+                                <tr>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Complaint Date</th> <!-- New Column -->
+                    <th>Confine Status</th> <!-- New Column -->
+                    <th>Go Home Status</th> <!-- New Column -->
+                                    <th>Description of Sickness</th>
+                                    <th>Pain Assessment</th>
+                                    <th>Medicine Given</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($staffComplaints as $complaint)
+                                    <tr id="complaint-row-{{ $complaint->id }}">
+                                        <td>{{ $complaint->first_name }}</td>
+                                        <td>{{ $complaint->last_name }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($complaint->created_at)->format('Y-m-d') }}</td> <!-- Updated -->
+                        <td>{{ ucfirst($complaint->confine_status) }}</td> <!-- Confine Status -->
+                        <td>{{ ucfirst($complaint->go_home ?? 'N/A') }}</td> <!-- Go Home Status -->
+                                        <td>{{ $complaint->sickness_description }}</td>
+                                        <td>{{ $complaint->pain_assessment }}</td>
+                                        <td>{{ $complaint->medicine_given }}</td>
+                                        <td>
+                                            <button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button>
+                                            @if($complaint->report_url)
+                                                <a href="{{ $complaint->report_url }}" target="_blank" class="pdf-button">
+                                                    <i class="fas fa-file-pdf"></i> View PDF
+                                                </a>
+                                             
+                                            @else
+                                                <button class="pdf-button" disabled title="PDF not available">
+                                                    <i class="fas fa-file-pdf"></i> View PDF
+                                                </button>
+                                              
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-        <!-- Parent Complaints Tab -->
-        <div id="parent-complaints" class="tab-content">
-            <h2>Parent Complaints</h2>
-            <input type="text" id="parent-search" class="search-input" onkeyup="searchTable('parent-search', 'parent-complaints-table')" placeholder="Search for complaints..">
-            <div class="table-container">
-                <table class="complaints-table" id="parent-complaints-table">
-                    <thead>
-                        <tr>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>Description of Sickness</th>
-                            <th>Pain Assessment</th>
-                            <th>Medicine Given</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($parentComplaints as $complaint)
-                            <tr>
-                                <td>{{ $complaint->first_name }}</td>
-                                <td>{{ $complaint->last_name }}</td>
-                                <td>{{ $complaint->sickness_description }}</td>
-                                <td>{{ $complaint->pain_assessment }}</td>
-                                <td>{{ $complaint->medicine_given }}</td>
-                                <td><button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button></td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Teacher Complaints Tab -->
-        <div id="teacher-complaints" class="tab-content">
-            <h2>Teacher Complaints</h2>
-            <input type="text" id="teacher-search" class="search-input" onkeyup="searchTable('teacher-search', 'teacher-complaints-table')" placeholder="Search for complaints..">
-            <div class="table-container">
-                <table class="complaints-table" id="teacher-complaints-table">
-                    <thead>
-                        <tr>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>Description of Sickness</th>
-                            <th>Pain Assessment</th>
-                            <th>Medicine Given</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($teacherComplaints as $complaint)
-                            <tr>
-                                <td>{{ $complaint->first_name }}</td>
-                                <td>{{ $complaint->last_name }}</td>
-                                <td>{{ $complaint->sickness_description }}</td>
-                                <td>{{ $complaint->pain_assessment }}</td>
-                                <td>{{ $complaint->medicine_given }}</td>
-                                <td><button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button></td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</main>
+             
+                <!-- Teacher Complaints Tab -->
+                <div id="teacher-complaints" class="inner-tab-content">
+                    <h2>Teacher Complaints</h2>
+                    <div class="table-container">
+                        <table class="complaints-table" id="teacher-complaints-table">
+                            <thead>
+                                <tr>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Description of Sickness</th>
+                                    <th>Complaint Date</th> <!-- New Column -->
+                    <th>Confine Status</th> <!-- New Column -->
+                    <th>Go Home Status</th> <!-- New Column -->
+                                    <th>Pain Assessment</th>
+                                    <th>Medicine Given</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($teacherComplaints as $complaint)
+                                    <tr id="complaint-row-{{ $complaint->id }}">
+                                        <td>{{ $complaint->first_name }}</td>
+                                        <td>{{ $complaint->last_name }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($complaint->created_at)->format('Y-m-d') }}</td> <!-- Updated -->
+                        <td>{{ ucfirst($complaint->confine_status) }}</td> <!-- Confine Status -->
+                        <td>{{ ucfirst($complaint->go_home ?? 'N/A') }}</td> <!-- Go Home Status -->
+                                        <td>{{ $complaint->sickness_description }}</td>
+                                        <td>{{ $complaint->pain_assessment }}</td>
+                                        <td>{{ $complaint->medicine_given }}</td>
+                                        <td>
+                                            <button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button>
+                                            @if($complaint->report_url)
+                                                <a href="{{ $complaint->report_url }}" target="_blank" class="pdf-button">
+                                                    <i class="fas fa-file-pdf"></i> View PDF
+                                                </a>
+                                             
+                                            @else
+                                                <button class="pdf-button" disabled title="PDF not available">
+                                                    <i class="fas fa-file-pdf"></i> View PDF
+                                                </button>
+                                        
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                </div>
+                </div>
+            
+        
+    </main>
 
     <!-- Modal for Complaint Preview -->
     <div id="complaint-modal" class="modal">
@@ -590,30 +895,47 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Spinner Overlay -->
+    <div id="spinner-overlay">
+        <div class="spinner"></div>
+    </div>
+
     <script>
+            let complaintChart;
+
         document.addEventListener('DOMContentLoaded', function() {
+            $('#student-complaints-table').DataTable();
+            $('#staff-complaints-table').DataTable();
+            $('#teacher-complaints-table').DataTable();
             fetchAvailableMedicines();
             renderChart();
         });
+        function capitalizeFirstLetter(string) {
+    if (typeof string !== 'string' || !string) {
+        return 'N/A'; // Or any default value you prefer
+    }
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
 
         // Function to switch between main tabs
-        function showTab(tabId) {
+        function showTab(tabId, element) {
             console.log(`Switching to tab: ${tabId}`);
 
-            // Hide all tab contents
-            const tabContents = document.querySelectorAll('.tab-content');
+            // Hide all main tab contents
+            const tabContents = document.querySelectorAll('.main-tab-content');
             tabContents.forEach(tabContent => {
-                tabContent.classList.remove('active');
+                if (tabContent.id !== tabId) {
+                    tabContent.classList.remove('active');
+                }
             });
 
-            // Remove active class from all tabs
-            const tabs = document.querySelectorAll('.tab');
+            // Remove active class from all main tabs
+            const tabs = document.querySelectorAll('.main-tab');
             tabs.forEach(tab => {
                 tab.classList.remove('active');
             });
 
-            // Show the selected tab content
+            // Show the selected main tab content with animation
             const selectedTabContent = document.getElementById(tabId);
             if (selectedTabContent) {
                 selectedTabContent.classList.add('active');
@@ -621,25 +943,29 @@
                 console.error(`Tab content with id ${tabId} not found.`);
             }
 
-            // Add active class to the selected tab
-            document.querySelector(`.tab[onclick="showTab('${tabId}')"]`).classList.add('active');
+            // Add active class to the selected main tab
+            element.classList.add('active');
         }
 
         // Function to switch between inner complaint tabs
-        function showInnerTab(tabId) {
+        function showInnerTab(tabId, element) {
+            console.log(`Switching to inner tab: ${tabId}`);
+
             // Hide all inner tab contents
-            const innerTabContents = document.querySelectorAll('#complaint-table .tab-content');
+            const innerTabContents = document.querySelectorAll('.inner-tab-content');
             innerTabContents.forEach(innerTabContent => {
-                innerTabContent.classList.remove('active');
+                if (innerTabContent.id !== tabId) {
+                    innerTabContent.classList.remove('active');
+                }
             });
 
             // Remove active class from all inner tabs
-            const innerTabs = document.querySelectorAll('#complaint-table .tab');
+            const innerTabs = document.querySelectorAll('.inner-tab');
             innerTabs.forEach(tab => {
                 tab.classList.remove('active');
             });
 
-            // Show the selected inner tab content
+            // Show the selected inner tab content with animation
             const selectedInnerTabContent = document.getElementById(tabId);
             if (selectedInnerTabContent) {
                 selectedInnerTabContent.classList.add('active');
@@ -648,7 +974,7 @@
             }
 
             // Add active class to the selected inner tab
-            document.querySelector(`#complaint-table .tab[onclick="showInnerTab('${tabId}')"]`).classList.add('active');
+            element.classList.add('active');
         }
 
         // Fetch available medicines
@@ -657,7 +983,7 @@
                 .then(response => response.json())
                 .then(data => {
                     const medicineSelect = document.getElementById('medicine_given');
-                    medicineSelect.innerHTML = '';
+                    medicineSelect.innerHTML = '<option value="">Select Medicine</option>';
                     data.forEach(medicine => {
                         const option = document.createElement('option');
                         option.value = medicine;
@@ -669,8 +995,8 @@
                     console.error('Error fetching medicines:', error);
                 });
         }
-
-        // Fetch person data
+    
+        // Fetch person data based on ID number
         function fetchPersonData() {
             const idNumber = document.getElementById('id_number').value;
 
@@ -726,9 +1052,15 @@
                     modalBody.innerHTML = `
                         <p><strong>First Name:</strong> ${data.first_name}</p>
                         <p><strong>Last Name:</strong> ${data.last_name}</p>
-                        <p><strong>Pain Assessment:</strong> ${data.pain_assessment}</p>
                         <p><strong>Description of Sickness:</strong> ${data.sickness_description}</p>
-                        <p><strong>Medicine Given:</strong> ${data.medicine_given}</p>
+                        <p><strong>Pain Assessment:</strong> ${data.pain_assessment}</p>
+                        <p><strong>Confine Status:</strong> ${data.confine_status}</p>
+                        <p><strong>Status:</strong> ${data.status}</p>
+                        ${data.pdf_url ? `
+                            <a href="${data.pdf_url}" target="_blank" class="pdf-link">
+                                <i class="fas fa-file-pdf"></i> View PDF
+                            </a>
+                        ` : ''}
                     `;
                     document.getElementById('complaint-modal').style.display = 'block';
                 })
@@ -746,96 +1078,308 @@
         function closeModal() {
             document.getElementById('complaint-modal').style.display = 'none';
         }
-
-        // Render chart for complaint statistics
         function renderChart() {
-            const ctx = document.getElementById('complaint-chart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Most Common Complaint', 'Most Used Medicine'],
-                    datasets: [{
-                        label: 'Occurrences',
-                        data: [{{ $commonComplaintCount }}, {{ $mostUsedMedicineCount }}],
-                        backgroundColor: ['rgba(54, 162, 235, 0.2)', 'rgba(255, 99, 132, 0.2)'],
-                        borderColor: ['rgba(54, 162, 235, 1)', 'rgba(255, 99, 132, 1)'],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
+    fetch('{{ route('nurse.complaint.statistics') }}', {
+        method: 'GET',
+        credentials: 'same-origin', // Ensure cookies are sent
+        headers: {
+            'Accept': 'application/json'
         }
-        document.getElementById('complaint-form').addEventListener('submit', function(event) {
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        const ctx = document.getElementById('complaint-chart').getContext('2d');
+
+        // Destroy existing chart instance if it exists
+        if (complaintChart) {
+            complaintChart.destroy();
+        }
+
+        // Create a new chart instance
+        complaintChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Most Common Complaint', 'Most Used Medicine'],
+                datasets: [{
+                    label: 'Occurrences',
+                    data: [data.commonComplaintCount, data.mostUsedMedicineCount],
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 99, 132, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 99, 132, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching statistics:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to load chart data. Please try again later.'
+        });
+    });
+}
+
+       // Handle complaint form submission with AJAX and SweetAlert
+document.getElementById('complaint-form').addEventListener('submit', function(event) {
     event.preventDefault(); // Prevent the default form submission
 
     const form = event.target;
     const formData = new FormData(form); // Collect form data
 
-    fetch("{{ route('nurse.complaint.store') }}", { // Use the admin route here
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // SweetAlert success message
+    Swal.fire({
+        title: 'Submit Complaint',
+        text: "Are you sure you want to submit this complaint?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#00d1ff',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, submit it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading spinner
             Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: 'Complaint submitted successfully.'
+                title: 'Submitting...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
             });
 
-            // Clear all form fields
-            form.reset();
-        } else {
-            // SweetAlert error message
-            Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                text: data.message || 'An error occurred while submitting the form.'
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
+            fetch("{{ route('nurse.complaint.store') }}", { // Use the admin route here
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.close(); // Close the loading spinner
 
-        // SweetAlert error message for any network issues
-        Swal.fire({
-            icon: 'error',
-            title: 'Oops...',
-            text: 'Something went wrong. Please try again later.'
-        });
-    });
-});
-function searchTable(inputId, tableId) {
-            const input = document.getElementById(inputId);
-            const filter = input.value.toUpperCase();
-            const table = document.getElementById(tableId);
-            const tr = table.getElementsByTagName("tr");
+                if (data.success) {
+                    // Clear all form fields
+                    form.reset();
 
-            for (let i = 1; i < tr.length; i++) {
-                tr[i].style.display = "none";
-                const td = tr[i].getElementsByTagName("td");
-                for (let j = 0; j < td.length; j++) {
-                    if (td[j]) {
-                        const txtValue = td[j].textContent || td[j].innerText;
-                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                            tr[i].style.display = "";
+                    // Prepare the new complaint row HTML
+                    let newRow = `
+                        <tr id="complaint-row-${data.complaint_id}">
+                            <td>${data.first_name}</td>
+                            <td>${data.last_name}</td>
+                            <td>${new Date().toISOString().split('T')[0]}</td> <!-- Record Date (current date) -->
+                            <td>${capitalizeFirstLetter(data.confine_status)}</td> <!-- Confine Status -->
+                            <td>${capitalizeFirstLetter(data.go_home)}</td> <!-- Go Home Status -->
+                            <td>${data.sickness_description}</td>
+                            <td>${data.pain_assessment}</td>
+                            <td>${data.medicine_given}</td>
+                            <td>
+                                <button class="preview-button" onclick="openModal(${data.complaint_id})">Preview</button>
+                                ${data.report_url ? `
+                                    <a href="${data.report_url}" target="_blank" class="pdf-button">
+                                        <i class="fas fa-file-pdf"></i> View PDF
+                                    </a>
+                                    <a href="${data.report_url}" download class="download-button">
+                                        <i class="fas fa-download"></i> Download PDF
+                                    </a>
+                                ` : `
+                                    <button class="pdf-button" disabled title="PDF not available">
+                                        <i class="fas fa-file-pdf"></i> View PDF
+                                    </button>
+                                    <button class="download-button" disabled title="PDF not available">
+                                        <i class="fas fa-download"></i> Download PDF
+                                    </button>
+                                `}
+                            </td>
+                        </tr>
+                    `;
+
+                    // Append the new row to the appropriate table based on role
+                    const role = data.role.toLowerCase();
+                    let tableId = '';
+
+                    switch(role) {
+                        case 'student':
+                            tableId = 'student-complaints-table';
                             break;
+                        case 'staff':
+                            tableId = 'staff-complaints-table';
+                            break;
+                        case 'teacher':
+                            tableId = 'teacher-complaints-table';
+                            break;
+                        default:
+                            tableId = 'student-complaints-table'; // Default to student
+                    }
+
+                    document.querySelector(`#${tableId} tbody`).insertAdjacentHTML('beforeend', newRow);
+
+                    // Optionally, update statistics and charts
+                    renderChart();
+
+                    // SweetAlert success message with option to view the PDF
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Complaint submitted successfully.',
+                        showCancelButton: data.report_url ? true : false,
+                        confirmButtonText: data.report_url ? 'View Report' : 'Close',
+                        cancelButtonText: 'Close',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed && data.report_url) {
+                            window.open(data.report_url, '_blank');
                         }
+                    });
+                } else {
+                    // Handle validation errors
+                    if (data.errors) {
+                        let errorMessages = '';
+                        for (let key in data.errors) {
+                            errorMessages += `${data.errors[key][0]}<br>`;
+                        }
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validation Error',
+                            html: errorMessages
+                        });
+                    } else {
+                        // SweetAlert error message
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: data.message || 'An error occurred while submitting the form.'
+                        });
                     }
                 }
-            }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+
+                // SweetAlert error message for any network issues
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Something went wrong. Please try again later.'
+                });
+            });
         }
+    });
+});
+
+
+
+
+        //
+function generateComplaintsReport() {
+    const reportPeriod = document.getElementById('report-period').value;
+    const reportDate = document.getElementById('report-date').value;
+
+    // Front-end Validation
+    if (!reportPeriod || !reportDate) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Please select both report period and date.'
+        });
+        return;
+    }
+
+    // Confirmation Prompt
+    Swal.fire({
+        title: 'Generate Report',
+        text: `Do you want to generate a ${capitalizeFirstLetter(reportPeriod)} report for ${reportDate}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, generate it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading spinner
+            Swal.fire({
+                title: 'Generating Report...',
+                text: 'Please wait while your report is being generated.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Construct the URL with query parameters
+            const url = new URL("{{ route('nurse.complaint.statisticsReport') }}", window.location.origin);
+            url.searchParams.append('report_period', reportPeriod);
+            url.searchParams.append('report_date', reportDate);
+
+            fetch(url, { // Use GET with query parameters
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.message || 'Unknown error');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                Swal.close(); // Close the loading spinner
+
+                if (data.success) {
+                    // Automatically open the generated PDF in a new tab
+                    window.open(data.report_url, '_blank');
+
+                    // Optional: Notify the user
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Report Generated',
+                        text: 'Your Complaints Statistics Report has been generated successfully and opened in a new tab.',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'An error occurred while generating the report.'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error generating report:', error);
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'An unexpected error occurred while generating the report.'
+                });
+            });
+        }
+    });
+}
 
     </script>
 </x-app-layout>

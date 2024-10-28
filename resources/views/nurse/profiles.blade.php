@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :pageTitle="' Profiles'">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
  

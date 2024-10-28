@@ -1,127 +1,163 @@
-<x-app-layout>
+<x-app-layout :pageTitle="' Dental Approval'">
+    <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<head>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+
+    <!-- SweetAlert2 for Alerts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
     <style>
-        /* Your existing styles remain unchanged */
+        /* General Styling */
         body {
             background-color: #f5f7fa;
             font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
         }
-        .container {
-            display: flex;
-            flex-direction: row;
-            min-height: 100vh;
-        }
+
         .main-content {
             margin-top: 30px;
-            transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
         }
-        .form-container, .table-container {
-            margin-top: 20px;
-            background-color: #f9f9f9;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            animation: fadeInUp 0.5s ease-in-out;
-        }
-        .tab-buttons {
+
+        /* Search Bar Styling */
+        .search-bar {
+            display: flex;
+            justify-content: center;
             margin-bottom: 20px;
         }
-        .tab-buttons button {
-            background-color: #00d2ff;
-            color: white;
-            padding: 10px 20px;
+
+        .search-bar input {
+            width: 300px;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px 0 0 5px;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .search-bar button {
+            padding: 10px 15px;
             border: none;
-            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 0 5px 5px 0;
             cursor: pointer;
-            margin-right: 10px;
-            transition: background-color 0.3s, transform 0.3s;
+            transition: background-color 0.3s;
+            font-size: 1rem;
+        }
+
+        .search-bar button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Tab Navigation Styling */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ddd;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 600;
+            color: #555;
+            transition: color 0.3s, border-bottom 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        .tab-buttons button:hover {
-            background-color: #00b8e6;
+
+        .tab-btn:hover {
+            color: #007bff;
         }
-        .tab-buttons button:active {
-            transform: scale(0.95);
+
+        .tab-btn.active {
+            color: #007bff;
+            border-bottom: 3px solid #007bff;
         }
-        .tab-buttons button.active {
-            background-color: #00a8cc;
+
+        /* Table Container */
+        .table-container {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 10px;
+            background-color: #fff;
         }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-            animation: fadeInUp 0.5s ease-in-out;
-        }
+
+        /* Table Styling */
         table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 800px; /* Ensure table has a minimum width */
         }
+
         table th, table td {
             border: 1px solid #ddd;
-            padding: 8px;
-            animation: fadeIn 1s ease-in-out;
+            padding: 12px 15px;
             text-align: center;
         }
+
         table th {
             background-color: #f2f2f2;
+            font-weight: 600;
+            color: #333;
+            position: sticky;
+            top: 0;
+            z-index: 1;
         }
-        .image-previews img {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 5px;
+
+        table tbody tr:hover {
+            background-color: #f9f9f9;
             cursor: pointer;
         }
-        .image-previews {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .image-container {
-            width: 100px;
-            height: 100px;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 0 auto;
-        }
-        .image-container img {
-            max-width: 100%;
-            max-height: 100%;
-        }
+
+        /* Action Buttons */
         .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            font-size: 14px;
-            font-weight: bold;
-            text-align: center;
-            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 8px 12px;
             border: none;
             border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
             transition: background-color 0.3s, transform 0.3s;
-        }
-        .btn-success {
-            background-color: #28a745;
             color: white;
         }
+
+        .btn-success {
+            background-color: #28a745;
+        }
+
         .btn-success:hover {
             background-color: #218838;
             transform: scale(1.05);
         }
+
         .btn-danger {
             background-color: #dc3545;
-            color: white;
         }
+
         .btn-danger:hover {
             background-color: #c82333;
             transform: scale(1.05);
         }
+
+        /* Modal Styling */
         .modal {
-            display: none;
+            display: none; /* Hidden by default */
             position: fixed;
             z-index: 1000;
             left: 0;
@@ -130,8 +166,11 @@
             height: 100%;
             overflow: auto;
             background-color: rgba(0, 0, 0, 0.6);
-            animation: fadeIn 0.5s ease-in-out;
+            animation: fadeIn 0.3s ease-in-out;
+            justify-content: center;
+            align-items: center;
         }
+
         .modal-content {
             background-color: #fefefe;
             margin: 5% auto;
@@ -140,28 +179,100 @@
             width: 90%;
             max-width: 800px;
             border-radius: 10px;
-            animation: fadeInUp 0.5s ease-in-out;
-            overflow: hidden;
-            text-align: center;
+            animation: slideIn 0.3s ease-in-out;
+            position: relative;
         }
-        .modal img {
-            max-width: 100%;
-            max-height: 70vh;
-            object-fit: contain;
-            border-radius: 10px;
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
         }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: #007bff;
+        }
+
         .close {
             color: #aaa;
-            float: right;
             font-size: 28px;
             font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
         }
+
         .close:hover,
         .close:focus {
-            color: black;
+            color: #000;
             text-decoration: none;
-            cursor: pointer;
         }
+
+        .modal-body p {
+            margin: 10px 0;
+            color: #555;
+            font-size: 1rem;
+        }
+
+        /* Image Previews */
+        .image-previews img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 5px 5px 0;
+            transition: transform 0.3s;
+        }
+
+        .image-previews img:hover {
+            transform: scale(1.05);
+        }
+
+        /* Spinner Overlay */
+        #spinner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #007bff;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -170,137 +281,266 @@
                 opacity: 1;
             }
         }
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+                align-items: center;
             }
-            to {
-                opacity: 1;
-                transform: translateY(0);
+
+            .tab-btn {
+                width: 100%;
+                text-align: center;
+                border-bottom: 1px solid #ddd;
+            }
+
+            .tab-btn:last-child {
+                border-bottom: none;
+            }
+
+            .table-container {
+                max-height: 300px;
+            }
+
+            table {
+                min-width: 600px;
+            }
+
+            .image-previews img {
+                width: 80px;
+                height: 80px;
+            }
+
+            .btn {
+                padding: 6px 10px;
+                font-size: 0.8rem;
             }
         }
     </style>
 
-    <div class="container">
-        <main class="main-content">
-   
-
-            <!-- Pending Dental Records Content -->
-            <div id="pending-approvals" class="tab-content active">
-                <h1>Pending Dental Record Approvals</h1>
-                <div class="table-container">
-                    @if(isset($pendingDentalRecords) && $pendingDentalRecords->isNotEmpty())
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Patient Name</th>
-                                    <th>User Type</th> <!-- New column for user type -->
-                                    <th>Tooth Number</th>
-                                    <th>Status</th>
-                                    <th>Notes</th>
-                                    <th>Teeth Images</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($pendingDentalRecords as $dentalRecord)
-                                    <tr>
-                                    <td>{{ $dentalRecord->dentalRecord->patient_name ?? 'N/A' }}</td>
-                                    <td>{{ $dentalRecord->dentalRecord->user_type ?? 'N/A' }}</td>
-                                    <td>{{ $dentalRecord->tooth_number }}</td>
-                                        <td>{{ $dentalRecord->status }}</td>
-                                        <td>{{ $dentalRecord->notes }}</td>
-                                        <td>
-                                            @if($dentalRecord->dental_pictures)
-                                                <div class="image-previews">
-                                                    @foreach(json_decode($dentalRecord->dental_pictures) as $picture)
-                                                        <img src="{{ asset('storage/' . $picture) }}" alt="Tooth Image" onclick="openModal('{{ asset('storage/' . $picture) }}')">
-                                                    @endforeach
-                                                </div>
-                                            @else
-                                                No images
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <button type="button" class="btn btn-success" onclick="approveRecord({{ $dentalRecord->id }})">
-                                                <img src="https://img.icons8.com/material-rounded/24/ffffff/checkmark--v1.png"/> Approve
-                                            </button>
-                                            <button type="button" class="btn btn-danger" onclick="rejectRecord({{ $dentalRecord->id }})">
-                                                <img src="https://img.icons8.com/material-rounded/24/ffffff/delete-sign.png"/> Reject
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    @else
-                        <p>No pending dental records available.</p>
-                    @endif
-                </div>
+    <div class="main-content">
+        <!-- Success Message -->
+        @if(session('success'))
+            <div class="alert alert-success" style="background-color: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                {{ session('success') }}
             </div>
-        </main>
-    </div>
+        @endif
 
-    <div id="previewModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <img id="modal-image" src="" alt="Image Preview">
+        <!-- Search Bar -->
+       
+<h2> Teeth Approvals</h2>
+        <!-- Tab Navigation -->
+  
+
+        <!-- Dental Records Table -->
+        <div class="table-container">
+      <!-- Table Headers -->
+<table id="dental-records-table">
+    <thead>
+        <tr>
+            <th>Patient Name</th>
+            <th>User Type</th>
+            <th>Tooth Number</th>
+            <th>Status</th>
+            <th>Notes</th>
+            <th>Teeth Images</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @forelse($teethData as $tooth)
+            <tr>
+                <td>{{ $tooth['patient_name'] }}</td>
+                <td>{{ $tooth['user_type'] }}</td>
+                <td>{{ $tooth['tooth_number'] }}</td> <!-- Corrected -->
+                <td>{{ $tooth['status'] }}</td>
+                <td>{{ $tooth['notes'] }}</td>
+                <td>
+    @php
+        // Ensure dental_pictures is an array
+        $pictures = is_array($tooth['dental_pictures']) ? $tooth['dental_pictures'] : json_decode($tooth['dental_pictures'], true) ?? [];
+    @endphp
+
+    @if(count($pictures) > 0)
+        <div class="image-previews">
+        @foreach($pictures as $picture)
+    <img src="{{ $picture }}" alt="Tooth Image" onclick="openImageModal('{{ $picture }}')" />
+@endforeach
+
+        </div>
+    @else
+        No images
+    @endif
+</td>
+
+                <td>
+                    <button type="button" class="btn btn-success" onclick="approveRecord({{ $tooth['id'] }})">
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="rejectRecord({{ $tooth['id'] }})">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                </td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="7" style="text-align: center; color: #888;">No pending dental records available.</td>
+            </tr>
+        @endforelse
+    </tbody>
+</table>
+
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Image Preview Modal -->
+    <div id="image-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeImageModal()">&times;</span>
+            <img id="modal-image" src="" alt="Image Preview" style="width: 100%; height: auto; border-radius: 5px;">
+        </div>
+    </div>
+
+    <!-- Spinner Overlay -->
+    <div id="spinner-overlay">
+        <div class="spinner"></div>
+    </div>
+
     <script>
-        function showTab(tabId) {
-            const tabContents = document.querySelectorAll('.tab-content');
-            tabContents.forEach(tabContent => {
-                tabContent.classList.remove('active');
-            });
+        // CSRF Token Setup
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
 
-            const selectedTabContent = document.getElementById(tabId);
-            selectedTabContent.classList.add('active');
 
-            const tabButtons = document.querySelectorAll('.tab-buttons button');
-            tabButtons.forEach(button => {
-                button.classList.remove('active');
-            });
+        // Fetch dental records based on selected role
+        
+    function fetchDentalRecords(role) {
+        const tableBody = document.querySelector('#dental-records-table tbody');
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #555;">Loading...</td></tr>';
+        showSpinner();
 
-            document.getElementById(tabId + '-tab').classList.add('active');
-        }
+        fetch(`/nurse/dental-records?role=${encodeURIComponent(role)}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken
+            }
+        })
+        .then(response => {
+            hideSpinner();
+            if (!response.ok) {
+                throw new Error(`Server responded with status ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            tableBody.innerHTML = ''; // Clear table
 
-        function openModal(src) {
-            const modal = document.getElementById('previewModal');
+            if (data.length > 0) {
+                data.forEach(tooth => {
+                    let imagesHtml = '';
+                    if (tooth.dental_pictures && tooth.dental_pictures.length > 0) {
+                        imagesHtml = `<div class="image-previews">`;
+                        tooth.dental_pictures.forEach(picture => {
+                            imagesHtml += `<img src="${picture}" alt="Tooth Image" onclick="openImageModal('${picture}')" />`;
+                        });
+                        imagesHtml += `</div>`;
+                    } else {
+                        imagesHtml = 'No images';
+                    }
+
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td>${escapeHtml(tooth.patient_name || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.user_type || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.tooth_number || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.status || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.notes || 'N/A')}</td>
+                            <td>${imagesHtml}</td>
+                            <td>
+                                <button type="button" class="btn btn-success" onclick="approveRecord(${tooth.id})">
+                                    <i class="fas fa-check"></i> Approve
+                                </button>
+                                <button type="button" class="btn btn-danger" onclick="rejectRecord(${tooth.id})">
+                                    <i class="fas fa-times"></i> Reject
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #888;">No records found for this role.</td>
+                    </tr>
+                `;
+            }
+
+            // Initialize DataTable after a slight delay to stabilize DOM
+            setTimeout(() => {
+                $('#dental-records-table').DataTable({
+                    paging: true,
+                    searching: true,
+                    ordering: true,
+                    info: true,
+                    responsive: true,
+                    autoWidth: false,
+                    destroy: true // Ensures any previous instance is cleared
+                });
+            }, 200); // Adjust delay as needed
+        })
+        .catch(error => {
+            hideSpinner();
+            console.error('Error fetching dental records:', error);
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; color: #dc3545;">Failed to load dental records. Please try again later.</td>
+                </tr>
+            `;
+        });
+    }
+
+        // Function to open image modal
+        function openImageModal(src) {
+            const modal = document.getElementById('image-modal');
             const modalImg = document.getElementById('modal-image');
             modalImg.src = src;
-            modal.style.display = 'block';
+            modal.style.display = 'flex';
         }
 
-        function closeModal() {
-            const modal = document.getElementById('previewModal');
+        // Function to close image modal
+        function closeImageModal() {
+            const modal = document.getElementById('image-modal');
             modal.style.display = 'none';
         }
 
+        // Function to approve a dental record
         function approveRecord(id) {
             Swal.fire({
                 title: 'Are you sure?',
                 text: "You want to approve this dental record!",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
+                confirmButtonColor: '#28a745',
                 cancelButtonColor: '#d33',
                 confirmButtonText: 'Yes, approve it!'
             }).then((result) => {
                 if (result.isConfirmed) {
+                    showSpinner();
                     fetch(`/nurse/dental-record/${id}/approve`, {
                         method: 'POST',
                         headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
                         }
-                    }).then(response => {
-                        if (response.ok) {
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        hideSpinner();
+                        if (data.success) {
                             Swal.fire(
                                 'Approved!',
-                                'The dental record has been approved.',
+                                data.message,
                                 'success'
                             ).then(() => {
                                 location.reload();
@@ -308,11 +548,13 @@
                         } else {
                             Swal.fire(
                                 'Error!',
-                                'The dental record could not be approved.',
+                                data.message || 'The dental record could not be approved.',
                                 'error'
                             );
                         }
-                    }).catch(error => {
+                    })
+                    .catch(error => {
+                        hideSpinner();
                         console.error('Error:', error);
                         Swal.fire(
                             'Error!',
@@ -324,27 +566,33 @@
             });
         }
 
+        // Function to reject a dental record
         function rejectRecord(id) {
             Swal.fire({
                 title: 'Are you sure?',
                 text: "You want to reject this dental record!",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
                 confirmButtonText: 'Yes, reject it!'
             }).then((result) => {
                 if (result.isConfirmed) {
+                    showSpinner();
                     fetch(`/nurse/dental-record/${id}/reject`, {
                         method: 'POST',
                         headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
                         }
-                    }).then(response => {
-                        if (response.ok) {
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        hideSpinner();
+                        if (data.success) {
                             Swal.fire(
                                 'Rejected!',
-                                'The dental record has been rejected.',
+                                data.message,
                                 'success'
                             ).then(() => {
                                 location.reload();
@@ -352,11 +600,13 @@
                         } else {
                             Swal.fire(
                                 'Error!',
-                                'The dental record could not be rejected.',
+                                data.message || 'The dental record could not be rejected.',
                                 'error'
                             );
                         }
-                    }).catch(error => {
+                    })
+                    .catch(error => {
+                        hideSpinner();
                         console.error('Error:', error);
                         Swal.fire(
                             'Error!',
@@ -368,8 +618,129 @@
             });
         }
 
+        // Function to switch tabs
+     
+      
+
+        // Helper Function to Escape HTML (Prevent XSS)
+        function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    text = text.toString(); // Convert to string
+    return text.replace(/&/g, "&amp;")
+               .replace(/</g, "&lt;")
+               .replace(/>/g, "&gt;")
+               .replace(/"/g, "&quot;")
+               .replace(/'/g, "&#039;");
+}
+
+
+        // Spinner Functions
+        function showSpinner() {
+            document.getElementById('spinner-overlay').style.display = 'flex';
+        }
+
+        function hideSpinner() {
+            document.getElementById('spinner-overlay').style.display = 'none';
+        }
+
+        // Initialize with default tab and fetch records
         document.addEventListener('DOMContentLoaded', function () {
-            showTab('pending-approvals');
+        // Load the default records and then initialize DataTables
+        const defaultRole = 'student';
+        fetchDentalRecords(defaultRole);
+        switchTab('student'); // Load 'student' records by default
+
+        // Initialize DataTables after table content is fully loaded
+        setTimeout(() => {
+            $('#dental-records-table').DataTable({
+                paging: true,
+                searching: true,
+                ordering: true,
+                info: true,
+                responsive: true,
+                autoWidth: false,
+                destroy: true // Ensures any previous instances are cleared
+            });
+        }, 500); // Add a delay to allow content to load; adjust as needed
+    });
+
+        // Close modal when clicking outside of the modal content
+        window.onclick = function(event) {
+            const imageModal = document.getElementById('image-modal');
+            if (event.target == imageModal) {
+                imageModal.style.display = 'none';
+            }
+        }
+        function refreshDentalRecords() {
+        const activeTab = document.querySelector('.tab-btn.active');
+        const role = activeTab ? activeTab.getAttribute('data-role') : 'student';
+        const searchQuery = document.getElementById('search-input').value.trim();
+
+        fetch(`/nurse/dental-records?role=${encodeURIComponent(role)}&search=${encodeURIComponent(searchQuery)}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Server responded with status ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const tableBody = document.querySelector('#dental-records-table tbody');
+            tableBody.innerHTML = '';
+
+            if (data.length > 0) {
+                data.forEach(tooth => {
+                    let imagesHtml = '';
+                    if (tooth.dental_pictures && tooth.dental_pictures.length > 0) {
+                        imagesHtml = `<div class="image-previews">`;
+                        tooth.dental_pictures.forEach(picture => {
+                            imagesHtml += `<img src="${picture}" alt="Tooth Image" onclick="openImageModal('${picture}')"/>`;
+                        });
+                        imagesHtml += `</div>`;
+                    } else {
+                        imagesHtml = 'No images';
+                    }
+
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td>${escapeHtml(tooth.patient_name || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.user_type || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.tooth_number || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.status || 'N/A')}</td>
+                            <td>${escapeHtml(tooth.notes || 'N/A')}</td>
+                            <td>${imagesHtml}</td>
+                            <td>
+                                <button type="button" class="btn btn-success" onclick="approveRecord(${tooth.id})">
+                                    <i class="fas fa-check"></i> Approve
+                                </button>
+                                <button type="button" class="btn btn-danger" onclick="rejectRecord(${tooth.id})">
+                                    <i class="fas fa-times"></i> Reject
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #888;">No pending dental records found.</td>
+                    </tr>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching dental records:', error);
+            // Optionally, display an error message to the user
         });
+    }
+
+    // Set an interval to refresh dental records every 30 seconds
+    setInterval(refreshDentalRecords, 30000); // 30000 milliseconds = 30 seconds
+
+
     </script>
 </x-app-layout>

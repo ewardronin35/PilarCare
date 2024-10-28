@@ -1,21 +1,36 @@
-<x-app-layout>
+<x-app-layout :pageTitle="'Complaints'">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    
     <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-yH6jIwETnIsIv+J8bGZ1CST5Q3gqLbG3Ehj3FdJ9VqgqkrFuzqfY1JIDxr2VDYfv4pZwU6yD/WHx3Q+5GfYbQg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
     <!-- SweetAlert2 for Alerts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+    
+    <!-- jQuery CDN -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+            integrity="sha256-/xUj+3OJ+Y5e3U6IY+PffyONVfQK3rWZ6+P1Rrz4jAE="
+            crossorigin="anonymous"></script>
+    
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    
     <style>
+        /* Existing Styles */
+
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Arial', sans-serif;
+            font-family: 'Poppins', sans-serif;
             animation: fadeInBackground 1s ease-in-out;
             background-color: #f5f7fa;
         }
 
         .main-content {
-            margin-top: 40px;
+            margin-top: 30px;
         }
 
         .alert {
@@ -27,6 +42,7 @@
         }
 
         .complaints-section {
+            margin-right: 50px;
             padding: 20px;
             background-color: #fff;
             border-radius: 10px;
@@ -43,7 +59,6 @@
 
         /* Scrollable Table Container */
         .table-container {
-            max-height: 500px; /* Adjust as needed */
             overflow-y: auto;
             border: 1px solid #ddd;
             border-radius: 10px;
@@ -88,10 +103,12 @@
             display: flex;
             gap: 10px;
             justify-content: center;
+            flex-wrap: wrap; /* Allows buttons to wrap on smaller screens */
         }
 
         .preview-button,
-        .pdf-button {
+        .pdf-button,
+        .download-button {
             background-color: #00d1ff;
             color: white;
             padding: 5px 15px;
@@ -100,11 +117,24 @@
             cursor: pointer;
             transition: background-color 0.3s ease-in-out;
             font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none; /* For anchor tags */
         }
 
         .preview-button:hover,
-        .pdf-button:hover {
+        .pdf-button:hover,
+        .download-button:hover {
             background-color: #00b8e6;
+        }
+
+        .pdf-button[disabled],
+        .pdf-button[disabled]:hover,
+        .download-button[disabled],
+        .download-button[disabled]:hover {
+            background-color: #6c757d;
+            cursor: not-allowed;
         }
 
         /* Modal Styling */
@@ -240,11 +270,79 @@
             }
 
             .preview-button,
-            .pdf-button {
+            .pdf-button,
+            .download-button {
                 width: 100%;
                 text-align: center;
             }
+
+            .search-bar input[type="text"] {
+                width: 80%;
+                margin-bottom: 10px;
+            }
+
+            .search-bar button {
+                width: 80%;
+            }
         }
+
+        /* Search Form Styles */
+        .search-form {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .search-bar input[type="text"] {
+            padding: 10px;
+            width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .search-bar button {
+            padding: 10px 15px;
+            border: none;
+            background-color: #00d1ff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .search-bar button:hover {
+            background-color: #00b8e6;
+        }
+
+        /* Filter Buttons */
+        .filter-buttons {
+            margin-bottom: 20px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-button {
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+            font-size: 1rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .filter-button.active,
+        .filter-button:hover {
+            background-color: #00d1ff;
+        }
+
     </style>
 
     <div class="main-content">
@@ -254,13 +352,25 @@
             </div>
         @endif
 
+        <!-- Filter Buttons -->
+        <div class="filter-buttons">
+            <a href="{{ route('student.complaint', ['filter' => 'present']) }}" class="filter-button {{ request('filter') === 'present' ? 'active' : '' }}">
+                <i class="fas fa-sun"></i> Present Complaint
+            </a>
+            <a href="{{ route('student.complaint', ['filter' => 'past']) }}" class="filter-button {{ request('filter') === 'past' ? 'active' : '' }}">
+                <i class="fas fa-moon"></i> Past Complaint
+            </a>
+        </div>
+
+        <!-- Search Form -->
+      
         <!-- Complaints Section -->
         <div class="complaints-section">
             <h2>Student Complaint History</h2>
 
             <!-- Complaints Table -->
             <div class="table-container">
-                <table class="complaints-table">
+                <table class="complaints-table" id="complaints-table">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -268,7 +378,7 @@
                             <th>Pain Assessment</th>
                             <th>Confine Status</th>
                             <th>Medicine Given</th>
-                            <th>Status</th>
+                            <th>Record Date</th> <!-- Added Record Date -->
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -281,32 +391,36 @@
                                 <td>{{ $complaint->pain_assessment }}</td>
                                 <td>{{ ucwords(str_replace('_', ' ', $complaint->confine_status)) }}</td>
                                 <td>{{ $complaint->medicine_given }}</td>
-                                <td>{{ ucfirst($complaint->status) }}</td>
+                                <td>{{ $complaint->created_at->format('M d, Y') }}</td> <!-- Record Date Based on created_at -->
                                 <td>
                                     <div class="action-buttons">
                                         <button class="preview-button" onclick="openPreviewModal({{ $complaint->id }})">
                                             <i class="fas fa-eye"></i> Preview
                                         </button>
-                                        @if(isset($complaint->pdf_url))
-                                            <a href="{{ $complaint->pdf_url }}" target="_blank" class="pdf-button">
+                                        @if(isset($complaint->report_url))
+                                            <a href="{{ $complaint->report_url }}" target="_blank" class="pdf-button">
                                                 <i class="fas fa-file-pdf"></i> View PDF
+                                            </a>
+                                            <a href="{{ $complaint->report_url }}" download class="download-button">
+                                                <i class="fas fa-download"></i> Download PDF
                                             </a>
                                         @else
                                             <button class="pdf-button" disabled title="PDF not available">
                                                 <i class="fas fa-file-pdf"></i> View PDF
+                                            </button>
+                                            <button class="download-button" disabled title="PDF not available">
+                                                <i class="fas fa-download"></i> Download PDF
                                             </button>
                                         @endif
                                     </div>
                                 </td>
                             </tr>
                         @empty
-                            <tr>
-                                <td colspan="8" style="text-align: center; color: #888;">No complaints found.</td>
-                            </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
+
         </div>
     </div>
 
@@ -324,6 +438,24 @@
     </div>
 
     <script>
+        $(document).ready(function() {
+            // Initialize DataTables for Complaints Table
+            $('#complaints-table').DataTable({
+                "paging": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "autoWidth": false,
+                "responsive": true,
+                "language": {
+                    "emptyTable": "No complaints found."
+                }
+            });
+
+            // Handle Submenu Toggles (if any)
+            // Since this template doesn't have a sidebar, this part can be omitted or adjusted based on your actual layout
+        });
+
         // Function to open modal and load complaint details
         function openPreviewModal(complaintId) {
             fetch(`/student/complaint/${complaintId}`)
@@ -341,8 +473,12 @@
                         <p><strong>Pain Assessment:</strong> ${data.pain_assessment}</p>
                         <p><strong>Confine Status:</strong> ${data.confine_status}</p>
                         <p><strong>Medicine Given:</strong> ${data.medicine_given}</p>
-                        <p><strong>Status:</strong> ${data.status}</p>
-                        ${data.pdf_url ? `<a href="${data.pdf_url}" target="_blank" class="pdf-link"><i class="fas fa-file-pdf"></i> View PDF</a>` : ''}
+                        <p><strong>Record Date:</strong> ${data.created_at ? new Date(data.created_at).toLocaleDateString() : 'N/A'}</p>
+                        ${data.pdf_url ? `
+                            <a href="${data.pdf_url}" target="_blank" class="pdf-link">
+                                <i class="fas fa-file-pdf"></i> View PDF
+                            </a>
+                        ` : ''}
                     `;
                     document.getElementById('preview-modal').style.display = 'flex';
                 })

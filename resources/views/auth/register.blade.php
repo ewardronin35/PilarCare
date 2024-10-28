@@ -6,6 +6,8 @@
     <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.nocaptcha.sitekey') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     
     <!-- Internal Styles -->
     <style>
@@ -22,20 +24,29 @@
             font-family: 'Arial', sans-serif;
             animation: fadeInBackground 1s ease-in-out;
             overflow: hidden;
+            position: relative; /* Necessary for overlay */
         }
-
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Dark overlay with 50% opacity */
+            z-index: 1; /* Behind the container but above the background */
+        }
         /* Container Styling */
         .container {
             background-color: #fff;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            max-width: 350px;
+            padding: 30px;
+            max-width: 400px;
             width: 100%;
             animation: fadeInContainer 1s ease-in-out;
+            z-index: 2; /* Above the overlay */
             position: relative;
         }
-
         /* Logo Styling */
         .logo-container {
             display: flex;
@@ -218,6 +229,7 @@
             100% { transform: rotate(360deg); }
         }
     </style>
+    <div class="overlay"></div>
 
     <!-- Spinner Overlay -->
     <div id="spinner-overlay">

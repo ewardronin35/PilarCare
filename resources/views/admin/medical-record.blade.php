@@ -1,5 +1,7 @@
-<x-app-layout>
+<x-app-layout :pageTitle="'Medical Record'">   
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 
     <style>
         body {
@@ -59,6 +61,15 @@
 
         .form-container {
             flex: 1;
+            background-color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            max-height: 75vh;
+            border: 1px solid #eaeaea;
+        }
+        .form-containers {
             background-color: white;
             padding: 25px;
             border-radius: 15px;
@@ -422,7 +433,30 @@
     transition: all 0.3s ease;
     resize: vertical;
 }
+.scrollable-container {
+            max-height: 400px; /* Adjust as needed */
+            overflow-y: auto;
+            padding-right: 10px; /* To prevent content from hiding behind scrollbar */
+        }
 
+        /* Scrollbar Styling */
+        .scrollable-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollable-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 8px;
+        }
+
+        .scrollable-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 8px;
+        }
+
+        .scrollable-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
 /* On focus, change border color and box-shadow for emphasis */
 .styled-textarea:focus {
     outline: none;
@@ -457,7 +491,265 @@
     max-height: 400px; /* Adjust the height as needed */
     overflow-y: auto;
 }
+@media (max-width: 1200px) {
+        .container {
+            flex-direction: column;
+            padding: 10px;
+        }
 
+        .main-content {
+            margin-left: 0;
+            width: 100%;
+            padding: 15px;
+        }
+
+        .forms-container {
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            height: auto;
+        }
+
+        .form-container {
+            max-height: none;
+            height: auto;
+        }
+
+        .tabs {
+            flex-wrap: wrap;
+        }
+
+        .tab-buttons button {
+            flex: 1 1 45%;
+            margin-bottom: 10px;
+        }
+
+        .search-bar input[type="text"] {
+            width: 100%;
+            max-width: none;
+        }
+
+        .search-bar button {
+            width: 100%;
+            margin-left: 0;
+            margin-top: 10px;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 10px;
+            font-size: 0.9rem;
+        }
+
+        .styled-textarea {
+            width: 100%;
+            margin-left: 0;
+        }
+
+        .file-input-container {
+            max-width: 100%;
+        }
+
+        .custom-picture-previews img {
+            width: 80px;
+            height: 80px;
+        }
+    }
+
+    /* Tablet (max-width: 992px) */
+    @media (max-width: 992px) {
+        .tab-buttons button {
+            flex: 1 1 100%;
+        }
+
+        .forms-container {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-group-inline {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            font-size: 0.9rem;
+            padding: 10px;
+        }
+
+        .form-group button {
+            font-size: 1rem;
+            padding: 8px 16px;
+        }
+
+        .search-bar input[type="text"] {
+            font-size: 0.9rem;
+            padding: 8px;
+        }
+
+        .search-bar button {
+            font-size: 0.9rem;
+            padding: 8px 16px;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 8px;
+            font-size: 0.85rem;
+        }
+
+        .custom-picture-previews img {
+            width: 70px;
+            height: 70px;
+        }
+
+        .styled-textarea {
+            font-size: 0.9rem;
+            padding: 10px 12px;
+        }
+    }
+
+    /* Mobile Devices (max-width: 768px) */
+    @media (max-width: 768px) {
+        .forms-container {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-container {
+            padding: 20px;
+        }
+
+        .tab-buttons button {
+            font-size: 1rem;
+            padding: 8px 16px;
+        }
+
+        .form-group-inline {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            font-size: 0.85rem;
+            padding: 8px;
+        }
+
+        .form-group button {
+            font-size: 0.95rem;
+            padding: 8px 14px;
+        }
+
+        .search-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .search-bar input[type="text"] {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .search-bar button {
+            width: 100%;
+            margin-left: 0;
+            padding: 8px 14px;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 6px;
+            font-size: 0.8rem;
+        }
+
+        .custom-picture-previews img {
+            width: 60px;
+            height: 60px;
+        }
+
+        .styled-textarea {
+            font-size: 0.85rem;
+            padding: 8px 10px;
+        }
+
+        .file-input-container {
+            max-width: 100%;
+        }
+    }
+
+    /* Small Mobile Devices (max-width: 576px) */
+    @media (max-width: 576px) {
+        .main-content {
+            padding: 10px;
+        }
+
+        .tab-buttons button {
+            font-size: 0.9rem;
+            padding: 6px 12px;
+        }
+
+        .form-group-inline {
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            font-size: 0.8rem;
+            padding: 6px;
+        }
+
+        .form-group button {
+            font-size: 0.9rem;
+            padding: 6px 12px;
+        }
+
+        .search-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .search-bar input[type="text"] {
+            font-size: 0.8rem;
+            padding: 6px;
+        }
+
+        .search-bar button {
+            font-size: 0.8rem;
+            padding: 6px 12px;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 4px;
+            font-size: 0.75rem;
+        }
+
+        .custom-picture-previews img {
+            width: 50px;
+            height: 50px;
+        }
+
+        .styled-textarea {
+            font-size: 0.75rem;
+            padding: 6px 8px;
+        }
+
+        .file-input-label {
+            font-size: 0.9rem;
+            padding: 8px;
+        }
+
+        #profile-picture-preview {
+            width: 120px;
+            height: 120px;
+        }
+    }
     </style>
 
     <div class="main-content">
@@ -667,17 +959,38 @@
             <button type="submit" class="button" id="save-button" disabled>Save</button>
         </div>
     </form>
+    <div class="form-container">
+                <div class="form-header">
+                    <h2>Medicine Intake History</h2>
+                </div>
+                <div class="scrollable-container">
+                <table class="history-table" id="medicine-intake-history-table">
+                <thead>
+                            <tr>
+                                <th>Medicine</th>
+                                <th>Date</th>
+                                <th>Dosage</th>
+                                <th>Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody id="medicine-intake-history-body">
+                            <!-- This will be populated via JS/AJAX -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 </div>
 </div>
 
         <div id="history" class="tab forms-container hidden">
             <!-- Medical Record History -->
-            <div class="form-container">
+            <div class="form-containers">
                 <h2>Medical Record History</h2>
                 <div class="history-scrollable">
 
-                <table class="history-table">
-                    <thead>
+                <table class="history-table" id="medical-record-history-table">
+                <thead>
                         <tr>
                             <th>Chronic Conditions</th>
                             <th>Surgical History</th>
@@ -686,7 +999,7 @@
                             <th>Medicines</th>
                             <th>Health Documents</th> 
                             <th>Approval Status</th> 
-                            <th>Current Status</th> 
+                            <th>Current Record?</th> 
                         </tr>
                     </thead>
                     <tbody id="medical-record-history-body">
@@ -700,8 +1013,8 @@
             <div class="form-container">
                 <h2>Physical Examination History</h2>
                 <div class="history-scrollable">
-                <table class="history-table">
-                    <thead>
+                <table class="history-table" id="physical-examination-history-table">
+                <thead>
                         <tr>
                             <th>Height in CM</th>
                             <th>Weight in KG</th>
@@ -721,10 +1034,10 @@
             <div class="form-container">
                 <h2>Health Examination Uploads</h2>
                 <div class="history-scrollable">
-                <table class="history-table">
-                    <thead>
+                <table class="history-table" id="health-examination-uploads-table">
+                <thead>
                         <tr>
-                            <th>Type</th>
+                            <th>Year</th>
                             <th>File</th>
                         </tr>
                     </thead>
@@ -737,26 +1050,10 @@
 
 
         </div>
-        <div class="form-container">
-            <div class="form-header">
-             <h2>Medicine Intake History</h2>
-             <div class="history-scrollable">
+     
 
-    <table class="history-table">
-        <thead>
-            <tr>
-                <th>Medicine</th>
-                <th>Date</th>
-                <th>Dosage</th>
-                <th>Reason</th>
-            </tr>
-        </thead>
-        <tbody id="medicine-intake-history-body">
-            <!-- This will be populated via JS/AJAX -->
-                
-        </tbody>
-    </table>
-</div>
+    </div>
+
 @if(session('success'))
         <div class="alert alert-success">
             {{ session('success') }}
@@ -781,11 +1078,20 @@
         </div>
     @endif
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 
-<script>
-// URL for search route
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // URL for search route
+   // URL for search route
 const searchUrl = "{{ route('admin.medical-record.search') }}";
+
+// Variables to store DataTable instances
+let medicalRecordTable;
+let physicalExaminationTable;
+let healthExaminationUploadsTable;
+let medicineIntakeTable;
 
 // Function to show tab
 function showTab(tabId) {
@@ -815,7 +1121,40 @@ function showTab(tabId) {
 // Initialize tab on page load
 document.addEventListener('DOMContentLoaded', function () {
     showTab('medical');
+    initializeDataTables(); // Initialize DataTables after DOM is ready
 });
+
+// Function to initialize DataTables
+function initializeDataTables() {
+    // Store DataTable instances in variables
+    medicalRecordTable = $('#medical-record-history-table').DataTable({
+        paging: true,
+        searching: true,
+        ordering: true,
+        responsive: true,
+    });
+
+    physicalExaminationTable = $('#physical-examination-history-table').DataTable({
+        paging: true,
+        searching: true,
+        ordering: true,
+        responsive: true,
+    });
+
+    healthExaminationUploadsTable = $('#health-examination-uploads-table').DataTable({
+        paging: true,
+        searching: true,
+        ordering: true,
+        responsive: true,
+    });
+
+    medicineIntakeTable = $('#medicine-intake-history-table').DataTable({
+        paging: true,
+        searching: true,
+        ordering: true,
+        responsive: true,
+    });
+}
 
 // Fetch medical history and show alerts based on success or failure
 function fetchMedicalHistory(showAlertOnNoData = true) {
@@ -827,29 +1166,25 @@ function fetchMedicalHistory(showAlertOnNoData = true) {
             return response.json();
         })
         .then(data => {
-            console.log('Data received from server:', data); // Log full response
-            
+            console.log('Data received in fetchMedicalHistory:', data); // Debugging
             if (data.success) {
-                // Debugging: Check if the records exist and the length
-                console.log('Records found:', data.medicalRecords);
-                if (data.medicalRecords.length > 0 || data.physicalExaminations.length > 0 || data.healthExamination) {
-                    populateFields(data); // Populate fields if data is available
+                // Populate the fields
+                populateFields(data);
+
+                // Show SweetAlert and switch to the history tab only once
+                if (showAlertOnNoData) {
                     Swal.fire({
                         icon: 'success',
                         title: 'Success',
                         text: 'Medical record data found and populated successfully!',
                         timer: 2000, // Auto-close after 2 seconds
                         showConfirmButton: false
+                    }).then(() => {
+                        // Optionally switch to the history tab after SweetAlert closes
                     });
-                } else if (showAlertOnNoData) {
-                    showNoDataAlert(); // Show alert if no data found
                 }
-            } else {
-                // Debugging: If `data.success` is false
-                console.warn('No success status in the response:', data);
-                if (showAlertOnNoData) {
-                    showNoDataAlert();
-                }
+            } else if (showAlertOnNoData) {
+                showNoDataAlert();
             }
         })
         .catch(error => {
@@ -864,6 +1199,7 @@ function fetchMedicalHistory(showAlertOnNoData = true) {
 
 // Populate fields based on the fetched data
 function populateFields(data) {
+    console.log('Data received in populateFields:', data); // Debugging
     // Populate the medical record fields
     if (data.medicalRecord) {
         document.getElementById('name').value = data.medicalRecord.name || '';
@@ -885,7 +1221,7 @@ function populateFields(data) {
         console.log('Set physical-exam-id_number to:', data.medicalRecord.id_number || '');
 
         // Medicines (assuming they are checkboxes)
-        let medicines = JSON.parse(data.medicalRecord.medicines || '[]');
+        let medicines = Array.isArray(data.medicalRecord.medicines) ? data.medicalRecord.medicines : JSON.parse(data.medicalRecord.medicines || '[]');
         document.querySelectorAll("input[name='medicines[]']").forEach((checkbox) => {
             checkbox.checked = medicines.includes(checkbox.value);
         });
@@ -899,8 +1235,7 @@ function populateFields(data) {
         console.log('Setting id_number to:', data.medicalRecord.id_number);
         document.getElementById('physical-exam-id_number').value = data.medicalRecord.id_number || '';
         document.getElementById('save-button').disabled = false; // Enable the button
-
-    }  else {
+    } else {
         document.getElementById('save-button').disabled = true; // Keep the button disabled
     }
 
@@ -909,97 +1244,94 @@ function populateFields(data) {
         populatePhysicalExaminationHistory(data.physicalExaminations);
     }
 
-    // Populate Health Examination Data
-    if (data.healthExamination) {
-        populateHealthExaminationHistory(data.healthExamination);
-    }
-    if (data.healthDocuments && data.healthDocuments.length > 0) {
-        populateHealthDocuments(data.healthDocuments);
+    // Populate Health Examination Uploads
+    if (data.healthExaminations && data.healthExaminations.length > 0) {
+        populateHealthExaminationHistory(data.healthExaminations);
+    } else {
+        // If no health examinations found, clear the table
+        healthExaminationUploadsTable.clear().draw();
     }
 
     // Populate profile picture
     if (data.information && data.information.profile_picture) {
         document.getElementById('profile-picture-preview').src = `/storage/${data.information.profile_picture}`;
     }
+
+    // Populate Medicine Intake History
     if (data.medicineIntakes && data.medicineIntakes.length > 0) {
         populateMedicineIntakeHistory(data.medicineIntakes);
     } else {
         // If no records found, clear the table
-        const medicineIntakeBody = document.getElementById('medicine-intake-history-body');
-        medicineIntakeBody.innerHTML = '<tr><td colspan="4">No medicine intake records found.</td></tr>';
+        medicineIntakeTable.clear().draw();
     }
-    document.getElementById('physical-exam-id_number').value = data.medicalRecord.id_number || '';
-
 }
 
-// Populate Medical Record History Table
 // Populate Medical Record History Table
 function populateMedicalRecordHistory(records) {
-    const medicalHistoryBody = document.getElementById('medical-record-history-body');
-    medicalHistoryBody.innerHTML = ''; // Clear existing rows
-    
+    console.log('Medical Records:', records); // Debugging
+    medicalRecordTable.clear(); // Clear existing data
+
     records.forEach(record => {
-        // If medicines are stored as JSON or a comma-separated string, we should parse it
-        let medicines = record.medicines;
-        if (typeof medicines === 'string') {
-            medicines = JSON.parse(medicines); // Adjust this if medicines are stored differently
+        // Medicines are already arrays due to model casting
+        let medicines = Array.isArray(record.medicines) ? record.medicines.join(', ') : 'N/A';
+
+        // Handle Health Examination Pictures
+        let healthExamDocumentsHtml = '';
+        if (record.health_examination_picture && Array.isArray(record.health_examination_picture) && record.health_examination_picture.length > 0) {
+            healthExamDocumentsHtml = record.health_examination_picture.map((document, index) => `
+                <a href="javascript:void(0);" onclick="openImageModal('/storage/${document}')">Health Exam ${index + 1}</a>
+            `).join('<br>');
+        } else {
+            healthExamDocumentsHtml = 'No Health Exam Documents';
         }
 
-        // Check if health documents exist
-        let healthDocumentsHtml = '';
-        if (record.health_documents) {
-    const healthDocuments = JSON.parse(record.health_documents); // Assuming health documents are stored as a JSON array
-    healthDocumentsHtml = healthDocuments.map(document => `
-        <a href="/storage/${document}" target="_blank">View Document</a>
-    `).join('<br>');
-} else {
-    healthDocumentsHtml = 'No documents';
-}
+        // Handle Lab Result Pictures
+        let labResultDocumentsHtml = '';
+        if (record.lab_result_picture && Array.isArray(record.lab_result_picture) && record.lab_result_picture.length > 0) {
+            labResultDocumentsHtml = record.lab_result_picture.map((document, index) => `
+                <a href="javascript:void(0);" onclick="openImageModal('/storage/${document}')">Lab Result ${index + 1}</a>
+            `).join('<br>');
+        } else {
+            labResultDocumentsHtml = 'No Lab Result Documents';
+        }
 
+        // Handle X-ray Pictures
+        let xrayDocumentsHtml = '';
+        if (record.xray_picture && Array.isArray(record.xray_picture) && record.xray_picture.length > 0) {
+            xrayDocumentsHtml = record.xray_picture.map((document, index) => `
+                <a href="javascript:void(0);" onclick="openImageModal('/storage/${document}')">X-ray ${index + 1}</a>
+            `).join('<br>');
+        } else {
+            xrayDocumentsHtml = 'No X-ray Documents';
+        }
 
-        const row = `
-            <tr>
-                <td>${record.chronic_conditions || 'N/A'}</td>
-                <td>${record.surgical_history || 'N/A'}</td>
-                <td>${record.family_medical_history || 'N/A'}</td>
-                <td>${record.allergies || 'N/A'}</td>
-                <td>${medicines ? medicines.join(', ') : 'N/A'}</td>
-                <td>${healthDocumentsHtml}</td>
-                <td>${record.is_approved ? 'Approved' : 'Pending Approval'}</td> <!-- Health document approval status -->
-                <td>${record.is_current ? 'Yes' : 'No'}</td> <!-- Whether this record is current or not -->
-            </tr>`;
-        medicalHistoryBody.insertAdjacentHTML('beforeend', row);
+        // Combine all documents into one HTML string
+        let healthDocumentsHtml = `
+            <strong>Health Exams:</strong><br>${healthExamDocumentsHtml}<br>
+            <strong>Lab Results:</strong><br>${labResultDocumentsHtml}<br>
+            <strong>X-rays:</strong><br>${xrayDocumentsHtml}
+        `;
+
+        // Add row data as an array
+        medicalRecordTable.row.add([
+            record.chronic_conditions || 'N/A',
+            record.surgical_history || 'N/A',
+            record.family_medical_history || 'N/A',
+            record.allergies || 'N/A',
+            medicines,
+            healthDocumentsHtml,
+            record.is_approved ? 'Approved' : 'Pending Approval',
+            record.is_current ? 'Yes' : 'No'
+        ]);
     });
+
+    medicalRecordTable.draw(); // Redraw the table with new data
 }
 
-function populateHealthDocuments(documents) {
-    const medicalHistoryBody = document.getElementById('medical-record-history-body');
-    medicalHistoryBody.innerHTML = ''; // Clear existing rows
-
-    documents.forEach(document => {
-        const row = `
-            <tr>
-                <td>${document.chronic_conditions || 'N/A'}</td>
-                <td>${document.surgical_history || 'N/A'}</td>
-                <td>${document.family_medical_history || 'N/A'}</td>
-                <td>${document.allergies || 'N/A'}</td>
-                <td>${document.medicines ? document.medicines.join(', ') : 'N/A'}</td>
-                <td>
-                    <a href="javascript:void(0);" onclick="openImageModal('${document.file_path}')">
-                        View Document
-                    </a>
-                </td>
-                <td>${document.is_approved ? 'Approved' : 'Pending'}</td>
-                <td>${document.is_current ? 'Current' : 'Not Current'}</td>
-            </tr>`;
-        medicalHistoryBody.insertAdjacentHTML('beforeend', row);
-    });
-}
-
-/// Populate Physical Examination History Table with BMI
+// Populate Physical Examination History Table with BMI
 function populatePhysicalExaminationHistory(exams) {
-    const physicalExaminationBody = document.getElementById('physical-examination-history-body');
-    physicalExaminationBody.innerHTML = ''; // Clear existing rows
+    console.log('Physical Examinations:', exams); // Debugging
+    physicalExaminationTable.clear(); // Clear existing data
 
     exams.forEach(exam => {
         // Parse height and weight as floats
@@ -1015,67 +1347,62 @@ function populatePhysicalExaminationHistory(exams) {
             bmi = (weightKg / (heightM * heightM)).toFixed(2); // BMI formula
         }
 
-        const row = `
-            <tr>
-                <td>${!isNaN(heightCm) && heightCm > 0 ? heightCm : 'N/A'}</td>
-                <td>${!isNaN(weightKg) && weightKg > 0 ? weightKg : 'N/A'}</td>
-                <td>${bmi}</td> <!-- Display BMI -->
-                <td>${exam.vision || 'N/A'}</td>
-                <td>${exam.remarks || 'N/A'}</td>
-            </tr>`;
-        physicalExaminationBody.insertAdjacentHTML('beforeend', row);
+        // Add row data as an array
+        physicalExaminationTable.row.add([
+            !isNaN(heightCm) && heightCm > 0 ? heightCm : 'N/A',
+            !isNaN(weightKg) && weightKg > 0 ? weightKg : 'N/A',
+            bmi,
+            exam.vision || 'N/A',
+            exam.remarks || 'N/A'
+        ]);
     });
+
+    physicalExaminationTable.draw(); // Redraw the table with new data
 }
 
+// Populate Health Examination Uploads Table
+function populateHealthExaminationHistory(healthExaminations) {
+    console.log('Health Examinations:', healthExaminations); // Debugging
+    healthExaminationUploadsTable.clear(); // Clear existing data
 
-// Populate Health Examination Uploads Table and Add Preview Modal for Images
-function populateHealthExaminationHistory(healthExamination) {
-    const healthExaminationUploadsBody = document.getElementById('health-examination-uploads-body');
-    healthExaminationUploadsBody.innerHTML = ''; // Clear existing rows
-
-    // Add Health Examination Picture with Preview Modal
-    if (healthExamination.health_examination_picture) {
-        const healthExamRow = `
-            <tr>
-                <td>2024-2025</td>
-                <td><a href="javascript:void(0);" onclick="openImageModal('/storage/${healthExamination.health_examination_picture}')">View</a></td>
-            </tr>`;
-        healthExaminationUploadsBody.insertAdjacentHTML('beforeend', healthExamRow);
+    if (!Array.isArray(healthExaminations) || healthExaminations.length === 0) {
+        healthExaminationUploadsTable.draw(); // Redraw empty table
+        return;
     }
 
-    // Add Lab Results with Preview Modal
-    if (healthExamination.lab_result_picture) {
-        try {
-            let labResults = JSON.parse(healthExamination.lab_result_picture);
-            labResults.forEach((labResult, index) => {
-                const labResultRow = `
-                    <tr>
-                        <td>2024-2025</td>
-                        <td><a href="javascript:void(0);" onclick="openImageModal('/storage/${labResult}')">Lab Result ${index + 1}</a></td>
-                    </tr>`;
-                healthExaminationUploadsBody.insertAdjacentHTML('beforeend', labResultRow);
+    healthExaminations.forEach((healthExamination, examIndex) => {
+        // Handle health_examination_picture
+        if (healthExamination.health_examination_picture && Array.isArray(healthExamination.health_examination_picture) && healthExamination.health_examination_picture.length > 0) {
+            healthExamination.health_examination_picture.forEach((picture, picIndex) => {
+                healthExaminationUploadsTable.row.add([
+                    healthExamination.school_year || 'N/A',
+                    `<a href="javascript:void(0);" onclick="openImageModal('/storage/${picture}')">Health Exam ${picIndex + 1}</a>`
+                ]);
             });
-        } catch (error) {
-            console.error('Error parsing lab result pictures:', error);
         }
-    }
 
-    // Add X-ray Pictures with Preview Modal
-    if (healthExamination.xray_picture) {
-        try {
-            let xrayPictures = JSON.parse(healthExamination.xray_picture);
-            xrayPictures.forEach((xrayPicture, index) => {
-                const xrayPictureRow = `
-                    <tr>
-                        <td>2024-2025</td>
-                        <td><a href="javascript:void(0);" onclick="openImageModal('/storage/${xrayPicture}')">X-ray ${index + 1}</a></td>
-                    </tr>`;
-                healthExaminationUploadsBody.insertAdjacentHTML('beforeend', xrayPictureRow);
+        // Handle lab_result_picture
+        if (healthExamination.lab_result_picture && Array.isArray(healthExamination.lab_result_picture) && healthExamination.lab_result_picture.length > 0) {
+            healthExamination.lab_result_picture.forEach((labResult, labIndex) => {
+                healthExaminationUploadsTable.row.add([
+                    healthExamination.school_year || 'N/A',
+                    `<a href="javascript:void(0);" onclick="openImageModal('/storage/${labResult}')">Lab Result ${labIndex + 1}</a>`
+                ]);
             });
-        } catch (error) {
-            console.error('Error parsing x-ray pictures:', error);
         }
-    }
+
+        // Handle xray_picture
+        if (healthExamination.xray_picture && Array.isArray(healthExamination.xray_picture) && healthExamination.xray_picture.length > 0) {
+            healthExamination.xray_picture.forEach((xrayPicture, xrayIndex) => {
+                healthExaminationUploadsTable.row.add([
+                    healthExamination.school_year || 'N/A',
+                    `<a href="javascript:void(0);" onclick="openImageModal('/storage/${xrayPicture}')">X-ray ${xrayIndex + 1}</a>`
+                ]);
+            });
+        }
+    });
+
+    healthExaminationUploadsTable.draw(); // Redraw the table with new data
 }
 
 // Open Image Modal Function using SweetAlert
@@ -1106,8 +1433,8 @@ document.getElementById('search-button').addEventListener('click', function (eve
     if (!query) {
         Swal.fire({
             icon: 'error',
-            title: 'Empty Query',
-            text: 'Please enter a search term.',
+            title: 'Empty Search',
+            text: 'Please enter an ID number',
         });
         return;
     }
@@ -1120,19 +1447,20 @@ document.getElementById('search-button').addEventListener('click', function (eve
             return response.json();
         })
         .then(data => {
-            console.log('Search response:', data); // Log search response for debugging
+            console.log('Data received in search:', data); // Debugging
             if (data.success) {
                 populateFields(data);
-                const idNumber = document.getElementById('physical-exam-id_number').value;
                 Swal.fire({
                     icon: 'success',
                     title: 'Success',
                     text: 'Medical record data found and populated successfully!',
                     timer: 2000, // Auto-close after 2 seconds
                     showConfirmButton: false
+                }).then(() => {
+                    // Optionally switch to the history tab after successful data fetch
                 });
             } else {
-                showNoDataAlert(); // Show alert if no matching data found
+                showNoDataAlert();
             }
         })
         .catch(error => {
@@ -1144,7 +1472,6 @@ document.getElementById('search-button').addEventListener('click', function (eve
             });
         });
 });
-
 
 // Function to calculate BMI and auto-update it
 function calculateBMI() {
@@ -1158,14 +1485,14 @@ function calculateBMI() {
         document.getElementById('bmi-value').textContent = 'N/A';
     }
 }
+
+// Function to populate Medicine Intake History
 function populateMedicineIntakeHistory(medicineIntakes) {
     console.log('Medicine Intakes:', medicineIntakes); // Debugging
-    const medicineIntakeBody = document.getElementById('medicine-intake-history-body');
-    medicineIntakeBody.innerHTML = ''; // Clear existing rows
+    medicineIntakeTable.clear(); // Clear existing data
 
     if (medicineIntakes.length === 0) {
-        const row = `<tr><td colspan="4">No medicine intake records found.</td></tr>`;
-        medicineIntakeBody.insertAdjacentHTML('beforeend', row);
+        medicineIntakeTable.draw(); // Redraw empty table
         return;
     }
 
@@ -1175,12 +1502,12 @@ function populateMedicineIntakeHistory(medicineIntakes) {
 
         // Date Handling
         let formattedDate = 'N/A';
-        if (intake.created_at) { // Assuming 'created_at' exists
+        if (intake.created_at) {
             const parsedDate = new Date(intake.created_at);
             if (!isNaN(parsedDate)) {
                 formattedDate = parsedDate.toLocaleDateString();
             }
-        } else if (intake.date) { // If there's a 'date' field
+        } else if (intake.date) {
             const parsedDate = new Date(intake.date);
             if (!isNaN(parsedDate)) {
                 formattedDate = parsedDate.toLocaleDateString();
@@ -1191,29 +1518,27 @@ function populateMedicineIntakeHistory(medicineIntakes) {
         const dosage = intake.dosage || 'N/A';
 
         // Reason
-        const reason = intake.reason || 'N/A'; // Ensure 'reason' exists
+        const reason = intake.reason || 'N/A';
 
-        const row = `
-            <tr>
-                <td>${medicine}</td>
-                <td>${formattedDate}</td>
-                <td>${dosage}</td>
-                <td>${reason}</td>
-            </tr>`;
-        medicineIntakeBody.insertAdjacentHTML('beforeend', row);
+        // Add row data as an array
+        medicineIntakeTable.row.add([
+            medicine,
+            formattedDate,
+            dosage,
+            reason
+        ]);
     });
+
+    medicineIntakeTable.draw(); // Redraw the table with new data
 }
 
-// Auto-calculate BMI when height and weight are input
-document.getElementById('height').addEventListener('input', calculateBMI);
-document.getElementById('weight').addEventListener('input', calculateBMI);
+// Handle Physical Examination Form Submission
 document.getElementById('physical-examination-form').addEventListener('submit', function(event) {
     event.preventDefault(); // Prevent the default form submission
 
     const form = event.target;
     const formData = new FormData(form);
     const idNumber = document.getElementById('physical-exam-id_number').value;
-
 
     // Debug: Log formData entries
     for (let [key, value] of formData.entries()) {
@@ -1230,6 +1555,7 @@ document.getElementById('physical-examination-form').addEventListener('submit', 
     })
     .then(response => response.json())
     .then(data => {
+        console.log('Physical Examination Form Submission Response:', data); // Debugging
         if (data.success) {
             Swal.fire({
                 icon: 'success',
@@ -1240,11 +1566,12 @@ document.getElementById('physical-examination-form').addEventListener('submit', 
             });
             
             // Reset specific fields without affecting id_number
-            form.querySelectorAll('input[type="text"], textarea').forEach(input => {
+            form.querySelectorAll('input[type="text"], textarea, input[type="number"]').forEach(input => {
                 input.value = '';
             });
             document.getElementById('bmi-value').textContent = 'N/A';
-            // Reset other fields as necessary
+            // Optionally, re-fetch history data
+            fetchMedicalHistory(false);
         } else {
             Swal.fire({
                 icon: 'error',
@@ -1263,69 +1590,80 @@ document.getElementById('physical-examination-form').addEventListener('submit', 
     });
 });
 
-
-   
+// Function to clear forms
 function clearForm(button) {
-        if (!button) {
-            console.error('No button element provided to clearForm.');
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Unable to identify the button element.',
-            });
-            return;
-        }
-
-        // Find the closest parent form of the clicked button
-        const form = button.closest('form');
-
-        if (form) {
-            // Clear all input fields of type text, number, date
-            form.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]').forEach(input => {
-                input.value = '';
-            });
-
-            // Uncheck all checkboxes and radio buttons
-            form.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(input => {
-                input.checked = false;
-            });
-
-            // Clear all textarea fields
-            form.querySelectorAll('textarea').forEach(textarea => {
-                textarea.value = '';
-            });
-
-            // Reset BMI display if it exists within the form
-            const bmiValue = form.querySelector('#bmi-value');
-            if (bmiValue) {
-                bmiValue.textContent = 'N/A';
-            }
-
-            // Optionally, disable the Save button if necessary
-            const saveButton = form.querySelector('#save-button');
-            if (saveButton) {
-                saveButton.disabled = true;
-            }
-
-            // Display SweetAlert notification
-            Swal.fire({
-                icon: 'info',
-                title: 'Form Cleared',
-                text: 'All fields have been cleared successfully.',
-                timer: 2000, // Auto-close after 2 seconds
-                showConfirmButton: false
-            });
-        } else {
-            // If no parent form is found, display an error alert
-            console.error('No parent form found for the Clear button.');
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Unable to locate the form to clear.',
-            });
-        }
+    if (!button) {
+        console.error('No button element provided to clearForm.');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Unable to identify the button element.',
+        });
+        return;
     }
-</script>
 
+    // Find the closest parent form of the clicked button
+    const form = button.closest('form');
 
+    if (form) {
+        // Clear all input fields of type text, number, date
+        form.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]').forEach(input => {
+            input.value = '';
+        });
+
+        // Uncheck all checkboxes and radio buttons
+        form.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(input => {
+            input.checked = false;
+        });
+
+        // Clear all textarea fields
+        form.querySelectorAll('textarea').forEach(textarea => {
+            textarea.value = '';
+        });
+
+        // Reset BMI display if it exists within the form
+        const bmiValue = form.querySelector('#bmi-value');
+        if (bmiValue) {
+            bmiValue.textContent = 'N/A';
+        }
+
+        // Optionally, disable the Save button if necessary
+        const saveButton = form.querySelector('#save-button');
+        if (saveButton) {
+            saveButton.disabled = true;
+        }
+
+        // Display SweetAlert notification
+        Swal.fire({
+            icon: 'info',
+            title: 'Form Cleared',
+            text: 'All fields have been cleared successfully.',
+            timer: 2000, // Auto-close after 2 seconds
+            showConfirmButton: false
+        });
+    } else {
+        // If no parent form is found, display an error alert
+        console.error('No parent form found for the Clear button.');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Unable to locate the form to clear.',
+        });
+    }
+}
+
+// Function to preview profile picture
+function previewProfilePicture(event) {
+    const preview = document.getElementById('profile-picture-preview');
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+        }
+        reader.readAsDataURL(file);
+    }
+}
+
+    </script>
 </x-app-layout>

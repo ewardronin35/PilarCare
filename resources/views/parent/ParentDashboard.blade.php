@@ -1,9 +1,13 @@
-<x-app-layout>
-<meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.css">
+<x-app-layout :pageTitle="'Dashboard'">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- SweetAlert2 for Alerts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
     <style>
- body {
+    body {
         background-color: #f5f7fa;
         font-family: 'Poppins', sans-serif;
     }
@@ -18,29 +22,45 @@
     }
 
     .profile-box {
-        display: flex;
-        align-items: center;
-        padding: 20px;
-        background-image: url('{{ asset('images/bg.jpg') }}');
-        background-size: cover;
-        background-position: center;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px;
-        color: white;
-    }
+            position: relative; /* Required for the overlay */
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background-image: url('{{ asset('images/bg.jpg') }}');
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            color: white;
+            overflow: hidden; /* Clip the overlay within the border-radius */
+        }
 
-    .profile-box img {
-        border-radius: 50%;
-        width: 80px;
-        height: 80px;
-        margin-right: 20px;
-    }
+        .profile-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5); /* 50% opacity black overlay */
+            z-index: 1; /* Place behind the profile content */
+        }
 
-    .profile-info {
-        display: flex;
-        flex-direction: column;
-    }
+        .profile-box img {
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            margin-right: 20px;
+            z-index: 2; /* Ensure the profile image is above the overlay */
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            z-index: 2; /* Ensure text content is above the overlay */
+        }
+
 
     .profile-info h2 {
         margin: 0;
@@ -373,13 +393,14 @@
     } 
 }
 .calendar-container {
-            width: 90%;
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin-top: 20px;
-        }
+    width: 95%;
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    transition: background-color 0.3s ease-in-out;
+}
 
         .calendar-container h2 {
             text-align: center;
@@ -464,6 +485,10 @@
         .legend-color.appointed {
             background-color: #ff4d4d;
         }
+        .legend-color.pending {
+            background-color: #ffc107
+            ;
+        }
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -547,31 +572,73 @@
         .modal-content::-webkit-scrollbar-thumb:hover {
             background-color: #888;
         }
+        /* Status Text Colors */
+.status-approved {
+    color: #28a745; /* Green */
+    font-weight: bold;
+}
+
+.status-pending {
+    color: #ffc107; /* Yellow */
+    font-weight: bold;
+}
+
+.status-no-record {
+    color: #dc3545; /* Red */
+    font-weight: bold;
+}
+
+/* Calendar Cell Status Colors */
+.calendar-cell-free {
+    background-color: #66ff66; /* Green for Free */
+    color: #fff;
+}
+
+.calendar-cell-appointed {
+    background-color: #ff4d4d; /* Red for Appointed */
+    color: #fff;
+}
+
+.calendar-cell-pending {
+    background-color: #ffc107; /* Yellow for Pending */
+    color: #fff;
+}
+
+    
     </style>
 
 <div class="main-content">
+        <!-- Profile Box -->
         <div class="profile-box">
             <img src="{{ asset('images/pilarLogo.jpg') }}" alt="Profile Image">
             <div class="profile-info">
-                <h2>{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</h2>
-                <p>Parent of: 
-                    @foreach (Auth::user()->students as $student)
-                        <span>{{ $student->first_name }} {{ $student->last_name }}</span><br>
-                    @endforeach
-                </p>
-                <!-- No edit profile button for parents -->
-            </div>
-        </div>
+    <h2>{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</h2>
 
+    @if(strtolower(Auth::user()->role) === 'parent')
+        <p>Parent of:</p>
+        <ul>
+            @forelse($studentsStatus as $studentStatus)
+                <li>
+                    <strong>{{ $studentStatus['name'] }}</strong>
+                </li>
+            @empty
+                <li>No children associated.</li>
+            @endforelse
+        </ul>
+    @endif
+
+    <a href="{{ route('profile.edit') }}" class="edit-profile-btn">Edit Profile</a>
+</div>
+</div>
+        <!-- Statistics Section -->
         <div class="statistics">
-            <!-- Appointment Count for All Children -->
             <div class="stat-box">
-                <img src="https://img.icons8.com/ios-filled/50/000000/appointment-reminders.png" alt="Appointments Icon">
-                <h2>{{ $appointmentCount }}</h2>
-                <p>Appointments</p>
+                <a href="{{ route('parent.appointment') }}">
+                    <img src="https://img.icons8.com/ios-filled/50/000000/appointment-reminders.png" alt="Appointments Icon">
+                    <h2>{{ $appointmentCount }}</h2>
+                    <p>Appointments</p>
+                </a>
             </div>
-
-            <!-- Health Record Status -->
             <div class="stat-box">
                 <img src="https://img.icons8.com/ios-filled/50/000000/medical-doctor.png" alt="Health Record Icon">
                 @if($hasHealthExamination)
@@ -582,8 +649,6 @@
                     <p>No Health Record Submitted</p>
                 @endif
             </div>
-
-            <!-- Dental Record Status -->
             <div class="stat-box">
                 <img src="https://img.icons8.com/ios-filled/50/000000/dental-braces.png" alt="Dental Record Icon">
                 @if($hasDentalRecord)
@@ -595,7 +660,7 @@
                 @endif
             </div>
 
-            <!-- Medical Record Status -->
+            <!-- Medical Record Stat Box -->
             <div class="stat-box">
                 <img src="https://img.icons8.com/ios-filled/50/000000/medical-history.png" alt="Medical Record Icon">
                 @if($hasMedicalRecord)
@@ -606,22 +671,23 @@
                     <p>No Medical Record Submitted</p>
                 @endif
             </div>
-
-            <!-- Complaints -->
             <div class="stat-box">
-                <img src="https://img.icons8.com/ios-filled/50/000000/complaint.png" alt="Complaints Icon">
-                <h2>{{ $complaintCount }}</h2>
-                <p>Complaints</p>
+                <a href="{{ route('student.complaint') }}">
+                    <img src="https://img.icons8.com/ios-filled/50/000000/complaint.png" alt="Complaints Icon">
+                    <h2>{{ $complaintCount }}</h2>
+                    <p>Complaints</p>
+                </a>
             </div>
         </div>
 
-        <!-- Appointment Calendar -->
+        <!-- Calendar Section -->
         <div class="calendar-container">
             <h2>Appointment Calendar</h2>
             <div class="calendar-controls">
-                <button onclick="changeMonth(-1)">Previous</button>
-                <span id="calendar-month-year"></span>
-                <button onclick="changeMonth(1)">Next</button>
+            <button id="previousMonthButton">&#8249; Previous</button>
+<span id="calendar-month-year"></span>
+<button id="nextMonthButton">Next &#8250;</button>
+
             </div>
             <table class="calendar">
                 <thead>
@@ -636,9 +702,10 @@
                     </tr>
                 </thead>
                 <tbody id="calendar-body">
-                    <!-- Calendar rows will be dynamically generated here -->
+                    <!-- Dynamically generated calendar rows go here -->
                 </tbody>
             </table>
+            <!-- Legend Section -->
             <div class="legend">
                 <div class="legend-item">
                     <div class="legend-color free"></div>
@@ -648,59 +715,134 @@
                     <div class="legend-color appointed"></div>
                     <span>Appointed</span>
                 </div>
+                <div class="legend-item">
+                    <div class="legend-color pending"></div>
+                    <span>Pending</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointment Modal -->
+        <div id="preview-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closePreviewModal">&times;</span>
+                <h2>Appointments on <span id="preview-date"></span></h2>
+                <div class="appointments-container">
+                    <ul id="appointments-list">
+                        <!-- Appointments will be dynamically inserted here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Welcome Modal -->
+        <div id="welcomeModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div id="welcomeMessage" class="welcome-message show">
+                    <img src="{{ asset('images/pilarLogo.jpg') }}" alt="PilarCare Logo" width="100">
+                    <h2>Welcome to PilarCare, {{ Auth::user()->first_name }}!</h2>
+                </div>
+                <div class="disclaimer" id="disclaimerSection">
+                    <h3>Data Privacy Disclaimer</h3>
+                    <p>
+                        In compliance with the Data Privacy Act of 2012, all gathered data from the participant will be treated with utmost confidentiality to protect the participant’s/respondent’s privacy.
+                    </p>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="agree_disclaimer" name="agree_disclaimer" required>
+                            I have read and understood the above statement. I agree to participate voluntarily in this research without any force.
+                        </label>
+                    </div>
+                    <p>After agreeing to the terms, you will proceed to view your dashboard.</p>
+                    <button type="button" class="next-button" id="nextButton" disabled>
+                        Next <span class="arrow">&rarr;</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-       // Global variables and functions
-       let currentMonth;
-let currentYear;
-const csrfToken = document.querySelector('meta[name="csrf-token"]');
-// Function to format time to 12-hour AM/PM
-function formatTimeTo12Hour(timeString) {
-    // Assume timeString is in "HH:mm:ss" or "HH:mm" format
-    const [hoursStr, minutesStr] = timeString.split(':');
-    let hours = parseInt(hoursStr, 10);
-    const minutes = minutesStr;
-    const ampm = hours >= 12 ? 'PM' : 'AM';
+        // Define closePreviewModal in the global scope
+        function closePreviewModal() {
+            const modal = document.getElementById('preview-modal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
 
-    hours = hours % 12 || 12; // Convert '0' to '12' for 12 AM
-    return `${hours}:${minutes} ${ampm}`;
-}
+        document.addEventListener('DOMContentLoaded', function() {
 
-// Function to close the preview modal
-function closePreviewModal() {
-    const modal = document.getElementById('preview-modal');
-    modal.style.display = 'none';
-}
+            const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
 
-// Function to change the month in the calendar
-function changeMonth(direction) {
-    currentMonth += direction;
-    if (currentMonth < 0) {
-        currentMonth = 11;
-        currentYear--;
-    } else if (currentMonth > 11) {
-        currentMonth = 0;
-        currentYear++;
+            // Validation functions
+            function validateLetters(input) {
+                setTimeout(() => {
+                    input.value = input.value.replace(/[^A-Za-z\s]/g, '');
+                }, 1);
+            }
+
+            function validateNumbers(input) {
+                setTimeout(() => {
+                    input.value = input.value.replace(/[^0-9]/g, '');
+                }, 1);
+            }
+
+            // Function to format time to 12-hour AM/PM
+            function formatTimeTo12Hour(timeString) {
+                const [hoursStr, minutesStr] = timeString.split(':');
+                let hours = parseInt(hoursStr, 10);
+                const minutes = minutesStr;
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+
+                hours = hours % 12 || 12;
+                return `${hours}:${minutes} ${ampm}`;
+            }
+
+            // Function to change the month in the calendar
+            let currentMonth = new Date().getMonth();
+            let currentYear = new Date().getFullYear();
+
+            function changeMonth(direction) {
+        currentMonth += direction;
+        if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        } else if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        }
+        renderCalendar(currentMonth, currentYear);
     }
-    renderCalendar(currentMonth, currentYear);
-}
 
-// Function to validate date
-function isValidDate(year, month, day) {
-    const date = new Date(year, month - 1, day); // JS months are 0-indexed
+    const previousMonthButton = document.getElementById('previousMonthButton');
+    const nextMonthButton = document.getElementById('nextMonthButton');
+
+    if (previousMonthButton) {
+        previousMonthButton.addEventListener('click', function() {
+            changeMonth(-1);
+        });
+    }
+
+    if (nextMonthButton) {
+        nextMonthButton.addEventListener('click', function() {
+            changeMonth(1);
+        });
+    }
+    function isValidDate(year, month, day) {
+    const date = new Date(year, month - 1, day); // Months are zero-indexed in JavaScript
     return date.getFullYear() === year && date.getMonth() + 1 === month && date.getDate() === day;
 }
-
-// Function to render the calendar
-function renderCalendar(month, year) {
+            // Function to render the calendar
+            function renderCalendar(month, year) {
     const calendarBody = document.getElementById('calendar-body');
+    if (!calendarBody) return;
     calendarBody.innerHTML = ''; // Clear previous calendar
 
-    const firstDay = new Date(year, month).getDay(); // Get the first day of the month
-    const daysInMonth = new Date(year, month + 1, 0).getDate(); // Number of days in the month
+    const firstDay = new Date(year, month).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
 
     const monthYearText = document.getElementById('calendar-month-year');
     const monthNames = [
@@ -717,16 +859,15 @@ function renderCalendar(month, year) {
             if (i === 0 && j < firstDay) {
                 cell.innerHTML = ''; // Empty cells before the first day
             } else if (date > daysInMonth) {
-                break; // Exit when exceeding days in the month
+                cell.innerHTML = ''; // Empty cells after the last day
             } else {
-                let day = date; // Capture the current date
+                let day = date;
                 cell.innerHTML = day;
                 const currentDate = new Date(year, month, day);
 
-                // Only add click event for valid dates
                 if (isValidDate(year, month + 1, day)) {
                     cell.onclick = function () {
-                        openPreviewModal(day, month + 1, year); // Pass adjusted month
+                        openPreviewModal(day, month + 1, year);
                     };
 
                     // Add appointment markers
@@ -739,116 +880,204 @@ function renderCalendar(month, year) {
                     cell.classList.add('active');
                 }
 
-                row.appendChild(cell);
                 date++;
             }
+            // Append the cell to the row after processing
+            row.appendChild(cell);
         }
         calendarBody.appendChild(row);
     }
 }
 
-// Fetch and mark appointments
-function fetchAppointmentMarkers(day, month, year, cell) {
-    const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-    fetch(`/student/appointments/by-date?date=${formattedDate}`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken.getAttribute('content')
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.appointments && data.appointments.length > 0) {
-            // If there are appointments, mark the cell as red
-            cell.style.backgroundColor = '#ff4d4d'; // Red for appointments
-            cell.style.color = '#fff';
-        } else {
-            // If no appointments, mark the cell as green
-            cell.style.backgroundColor = '#66ff66'; // Green for free
-        }
-    })
-    .catch(error => {
-        console.error('Error fetching appointment markers:', error);
-    });
-}
+            // Fetch and mark appointments
+            function fetchAppointmentMarkers(day, month, year, cell) {
+                const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-const getAppointmentsByDateUrl = `{{ route('student.appointments.by-date') }}`;
+                // Determine user role
+                const userRole = '{{ strtolower(Auth::user()->role) }}';
 
-// Function to open the preview modal
-function openPreviewModal(day, month, year) {
-    const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                let fetchUrl = '';
+                if (userRole === 'parent') {
+                    fetchUrl = `/parent/appointments/by-date?date=${formattedDate}`;
+                } else {
+                    fetchUrl = `/student/appointments/by-date?date=${formattedDate}`;
+                }
 
-    document.getElementById('preview-date').innerText = formattedDate;
+                fetch(fetchUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Server responded with status ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Remove existing marker classes to prevent duplication
+                    cell.classList.remove('calendar-cell-free', 'calendar-cell-appointed', 'calendar-cell-pending');
+                    cell.innerHTML = day;
 
-    fetch(`${getAppointmentsByDateUrl}?date=${formattedDate}`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken.getAttribute('content')
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        const appointmentsList = document.getElementById('appointments-list');
-        appointmentsList.innerHTML = ''; // Clear previous appointments
+                    if (data.appointments && data.appointments.length > 0) {
+                        data.appointments.forEach(appointment => {
+                            const status = appointment.status.toLowerCase();
 
-        if (data.appointments && data.appointments.length > 0) {
-            data.appointments.forEach(appointment => {
-                // Convert appointment_time to 12-hour AM/PM format
-                const timeString = appointment.appointment_time;
-                const timeFormatted = formatTimeTo12Hour(timeString);
+                            if (status === 'approved') {
+                                cell.classList.add('calendar-cell-appointed');
+                                cell.innerHTML += ' <span class="status-approved">(Approved)</span>';
+                            } else if (status === 'pending') {
+                                cell.classList.add('calendar-cell-pending');
+                                cell.innerHTML += ' <span class="status-pending">(Pending)</span>';
+                            }
+                        });
+                    } else {
+                        // If no appointments, mark the cell as free
+                        cell.classList.add('calendar-cell-free');
+                        cell.innerHTML += ' <span class="status-free">(Free)</span>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching appointment markers:', error);
+                });
+            }
 
-                const li = document.createElement('li');
-                li.innerHTML = `<p><span>${timeFormatted}</span> - ${appointment.appointment_type}</p>`;
-                appointmentsList.appendChild(li);
+            // Function to open the preview modal
+            function openPreviewModal(day, month, year) {
+                const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+                document.getElementById('preview-date').innerText = formattedDate;
+
+                const userRole = '{{ strtolower(Auth::user()->role) }}';
+                let fetchUrl = '';
+
+                if (userRole === 'parent') {
+                    fetchUrl = `/parent/appointments/by-date?date=${formattedDate}`;
+                } else {
+                    fetchUrl = `/student/appointments/by-date?date=${formattedDate}`;
+                }
+
+                fetch(fetchUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Server responded with status ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const appointmentsList = document.getElementById('appointments-list');
+                    if (!appointmentsList) return;
+                    appointmentsList.innerHTML = ''; // Clear previous appointments
+
+                    if (data.appointments && data.appointments.length > 0) {
+                        data.appointments.forEach(appointment => {
+                            const timeFormatted = formatTimeTo12Hour(appointment.appointment_time);
+
+                            const li = document.createElement('li');
+                            li.innerHTML = `<p><span>${timeFormatted}</span> - ${appointment.child_name} - ${appointment.appointment_type} with Dr. ${appointment.doctor_name}</p>`;
+                            appointmentsList.appendChild(li);
+                        });
+                    } else {
+                        const li = document.createElement('li');
+                        li.innerText = userRole === 'parent' ? 'No appointments for your child.' : 'No appointments for this day.';
+                        appointmentsList.appendChild(li);
+                    }
+
+                    const modal = document.getElementById('preview-modal');
+                    if (modal) {
+                        modal.style.display = 'flex'; // Show the modal
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching appointments:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to load appointments.',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                });
+            }
+
+            // Function to handle the welcome modal
+            const welcomeModal = document.getElementById("welcomeModal");
+            const nextButton = document.getElementById("nextButton");
+            const welcomeMessage = document.getElementById('welcomeMessage');
+            const agreeDisclaimer = document.getElementById("agree_disclaimer");
+            const disclaimerSection = document.getElementById('disclaimerSection');
+
+            if (welcomeModal && nextButton && agreeDisclaimer) {
+                // Agree to disclaimer
+                agreeDisclaimer.addEventListener('change', function() {
+                    nextButton.disabled = !this.checked;
+                });
+
+                // Countdown before enabling the next button and closing the modal
+                nextButton.addEventListener('click', function() {
+                    let countdown = 5; // Reduced countdown time for better UX
+                    nextButton.disabled = true;
+                    nextButton.innerHTML = `Please wait ${countdown}s`;
+
+                    const countdownInterval = setInterval(() => {
+                        countdown--;
+                        nextButton.innerHTML = `Please wait ${countdown}s`;
+
+                        if (countdown === 0) {
+                            clearInterval(countdownInterval);
+                            nextButton.innerHTML = `Next <span class="arrow">&rarr;</span>`;
+                            nextButton.disabled = false;
+
+                            // Hide welcome message and close the modal
+                            if (welcomeMessage) welcomeMessage.style.display = 'none';
+                            if (disclaimerSection) disclaimerSection.style.display = 'none';
+                            welcomeModal.style.display = 'none';
+
+                            // Optional: Show a success message
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Welcome!',
+                                text: 'You have successfully viewed your dashboard.',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        }
+                    }, 1000);
+                });
+
+                // Close modal when clicking on the close button
+                const closeButtons = welcomeModal.querySelectorAll('.close');
+                closeButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        welcomeModal.style.display = 'none';
+                    });
+                });
+
+                // Close modal when clicking outside the modal content
+                window.addEventListener('click', function(event) {
+                    if (event.target === welcomeModal) {
+                        welcomeModal.style.display = 'none';
+                    }
+                });
+            }
+
+            // Close Preview Modal when clicking the close button
+            const closePreviewButtons = document.querySelectorAll('#preview-modal .close');
+            closePreviewButtons.forEach(button => {
+                button.addEventListener('click', closePreviewModal);
             });
-        } else {
-            const li = document.createElement('li');
-            li.innerText = 'No appointments for this day.';
-            appointmentsList.appendChild(li);
-        }
 
-        const modal = document.getElementById('preview-modal');
-        modal.style.display = 'flex'; // Show the modal
-    })
-    .catch(error => {
-        console.error('Error fetching appointments:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Failed to load appointments.',
-            timer: 3000,
-            showConfirmButton: false
+            // Initialize the calendar
+            renderCalendar(currentMonth, currentYear);
         });
-    });
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById("welcomeModal");
-    const nextButton = document.getElementById("nextButton");
-    const submitButton = document.getElementById("submitButton");
-    const welcomeForm = document.getElementById("welcomeForm");
-    const welcomeMessage = document.getElementById('welcomeMessage');
-    const agreeDisclaimer = document.getElementById("agree_disclaimer");
-    const agreeTerms = document.getElementById("agree_terms");
-    const profilePreview = document.getElementById('profile_preview');
-    const disclaimerSection = document.getElementById('disclaimerSection');
-
-    let formInteraction = false;
-
-    if (!csrfToken) {
-        console.error('CSRF token not found in meta tags');
-        return;
-    }
-
-    // Initialize the calendar
-    const today = new Date();
-    currentMonth = today.getMonth();
-    currentYear = today.getFullYear();
-    renderCalendar(currentMonth, currentYear);
-        });
-        </script>
-
+    </script>
 </x-app-layout>

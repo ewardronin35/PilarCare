@@ -1,9 +1,10 @@
-<x-app-layout>
+<x-app-layout :pageTitle="'Dental Record'">
     <head>
         <!-- Add CSRF Token Meta Tag -->
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <link rel="stylesheet" href="{{ asset('css/dental.css') }}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
     </head>
 
     <body>
@@ -52,9 +53,7 @@
                                     <span class="lower-right-label">Lower Right</span>
                                 </div>
                                 <svg class="diagram" viewBox="0 0 300 400">
-                                    <!-- Add SVG path data here for dental chart -->
-                                    <!-- Example Path: -->
-                                    <path
+                                <path
     class="tooth-11 tooth-11-parent"
     d="m 113.894,31.723601 c 0.0561,0.43476 3.08165,4.91178 3.84449,6.93412 1.03137,2.18327 2.67371,4.15697 7.0469,5.19412 3.57083,-0.36803 7.19248,-0.4467 10.19825,-4.03315 l 7.38989,-9.40518 1.34756,-2.99193 c 0.97308,-2.16029 -1.13419,-4.14679 -3.10702,-4.99829 l -5.34936,-1.19716 c -3.12438,-0.16807 -5.19809,-0.93656 -11.30278,0.59905 l -5.72815,1.04816 c -2.08382,0.77109 -4.86648,0.46927 -4.92056,4.35665 0.10953,1.48595 -0.58405,2.8577 0.58078,4.49361 z"
     style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"/>
@@ -805,15 +804,26 @@
 
             <!-- Right side: Dental History -->
             <div class="dental-examination-form">
-                <div class="dental-history">
-                    <h2>Dental History</h2>
-                    @if($dentalRecord)
-                        <a href="{{ route('student.dentalRecord.pdf', $dentalRecord->id_number) }}" class="btn btn-primary no-spinner">Download Dental Record</a>
-                    @endif
+    <div class="dental-history">
+        <h2>Dental History</h2>
+        
+        @if($dentalRecord)
+        <a href="{{ route('student.dentalRecord.pdf', ['id_number' => $dentalRecord->id_number]) }}" class="btn btn-primary no-spinner">Download Dental Record</a>
+    @endif
+
+    @if($nextExamination)
+        <a href="{{ route('student.dentalRecord.downloadPdf', ['id_number' => $nextExamination->id_number]) }}" class="btn btn-primary no-spinner">Download Dental Examination</a>
+    @else
+        <p>No dental examinations available for download.</p>
+    @endif
+
+    @if(!$dentalRecord && !$nextExamination)
+        <p>No dental examination records available for this student.</p>
+    @endif
 
                     <!-- Patient Information -->
-                    <table class="history-table">
-                        <thead>
+                    <table class="history-table" id="patient-information-table">
+                    <thead>
                             <tr>
                                 <th colspan="3">Patients Information</th>
                             </tr>
@@ -839,8 +849,8 @@
                     </table>
 
                     <!-- Previous Examinations -->
-                    <table class="history-table">
-                        <thead>
+                    <table class="history-table" id="dental-examination-history-table">
+                    <thead>
                             <tr>
                                 <th colspan="3">Dental Examinations History</th>
                             </tr>
@@ -852,8 +862,8 @@
 
                     <!-- Treatments Performed -->
                    <!-- Tooth History Table -->
-<table class="history-table">
-    <caption>Tooth History</caption>
+                   <table class="history-table" id="tooth-history-table">
+                   <caption>Tooth History</caption>
     <thead>
         <tr>
             <th>Tooth Number</th>
@@ -898,55 +908,71 @@
         </div>
 
         <!-- Preview Modal -->
-        <!-- Modal to update tooth details, status, and upload images -->
-        <div id="previewModal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h2>Tooth Details</h2>
-                <form id="tooth-details-form" action="{{ route('student.teeth.store') }}" enctype="multipart/form-data">
-                    @csrf
-                    <div class="form-group">
-                        <label for="modal-tooth">Tooth:</label>
-                        <input type="hidden" id="modal-is-first-submission" value="true">
-                        @if ($dentalRecord)
-                            <input type="hidden" id="dental-record-id" name="dental_record_id" value="{{ $dentalRecord->dental_record_id }}">
-                        @else
-                            <p>No dental record found for this user. A new dental record will be created automatically.</p>
-                        @endif
-                        <input type="text" id="modal-tooth" name="tooth_number" class="form-control" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="modal-status">Status:</label>
-                        <select id="modal-status" name="status" class="form-control">
-                            <option value="Healthy">Healthy</option>
-                            <option value="Aching">Aching</option>
-                            <option value="Missing">Missing</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="modal-notes">Notes:</label>
-                        <textarea id="modal-notes" name="notes" class="form-control"></textarea>
-                    </div>
-                    <input type="hidden" id="modal-svg-path" name="svg_path" value="">
-
-                    <!-- Image Upload Section in the Modal -->
-                    <div class="form-group">
-                        <label for="modal-upload-images">Upload Dental Pictures:</label>
-                        <div class="custom-file-upload">
-                            <label for="modal-upload-images" class="upload-label">
-                                <i class="fas fa-upload"></i> Choose Images
-                                <input type="file" id="modal-upload-images" name="update_images[]" class="form-control" accept="image/*" multiple>
-                            </label>
-                        </div>
-                        <div id="image-preview-container" class="image-preview-container"></div>
-                        <input type="hidden" name="is_current" value="true">
-                    </div>
-
-                    <button type="button" id="save-tooth-details" class="save-button">Save</button>
-                </form>
+    <!-- Modal to update tooth details, status, and upload images -->
+    <div id="previewModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Tooth Details</h2>
+        <form id="tooth-details-form" action="{{ route('student.teeth.store') }}" enctype="multipart/form-data">
+            @csrf
+            <div class="form-group">
+                <label for="modal-tooth">Tooth:</label>
+                @if ($dentalRecord)
+                    <input type="hidden" id="dental-record-id" name="dental_record_id" value="{{ $dentalRecord->dental_record_id }}">
+                @else
+                    <p>No dental record found for this user. A new dental record will be created automatically.</p>
+                @endif
+                <input type="text" id="modal-tooth" class="form-control" readonly>
             </div>
-        </div>
+            <div class="form-group">
+                <label for="modal-status">Status:</label>
+                <select id="modal-status" name="status" class="form-control">
+                    <option value="Healthy">Healthy</option>
+                    <option value="Aching">Aching</option>
+                    <option value="Missing">Missing</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="modal-notes">Notes:</label>
+                <textarea id="modal-notes" name="notes" class="form-control"></textarea>
+            </div>
+            <input type="hidden" id="modal-svg-path" name="svg_path" value="">
+            <!-- Keep only one hidden input for is_first_submission -->
+            <input type="hidden" id="modal-is-first-submission" name="is_first_submission" value="true">
+
+            <!-- Image Upload Section in the Modal -->
+            <div class="form-group" id="upload-images-section" style="display: none;">
+                <label for="modal-upload-images">Upload Dental Pictures:</label>
+                <div class="custom-file-upload">
+                    <label for="modal-upload-images" class="upload-label">
+                        <i class="fas fa-upload"></i> Choose Images
+                    </label>
+                    <input type="file" id="modal-upload-images" name="update_images[]" class="form-control" accept="image/*" multiple style="display: none;">
+                    <div id="image-preview-container" class="image-preview-container"></div>
+                    <input type="hidden" name="is_current" value="true">
+                    <small class="form-text text-muted">Please upload images as proof for the update.</small>
+                </div>
+            </div>
+
+            <button type="button" id="save-tooth-details" class="save-button">Save</button>
+        </form>
+    </div>
+</div>
+
+
+
     </body>
+<!-- Include jQuery First -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+<!-- Then Include DataTables JS -->
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+
+<!-- Include SweetAlert if Used -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- Finally, Include Your Custom JS -->
+<script src="{{ asset('js/dental.js') }}"></script>
 
     <script>
         var storeToothUrl = "{{ route('student.teeth.store') }}";
@@ -958,7 +984,4 @@
         var dentalRecordId = "{{ $dentalRecord->dental_record_id ?? '' }}"; // Ensure this is correctly set
         console.log('Teeth Statuses:', teethStatuses); 
     </script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="{{ asset('js/dental.js') }}"></script>
 </x-app-layout>

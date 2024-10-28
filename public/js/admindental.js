@@ -1,48 +1,97 @@
 $(document).ready(function () {
+    // Set today's date in the date input field on page load
     const today = new Date().toISOString().substr(0, 10);
     $('#date').val(today);
 
+    // Restrict input in the search bar to alphanumeric characters and limit to 7 characters
     $('#search-bar').on('input', function () {
         let input = $(this).val();
-        // Allow only letters and numbers, removing special characters
-        $(this).val(input.replace(/[^a-zA-Z0-9]/g, '').slice(0, 7)); // Keep only alphanumeric characters and limit to 7 characters
+        $(this).val(input.replace(/[^a-zA-Z0-9]/g, '').slice(0, 7));
     });
 
+    // Teeth data mapping
     const teethData = {
-        11: 'Upper Right Central Incisor',
-        12: 'Upper Right Lateral Incisor',
-        13: 'Upper Right Canine',
-        14: 'Upper Right First Premolar',
-        15: 'Upper Right Second Premolar',
-        16: 'Upper Right First Molar',
-        17: 'Upper Right Second Molar',
-        18: 'Upper Right Third Molar',
-        21: 'Upper Left Central Incisor',
-        22: 'Upper Left Lateral Incisor',
-        23: 'Upper Left Canine',
-        24: 'Upper Left First Premolar',
-        25: 'Upper Left Second Premolar',
-        26: 'Upper Left First Molar',
-        27: 'Upper Left Second Molar',
-        28: 'Upper Left Third Molar',
-        31: 'Lower Left Central Incisor',
-        32: 'Lower Left Lateral Incisor',
-        33: 'Lower Left Canine',
-        34: 'Lower Left First Premolar',
-        35: 'Lower Left Second Premolar',
-        36: 'Lower Left First Molar',
-        37: 'Lower Left Second Molar',
-        38: 'Lower Left Third Molar',
-        41: 'Lower Right Central Incisor',
-        42: 'Lower Right Lateral Incisor',
-        43: 'Lower Right Canine',
-        44: 'Lower Right First Premolar',
-        45: 'Lower Right Second Premolar',
-        46: 'Lower Right First Molar',
-        47: 'Lower Right Second Molar',
-        48: 'Lower Right Third Molar'
+        '11': 'Upper Right Central Incisor',
+        '12': 'Upper Right Lateral Incisor',
+        '13': 'Upper Right Canine',
+        '14': 'Upper Right First Premolar',
+        '15': 'Upper Right Second Premolar',
+        '16': 'Upper Right First Molar',
+        '17': 'Upper Right Second Molar',
+        '18': 'Upper Right Third Molar',
+        '21': 'Upper Left Central Incisor',
+        '22': 'Upper Left Lateral Incisor',
+        '23': 'Upper Left Canine',
+        '24': 'Upper Left First Premolar',
+        '25': 'Upper Left Second Premolar',
+        '26': 'Upper Left First Molar',
+        '27': 'Upper Left Second Molar',
+        '28': 'Upper Left Third Molar',
+        '31': 'Lower Left Central Incisor',
+        '32': 'Lower Left Lateral Incisor',
+        '33': 'Lower Left Canine',
+        '34': 'Lower Left First Premolar',
+        '35': 'Lower Left Second Premolar',
+        '36': 'Lower Left First Molar',
+        '37': 'Lower Left Second Molar',
+        '38': 'Lower Left Third Molar',
+        '41': 'Lower Right Central Incisor',
+        '42': 'Lower Right Lateral Incisor',
+        '43': 'Lower Right Canine',
+        '44': 'Lower Right First Premolar',
+        '45': 'Lower Right Second Premolar',
+        '46': 'Lower Right First Molar',
+        '47': 'Lower Right Second Molar',
+        '48': 'Lower Right Third Molar'
     };
 
+    // Initialize DataTables on Dental Examinations History Table
+    const dentalExaminationTable = $('#dental-examination-history-table').DataTable({
+        "paging": true,
+        "searching": true,
+        "ordering": true,
+        "info": true,
+        "responsive": true,
+        "autoWidth": false,
+        "columns": [
+            { "data": "date", "orderable": true },
+            { "data": "dentist_name", "orderable": true },
+            { "data": "findings", "orderable": true }
+        ],
+        "language": {
+            "emptyTable": "No previous examinations found."
+        },
+        "dom": 'Bfrtip', // For Buttons extension
+        "buttons": [
+            'copy', 'csv', 'excel', 'pdf', 'print'
+        ]
+    });
+
+    // Initialize DataTables on Tooth History Table
+    const toothHistoryTable = $('#tooth-history-table').DataTable({
+        "paging": true,
+        "searching": true,
+        "ordering": true,
+        "info": true,
+        "responsive": true,
+        "autoWidth": false,
+        "columns": [
+            { "data": "tooth_number", "orderable": true },
+            { "data": "status", "orderable": true },
+            { "data": "notes", "orderable": true },
+            { "data": "dental_pictures", "orderable": false },
+            { "data": "last_updated", "orderable": true }
+        ],
+        "language": {
+            "emptyTable": "No tooth history found."
+        },
+        "dom": 'Bfrtip', // For Buttons extension
+        "buttons": [
+            'copy', 'csv', 'excel', 'pdf', 'print'
+        ]
+    });
+
+    // Tab functionality
     $('.tab-button').click(function () {
         const tab = $(this).data('tab');
 
@@ -59,42 +108,46 @@ $(document).ready(function () {
 
     // Function to toggle the select dropdown based on checkbox state
     function toggleToothSelect(checkboxId, selectId) {
-        $(checkboxId).change(function () {
+        const checkboxSelector = `#${checkboxId}`;
+        const selectSelector = `#${selectId}`;
+
+        $(checkboxSelector).change(function () {
             if ($(this).is(':checked')) {
-                $(selectId).prop('disabled', false);
-                $(selectId).focus();
+                $(selectSelector).prop('disabled', false).trigger('change');
             } else {
-                // Re-enable the tooth in other selects
-                const selectedTooth = $(selectId).val();
-                if (selectedTooth) {
-                    $('select[name$="_tooth[]"]').not(`#${selectId}`).find(`option[value="${selectedTooth}"]`).prop('disabled', false);
+                // Re-enable the teeth in other selects
+                const selectedTeeth = $(selectSelector).val();
+                if (selectedTeeth) {
+                    selectedTeeth.forEach(function(tooth) {
+                        $('select[name$="_tooth[]"]').not(selectSelector).find(`option[value="${tooth}"]`).prop('disabled', false);
+                    });
                 }
-                $(selectId).prop('disabled', true).val('');
+                $(selectSelector).prop('disabled', true).val('').trigger('change');
             }
         });
 
         // Handle change event on the select to disable selected tooth in other selects
-        $(selectId).change(function () {
+        $(selectSelector).change(function () {
             enableAllTeeth(); // Reset all teeth options
             const selectedTeeth = $(this).val();
             if (selectedTeeth) {
                 selectedTeeth.forEach(function(tooth) {
-                    disableSelectedTeeth(tooth, selectId);
+                    disableSelectedTeeth(tooth, selectSelector);
                 });
             }
         });
 
         // Initialize the state based on the current checkbox state
-        if ($(checkboxId).is(':checked')) {
-            $(selectId).prop('disabled', false);
+        if ($(checkboxSelector).is(':checked')) {
+            $(selectSelector).prop('disabled', false);
         } else {
-            $(selectId).prop('disabled', true).val('');
+            $(selectSelector).prop('disabled', true).val('').trigger('change');
         }
     }
 
     // Function to disable selected teeth in other selects
-    function disableSelectedTeeth(selectedTooth, currentSelectId) {
-        $('select[name$="_tooth[]"]').not(`#${currentSelectId}`).find(`option[value="${selectedTooth}"]`).prop('disabled', true);
+    function disableSelectedTeeth(selectedTooth, currentSelectSelector) {
+        $('select[name$="_tooth[]"]').not(currentSelectSelector).find(`option[value="${selectedTooth}"]`).prop('disabled', true);
     }
 
     // Function to enable all teeth (to reset)
@@ -103,11 +156,11 @@ $(document).ready(function () {
     }
 
     // Initialize toggle functions for each procedure
-    toggleToothSelect('#filling', '#filling-tooth');
-    toggleToothSelect('#extraction', '#extraction-tooth');
-    toggleToothSelect('#endodontic', '#endodontic-tooth');
-    toggleToothSelect('#radiograph', '#radiograph-tooth');
-    toggleToothSelect('#prosthesis', '#prosthesis-tooth');
+    toggleToothSelect('filling', 'filling-tooth');
+    toggleToothSelect('extraction', 'extraction-tooth');
+    toggleToothSelect('endodontic', 'endodontic-tooth');
+    toggleToothSelect('radiograph', 'radiograph-tooth');
+    toggleToothSelect('prosthesis', 'prosthesis-tooth');
 
     // Function to determine the fill color based on the tooth status
     function getColorBasedOnStatus(status) {
@@ -132,6 +185,7 @@ $(document).ready(function () {
         }
     }
 
+    // Function to populate tooth colors based on status
     function populateTeeth(teeth) {
         if (!Array.isArray(teeth)) {
             console.error('Teeth data is not an array:', teeth);
@@ -153,19 +207,21 @@ $(document).ready(function () {
         });
     }
 
+    // Mapping for boolean values
     const booleanMapping = {
         0: 'No',
         1: 'Yes'
     };
-    
+
     // Function to map boolean values
     function mapBoolean(value) {
         return booleanMapping[value] || 'N/A';
     }
 
-    function populateDentalHistory(data) {
-        if (!data) {
-            console.error('Dental history data is undefined or null:', data);
+    // Function to populate dental history using DataTables API
+    function populateDentalHistory(dentalRecord) {
+        if (!dentalRecord) {
+            console.error('Dental history data is undefined or null:', dentalRecord);
             return;
         }
 
@@ -173,13 +229,13 @@ $(document).ready(function () {
         const patientInfoBody = $('#patient-info-body');
         patientInfoBody.empty();
 
-        const formattedDOB = data.birthdate ? new Date(data.birthdate).toLocaleDateString() : 'N/A';
-        const lastVisitDate = (data.previousExaminations && data.previousExaminations.length > 0)
-            ? new Date(data.previousExaminations[0].date_of_examination).toLocaleDateString()
+        const formattedDOB = dentalRecord.birthdate ? new Date(dentalRecord.birthdate).toLocaleDateString() : 'N/A';
+        const lastVisitDate = (dentalRecord.previousExaminations && dentalRecord.previousExaminations.length > 0)
+            ? new Date(dentalRecord.previousExaminations[0].date_of_examination).toLocaleDateString()
             : 'N/A';
 
-        const patientName = data.name || 'N/A';
-        const dateOfBirth = data.birthdate ? formattedDOB : 'N/A';
+        const patientName = dentalRecord.name || 'N/A';
+        const dateOfBirth = dentalRecord.birthdate ? formattedDOB : 'N/A';
 
         patientInfoBody.append(`
             <tr>
@@ -196,15 +252,21 @@ $(document).ready(function () {
             </tr>
         `);
 
+        // Initialize DataTables instances
+        const dentalExaminationTable = $('#dental-examination-history-table').DataTable();
+        const toothHistoryTable = $('#tooth-history-table').DataTable();
+
+        // Clear existing data
+        dentalExaminationTable.clear().draw();
+        toothHistoryTable.clear().draw();
+
         // Populate Previous Examinations
-        const prevExamBody = $('#dental-examination-history-body');
-        prevExamBody.empty();
-        if (data.previousExaminations && data.previousExaminations.length > 0) {
-            data.previousExaminations.forEach(exam => {
+        if (dentalRecord.previousExaminations && dentalRecord.previousExaminations.length > 0) {
+            dentalRecord.previousExaminations.forEach(exam => {
                 const formattedDate = exam.date_of_examination ? new Date(exam.date_of_examination).toLocaleDateString() : 'N/A';
                 const dentistName = exam.dentist_name || 'N/A';
-        
-                // Collect additional findings based on fields with value 1
+
+                // Collect additional findings based on fields with value true or arrays
                 const additionalFindings = [];
                 const examinationFields = {
                     carries_free: 'Carries Free',
@@ -216,23 +278,29 @@ $(document).ready(function () {
                     oral_prophylaxis: 'Oral Prophylaxis',
                     fluoride_application: 'Fluoride Application',
                     gum_treatment: 'Gum Treatment',
-                    ortho_consultation: 'Ortho Consultation',
-                    sealant_tooth: 'Sealant Tooth',
-                    filling_tooth: 'Filling Tooth',
-                    extraction_tooth: 'Extraction Tooth',
-                    endodontic_tooth: 'Endodontic Tooth',
-                    radiograph_tooth: 'Radiograph Tooth',
-                    prosthesis_tooth: 'Prosthesis Tooth',
+                    ortho_consultation: 'Orthodontic Consultation',
+                    filling_tooth: 'Filling Tooth(s)',
+                    extraction_tooth: 'Extraction Tooth(s)',
+                    endodontic_tooth: 'Endodontic Tooth(s)',
+                    radiograph_tooth: 'Radiograph Tooth(s)',
+                    prosthesis_tooth: 'Prosthesis Tooth(s)',
                     medical_clearance: 'Medical Clearance',
                     other_recommendation: 'Other Recommendation'
                 };
-        
+
                 Object.keys(examinationFields).forEach(field => {
-                    if (exam[field] === 1) {
+                    if (Array.isArray(exam[field]) && exam[field].length > 0) {
+                        const teethList = exam[field].map(toothNum => {
+                            const toothKey = toothNum.toString();
+                            const toothName = teethData[toothKey] || 'Unknown Tooth';
+                            return `${toothKey}: ${toothName}`;
+                        }).join(', ');
+                        additionalFindings.push(`${examinationFields[field]}: ${teethList}`);
+                    } else if (exam[field] === true || exam[field] === 1) {
                         additionalFindings.push(examinationFields[field]);
                     }
                 });
-        
+                
                 // Prepare HTML for additional findings
                 let findingsHtml = 'N/A'; // Default value
                 if (additionalFindings.length > 0) {
@@ -242,26 +310,25 @@ $(document).ready(function () {
                     });
                     findingsHtml += '</ul>';
                 }
-        
-                // Updated row without the main findings
-                const row = `
-                    <tr>
-                        <td>${formattedDate}</td>
-                        <td>${dentistName}</td>
-                        <td>${findingsHtml}</td>
-                    </tr>
-                `;
-                prevExamBody.append(row);
+
+                // Add row to Dental Examinations History Table
+                dentalExaminationTable.row.add({
+                    "date": formattedDate,
+                    "dentist_name": dentistName,
+                    "findings": findingsHtml
+                }).draw(false);
             });
         } else {
-            prevExamBody.append('<tr><td colspan="3">No previous examinations found.</td></tr>');
+            dentalExaminationTable.row.add({
+                "date": '',
+                "dentist_name": '',
+                "findings": 'No previous examinations found.'
+            }).draw(false);
         }
-        
+
         // Populate Tooth History
-        const toothHistoryBody = $('#tooth-history-body');
-        toothHistoryBody.empty();
-        if (data.toothHistory && data.toothHistory.length > 0) {
-            data.toothHistory.forEach(tooth => {
+        if (dentalRecord.toothHistory && dentalRecord.toothHistory.length > 0) {
+            dentalRecord.toothHistory.forEach(tooth => {
                 const toothNumber = tooth.tooth_number || 'N/A';
                 const status = tooth.status || 'N/A';
                 const notes = tooth.notes || 'N/A';
@@ -283,29 +350,33 @@ $(document).ready(function () {
                     picturesHtml = dentalPictures.map(pic => `<img src="/storage/${pic}" alt="Dental Picture" style="max-width: 100px; margin-right: 5px; cursor: pointer;" class="dental-picture-preview">`).join('');
                 }
 
-                const row = `
-                    <tr>
-                        <td>Tooth ${toothNumber}</td>
-                        <td>${status}</td>
-                        <td>${notes}</td>
-                        <td>${picturesHtml}</td>
-                        <td>${formattedDate}</td>
-                    </tr>
-                `;
-                toothHistoryBody.append(row);
+                // Add row to Tooth History Table
+                toothHistoryTable.row.add({
+                    "tooth_number": `Tooth ${toothNumber}`,
+                    "status": status,
+                    "notes": notes,
+                    "dental_pictures": picturesHtml,
+                    "last_updated": formattedDate
+                }).draw(false);
             });
         } else {
-            toothHistoryBody.append('<tr><td colspan="5">No tooth history found.</td></tr>');
+            toothHistoryTable.row.add({
+                "tooth_number": '',
+                "status": '',
+                "notes": '',
+                "dental_pictures": 'No tooth history found.',
+                "last_updated": ''
+            }).draw(false);
         }
 
         // Populate Next Scheduled Appointment
         const appointmentBody = $('#next-appointment-body');
         appointmentBody.empty();
-        if (data.nextAppointment) {
-            const formattedDate = data.nextAppointment.appointment_date
-                ? new Date(data.nextAppointment.appointment_date).toLocaleDateString()
+        if (dentalRecord.nextAppointment) {
+            const formattedDate = dentalRecord.nextAppointment.appointment_date
+                ? new Date(dentalRecord.nextAppointment.appointment_date).toLocaleDateString()
                 : 'N/A';
-            const purpose = data.nextAppointment.purpose || 'N/A';
+            const purpose = dentalRecord.nextAppointment.appointment_type || 'N/A';
             const row = `
                 <tr>
                     <td><strong>Date:</strong></td>
@@ -336,8 +407,27 @@ $(document).ready(function () {
             $(parentClass).css('fill', 'green');  // Set default to green for Healthy
         });
 
-        // Clear Dental History Tables
-        // Clear patient info
+        // Clear Dental History Tables using DataTables API
+        const dentalExaminationTable = $('#dental-examination-history-table').DataTable();
+        const toothHistoryTable = $('#tooth-history-table').DataTable();
+
+        dentalExaminationTable.clear().draw();
+        dentalExaminationTable.row.add({
+            "date": '',
+            "dentist_name": '',
+            "findings": 'No previous examinations found.'
+        }).draw(false);
+
+        toothHistoryTable.clear().draw();
+        toothHistoryTable.row.add({
+            "tooth_number": '',
+            "status": '',
+            "notes": '',
+            "dental_pictures": 'No tooth history found.',
+            "last_updated": ''
+        }).draw(false);
+
+        // Reset Patient Information
         const patientInfoBody = $('#patient-info-body');
         patientInfoBody.empty().append(`
             <tr>
@@ -354,14 +444,9 @@ $(document).ready(function () {
             </tr>
         `);
 
-        // Clear Previous Examinations
-        $('#dental-examination-history-body').empty().append('<tr><td colspan="3">No previous examinations found.</td></tr>');
-
-        // Clear Tooth History
-        $('#tooth-history-body').empty().append('<tr><td colspan="5">No tooth history found.</td></tr>');
-
-        // Clear Next Appointment
-        $('#next-appointment-body').empty().append('<tr><td colspan="2">No upcoming appointments found.</td></tr>');
+        // Reset Next Appointment
+        const appointmentBody = $('#next-appointment-body');
+        appointmentBody.empty().append('<tr><td colspan="2">No upcoming appointments found.</td></tr>');
     }
 
     // Event listener for the search button in Dental Record Tab
@@ -484,10 +569,23 @@ $(document).ready(function () {
         });
     });
 
-    // Handle form submission for dental exam
+    // Initialize Select2 on tooth-select elements
+    if ($('.tooth-select').length) {
+        $('.tooth-select').select2({
+            placeholder: "Select Teeth",
+            allowClear: true,
+            width: '100%'
+        });
+    } else {
+        console.warn('No elements with class .tooth-select found to initialize Select2');
+    }
+
+    // Handle form submission for dental exam with SweetAlert loading indicator
     $('#dental-exam-form').on('submit', function (event) {
         event.preventDefault(); // Prevent form from refreshing
-        const formData = $(this).serialize(); // Serialize form data
+
+        const form = $(this);
+        const formData = form.serialize(); // Serialize form data
 
         // Check if id_number is set
         const idNumber = $('#form-id_number').val();
@@ -500,12 +598,32 @@ $(document).ready(function () {
             return;
         }
 
+        // Reference to the submit button
+        const submitButton = form.find('button[type="submit"], input[type="submit"]');
+
+        // Disable the submit button to prevent multiple submissions
+        submitButton.prop('disabled', true);
+
+        // Show loading SweetAlert
+        Swal.fire({
+            title: 'Submitting...',
+            html: 'Please wait while we save your data.',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
         // AJAX request to submit the dental exam data
         $.ajax({
-            url: $(this).attr('action'),
+            url: form.attr('action'),
             method: 'POST',
             data: formData,
             success: function (response) {
+                // Close the loading SweetAlert
+                Swal.close();
+
+                // Show success SweetAlert
                 Swal.fire({
                     icon: 'success',
                     title: 'Success',
@@ -513,8 +631,12 @@ $(document).ready(function () {
                     timer: 2000,
                     showConfirmButton: false
                 });
+
                 // Additional actions after successful submission (e.g., clearing the form)
-                $('#dental-exam-form')[0].reset();
+                form[0].reset();
+
+                // Optionally, set the date field to today's date if required
+                const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
                 $('#date').val(today); // Reset date to today's date
 
                 // Reset id_number fields
@@ -525,32 +647,32 @@ $(document).ready(function () {
                 clearDentalRecordDisplay();
             },
             error: function (xhr) {
+                // Close the loading SweetAlert
+                Swal.close();
+
+                // Determine the error message
+                let errorMessage = 'An error occurred while saving the dental examination data.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                } else if (xhr.status === 422) {
+                    // Handle validation errors
+                    const errors = xhr.responseJSON.errors;
+                    if (errors) {
+                        errorMessage = Object.values(errors).flat().join('<br>'); // Concatenate all error messages
+                    }
+                }
+
+                // Show error SweetAlert
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: xhr.responseJSON.message || 'An error occurred while saving the dental examination data.',
+                    html: errorMessage, // Use 'html' to render line breaks
                 });
+            },
+            complete: function () {
+                // Re-enable the submit button regardless of success or error
+                submitButton.prop('disabled', false);
             }
         });
     });
-
-    // Function to disable selected teeth in other selects
-    function disableSelectedTeeth(selectedTooth, currentSelectId) {
-        $('select[name$="_tooth[]"]').not(`#${currentSelectId}`).find(`option[value="${selectedTooth}"]`).prop('disabled', true);
-    }
-
-    // Function to enable all teeth (to reset)
-    function enableAllTeeth() {
-        $('select[name$="_tooth[]"] option').prop('disabled', false);
-    }
-    $('.form-control').select2({
-        placeholder: "Select Teeth",
-        allowClear: true,
-        width: '100%'
-    });
-    $('.tooth-select').select2({
-        placeholder: "Select Teeth",
-        allowClear: true,
-        width: '100%'
-    });    
 });
