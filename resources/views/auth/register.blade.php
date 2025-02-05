@@ -3,7 +3,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.nocaptcha.sitekey') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -262,32 +261,6 @@
                 <x-input-error :messages="$errors->get('id_number')" class="mt-1" />
             </div>
 
-            <!-- First and Last Name Fields -->
-            <div class="form-row mb-2">
-                <div class="form-col position-relative">
-                    <x-input-label for="first_name" :value="__('First Name')" class="label"/>
-                    <div class="input-wrapper">
-                        <i class="fas fa-user input-icon"></i>
-                        <x-text-input id="first_name" class="form-control ps-5"
-                                      type="text" name="first_name" :value="old('first_name')"
-                                      required autocomplete="first_name"
-                                      placeholder="Enter your first name" />
-                    </div>
-                    <x-input-error :messages="$errors->get('first_name')" class="mt-1" />
-                </div>
-
-                <div class="form-col position-relative">
-                    <x-input-label for="last_name" :value="__('Last Name')" class="label"/>
-                    <div class="input-wrapper">
-                        <i class="fas fa-user input-icon"></i>
-                        <x-text-input id="last_name" class="form-control ps-5"
-                                      type="text" name="last_name" :value="old('last_name')"
-                                      required autocomplete="last_name"
-                                      placeholder="Enter your last name" />
-                    </div>
-                    <x-input-error :messages="$errors->get('last_name')" class="mt-1" />
-                </div>
-            </div>
 
             <!-- Email Field -->
             <div class="mb-2 position-relative">
@@ -351,7 +324,6 @@
             </div>
 
             <!-- reCAPTCHA v3 Token -->
-            <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
         </form>
     </div>
 
@@ -388,169 +360,138 @@
 
     <!-- JavaScript for Spinner, Show Password, and Form Handling -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const spinnerOverlay = document.getElementById('spinner-overlay');
-            const togglePasswordIcons = document.querySelectorAll('.toggle-password');
+document.addEventListener('DOMContentLoaded', function() {
+    const spinnerOverlay = document.getElementById('spinner-overlay');
+    const togglePasswordIcons = document.querySelectorAll('.toggle-password');
 
-            // Show Spinner Overlay
-            function showSpinner() {
-                spinnerOverlay.style.display = 'flex';
-            }
+    // Show Spinner Overlay
+    function showSpinner() {
+        spinnerOverlay.style.display = 'flex';
+    }
 
-            // Hide Spinner Overlay
-            function hideSpinner() {
-                spinnerOverlay.style.display = 'none';
-            }
+    // Hide Spinner Overlay
+    function hideSpinner() {
+        spinnerOverlay.style.display = 'none';
+    }
 
-            // Handle Form Submission
-            document.getElementById('registration-form').addEventListener('submit', function(event) {
-                event.preventDefault();
-                showSpinner(); // Show the loading spinner
-                grecaptcha.ready(function() {
-                    grecaptcha.execute('{{ config('services.nocaptcha.sitekey') }}', { action: 'submit' }).then(function(token) {
-                        document.getElementById('g-recaptcha-response').value = token;
-                        if (validateForm()) {
-                            submitForm();
-                        } else {
-                            hideSpinner(); // Hide the spinner if validation fails
-                        }
-                    });
-                });
+    // Validate Form Inputs
+    function validateForm() {
+        const idNumber = document.getElementById('id_number').value.trim();
+        const idNumberPattern = /^[A-Za-z]{1}[0-9]{6}$/;
+        const password = document.getElementById('password').value;
+        const passwordConfirmation = document.getElementById('password_confirmation').value;
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+
+        if (!idNumberPattern.test(idNumber)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'ID number must start with a letter followed by 6 numbers.',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+            });
+            return false;
+        }
+
+        if (password !== passwordConfirmation) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Passwords do not match.',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+            });
+            return false;
+        }
+
+        if (!passwordRegex.test(password)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Password must be at least 8 characters long and contain both letters and numbers.',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+            });
+            return false;
+        }
+
+        if (!document.getElementById('agreeCheckbox').checked) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'You must agree to the terms and conditions to proceed.',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+            });
+            return false;
+        }
+
+        return true;
+    }
+
+    // Submit Form via AJAX
+    async function submitForm() {
+        const form = document.getElementById('registration-form');
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: formData
             });
 
-            // Validate Form Inputs
-            function validateForm() {
-                const idNumber = document.getElementById('id_number').value;
-                const idNumberPattern = /^[A-Za-z]{1}[0-9]{6}$/;
-                const password = document.getElementById('password').value;
-                const passwordConfirmation = document.getElementById('password_confirmation').value;
-                const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+            const data = await response.json();
+            hideSpinner(); // Hide the spinner once the response is received
 
-                if (!idNumberPattern.test(idNumber)) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'ID number must start with a letter followed by 6 numbers.',
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                    });
-                    return false;
-                }
-
-                if (password !== passwordConfirmation) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Passwords do not match.',
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                    });
-                    return false;
-                }
-
-                if (!passwordRegex.test(password)) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Password must be at least 8 characters long and contain both letters and numbers.',
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                    });
-                    return false;
-                }
-
-                if (!document.getElementById('agreeCheckbox').checked) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'You must agree to the terms and conditions to proceed.',
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                    });
-                    return false;
-                }
-
-                return true;
-            }
-
-            // Submit Form via AJAX
-            async function submitForm() {
-                const form = document.getElementById('registration-form');
-                const formData = new FormData(form);
-
-                try {
-                    const response = await fetch(form.action, {
-                        method: 'POST',
-                        headers: {
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        },
-                        body: formData
-                    });
-
-                    const data = await response.json();
-                    hideSpinner(); // Hide the spinner once the response is received
-
-                    if (data.success) {
+            if (response.ok && data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: data.message,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                }).then(() => {
+                    window.location.href = '{{ route('dashboard') }}';
+                });
+            } else {
+                const errors = data.errors;
+                if (errors) {
+                    for (const [field, messages] of Object.entries(errors)) {
                         Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: data.message,
+                            icon: 'error',
+                            title: 'Error',
+                            html: messages.join('<br>'),
                             toast: true,
                             position: 'top-end',
                             showConfirmButton: false,
-                            timer: 2000,
+                            timer: 3000,
                             timerProgressBar: true,
-                        }).then(() => {
-                            window.location.href = '{{ route('dashboard') }}';
                         });
-                    } else {
-                        const errors = data.errors;
-                        if (errors) {
-                            for (const [field, messages] of Object.entries(errors)) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    html: messages.join('<br>'),
-                                    toast: true,
-                                    position: 'top-end',
-                                    showConfirmButton: false,
-                                    timer: 3000,
-                                    timerProgressBar: true,
-                                });
-                            }
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: 'Registration failed. Please check your inputs.',
-                                toast: true,
-                                position: 'top-end',
-                                showConfirmButton: false,
-                                timer: 3000,
-                                timerProgressBar: true,
-                            });
-                        }
                     }
-                } catch (error) {
-                    console.error('Error:', error);
-                    hideSpinner(); // Hide the spinner if an error occurs
+                } else {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'An unexpected error occurred. Please try again later.',
+                        text: 'Registration failed. Please check your inputs.',
                         toast: true,
                         position: 'top-end',
                         showConfirmButton: false,
@@ -559,29 +500,55 @@
                     });
                 }
             }
-
-            // Show/Hide Password Toggle Functionality
-            togglePasswordIcons.forEach(function(icon) {
-                icon.addEventListener('click', function() {
-                    const target = this.getAttribute('data-target');
-                    const passwordInput = document.getElementById(target);
-                    if (passwordInput.type === 'password') {
-                        passwordInput.type = 'text';
-                        this.classList.remove('fa-eye');
-                        this.classList.add('fa-eye-slash');
-                    } else {
-                        passwordInput.type = 'password';
-                        this.classList.remove('fa-eye-slash');
-                        this.classList.add('fa-eye');
-                    }
-                });
+        } catch (error) {
+            console.error('Error:', error);
+            hideSpinner(); // Hide the spinner if an error occurs
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An unexpected error occurred. Please try again later.',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
             });
+        }
+    }
 
-            // Function to Open Terms Modal
-            window.openTermsModal = function() {
-                var modal = new bootstrap.Modal(document.getElementById('termsModal'), {});
-                modal.show();
+    // Handle Form Submission
+    document.getElementById('registration-form').addEventListener('submit', async function(event) {
+        event.preventDefault();
+        
+        if (validateForm()) { // Only proceed if validation passes
+            showSpinner(); // Show the loading spinner
+            await submitForm(); // Submit the form via AJAX
+        }
+    });
+
+    // Show/Hide Password Toggle Functionality
+    togglePasswordIcons.forEach(function(icon) {
+        icon.addEventListener('click', function() {
+            const target = this.getAttribute('data-target');
+            const passwordInput = document.getElementById(target);
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                this.classList.remove('fa-eye');
+                this.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                this.classList.remove('fa-eye-slash');
+                this.classList.add('fa-eye');
             }
         });
+    });
+
+    // Function to Open Terms Modal
+    window.openTermsModal = function() {
+        var modal = new bootstrap.Modal(document.getElementById('termsModal'), {});
+        modal.show();
+    }
+});
+
     </script>
 </x-guest-layout>

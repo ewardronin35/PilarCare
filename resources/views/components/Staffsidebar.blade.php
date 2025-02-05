@@ -328,22 +328,29 @@
                 </a>
             </li>
 
-            <!-- Records (with Submenu) -->
-            <li class="has-submenu {{ Route::currentRouteName() == 'staff.medical-record' || Route::currentRouteName() == 'staff.dental-record' ? 'active' : '' }}">
-                <a href="#">
-                    <span class="icon"><i class="fas fa-notes-medical"></i></span>
-                    <span class="menu-text">Records</span>
-                    <span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span>
-                </a>
-                <ul class="submenu">
-                    <li class="{{ Route::currentRouteName() == 'staff.medical-record' ? 'active' : '' }}">
-                        <a href="{{ route('staff.medical-record') }}">View Medical Record</a>
-                    </li>
-                    <li class="{{ Route::currentRouteName() == 'staff.dental-record' ? 'active' : '' }}">
-                        <a href="{{ route('staff.dental-record') }}">View Dental Record</a>
-                    </li>
-                </ul>
+       <!-- Records (with Submenu) -->
+<li class="has-submenu {{ in_array(Route::currentRouteName(), ['staff.medical-record', 'staff.dental-record', 'staff.upload-pictures']) ? 'active' : '' }}">
+    <a href="#">
+        <span class="icon"><i class="fas fa-notes-medical"></i></span>
+        <span class="menu-text">Records</span>
+        <span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span>
+    </a>
+    <ul class="submenu">
+        @if (!$healthExamination)
+            <li class="{{ Route::currentRouteName() == 'staff.upload-pictures' ? 'active' : '' }}">
+                <a href="{{ route('staff.upload-pictures') }}">Health Approval</a>
             </li>
+        @else
+            <li class="{{ Route::currentRouteName() == 'staff.medical-record' ? 'active' : '' }}">
+                <a href="{{ route('staff.medical-record') }}">View Medical Record</a>
+            </li>
+        @endif
+        <li class="{{ Route::currentRouteName() == 'staff.dental-record' ? 'active' : '' }}">
+                <a href="{{ route('staff.dental-record') }}">View Dental Record</a>
+            </li>
+    </ul>
+</li>
+
 
       
 

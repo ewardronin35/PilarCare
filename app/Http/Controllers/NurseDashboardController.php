@@ -6,6 +6,7 @@ use App\Models\Appointment;
 use App\Models\Complaint;
 use App\Models\Inventory;
 use App\Models\User;
+use App\Models\Nurse;
 use App\Models\Notification;
 use App\Models\HealthExamination;
 use App\Models\Teeth;
@@ -23,51 +24,39 @@ class NurseDashboardController extends Controller
         $dentalRecordCount = Teeth::count();
         $medicalRecordCount = MedicalRecord::count();
         
+        // Fetch the Nurse's information
+        $nurse = Nurse::where('id_number', Auth::user()->id_number)->first();
+        
+        // Handle the case where the nurse might not be found
+        if ($nurse) {
+            $nurseName = $nurse->name; // Adjust this if your Nurse model has first_name and last_name
+        } else {
+            $nurseName = 'Default Nurse Name'; // Or any default value you prefer
+        }
+    
         // Statistics for submissions by role (HealthExaminations, DentalRecords, MedicalRecords)
         $roles = ['Student', 'Teacher', 'Staff', 'Parent', 'Doctor', 'Nurse'];
         $submissionsPerRole = [];
-
+    
         foreach ($roles as $role) {
             $healthExamCount = HealthExamination::whereHas('user', function($query) use ($role) {
                 $query->where('role', $role);
             })->count();
-
+    
             $dentalRecordCountRole = Teeth::whereHas('dentalRecord.user', function($query) use ($role) {
                 $query->where('role', $role);
             })->count();
-
+    
             $medicalRecordCountRole = MedicalRecord::whereHas('user', function($query) use ($role) {
                 $query->where('role', $role);
             })->count();
-
+    
             $submissionsPerRole[$role] = [
                 'health_examinations' => $healthExamCount,
                 'dental_records' => $dentalRecordCountRole,
                 'medical_records' => $medicalRecordCountRole,
             ];
         }
-
-        // Fetch Complaints by Status
-        $complaintsByConfineStatus = Complaint::select('confine_status', \DB::raw('count(*) as total'))
-        ->groupBy('confine_status')
-        ->get()
-        ->pluck('total', 'confine_status')
-        ->toArray();
-
-// 3. Complaints by Go Home
-$complaintsByGoHome = Complaint::select('go_home', \DB::raw('count(*) as total'))
-  ->groupBy('go_home')
-  ->get()
-  ->pluck('total', 'go_home')
-  ->toArray();
-
-        // Fetch Inventory by Category
-        // Assuming your Inventory model has a 'category' field
-        $inventoryByCategory = Inventory::select('type', \DB::raw('count(*) as total'))
-                                        ->groupBy('type')
-                                        ->get()
-                                        ->pluck('total', 'type')
-                                        ->toArray();
     
         // Fetch low stock notifications
         $notifications = Notification::where('user_id', 'admin')->get();
@@ -91,15 +80,11 @@ $complaintsByGoHome = Complaint::select('go_home', \DB::raw('count(*) as total')
             'staff',
             'parents',
             'teachers',
-            'doctors',
-            'nurses',
-            'submissionsPerRole',
-            'complaintsByConfineStatus',
-            'complaintsByGoHome',
-            'inventoryByCategory' // Added variables
+            // Pass the nurse's name to the view
+            'nurseName'
         ));
     }
-
+    
     
     public function pendingApprovals()
     {

@@ -12,7 +12,6 @@
         .container {
             display: flex;
             justify-content: center;
-            padding: 20px;
         }
 
         .main-content {
@@ -293,13 +292,22 @@
             <div id="pending-approvals" class="tab-content active">
                 <h1>Pending Medical Record Approvals</h1>
 
-              
+                <div class="bulk-actions" style="margin-bottom: 15px;">
+    <button id="bulk-approve-btn" class="btn btn-success">
+        <i class="fas fa-check-circle"></i> Bulk Approve
+    </button>
+    <button id="bulk-reject-btn" class="btn btn-danger">
+        <i class="fas fa-times-circle"></i> Bulk Reject
+    </button>
+</div>
+
                 <div class="table-container">
                     @if(isset($pendingMedicalRecords) && $pendingMedicalRecords->isNotEmpty())
                         <table id="medicalRecordsTable">
                             <!-- Table Headers -->
                             <thead>
                                 <tr>
+                                <th><input type="checkbox" id="select-all-checkbox"></th>
                                     <th>Record Date</th>
                                     <th>Name</th>
                                     <th>Birthdate</th>
@@ -322,6 +330,8 @@
                             <tbody id="medicalRecordsTbody">
                                 @foreach($pendingMedicalRecords as $medicalRecord)
                                     <tr data-id="{{ $medicalRecord->id }}">
+                                    <td><input type="checkbox" class="select-record" data-record-id="{{ $medicalRecord->id }}"></td>
+
                                         <td>{{ \Carbon\Carbon::parse($medicalRecord->record_date)->format('Y-m-d') }}</td>
                                         <td>{{ $medicalRecord->name }}</td>
                                         <td>{{ \Carbon\Carbon::parse($medicalRecord->birthdate)->format('Y-m-d') }}</td>
@@ -445,7 +455,177 @@
                     autoWidth: false
                 });
             }
+            $('#select-all-checkbox').on('change', function() {
+        const isChecked = $(this).is(':checked');
+        $('.select-record').prop('checked', isChecked);
+    });
 
+    // Update Select All checkbox based on individual selections
+    $(document).on('change', '.select-record', function() {
+        if (!$(this).is(':checked')) {
+            $('#select-all-checkbox').prop('checked', false);
+        } else if ($('.select-record:checked').length === $('.select-record').length) {
+            $('#select-all-checkbox').prop('checked', true);
+        }
+    });
+    $('#bulk-approve-btn').on('click', function() {
+        const selectedRecords = [];
+        $('.select-record:checked').each(function() {
+            selectedRecords.push($(this).data('record-id'));
+        });
+
+        if (selectedRecords.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'No Selection',
+                text: 'Please select at least one medical record to approve.',
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: 'Bulk Approve',
+            text: `Are you sure you want to approve ${selectedRecords.length} medical record(s)?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, approve them!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Show spinner
+                Swal.fire({
+                    title: 'Approving...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    }
+                });
+
+                // Send AJAX request for bulk approval
+                $.ajax({
+                    url: '{{ route("admin.medical-records.bulk-approve") }}',
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    data: JSON.stringify({
+                        record_ids: selectedRecords
+                    }),
+                    success: function(data) {
+                        Swal.close();
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Approved!',
+                                text: data.message || `${data.approved_count} medical record(s) approved successfully.`,
+                                showConfirmButton: false,
+                                timer: 2000
+                            });
+                            // Reload the page to reflect changes
+                            location.reload();
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: data.message || 'Failed to approve some medical records.',
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        Swal.close();
+                        console.error('Error approving medical records:', xhr.responseText);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: xhr.responseJSON.message || 'Failed to approve medical records.',
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+    // Handle Bulk Reject Button Click
+    $('#bulk-reject-btn').on('click', function() {
+        const selectedRecords = [];
+        $('.select-record:checked').each(function() {
+            selectedRecords.push($(this).data('record-id'));
+        });
+
+        if (selectedRecords.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'No Selection',
+                text: 'Please select at least one medical record to reject.',
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: 'Bulk Reject',
+            text: `Are you sure you want to reject ${selectedRecords.length} medical record(s)?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, reject them!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Show spinner
+                Swal.fire({
+                    title: 'Rejecting...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    }
+                });
+
+                // Send AJAX request for bulk rejection
+                $.ajax({
+                    url: '{{ route("admin.medical-records.bulk-reject") }}',
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    data: JSON.stringify({
+                        record_ids: selectedRecords
+                    }),
+                    success: function(data) {
+                        Swal.close();
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Rejected!',
+                                text: data.message || `${data.rejected_count} medical record(s) rejected successfully.`,
+                                showConfirmButton: false,
+                                timer: 2000
+                            });
+                            // Reload the page to reflect changes
+                            location.reload();
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: data.message || 'Failed to reject some medical records.',
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        Swal.close();
+                        console.error('Error rejecting medical records:', xhr.responseText);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: xhr.responseJSON.message || 'Failed to reject medical records.',
+                        });
+                    }
+                });
+            }
+        });
+    });
             // Search functionality (Optional)
             const searchInput = document.getElementById('searchInput');
             if (searchInput) {

@@ -19,6 +19,8 @@ class TeacherDashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
+        $user->load('teacher');
+
         $appointments = Appointment::where('id_number', $user->id_number)->get();
         $appointmentCount = $appointments->count();
         
@@ -53,30 +55,33 @@ class TeacherDashboardController extends Controller
             'notifications',
             'hasHealthExamination',
             'hasDentalRecord',
-            'hasMedicalRecord'
+            'hasMedicalRecord',
+            'user' // Pass the user with the loaded teacher relationship
+
         ));
     }
     
     public function storeProfile(Request $request)
     {
         try {
-            $request->validate([
+            $validated = $request->validate([
                 'parent_name_father' => ['nullable', 'regex:/^[A-Za-z\s]+$/'],
                 'parent_name_mother' => ['nullable', 'regex:/^[A-Za-z\s]+$/'],
-                'guardian_first_name' => ['required', 'regex:/^[A-Za-z\s]+$/'],
-                'guardian_last_name' => ['required', 'regex:/^[A-Za-z\s]+$/'],
-                'guardian_relationship' => ['nullable', 'regex:/^[A-Za-z\s]+$/'],
+                'guardian_first_name' => ['nullable', 'string'],
+                'guardian_last_name' => ['nullable', 'string'],
+                'guardian_relationship' => ['nullable', 'string'],
                 'emergency_contact_number' => ['required', 'digits:11'],
                 'personal_contact_number' => ['required', 'digits:11'],
                 'birthdate' => 'required|date',
                 'address' => 'required|string|max:255',
                 'profile_picture' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             ]);
+            
     
             // Process the uploaded profile picture
             $profilePicture = $request->file('profile_picture')->store('profile_pictures', 'public');
     
-            // Save student's information
+            // Save's information
             Information::create([
                 'id_number' => $request->id_number,
                 'parent_name_father' => $request->parent_name_father,
@@ -91,24 +96,11 @@ class TeacherDashboardController extends Controller
             ]);
     
             // Create parent account
-            $teacherIdNumber = $request->id_number;
-    
-            // Generate parent id_number by replacing the first character with 'P'
-            $parentIdNumber = 'P' . substr($teacherIdNumber, 1);
-    
-            // Create the parent account
-            $parent = Parents::create([
-                'id_number' => $parentIdNumber,
-                'first_name' => $request->guardian_first_name,
-                'last_name' => $request->guardian_last_name,
-                'student_id' => $teacherIdNumber,
-                'approved' => 1, // Automatically approved
-            ]);
+           
     
             // Return response including parent account details
             return response()->json([
                 'success' => true,
-                'parent_id_number' => $parentIdNumber
             ]);
     
         } catch (\Exception $e) {

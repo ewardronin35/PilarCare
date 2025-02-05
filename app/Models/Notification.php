@@ -23,6 +23,8 @@ class Notification extends Model
         'scheduled_time',
         'role',
         'is_opened',
+        'section', // Add this line
+
     ];
 
     /**

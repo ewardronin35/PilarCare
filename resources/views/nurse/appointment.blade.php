@@ -1,8 +1,8 @@
-<x-app-layout :pageTitle="' Appointments'">
+<x-app-layout :pageTitle="'Appointments'">   
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
-    <style>
+<style>
 /* Legend Styling */
 .calendar-legend {
     display: flex;
@@ -133,6 +133,7 @@
 
         .stats-and-table-container {
             display: flex;
+            flex-direction
             justify-content: space-between;
             align-items: flex-start;
             gap: 30px;
@@ -265,15 +266,13 @@
 
      
         .calendar-container {
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            animation: fadeInUp 0.5s ease-in-out;
-            flex: 1.5;
-            margin-left: 20px;
-            width: 90%;
-        }
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    margin-top: 20px;
+}
 
         .calendar-controls {
             display: flex;
@@ -1075,16 +1074,271 @@
     cursor: not-allowed;
     opacity: 0.6;
 }
+.action-buttons {
+            display: flex;
+            gap: 10px; /* Adjust the gap size as needed */
+        }
+        /* Container for Statistics & Reports */
+        .stats-reports-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 30px;
+            flex-wrap: wrap;
+            padding: 20px;
+        }
+        .charts-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            flex: 1 1 60%;
+            width: 100%;
+        }
+.charts-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+/* Left Side: Generate Report Form */
+.generate-report-container {
+    flex: 1 1 45%; /* Adjusted flex-basis for better alignment */
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    animation: fadeInUp 0.5s ease-in-out;
+    box-sizing: border-box;
+}
 
+/* Right Side: Statistics Chart */
+.chart-container {
+    flex: 1 1 45%; /* Adjusted flex-basis for better alignment */
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    animation: fadeInUp 0.5s ease-in-out;
+    box-sizing: border-box;
+    height: 600px; /* Removed fixed height */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: -30px;
+}
+
+.chart-container canvas {
+    width: 90% !important;
+    height: 90% !important;
+}
+@media (max-width: 992px) {
+    .stats-reports-container {
+        flex-direction: column;
+    }
+
+    .chart-container {
+        /* Remove or adjust the height if necessary */
+        height: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .generate-report-container,
+    .chart-container {
+        flex: 1 1 100%;
+    }
+
+    .chart-container {
+        height: auto;
+    }
+}
+
+@media (max-width: 576px) {
+    .stats-reports-container {
+        padding: 10px;
+        gap: 20px;
+    }
+
+    .generate-report-container,
+    .chart-container {
+        padding: 15px;
+    }
+
+    .chart-container {
+        height: auto;
+    }
+}
+/* Charts Container */
+.charts-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    width: 100%;
+}
+
+/* Individual Chart Boxes */
+.chart-box {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            animation: fadeInUp 0.5s ease-in-out;
+            box-sizing: border-box;
+            width: 100%;
+            position: relative;
+            height: 400px;
+        }
+        .chart-box h3 {
+            text-align: center;
+            color: #0056b3;
+            margin-bottom: 20px;
+        }
+.chart-box canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+.prediction-chart-box {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            animation: fadeInUp 0.5s ease-in-out;
+            box-sizing: border-box;
+            width: 100%;
+            position: relative;
+            height: 400px;
+        }
+        .prediction-chart-box h3 {
+            text-align: center;
+            color: #0056b3;
+            margin-bottom: 20px;
+        }
+
+        .prediction-chart-box canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        .generate-report-container {
+            flex: 1 1 35%;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            animation: fadeInUp 0.5s ease-in-out;
+            box-sizing: border-box;
+            height: 400px;
+        }
+
+        .generate-report-container h2 {
+            text-align: center;
+            color: #0056b3;
+            margin-bottom: 20px;
+        }
+
+        .generate-report-container form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            height: 100%;
+            justify-content: center;
+        }
+
+        .generate-report-container .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .generate-report-container .form-group label {
+            margin-bottom: 5px;
+            font-size: 1rem;
+        }
+
+        .generate-report-container .form-group select,
+        .generate-report-container .form-group input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .generate-report-container .form-group button {
+            align-self: center;
+            padding: 10px 20px;
+            background-color: #00d1ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .generate-report-container .form-group button:hover {
+            background-color: #00b8e6;
+            transform: scale(1.05);
+        }
+
+        .generate-report-container .form-group button:active {
+            transform: scale(0.95);
+        }
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+    .charts-container {
+        flex-direction: column;
+    }
+
+    .chart-box {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .charts-container {
+        flex-direction: column;
+    }
+
+    .chart-box {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .charts-container {
+        padding: 10px;
+        gap: 20px;
+    }
+
+    .chart-box {
+        padding: 15px;
+    }
+}
 
     </style>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
 
     <main class="main-content">
-        <div class="tabs">
-            <div class="tab active" onclick="showTab('doctors-appointment-calendar')">Doctors, Add Appointment & Calendar</div>
-            <div class="tab" onclick="showTab('stats-appointment-list')">Statistics & Appointment List</div>
-        </div>
+    <div class="tabs">
+    <!-- Doctors, Add Appointment & Calendar Tab -->
+    <div class="tab active" onclick="showTab('doctors-appointment-calendar')">
+        <i class="fas fa-user-md"></i> <!-- Doctor Icon -->
+        <span>Doctors, Add Appointment & Calendar</span>
+    </div>
+
+    <!-- Appointment List Tab -->
+    <div class="tab" onclick="showTab('stats-appointment-list')">
+        <i class="fas fa-clipboard-list"></i> <!-- Clipboard List Icon -->
+        <span>Appointment List</span>
+    </div>
+
+    <!-- Statistics & Reports Tab -->
+    <div class="tab" onclick="showTab('statistics-reports')">
+        <i class="fas fa-chart-line"></i> <!-- Chart Line Icon -->
+        <span>Statistics & Reports</span>
+    </div> 
+</div>
+
 
         <!-- Doctors, Add Appointment and Calendar Tab -->
         <div id="doctors-appointment-calendar" class="tab-content active">
@@ -1155,11 +1409,12 @@
         <option value="" disabled selected>Select Doctor</option>
         @foreach($doctors as $doctor)
             <option value="{{ $doctor->id }}">
-                {{ $doctor->user->first_name }} {{ $doctor->user->last_name }} ({{ $doctor->specialization }})
+                 {{ $doctor->full_name }} ({{ $doctor->specialization }})
             </option>
         @endforeach
     </select>
 </div>
+
                         <div class="form-group">
                         <button type="button" class="add-appointment-btn" onclick="addAppointment()">Add Appointment</button>
                         </div>
@@ -1168,45 +1423,43 @@
 
                 <!-- Calendar Section -->
                 <div class="calendar-container" style="flex: 1.5;">
-                    <h2>Appointment Calendar</h2>
-                    <div class="calendar-controls">
-                        <button onclick="changeMonth(-1)">Previous</button>
-                        <span id="calendar-month-year"></span>
-                        <button onclick="changeMonth(1)">Next</button>
-                    </div>
-                    <table class="calendar">
-                        <thead>
-                            <tr>
-                                <th>Sun</th>
-                                <th>Mon</th>
-                                <th>Tue</th>
-                                <th>Wed</th>
-                                <th>Thu</th>
-                                <th>Fri</th>
-                                <th>Sat</th>
-                            </tr>
-                        </thead>
-                        <tbody id="calendar-body">
-                            <!-- Dynamically generated calendar rows go here -->
-                        </tbody>
-                    </table>
-                    <!-- Legend Section -->
-<div class="calendar-legend">
-    <div class="legend-item">
-        <div class="legend-color legend-green"></div>
-        <span>Free</span>
+    <h2>Appointment Calendar</h2>
+    <div class="calendar-controls">
+        <button onclick="changeMonth(-1)">Previous</button>
+        <span id="calendar-month-year"></span>
+        <button onclick="changeMonth(1)">Next</button>
     </div>
-    <div class="legend-item">
-        <div class="legend-color legend-yellow"></div>
-        <span>Pending</span>
-    </div>
-    <div class="legend-item">
-        <div class="legend-color legend-red"></div>
-        <span>Confirmed</span>
+    <table class="calendar">
+        <thead>
+            <tr>
+                <th>Sun</th>
+                <th>Mon</th>
+                <th>Tue</th>
+                <th>Wed</th>
+                <th>Thu</th>
+                <th>Fri</th>
+                <th>Sat</th>
+            </tr>
+        </thead>
+        <tbody id="calendar-body">
+            <!-- Calendar days will be dynamically generated here -->
+        </tbody>
+    </table>
+    <div class="calendar-legend">
+        <div class="legend-item">
+            <div class="legend-color legend-green"></div>
+            <span>Free</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color legend-yellow"></div>
+            <span>Pending</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color legend-red"></div>
+            <span>Confirmed</span>
+        </div>
     </div>
 </div>
-
-                </div>
 
                 <!-- Doctors Profile Section -->
                 <div class="form-container" style="flex: 1;">
@@ -1224,8 +1477,8 @@
                                          style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%;">
 
                                     <div class="profile-info">
-                                        <h2>{{ $doctor->user->first_name ?? 'First Name' }} {{ $doctor->user->last_name ?? 'Last Name' }}</h2>
-                                        <p>{{ $doctor->specialization ?? 'Specialization' }}</p>
+                                    <h2>{{ $doctor->full_name }}</h2>
+                                    <p>{{ $doctor->specialization ?? 'Specialization' }}</p>
                                         @if ($doctor->approved)
                                             <span class="active-status" style="color: green; font-weight: bold;">Active</span>
                                         @else
@@ -1247,7 +1500,6 @@
             <div class="stats-and-table-container">
                 <!-- Left Column: Appointment List -->
                 <div class="appointment-list-container">
-                    <h2>Appointment List</h2>
                     <div class="filter-container" style="margin-bottom: 15px;">
                         <label for="status-filter">Filter by Status: </label>
                         <select id="status-filter" onchange="filterAppointments()" style="width: 200px; padding: 8px; border-radius: 5px;">
@@ -1278,7 +1530,7 @@
                                     <td>{{ \Carbon\Carbon::parse($appointment->appointment_date)->format('M d, Y') }}</td>
                                     <td>{{ \Carbon\Carbon::parse($appointment->appointment_time)->format('h:i A') }}</td>
                                     <td>{{ $appointment->appointment_type }}</td>
-                                    <td>{{ $appointment->doctor->user->first_name ?? 'N/A' }} {{ $appointment->doctor->user->last_name ?? '' }}</td> <!-- Display Doctor's Name -->
+                                    <td>{{ $appointment->doctor->full_name }}</td>
                                     <td>
                                         @if ($appointment->status === 'confirmed')
                                             <span style="color: green; font-weight: bold;">Confirmed</span>
@@ -1288,7 +1540,11 @@
                                     </td>
                                     <td>
                                     <div class="action-buttons">
-            
+                @if ($appointment->status !== 'confirmed')
+                    <button id="confirm-btn-{{ $appointment->id }}" class="confirm-btn" onclick="confirmAppointment({{ $appointment->id }})">
+                        Confirm
+                    </button>
+                @endif
                 
                 <button id="reschedule-btn-{{ $appointment->id }}" class="reschedule-btn" onclick="openEditModal({{ $appointment->id }})">
                     Reschedule
@@ -1302,37 +1558,50 @@
                         </tbody>
                     </table>
                 </div>
+                </div>
+                </div>
 
                 <!-- Right Column: Statistics Chart and Generate Report -->
-                <div class="right-column">
-                    <!-- Statistics Chart -->
-                    <div class="chart-container">
-                        <h2>Statistics</h2>
-                        <canvas id="appointmentsChart"></canvas>
+              <!-- Statistics & Reports Tab -->
+              <div id="statistics-reports" class="tab-content">
+            <div class="stats-reports-container">
+            <div class="charts-container">
+                    <!-- Most Appointed Doctor Chart -->
+                    <div class="chart-box">
+                        <h3>Most Appointed Doctor</h3>
+                        <canvas id="mostAppointedDoctorChart"></canvas>
                     </div>
 
-                    <!-- Generate Report Form -->
-                    <div class="generate-report-container">
-                        <h2>Generate Appointment Statistics Report</h2>
-                        <form id="report-form" method="GET" action="{{ route('nurse.appointments.statisticsReport') }}">
-                            @csrf
-                            <div class="form-group">
-                                <label for="report-period">Select Report Period</label>
-                                <select id="report-period" name="report_period" required>
-                                    <option value="week">Weekly</option>
-                                    <option value="month">Monthly</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="report-date">Select Date</label>
-                                <input type="date" id="report-date" name="report_date" required>
-                            </div>
-                            <div class="form-group">
-                            <button type="button" class="add-appointment-btn" onclick="generateStatisticsReport()">Generate Report</button>
-                            </div>
-                        </form>
+                    <!-- Appointment Types Distribution Chart -->
+                    <div class="prediction-chart-box">
+                        <h3>Next Appointment Type Prediction</h3>
+                        <canvas id="predictionChart"></canvas>
                     </div>
                 </div>
+                <!-- Generate Report Section -->
+                <div class="generate-report-container">
+                    <h2>Generate Appointment Statistics Report</h2>
+                    <form id="report-form" method="GET" action="{{ route('nurse.appointments.statisticsReport') }}">
+                        @csrf
+                        <div class="form-group">
+                            <label for="report-period">Select Report Period</label>
+                            <select id="report-period" name="report_period" required>
+                                <option value="week">Weekly</option>
+                                <option value="month">Monthly</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="report-date">Select Date</label>
+                            <input type="date" id="report-date" name="report_date" required>
+                        </div>
+                        <div class="form-group">
+                            <button type="button" class="add-appointment-btn" onclick="generateStatisticsReport()">Generate Report</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Charts Row -->
+               
             </div>
         </div>
 
@@ -1430,26 +1699,40 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
+    <script>
+    // Pass PHP variables to JavaScript
+    const mostAppointedDoctorName = "{{ $mostAppointedDoctorName }}";
+    const mostAppointedDoctorCount = "{{ $mostAppointedDoctorCount }}";
+    const predictedAppointmentTypes = @json($predictedAppointmentTypes); // Array of predicted types
+    const predictedAppointmentRecipients = @json($predictedAppointmentRecipients); // Array of recipients
+</script>
     <script>
 
         // Tab Switching Function
-        function showTab(tabId) {
-            const tabContents = document.querySelectorAll('.tab-content');
-            tabContents.forEach(tabContent => {
-                tabContent.classList.remove('active');
-            });
+      // Tab Switching Function
+function showTab(tabId) {
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabContents.forEach(tabContent => {
+        tabContent.classList.remove('active');
+    });
 
-            const selectedTabContent = document.getElementById(tabId);
-            selectedTabContent.classList.add('active');
+    const selectedTabContent = document.getElementById(tabId);
+    selectedTabContent.classList.add('active');
 
-            const tabs = document.querySelectorAll('.tab');
-            tabs.forEach(tab => {
-                tab.classList.remove('active');
-            });
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(tab => {
+        tab.classList.remove('active');
+    });
 
-            document.querySelector(`.tab[onclick="showTab('${tabId}')"]`).classList.add('active');
-        }
+    document.querySelector(`.tab[onclick="showTab('${tabId}')"]`).classList.add('active');
+
+    // Initialize the charts if the Statistics & Reports tab is activated
+    if (tabId === 'statistics-reports') {
+        initializeAllCharts();
+    }
+}
+
+
 
         const userRole = "{{ strtolower(Auth::user()->role) }}";
 
@@ -1525,23 +1808,50 @@
     document.getElementById('edit-appointment-time').value = formatTimeForInput(appointment.children[3].innerText);
     document.getElementById('edit-appointment-type').value = appointment.children[4].innerText;
     
+    // Get doctor ID and name
+    const doctorId = appointment.dataset.doctorId;
+    const doctorName = appointment.children[5].innerText.trim(); // Assuming the 6th column is Doctor
+
     // Populate doctors dropdown
     const selectedDate = document.getElementById('edit-appointment-date').value;
-    fetchAvailableDoctorsForEdit(selectedDate, id);
-    
-    // Select the current doctor
-    const doctorName = appointment.children[5].innerText.trim(); // Assuming the 6th column is Doctor
-    const doctorSelect = document.getElementById('edit-doctor');
-    for (let i = 0; i < doctorSelect.options.length; i++) {
-        const option = doctorSelect.options[i];
-        if (option.textContent.includes(doctorName)) {
-            option.selected = true;
-            break;
+
+    // Fetch available doctors and then select the current doctor
+    fetchAvailableDoctorsForEdit(selectedDate, id).then(() => {
+        const doctorSelect = document.getElementById('edit-doctor');
+        let doctorFound = false;
+
+        // Iterate through the options to find the doctor by ID
+        for (let i = 0; i < doctorSelect.options.length; i++) {
+            const option = doctorSelect.options[i];
+            if (option.value == doctorId) {
+                option.selected = true;
+                doctorFound = true;
+                break;
+            }
         }
-    }
+
+        if (!doctorFound) {
+            // If the current doctor is not in the available list, add it manually
+            const option = document.createElement('option');
+            option.value = doctorId;
+            option.textContent = doctorName;
+            option.selected = true;
+            doctorSelect.appendChild(option);
+        }
+    }).catch(error => {
+        console.error('Error fetching available doctors for edit:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to load available doctors.',
+            timer: 3000,
+            showConfirmButton: false
+        });
+    });
 
     document.getElementById('edit-modal').style.display = 'block';
 }
+
 
         // Close Edit Modal Function
         function closeEditModal() {
@@ -1699,9 +2009,11 @@ document.getElementById('appointment-date').addEventListener('change', function(
 
             if (data.available_doctors.length > 0) {
                 data.available_doctors.forEach(doctor => {
+                    const specialization = doctor.specialization ? doctor.specialization : 'General';
+
                     const option = document.createElement('option');
                     option.value = doctor.id;
-                    option.textContent = `${doctor.user.first_name} ${doctor.user.last_name} (${doctor.specialization})`;
+                    option.textContent = `${doctor.full_name} (${specialization})`;
                     doctorSelect.appendChild(option);
                 });
             } else {
@@ -1728,10 +2040,9 @@ document.getElementById('appointment-date').addEventListener('change', function(
         });
 }
 
-    // Existing JavaScript code...
 
 function fetchAvailableDoctorsForEdit(date, appointmentId) {
-    fetch(`${availableDoctorsRoute}?date=${date}&exclude_appointment_id=${appointmentId}`)
+    return fetch(`${availableDoctorsRoute}?date=${date}&exclude_appointment_id=${appointmentId}`)
         .then(response => response.json())
         .then(data => {
             const doctorSelect = document.getElementById('edit-doctor');
@@ -1739,9 +2050,11 @@ function fetchAvailableDoctorsForEdit(date, appointmentId) {
 
             if (data.available_doctors.length > 0) {
                 data.available_doctors.forEach(doctor => {
+                    const specialization = doctor.specialization ? doctor.specialization : 'General';
+
                     const option = document.createElement('option');
                     option.value = doctor.id;
-                    option.textContent = `${doctor.user.first_name} ${doctor.user.last_name} (${doctor.specialization})`;
+                    option.textContent = `${doctor.full_name} (${specialization})`;
                     doctorSelect.appendChild(option);
                 });
             } else {
@@ -1767,6 +2080,8 @@ function fetchAvailableDoctorsForEdit(date, appointmentId) {
             });
         });
 }
+
+
 
 
 // Add Event Listener for Edit Appointment Date Change
@@ -1930,8 +2245,153 @@ function renderCalendarDays(month, year, appointmentsByDate) {
         calendarBody.appendChild(row);
     }
 }
+let appointmentsChart; // Declare globally to manage the Overall Statistics chart
+
+// Initialize Most Appointed Doctor Chart
+function initializeMostAppointedDoctorChart() {
+    const ctx = document.getElementById('mostAppointedDoctorChart').getContext('2d');
+
+    const data = {
+        labels: [mostAppointedDoctorName],
+        datasets: [{
+            label: 'Number of Appointments',
+            data: [parseInt(mostAppointedDoctorCount, 10)], // Ensure it's a number
+            backgroundColor: 'rgba(255, 99, 132, 0.2)', // Customize color
+            borderColor: 'rgba(255, 99, 132, 1)', // Customize color
+            borderWidth: 1
+        }]
+    };
+
+    const options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            },
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        }
+    };
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: data,
+        options: options
+    });
+}
 
 
+// Initialize Prediction Chart
+function initializePredictionChart() {
+    const ctx = document.getElementById('predictionChart').getContext('2d');
+
+    // Prepare data for the Prediction chart
+    const labels = predictedAppointmentTypes.map(item => item.type);
+    const counts = predictedAppointmentTypes.map(item => item.count);
+
+    const data = {
+        labels: labels,
+        datasets: [{
+            label: 'Predicted Next Appointment Type',
+            data: counts,
+            backgroundColor: 'rgba(153, 102, 255, 0.2)', // Customize color
+            borderColor: 'rgba(153, 102, 255, 1)', // Customize color
+            borderWidth: 1
+        }]
+    };
+
+    const options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                enabled: true
+            }
+        }
+    };
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: data,
+        options: options
+    });
+}
+// Remove or comment out this entire function
+function initializeAppointmentsChart() {
+    if (appointmentsChart) {
+        appointmentsChart.destroy(); // Destroy existing chart instance if any
+    }
+
+    const ctx = document.getElementById('appointmentsChart').getContext('2d');
+    appointmentsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Total', 'Upcoming', 'Completed', 'Dr. Isnani', 'Dr. Gan'],
+            datasets: [{
+                label: 'Number of Appointments',
+                data: [{{ $totalAppointments }}, {{ $upcomingAppointments }}, {{ $completedAppointments }}, {{ $drIsnaniAppointments }}, {{ $drGanAppointments }}],
+                backgroundColor: [
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, // Ensure responsiveness
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false // Hide the legend if not needed
+                },
+                tooltip: {
+                    enabled: true
+                }
+            }
+        }
+    });
+}
+
+// Initialize All Charts
+function initializeAllCharts() {
+    initializeMostAppointedDoctorChart();
+    initializePredictionChart();
+
+}
 
     // Initialize Calendar on Page Load
     document.addEventListener('DOMContentLoaded', function () {
@@ -1963,29 +2423,80 @@ function renderCalendarDays(month, year, appointmentsByDate) {
     }
 
         // Chart.js Initialization with Safe Data Passing
-        const ctx = document.getElementById('appointmentsChart').getContext('2d');
-        const appointmentsChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Total', 'Upcoming', 'Completed', 'Dr. Isnani', 'Dr. Gan'],
-                datasets: [{
-                    label: 'Number of Appointments',
-                    data: [{{ $totalAppointments }}, {{ $upcomingAppointments }}, {{ $completedAppointments }}, {{ $drIsnaniAppointments }}, {{ $drGanAppointments }}],
-                    backgroundColor: ['rgba(75, 192, 192, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 206, 86, 0.2)', 'rgba(153, 102, 255, 0.2)', 'rgba(255, 159, 64, 0.2)'],
-                    borderColor: ['rgba(75, 192, 192, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)'],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
+
         // Confirm Appointment Function
-     
+        function confirmAppointment(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You want to confirm this appointment!",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745', // Matching Confirm Button Color
+        cancelButtonColor: '#dc3545', // Matching Delete Button Color for cancel
+        confirmButtonText: 'Yes, confirm it!',
+        cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show Loading Indicator
+                    Swal.fire({
+                        title: 'Confirming Appointment...',
+                        text: 'Please wait while the appointment is being confirmed.',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    const formData = new FormData();
+                    formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+                    formData.append('status', 'confirmed'); // Set status to confirmed
+
+                    fetch(`/nurse/appointment/confirm/${id}`, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        Swal.close(); // Close the loading indicator
+
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Appointment Confirmed',
+                                text: data.message,
+                                timer: 3000,
+                                showConfirmButton: false
+                            });
+
+                            // Reload the page to update calendar and table
+                            setTimeout(() => {
+                                location.reload();
+                            }, 3000);
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Could not confirm appointment.',
+                                timer: 3000,
+                                showConfirmButton: false
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        Swal.close(); // Close the loading indicator
+                        console.error('Error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An unexpected error occurred.',
+                            timer: 3000,
+                            showConfirmButton: false
+                        });
+                    });
+                }
+            });
+        }
+
 function populateEditDoctorsDropdown() {
             fetch('{{ route("nurse.appointment.getApprovedDoctors") }}')
                 .then(response => response.json())
@@ -2366,6 +2877,7 @@ function generateStatisticsReport() {
     const availableDoctorsRoute = "{{ route('nurse.appointment.availableDoctors') }}";
     const addAppointmentRoute = "{{ route('nurse.appointment.add') }}";
     const updateAppointmentRoute = "{{ url('/nurse/appointment/update') }}"; // Adjust if you have a named route
+    const confirmAppointmentRoute = "{{ url('/nurse/appointment/confirm') }}"; // Adjust if you have a named route
 </script>
 
 </x-app-layout>

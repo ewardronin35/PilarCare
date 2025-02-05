@@ -9,6 +9,9 @@
       referrerpolicy="no-referrer"
     />
     <style>
+        .main-content{ 
+            margin-top: 30px;
+        }
         /* Tab Navigation Styling */
         .tabs {
             display: flex;
@@ -252,7 +255,28 @@
         .search-bar button:hover {
             background-color: #0056b3;
         }
-
+        h1 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 2.5rem; /* Adjust as needed */
+    animation: fadeIn 1s forwards;
+}
+h3 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 2.5rem; /* Adjust as needed */
+    animation: fadeIn 1s forwards;
+}
+p {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 2.5rem; /* Adjust as needed */
+    animation: fadeIn 1s forwards;
+}
         /* Spinner Overlay */
         #spinner-overlay {
             position: fixed;
@@ -284,8 +308,7 @@
 
 
     <div class="main-content">
-        <h1 class="text-3xl font-bold text-center mb-6">Profile View of {{ ucfirst(Auth::user()->role) }}</h1>
-
+<h1> All Profiles </h1>
         <!-- Search Bar -->
         <div class="search-bar">
             <input type="text" id="search-input" placeholder="Search by name or ID number..." onkeyup="searchProfiles()" />

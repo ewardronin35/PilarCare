@@ -22,11 +22,15 @@ class DentalRecord extends Model
     {
         return $this->belongsTo(User::class, 'id_number', 'id_number');
     }
-    
+    public function student()
+    {
+        return $this->belongsTo(Student::class, 'id_number', 'id_number');
+    }
 
     public function dentalExaminations()
     {
         return $this->hasMany(DentalExamination::class, 'dental_record_id', 'dental_record_id');
     }
+    
     
 }

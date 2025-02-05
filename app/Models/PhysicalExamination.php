@@ -19,7 +19,11 @@ class PhysicalExamination extends Model
         'remarks',
         'md_approved',
     ];
-
+    protected $casts = [
+        'height' => 'float',
+        'weight' => 'float',
+        'md_approved' => 'boolean',
+    ];
 
     // Relationships if needed
     // Assuming `id_number` relates to a `User` model

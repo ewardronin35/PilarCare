@@ -13,21 +13,24 @@
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 
+
     <style>
         /* Existing Styles */
-        body{
+        body {
             font-family: 'Poppins', sans-serif;
         }
 
         .main-content {
-            margin-top: 40px;
-            position: relative; /* To contain absolutely positioned elements */
+            margin-top: 30px;
+            width: calc(100% - 80px);
+
         }
 
         .container {
             display: flex;
+            justify-content: center; /* Centers the form horizontally */
+            align-items: center; /* Centers the form vertically */
             font-family: 'Poppins', sans-serif;
-            justify-content: space-between;
             flex-wrap: wrap;
         }
 
@@ -37,9 +40,19 @@
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            width: 48%;
+            width: 100%; /* Full width on smaller screens */
+            max-width: 1000px; /* Limit width for better readability */
             box-sizing: border-box;
-            margin-bottom: 20px;
+            margin-top: 10px;
+        }
+        .form-containerd {
+            background-color: #f9f9f9;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 100%; /* Full width on smaller screens */
+            box-sizing: border-box;
+            margin-top: 10px;
         }
 
         .form-group {
@@ -102,12 +115,35 @@
             background-color: #00b8e6;
         }
 
-        .search-container {
-            display: flex;
+        /* Revised Search Button Styling */
+        .search-container .search-button {
+            display: inline-flex;
             align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            position: relative; /* To contain absolute elements if any */
+            justify-content: center;
+            background-color: #00d1ff;
+            color: white;
+            padding: 10px 20px; /* Adjust padding to ensure icon fits well */
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap; /* Prevent text wrapping */
+            transition: background-color 0.3s ease, transform 0.3s;
+        }
+
+        .search-container .search-button i {
+            margin-right: 6px; /* Space between icon and text */
+            font-size: 16px; /* Adjust icon size if necessary */
+            position: relative;
+            top: 6px; /* Aligns icon slightly above to match text baseline */
+        }
+
+        .search-container .search-button:hover {
+            background-color: #00b8e6;
+        }
+
+        .search-container .search-button:active {
+            transform: scale(0.95);
         }
 
         .search-input {
@@ -127,20 +163,22 @@
         .search-container button {
             background-color: #00d1ff;
             color: white;
-            padding: 8px 15px;
+            padding: 8px 12px;
             border: none;
             border-radius: 50px;
-            margin-right: 300px;
-            margin-bottom: 20px;
+            margin-left: 10px;
             cursor: pointer;
             font-size: 14px;
-            right: 0;
-            top: 0;
-            height: 100%;
+            width: auto;
+            transition: background-color 0.3s ease, transform 0.3s;
         }
 
         .search-container button:hover {
             background-color: #00b8e6;
+        }
+
+        .search-container button:active {
+            transform: scale(0.95);
         }
 
         .table-container {
@@ -185,10 +223,9 @@
             background-color: #fff;
         }
 
-        .preview-button,
-        .pdf-button,
-        .download-button {
-            background-color: #00d1ff;
+        /* Button Color Adjustments */
+        .preview-button {
+            background-color: #6c757d; /* Gray */
             color: white;
             padding: 5px 10px;
             border: none;
@@ -202,10 +239,48 @@
             text-decoration: none; /* For anchor tags */
         }
 
-        .preview-button:hover,
-        .pdf-button:hover,
+        .preview-button:hover {
+            background-color: #5a6268;
+        }
+
+        .pdf-button {
+            background-color: #007bff; /* Blue */
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none; /* For anchor tags */
+            margin-left: 5px; /* Space between buttons */
+        }
+
+        .pdf-button:hover {
+            background-color: #0069d9;
+        }
+
+        .download-button {
+            background-color: #28a745; /* Green */
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none; /* For anchor tags */
+            margin-left: 5px; /* Space between buttons */
+        }
+
         .download-button:hover {
-            background-color: #00b8e6;
+            background-color: #218838;
         }
 
         .pdf-button[disabled],
@@ -222,6 +297,10 @@
             border-bottom: 2px solid #ddd;
             margin-bottom: 20px;
             justify-content: space-around;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            max-width: 800px; /* Limit the width of the tabs */
         }
 
         .tab.main-tab {
@@ -249,8 +328,11 @@
         .tabs.inner-tabs {
             display: flex;
             border-bottom: 2px solid #ddd;
-            margin-bottom: 20px;
+            margin-top: 20px;
             justify-content: space-around;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .tab.inner-tab {
@@ -260,7 +342,7 @@
             font-weight: bold;
             font-size: 16px;
             text-align: center;
-            width: 25%;
+            width: 33.33%; /* Equally divides the space among three tabs */
             background-color: #e0e0e0;
             border-radius: 10px 10px 0 0;
         }
@@ -277,29 +359,17 @@
         .main-tab-content,
         .inner-tab-content {
             display: none;
-
             opacity: 0;
-            transform: translateX(-20px);
-            transition: opacity 0.5s ease, transform 0.5s ease;
+            transition: opacity 0.5s ease;
             width: 100%;
-            top: 0;
-            left: 0;
             pointer-events: none; /* Prevent interaction when not active */
         }
 
         .main-tab-content.active,
         .inner-tab-content.active {
             opacity: 1;
-            transform: translateX(0);
-            position: relative;
-            pointer-events: auto;
             display: block;
-            animation: fadeIn 0.5s forwards;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            pointer-events: auto;
         }
 
         /* Modal Styling */
@@ -317,7 +387,7 @@
 
         .modal-content {
             background-color: #fefefe;
-            margin: 15% auto;
+            margin: 10% auto;
             padding: 20px;
             border: 1px solid #888;
             width: 60%;
@@ -329,7 +399,36 @@
             from { transform: translateY(-50px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
+/* Fade-in and Fade-out Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
 
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+/* Classes to Trigger Animations */
+.fade-in {
+    animation: fadeIn 0.5s forwards;
+}
+
+.fade-out {
+    animation: fadeOut 0.5s forwards;
+}
+.main-tab-content,
+.inner-tab-content {
+    opacity: 0;
+    display: none;
+    width: 100%;
+}
+
+.main-tab-content.active,
+.inner-tab-content.active {
+    display: block;
+}
         .close {
             color: #aaa;
             float: right;
@@ -379,7 +478,6 @@
         .input-container i {
             position: absolute;
             top: 50%;
-            left: 15px;
             transform: translateY(-50%);
             color: #007bff;
             font-size: 18px;
@@ -481,7 +579,7 @@
             }
 
             .search-container button {
-                margin-right: 0;
+                margin-left: 0;
                 width: 100%;
                 margin-top: 10px;
             }
@@ -511,10 +609,6 @@
                 height: 40px;
                 border-width: 6px;
             }
-
-            .search-container button {
-                margin-right: 200px;
-            }
         }
 
         @media (max-width: 1200px) {
@@ -527,21 +621,123 @@
             }
 
             .search-container button {
-                margin-right: 200px;
+                margin-left: 10px;
             }
         }
 
         .complaint-list-container {
-            max-width: 1200px;
             margin: 0 auto;
             padding: 0 20px;
-            margin-top: -25px;
         }
+
+        .statistics-container {
+            width: 100%;
+        }
+
+        .statistics-item {
+            margin-bottom: 15px;
+        }
+
+        .statistics-item span {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* Adjust chart labels */
+        .chart-container canvas {
+            width: 100% !important;
+            height: auto !important;
+        }
+
+        /* New Styles for Two-Column Layout in Statistics */
+        .statistics-layout {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+.statistics-middle {
+    flex: 1;
+    min-width: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+        .statistics-left,
+        .statistics-right {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .statistics-left {
+            /* Additional styling if needed */
+        }
+
+        .statistics-right {
+            /* Additional styling if needed */
+        }
+
+        /* Ensure Generate Report form takes full width in right column */
+        .generate-report-container {
+            background-color: #f1f1f1;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+        .prediction-container {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 400px; /* Adjust as needed */
+    margin-bottom: 416px;
+}
+
+.prediction-container h3 {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.prediction-item {
+    margin-bottom: 15px;
+}
+
+.prediction-item span {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+.chart-container {
+    width: 100%;
+    height: 200px; /* Adjust height for prediction charts */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1200px) {
+    .statistics-layout {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .statistics-left,
+    .statistics-middle,
+    .statistics-right {
+        width: 100%;
+        max-width: none;
+    }
+
+    .statistics-middle {
+        margin: 20px 0;
+    }
+}
     </style>
 
-
     <main class="main-content">
-        <!-- Main Tabs for Add Complaint and Complaint List -->
+        <!-- Main Tabs for Add Complaint, Complaint List, and Statistics -->
         <div class="tabs main-tabs">
             <div class="tab main-tab active" onclick="showTab('add-complaint', this)">
                 <i class="fas fa-plus-circle"></i> Add Complaint
@@ -549,31 +745,31 @@
             <div class="tab main-tab" onclick="showTab('complaint-table', this)">
                 <i class="fas fa-list-alt"></i> Complaint List
             </div>
-      
-
-
+            <div class="tab main-tab" onclick="showTab('statistics', this)">
+                <i class="fas fa-chart-bar"></i> Statistics
+            </div>
         </div>
 
         <!-- Main Tab Contents -->
+        <!-- Add Complaint Tab -->
         <div id="add-complaint" class="main-tab-content active">
             <div class="container">
                 <div class="form-container">
                     <h2>Add Complaint</h2>
 
-                    <!-- Search section -->
+                    <!-- Search section with adjusted button alignment -->
                     <div class="search-container">
                         <div class="form-group">
                             <label for="id_number">
                                 <i class="fas fa-id-card"></i> ID Number
                             </label>
-                            <div class="input-container">
-                                <input type="text" id="id_number" name="id_number" placeholder="Enter ID Number" maxlength="7">
+                            <div class="input-container" style="display: flex; align-items: center; width: 100%;">
+                                <input type="text" id="id_number" name="id_number" placeholder="Enter ID Number" maxlength="7" style="flex: 1;">
+                                <button type="button" onclick="fetchPersonData()" class="search-button">
+                                    <i class="fas fa-search"></i> Search
+                                </button>
                             </div>
                         </div>
-
-                        <button type="button" onclick="fetchPersonData()">
-                            <i class="fas fa-search"></i> Search
-                        </button>
                     </div>
 
                     <form id="complaint-form" action="{{ route('admin.complaint.store') }}" method="POST">
@@ -581,36 +777,37 @@
                         <input type="hidden" name="role" id="role" value="">
                         <input type="hidden" name="year" value="{{ date('Y') }}">
                         <input type="hidden" name="id_number" id="hidden_id_number" value="">
+                        <input type="hidden" name="first_name" id="first_name" value="">
+                        <input type="hidden" name="last_name" id="last_name" value="">
 
-                        <!-- First Name and Last Name fields -->
+                        <!-- Full Name field -->
                         <div class="form-group">
                             <div class="input-wrapper">
-                                <label for="first_name"><i class="fas fa-user"></i> First Name</label>
-                                <input type="text" id="first_name" name="first_name" value="{{ old('first_name') }}" required>
-                            </div>
-                            <div class="input-wrapper">
-                                <label for="last_name"><i class="fas fa-user"></i> Last Name</label>
-                                <input type="text" id="last_name" name="last_name" value="{{ old('last_name') }}" required>
+                                <label for="full_name"><i class="fas fa-user"></i> Full Name</label>
+                                <input type="text" id="full_name" name="full_name" placeholder="First Name Last Name" value="{{ old('full_name') }}" required readonly>
                             </div>
                         </div>
 
-                        <!-- Age and Birthdate fields -->
+                        <!-- Grade/Course and Section fields -->
                         <div class="form-group">
+                        <div class="input-wrapper">
+        <label for="grade_course"><i class="fas fa-school"></i> Grade/Course</label>
+        <input type="text" id="grade_course" name="grade_course" placeholder="Enter Grade or Course" required>
+    </div>
                             <div class="input-wrapper">
-                                <label for="age"><i class="fas fa-hourglass-half"></i> Age</label>
-                                <input type="number" id="age" name="age" required>
-                            </div>
-                            <div class="input-wrapper">
-                                <label for="birthdate"><i class="fas fa-calendar"></i> Birthdate</label>
-                                <input type="date" id="birthdate" name="birthdate" required>
+                                <label for="section"><i class="fas fa-users"></i> Section</label>
+                                <input type="text" id="section" name="section" placeholder="Enter Section" required>
                             </div>
                         </div>
 
-                        <!-- Contact Number and Pain Assessment fields -->
+                        <!-- Medicine Given and Pain Assessment fields -->
                         <div class="form-group">
                             <div class="input-wrapper">
-                                <label for="personal_contact_number"><i class="fas fa-phone"></i> Personal Contact Number</label>
-                                <input type="text" id="personal_contact_number" name="personal_contact_number" value="">
+                                <label for="medicine_given"><i class="fas fa-pills"></i> Medicine Given</label>
+                                <select id="medicine_given" name="medicine_given" required>
+                                    <option value="">Select Medicine</option>
+                                    <!-- Options will be populated via AJAX -->
+                                </select>
                             </div>
                             <div class="input-wrapper">
                                 <label for="pain_assessment"><i class="fas fa-thermometer-half"></i> Pain Assessment (1 to 10)</label>
@@ -622,35 +819,11 @@
                             </div>
                         </div>
 
-                        <!-- Medicine Given field -->
+                        <!-- Description of Sickness field -->
                         <div class="form-group">
                             <div class="input-wrapper">
-                                <label for="medicine_given"><i class="fas fa-pills"></i> Medicine Given</label>
-                                <select id="medicine_given" name="medicine_given" required>
-                                    <option value="">Select Medicine</option>
-                                    <!-- Options will be populated via AJAX -->
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Description of Sickness and Confine Status fields -->
-                        <div class="form-group">
-                            <div class="textarea-wrapper">
                                 <label for="sickness_description"><i class="fas fa-notes-medical"></i> Description of Sickness</label>
                                 <textarea id="sickness_description" name="sickness_description" rows="4" required></textarea>
-                            </div>
-
-                            <!-- Confine Status -->
-                            <div class="confine-status-wrapper">
-                                <label for="confine_status"><i class="fas fa-bed"></i> Confine Status</label>
-                                <div class="radio-group">
-                                    <label>
-                                        <input type="radio" name="confine_status" value="confined" required> Confined
-                                    </label>
-                                    <label>
-                                        <input type="radio" name="confine_status" value="not_confined" required> Not Confined
-                                    </label>
-                                </div>
                             </div>
                         </div>
 
@@ -675,51 +848,10 @@
                         </div>
                     </form>
                 </div>
-                <div class="form-container">
-                    <div class="table-container">
-                        <div class="statistics-container">
-                            <h3>Statistics</h3>
-                            <div class="statistics-item">
-                                <span>Most Common Complaint: </span>{{ $mostCommonComplaint }}
-                            </div>
-                            <div class="statistics-item">
-                                <span>Most Used Medicine: </span>{{ $mostUsedMedicine }}
-                            </div>
-                            <div class="chart-container">
-                                <canvas id="complaint-chart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                     <!-- Generate Report -->
-                     <div class="generate-report-container">
-                                <h2>Generate Complaint Statistics Report</h2>
-                                <form id="report-form" method="GET" action="{{ route('admin.complaint.statisticsReport') }}">
-                                @csrf
-                                <div class="form-group">
-    <label for="report-period">Select Report Period</label>
-    <select id="report-period" name="report_period" required>
-        <option value="">-- Select Period --</option>
-        <option value="daily">Daily</option>
-        <option value="weekly">Weekly</option> <!-- Corrected -->
-        <option value="monthly">Monthly</option> <!-- Corrected -->
-    </select>
-</div>
-                                    <div class="form-group">
-                                        <label for="report-date">Select Date</label>
-                                        <input type="date" id="report-date" name="report_date" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <button type="button" class="generate-report-btn" onclick="generateComplaintsReport()">Generate Report</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
-        <!-- Main Complaint List Tab Content -->
+        <!-- Complaint List Tab -->
         <div id="complaint-table" class="main-tab-content">
             <div class="complaint-list-container">
                 <!-- Inner Tabs for Complaint Roles -->
@@ -733,45 +865,45 @@
                 <!-- Student Complaints Tab -->
                 <div id="student-complaints" class="inner-tab-content active">
                     <h2>Student Complaints</h2>
-                    <!-- Search bar for student complaints -->
                     <div class="table-container">
                         <table class="complaints-table" id="student-complaints-table">
                             <thead>
                                 <tr>
-                                    <th>First Name</th>
-                                    <th>Last Name</th>
-                                    <th>Complaint Date</th> <!-- New Column -->
-                    <th>Confine Status</th> <!-- New Column -->
-                    <th>Go Home Status</th> <!-- New Column -->
+                                <th>Complaint Date</th>
+                                <th>Complaint Time </th>
+                                    <th>Full Name</th>
+                                    <th>Year and Section</th>
                                     <th>Description of Sickness</th>
-                                    <th>Pain Assessment</th>
                                     <th>Medicine Given</th>
+                                    <th>Pain Assessment</th>
+                                    <th>Did Student Go Home?</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($studentComplaints as $complaint)
                                     <tr id="complaint-row-{{ $complaint->id }}">
-                                        <td>{{ $complaint->first_name }}</td>
-                                        <td>{{ $complaint->last_name }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($complaint->created_at)->format('Y-m-d') }}</td> <!-- Updated -->
-                        <td>{{ ucfirst($complaint->confine_status) }}</td> <!-- Confine Status -->
-                        <td>{{ ucfirst($complaint->go_home ?? 'N/A') }}</td> <!-- Go Home Status -->
+                                    <td>{{ \Carbon\Carbon::parse($complaint->created_at)->format('Y-m-d') }}</td>
+                                    <td><time datetime="{{ $complaint->created_at->toIso8601String() }}">{{ $complaint->created_at->format('h:i A') }}</time></td>                                        
+                                    <td>{{ $complaint->first_name }} {{ $complaint->last_name }}</td>
+                                        <td>{{ $complaint->grade_course ?? 'N/A' }} {{ $complaint->section ?? 'N/A' }}</td>
                                         <td>{{ $complaint->sickness_description }}</td>
-                                        <td>{{ $complaint->pain_assessment }}</td>
                                         <td>{{ $complaint->medicine_given }}</td>
+                                        <td>{{ $complaint->pain_assessment }}</td>
+                                        <td>{{ ucfirst($complaint->go_home ?? 'N/A') }}</td>
+
                                         <td>
-                                            <button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button>
+                                           
                                             @if($complaint->report_url)
-                                                <a href="{{ $complaint->report_url }}" target="_blank" class="pdf-button">
-                                                    <i class="fas fa-file-pdf"></i> View PDF
-                                                </a>
-                                             
-                                            @else
-                                                <button class="pdf-button" disabled title="PDF not available">
-                                                    <i class="fas fa-file-pdf"></i> View PDF
-                                                </button>
                                                
+                                                <a href="{{ $complaint->report_url }}" download class="download-button">
+                                                    <i class="fas fa-download"></i> Download PDF
+                                                </a>
+                                            @else
+                                               
+                                                <button class="download-button" disabled title="PDF not available">
+                                                    <i class="fas fa-download"></i> Download PDF
+                                                </button>
                                             @endif
                                         </td>
                                     </tr>
@@ -788,40 +920,43 @@
                         <table class="complaints-table" id="staff-complaints-table">
                             <thead>
                                 <tr>
-                                    <th>First Name</th>
-                                    <th>Last Name</th>
-                                    <th>Complaint Date</th> <!-- New Column -->
-                    <th>Confine Status</th> <!-- New Column -->
-                    <th>Go Home Status</th> <!-- New Column -->
+                                <th>Complaint Date</th>
+                                <th>Complaint Time </th>
+                                    <th>Full Name</th>
                                     <th>Description of Sickness</th>
-                                    <th>Pain Assessment</th>
                                     <th>Medicine Given</th>
+                                    <th>Pain Assessment</th>
+                                    <th>Did Student Go Home?</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($staffComplaints as $complaint)
-                                    <tr id="complaint-row-{{ $complaint->id }}">
-                                        <td>{{ $complaint->first_name }}</td>
-                                        <td>{{ $complaint->last_name }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($complaint->created_at)->format('Y-m-d') }}</td> <!-- Updated -->
-                        <td>{{ ucfirst($complaint->confine_status) }}</td> <!-- Confine Status -->
-                        <td>{{ ucfirst($complaint->go_home ?? 'N/A') }}</td> <!-- Go Home Status -->
+                                <tr id="complaint-row-{{ $complaint->id }}">
+                                    <td>{{ \Carbon\Carbon::parse($complaint->created_at)->format('Y-m-d') }}</td>
+                                    <td><time datetime="{{ $complaint->created_at->toIso8601String() }}">{{ $complaint->created_at->format('h:i A') }}</time></td>                                        
+                                    <td>{{ $complaint->first_name }} {{ $complaint->last_name }}</td>
                                         <td>{{ $complaint->sickness_description }}</td>
-                                        <td>{{ $complaint->pain_assessment }}</td>
                                         <td>{{ $complaint->medicine_given }}</td>
+                                        <td>{{ $complaint->pain_assessment }}</td>
+                                        <td>{{ ucfirst($complaint->go_home ?? 'N/A') }}</td>
+
                                         <td>
-                                            <button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button>
+                                           
                                             @if($complaint->report_url)
                                                 <a href="{{ $complaint->report_url }}" target="_blank" class="pdf-button">
                                                     <i class="fas fa-file-pdf"></i> View PDF
                                                 </a>
-                                             
+                                                <a href="{{ $complaint->report_url }}" download class="download-button">
+                                                    <i class="fas fa-download"></i> Download PDF
+                                                </a>
                                             @else
                                                 <button class="pdf-button" disabled title="PDF not available">
                                                     <i class="fas fa-file-pdf"></i> View PDF
                                                 </button>
-                                              
+                                                <button class="download-button" disabled title="PDF not available">
+                                                    <i class="fas fa-download"></i> Download PDF
+                                                </button>
                                             @endif
                                         </td>
                                     </tr>
@@ -831,7 +966,6 @@
                     </div>
                 </div>
 
-             
                 <!-- Teacher Complaints Tab -->
                 <div id="teacher-complaints" class="inner-tab-content">
                     <h2>Teacher Complaints</h2>
@@ -839,40 +973,47 @@
                         <table class="complaints-table" id="teacher-complaints-table">
                             <thead>
                                 <tr>
-                                    <th>First Name</th>
-                                    <th>Last Name</th>
+                                <th>Complaint Date</th>
+                                <th>Complaint Time </th>
+                                    <th>Full Name</th>
                                     <th>Description of Sickness</th>
-                                    <th>Complaint Date</th> <!-- New Column -->
-                    <th>Confine Status</th> <!-- New Column -->
-                    <th>Go Home Status</th> <!-- New Column -->
-                                    <th>Pain Assessment</th>
                                     <th>Medicine Given</th>
+                                    <th>Pain Assessment</th>
+                                    <th>Did Student Go Home?</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($teacherComplaints as $complaint)
                                     <tr id="complaint-row-{{ $complaint->id }}">
-                                        <td>{{ $complaint->first_name }}</td>
-                                        <td>{{ $complaint->last_name }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($complaint->created_at)->format('Y-m-d') }}</td> <!-- Updated -->
-                        <td>{{ ucfirst($complaint->confine_status) }}</td> <!-- Confine Status -->
-                        <td>{{ ucfirst($complaint->go_home ?? 'N/A') }}</td> <!-- Go Home Status -->
+                                        <td>{{ \Carbon\Carbon::parse($complaint->created_at)->format('Y-m-d') }}</td>
+                                        <td><time datetime="{{ $complaint->created_at->toIso8601String() }}">{{ $complaint->created_at->format('h:i A') }}</time></td>                                        
+                                        <td>{{ $complaint->first_name }} {{ $complaint->last_name }}</td>
+
+                                        <td>{{ ucfirst($complaint->go_home ?? 'N/A') }}</td>
                                         <td>{{ $complaint->sickness_description }}</td>
                                         <td>{{ $complaint->pain_assessment }}</td>
                                         <td>{{ $complaint->medicine_given }}</td>
+                                        <td>{{ $complaint->grade_course ?? 'N/A' }}</td>
+                                        <td>{{ $complaint->section ?? 'N/A' }}</td>
                                         <td>
-                                            <button class="preview-button" onclick="openModal({{ $complaint->id }})">Preview</button>
+                                            <button class="preview-button" onclick="openModal({{ $complaint->id }})">
+                                                <i class="fas fa-eye"></i> Preview
+                                            </button>
                                             @if($complaint->report_url)
                                                 <a href="{{ $complaint->report_url }}" target="_blank" class="pdf-button">
                                                     <i class="fas fa-file-pdf"></i> View PDF
                                                 </a>
-                                             
+                                                <a href="{{ $complaint->report_url }}" download class="download-button">
+                                                    <i class="fas fa-download"></i> Download PDF
+                                                </a>
                                             @else
                                                 <button class="pdf-button" disabled title="PDF not available">
                                                     <i class="fas fa-file-pdf"></i> View PDF
                                                 </button>
-                                        
+                                                <button class="download-button" disabled title="PDF not available">
+                                                    <i class="fas fa-download"></i> Download PDF
+                                                </button>
                                             @endif
                                         </td>
                                     </tr>
@@ -880,11 +1021,100 @@
                             </tbody>
                         </table>
                     </div>
+                    </div>
                 </div>
+            </div>
+        </div>
+    
+        <!-- Statistics Tab -->
+    <!-- Statistics Tab -->
+<div id="statistics" class="main-tab-content">
+    <div class="container">
+        <div class="form-containerd">
+            <h2 style="margin-left: 800px;">Statistics</h2>
+
+            <div class="statistics-layout">
+                <!-- Left Side: Statistics -->
+                <div class="statistics-left">
+                    <!-- Statistics Chart -->
+                    <div class="table-container">
+                        <div class="statistics-container">
+                            <h3>Top 3 Statistics</h3>
+                            <div class="statistics-item">
+                                <span>Top 3 Most Common Complaints:</span>
+                                <ol>
+                                    @foreach ($topComplaints as $complaint)
+                                        <li>{{ $complaint->complaint }} ({{ $complaint->count }} occurrences)</li>
+                                    @endforeach
+                                </ol>
+                            </div>
+                            <div class="statistics-item">
+                                <span>Top 3 Most Used Medicines:</span>
+                                <ol>
+                                    @foreach ($topMedicines as $medicine)
+                                        <li>{{ $medicine->medicine }} ({{ $medicine->count }} usages)</li>
+                                    @endforeach
+                                </ol>
+                            </div>
+                            <div class="chart-container" style="height: 400px;">
+                                <canvas id="complaint-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Middle: Predictions -->
+                <div class="statistics-middle">
+                    <div class="prediction-container">
+                        <h3>Predictions</h3>
+                        <div class="prediction-item">
+                            <span>Next Likely Complaint Type:</span>
+                            <p id="next-complaint">Loading...</p>
+                        </div>
+                        <div class="prediction-item">
+                            <span>Most Likely Medicine to Be Used:</span>
+                            <p id="likely-medicine">Loading...</p>
+                        </div>
+                        <!-- Prediction Charts -->
+                        <div class="chart-container" style="height: 200px;">
+                            <canvas id="prediction-chart"></canvas>
+                        </div>
+                    </div>
                 </div>
-            
-        
+
+                <!-- Right Side: Generate Report -->
+                <div class="statistics-right">
+                    <!-- Generate Report -->
+                    <div class="generate-report-container">
+                        <h2>Generate Complaint Statistics Report</h2>
+                        <form id="report-form" method="GET" action="{{ route('admin.complaint.statisticsReport') }}">
+                            @csrf
+                            <div class="form-group">
+                                <label for="report-period">Select Report Period</label>
+                                <select id="report-period" name="report_period" required>
+                                    <option value="">-- Select Period --</option>
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="report-date">Select Date</label>
+                                <input type="date" id="report-date" name="report_date" required>
+                            </div>
+                            <div class="form-group">
+                                <button type="button" class="generate-report-btn" onclick="generateComplaintsReport()">Generate Report</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
     </main>
 
     <!-- Modal for Complaint Preview -->
@@ -901,83 +1131,176 @@
     </div>
 
     <script>
-            let complaintChart;
+        let complaintChart;
+        let studentTable, staffTable, teacherTable;
 
         document.addEventListener('DOMContentLoaded', function() {
-            $('#student-complaints-table').DataTable();
-            $('#staff-complaints-table').DataTable();
-            $('#teacher-complaints-table').DataTable();
+            // Initialize DataTables
+            studentTable = $('#student-complaints-table').DataTable();
+    staffTable = $('#staff-complaints-table').DataTable();
+    teacherTable = $('#teacher-complaints-table').DataTable();
+            // Fetch available medicines for the dropdown
             fetchAvailableMedicines();
+            fetchPredictions();
+
+            // Render statistics charts
             renderChart();
         });
-        function capitalizeFirstLetter(string) {
-    if (typeof string !== 'string' || !string) {
-        return 'N/A'; // Or any default value you prefer
+        function fetchPersonData() {
+    const idNumber = document.getElementById('id_number').value;
+
+    if (!idNumber) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Please enter an ID number.'
+        });
+        return;
     }
-    return string.charAt(0).toUpperCase() + string.slice(1);
+
+    fetch(`/admin/complaint/person/${idNumber}`)
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    throw new Error(errorData.error || 'Unknown error');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Log data to ensure the response structure is as expected
+            console.log('Fetched Data:', data);
+
+            // Combine first and last names
+            const fullName = `${data.first_name || ''} ${data.last_name || ''}`.trim();
+
+            document.getElementById('full_name').value = fullName || '';
+            document.getElementById('role').value = data.role || '';
+            document.getElementById('hidden_id_number').value = data.id_number || '';
+
+            // Populate grade/course and section
+            document.getElementById('grade_course').value = data.grade_course || '';
+            document.getElementById('section').value = data.section || '';
+
+            document.getElementById('first_name').value = data.first_name || '';
+            document.getElementById('last_name').value = data.last_name || '';
+
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Person Data Fetched',
+                text: 'Person data successfully fetched.'
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching person data:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred: ' + error.message
+            });
+        });
 }
 
+
+        // Utility function to capitalize the first letter of a string
+        function capitalizeFirstLetter(string) {
+            if (typeof string !== 'string' || !string) {
+                return 'N/A'; // Or any default value you prefer
+            }
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+
         // Function to switch between main tabs
-        function showTab(tabId, element) {
-            console.log(`Switching to tab: ${tabId}`);
+       // Function to switch between main tabs with fade animations
+function showTab(tabId, element) {
+    console.log(`Switching to tab: ${tabId}`);
 
-            // Hide all main tab contents
-            const tabContents = document.querySelectorAll('.main-tab-content');
-            tabContents.forEach(tabContent => {
-                if (tabContent.id !== tabId) {
-                    tabContent.classList.remove('active');
-                }
+    // Find the currently active main tab-content
+    const activeTabContent = document.querySelector('.main-tab-content.active');
+    if (activeTabContent) {
+        // Start fade-out animation
+        activeTabContent.classList.add('fade-out');
+
+        // Listen for the end of the fade-out animation
+        activeTabContent.addEventListener('animationend', function handleFadeOut() {
+            // Remove 'active' and 'fade-out' classes
+            activeTabContent.classList.remove('active', 'fade-out');
+            activeTabContent.removeEventListener('animationend', handleFadeOut);
+
+            // Show and fade-in the new tab-content
+            const newTabContent = document.getElementById(tabId);
+            newTabContent.classList.add('active', 'fade-in');
+
+            // Remove 'fade-in' class after animation completes
+            newTabContent.addEventListener('animationend', function handleFadeIn() {
+                newTabContent.classList.remove('fade-in');
+                newTabContent.removeEventListener('animationend', handleFadeIn);
             });
+        });
+    } else {
+        // If no active tab-content, directly show and fade-in the new tab
+        const newTabContent = document.getElementById(tabId);
+        newTabContent.classList.add('active', 'fade-in');
 
-            // Remove active class from all main tabs
-            const tabs = document.querySelectorAll('.main-tab');
-            tabs.forEach(tab => {
-                tab.classList.remove('active');
+        newTabContent.addEventListener('animationend', function handleFadeIn() {
+            newTabContent.classList.remove('fade-in');
+            newTabContent.removeEventListener('animationend', handleFadeIn);
+        });
+    }
+
+    // Remove 'active' class from all main tabs and add to the clicked tab
+    const tabs = document.querySelectorAll('.main-tab');
+    tabs.forEach(tab => tab.classList.remove('active'));
+    element.classList.add('active');
+}
+
+// Function to switch between inner tabs with fade animations
+function showInnerTab(tabId, element) {
+    console.log(`Switching to inner tab: ${tabId}`);
+
+    // Find the currently active inner tab-content
+    const activeInnerTabContent = document.querySelector('.inner-tab-content.active');
+    if (activeInnerTabContent) {
+        // Start fade-out animation
+        activeInnerTabContent.classList.add('fade-out');
+
+        // Listen for the end of the fade-out animation
+        activeInnerTabContent.addEventListener('animationend', function handleFadeOut() {
+            // Remove 'active' and 'fade-out' classes
+            activeInnerTabContent.classList.remove('active', 'fade-out');
+            activeInnerTabContent.removeEventListener('animationend', handleFadeOut);
+
+            // Show and fade-in the new inner tab-content
+            const newInnerTabContent = document.getElementById(tabId);
+            newInnerTabContent.classList.add('active', 'fade-in');
+
+            // Remove 'fade-in' class after animation completes
+            newInnerTabContent.addEventListener('animationend', function handleFadeIn() {
+                newInnerTabContent.classList.remove('fade-in');
+                newInnerTabContent.removeEventListener('animationend', handleFadeIn);
             });
+        });
+    } else {
+        // If no active inner tab-content, directly show and fade-in the new inner tab
+        const newInnerTabContent = document.getElementById(tabId);
+        newInnerTabContent.classList.add('active', 'fade-in');
 
-            // Show the selected main tab content with animation
-            const selectedTabContent = document.getElementById(tabId);
-            if (selectedTabContent) {
-                selectedTabContent.classList.add('active');
-            } else {
-                console.error(`Tab content with id ${tabId} not found.`);
-            }
+        newInnerTabContent.addEventListener('animationend', function handleFadeIn() {
+            newInnerTabContent.classList.remove('fade-in');
+            newInnerTabContent.removeEventListener('animationend', handleFadeIn);
+        });
+    }
 
-            // Add active class to the selected main tab
-            element.classList.add('active');
-        }
+    // Remove 'active' class from all inner tabs and add to the clicked tab
+    const innerTabs = document.querySelectorAll('.inner-tab');
+    innerTabs.forEach(tab => tab.classList.remove('active'));
+    element.classList.add('active');
+}
 
-        // Function to switch between inner complaint tabs
-        function showInnerTab(tabId, element) {
-            console.log(`Switching to inner tab: ${tabId}`);
 
-            // Hide all inner tab contents
-            const innerTabContents = document.querySelectorAll('.inner-tab-content');
-            innerTabContents.forEach(innerTabContent => {
-                if (innerTabContent.id !== tabId) {
-                    innerTabContent.classList.remove('active');
-                }
-            });
-
-            // Remove active class from all inner tabs
-            const innerTabs = document.querySelectorAll('.inner-tab');
-            innerTabs.forEach(tab => {
-                tab.classList.remove('active');
-            });
-
-            // Show the selected inner tab content with animation
-            const selectedInnerTabContent = document.getElementById(tabId);
-            if (selectedInnerTabContent) {
-                selectedInnerTabContent.classList.add('active');
-            } else {
-                console.error(`Inner tab content with id ${tabId} not found.`);
-            }
-
-            // Add active class to the selected inner tab
-            element.classList.add('active');
-        }
-
-        // Fetch available medicines
+     
+        // Fetch available medicines from the server
         function fetchAvailableMedicines() {
             fetch('{{ route('admin.inventory.available-medicines') }}')
                 .then(response => response.json())
@@ -995,153 +1318,192 @@
                     console.error('Error fetching medicines:', error);
                 });
         }
-    
-        // Fetch person data based on ID number
-        function fetchPersonData() {
-            const idNumber = document.getElementById('id_number').value;
 
-            if (!idNumber) {
+       
+        // Render Statistics Charts
+        function renderChart() {
+            fetch('{{ route('admin.complaint.statistics') }}', {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data.topComplaints || !data.topMedicines) {
+                    throw new Error('Invalid data structure received from the server.');
+                }
+
+                // Prepare labels and data for complaints and medicines
+                const complaintLabels = data.topComplaints.map(item => item.complaint);
+                const complaintCounts = data.topComplaints.map(item => item.count);
+                
+                const medicineLabels = data.topMedicines.map(item => item.medicine);
+                const medicineCounts = data.topMedicines.map(item => item.count);
+
+                const ctx = document.getElementById('complaint-chart').getContext('2d');
+
+                if (complaintChart) {
+                    complaintChart.destroy();
+                }
+
+                complaintChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: complaintLabels.concat(medicineLabels), // Combine labels for spacing
+                        datasets: [
+                            {
+                                label: 'Top 3 Most Common Complaints',
+                                data: complaintCounts.concat(new Array(medicineLabels.length).fill(null)), // Leave space for medicines
+                                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Top 3 Most Used Medicines',
+                                data: new Array(complaintLabels.length).fill(null).concat(medicineCounts), // Align medicines to the right
+                                backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                }
+                            }
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching statistics:', error);
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'Please enter an ID number.'
+                    text: 'Failed to load chart data. Please try again later.'
                 });
-                return;
-            }
-
-            fetch(`/admin/complaint/person/${idNumber}`)
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(errorData => {
-                            throw new Error(errorData.error || 'Unknown error');
-                        });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    document.getElementById('first_name').value = data.first_name || '';
-                    document.getElementById('last_name').value = data.last_name || '';
-                    document.getElementById('age').value = data.age || '';
-                    document.getElementById('birthdate').value = data.birthdate || '';
-                    document.getElementById('personal_contact_number').value = data.personal_contact_number || '';
-                    document.getElementById('role').value = data.role || '';
-                    document.getElementById('hidden_id_number').value = data.id_number || '';
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Person Data Fetched',
-                        text: 'Person data successfully fetched.'
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching person data:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'An error occurred: ' + error.message
-                    });
-                });
+            });
         }
 
-        // Open modal to preview complaint details
-        function openModal(complaintId) {
-            fetch(`/admin/complaint/${complaintId}`)
-                .then(response => response.json())
-                .then(data => {
-                    const modalBody = document.getElementById('modal-body');
-                    modalBody.innerHTML = `
-                        <p><strong>First Name:</strong> ${data.first_name}</p>
-                        <p><strong>Last Name:</strong> ${data.last_name}</p>
-                        <p><strong>Description of Sickness:</strong> ${data.sickness_description}</p>
-                        <p><strong>Pain Assessment:</strong> ${data.pain_assessment}</p>
-                        <p><strong>Confine Status:</strong> ${data.confine_status}</p>
-                        <p><strong>Status:</strong> ${data.status}</p>
-                        ${data.pdf_url ? `
-                            <a href="${data.pdf_url}" target="_blank" class="pdf-link">
-                                <i class="fas fa-file-pdf"></i> View PDF
-                            </a>
-                        ` : ''}
-                    `;
-                    document.getElementById('complaint-modal').style.display = 'block';
-                })
-                .catch(error => {
-                    console.error('Error fetching complaint details:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: error.message
-                    });
-                });
-        }
-
-        // Close modal
-        function closeModal() {
-            document.getElementById('complaint-modal').style.display = 'none';
-        }
-        function renderChart() {
-    fetch('{{ route('admin.complaint.statistics') }}', {
+        function fetchPredictions() {
+    fetch('{{ route('admin.complaint.predictions') }}', {
         method: 'GET',
-        credentials: 'same-origin', // Ensure cookies are sent
         headers: {
             'Accept': 'application/json'
         }
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
-        const ctx = document.getElementById('complaint-chart').getContext('2d');
+        if (data.success) {
+            document.getElementById('next-complaint').textContent = data.next_complaint;
+            document.getElementById('likely-medicine').textContent = data.likely_medicine;
 
-        // Destroy existing chart instance if it exists
-        if (complaintChart) {
-            complaintChart.destroy();
-        }
+            // Render Prediction Chart
+            renderPredictionChart(data.next_complaint, data.likely_medicine);
+        } else {
+            document.getElementById('next-complaint').textContent = 'Prediction unavailable.';
+            document.getElementById('likely-medicine').textContent = 'Prediction unavailable.';
 
-        // Create a new chart instance
-        complaintChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Most Common Complaint', 'Most Used Medicine'],
-                datasets: [{
-                    label: 'Occurrences',
-                    data: [data.commonComplaintCount, data.mostUsedMedicineCount],
-                    backgroundColor: [
-                        'rgba(54, 162, 235, 0.2)',
-                        'rgba(255, 99, 132, 0.2)'
-                    ],
-                    borderColor: [
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 99, 132, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                },
-                responsive: true,
-                maintainAspectRatio: false
+            // Optionally, hide or clear the prediction chart
+            if (window.predictionChart) {
+                window.predictionChart.destroy();
+                window.predictionChart = null;
             }
-        });
+        }
     })
     .catch(error => {
-        console.error('Error fetching statistics:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Failed to load chart data. Please try again later.'
-        });
+        console.error('Error fetching predictions:', error);
+        document.getElementById('next-complaint').textContent = 'Prediction unavailable.';
+        document.getElementById('likely-medicine').textContent = 'Prediction unavailable.';
+
+        // Optionally, hide or clear the prediction chart
+        if (window.predictionChart) {
+            window.predictionChart.destroy();
+            window.predictionChart = null;
+        }
     });
 }
 
-       // Handle complaint form submission with AJAX and SweetAlert
-document.getElementById('complaint-form').addEventListener('submit', function(event) {
+
+     // Render Prediction Chart using Chart.js
+function renderPredictionChart(nextComplaint, likelyMedicine) {
+    const ctx = document.getElementById('prediction-chart').getContext('2d');
+
+    // Destroy existing chart if it exists to prevent duplication
+    if (window.predictionChart) {
+        window.predictionChart.destroy();
+    }
+
+    const data = {
+        labels: ['Next Complaint Type', 'Likely Medicine'],
+        datasets: [{
+            label: 'Predictions',
+            data: [1, 1], // Dummy data for representation
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.6)',
+                'rgba(54, 162, 235, 0.6)'
+            ],
+            borderColor: [
+                'rgba(255,99,132,1)',
+                'rgba(54, 162, 235, 1)'
+            ],
+            borderWidth: 1
+        }]
+    };
+
+    const options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    afterLabel: function(context) {
+                        if (context.label === 'Next Complaint Type') {
+                            return nextComplaint;
+                        } else if (context.label === 'Likely Medicine') {
+                            return likelyMedicine;
+                        }
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                display: false,
+                beginAtZero: true
+            }
+        }
+    };
+
+    // Assign the chart to a global variable to manage its lifecycle
+    window.predictionChart = new Chart(ctx, {
+        type: 'bar',
+        data: data,
+        options: options
+    });
+}
+
+        // Handle complaint form submission with AJAX and SweetAlert
+        document.getElementById('complaint-form').addEventListener('submit', function(event) {
     event.preventDefault(); // Prevent the default form submission
 
     const form = event.target;
@@ -1181,60 +1543,74 @@ document.getElementById('complaint-form').addEventListener('submit', function(ev
                     // Clear all form fields
                     form.reset();
 
-                    // Prepare the new complaint row HTML
-                    let newRow = `
-                        <tr id="complaint-row-${data.complaint_id}">
-                            <td>${data.first_name}</td>
-                            <td>${data.last_name}</td>
-                            <td>${new Date().toISOString().split('T')[0]}</td> <!-- Record Date (current date) -->
-                            <td>${capitalizeFirstLetter(data.confine_status)}</td> <!-- Confine Status -->
-                            <td>${capitalizeFirstLetter(data.go_home)}</td> <!-- Go Home Status -->
-                            <td>${data.sickness_description}</td>
-                            <td>${data.pain_assessment}</td>
-                            <td>${data.medicine_given}</td>
-                            <td>
-                                <button class="preview-button" onclick="openModal(${data.complaint_id})">Preview</button>
-                                ${data.report_url ? `
-                                    <a href="${data.report_url}" target="_blank" class="pdf-button">
-                                        <i class="fas fa-file-pdf"></i> View PDF
-                                    </a>
-                                    <a href="${data.report_url}" download class="download-button">
-                                        <i class="fas fa-download"></i> Download PDF
-                                    </a>
-                                ` : `
-                                    <button class="pdf-button" disabled title="PDF not available">
-                                        <i class="fas fa-file-pdf"></i> View PDF
-                                    </button>
-                                    <button class="download-button" disabled title="PDF not available">
-                                        <i class="fas fa-download"></i> Download PDF
-                                    </button>
-                                `}
-                            </td>
-                        </tr>
+                    // Prepare the new complaint row data in correct order
+                    let createdAt = new Date(data.created_at);
+
+                    let complaintDate = createdAt.toLocaleDateString('en-CA'); // Format as 'YYYY-MM-DD'
+                    let complaintTime = createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); // Format as 'HH:MM AM/PM'
+
+                    let fullName = `${data.first_name || ''} ${data.last_name || ''}`.trim();
+
+                    let yearAndSection = `${data.grade_course || 'N/A'} ${data.section || 'N/A'}`;
+
+                    let description = data.sickness_description || 'N/A';
+                    let medicine = data.medicine_given || 'N/A';
+                    let painAssessment = data.pain_assessment || 'N/A';
+                    let goHome = capitalizeFirstLetter(data.go_home);
+
+                    let actionButtons = `
+                        <button class="preview-button" onclick="openModal(${data.complaint_id})">
+                            <i class="fas fa-eye"></i> Preview
+                        </button>
+                        ${data.report_url ? `
+                           
+                            <a href="${data.report_url}" download class="download-button">
+                                <i class="fas fa-download"></i> Download PDF
+                            </a>
+                        ` : `
+                            
+                            <button class="download-button" disabled title="PDF not available">
+                                <i class="fas fa-download"></i> Download PDF
+                            </button>
+                        `}
                     `;
 
-                    // Append the new row to the appropriate table based on role
+                    let newRowData = [
+                        complaintDate,
+                        complaintTime,
+                        fullName || 'N/A',
+                        yearAndSection,
+                        description,
+                        medicine,
+                        painAssessment,
+                        goHome,
+                        actionButtons
+                    ];
+
+                    // Determine which table to update based on role
                     const role = data.role.toLowerCase();
-                    let tableId = '';
+                    let tableInstance;
 
                     switch(role) {
                         case 'student':
-                            tableId = 'student-complaints-table';
+                            tableInstance = studentTable;
                             break;
                         case 'staff':
-                            tableId = 'staff-complaints-table';
+                            tableInstance = staffTable;
                             break;
                         case 'teacher':
-                            tableId = 'teacher-complaints-table';
+                            tableInstance = teacherTable;
                             break;
                         default:
-                            tableId = 'student-complaints-table'; // Default to student
+                            tableInstance = studentTable; // Default to student
                     }
 
-                    document.querySelector(`#${tableId} tbody`).insertAdjacentHTML('beforeend', newRow);
+                    // Add the new row using DataTables API
+                    tableInstance.row.add(newRowData).draw(false);
 
                     // Optionally, update statistics and charts
                     renderChart();
+                    fetchPredictions(); // Update predictions as data has changed
 
                     // SweetAlert success message with option to view the PDF
                     Swal.fire({
@@ -1286,102 +1662,105 @@ document.getElementById('complaint-form').addEventListener('submit', function(ev
     });
 });
 
+        // Generate Complaint Statistics Report with SweetAlert
+        function generateComplaintsReport() {
+            const reportPeriod = document.getElementById('report-period').value;
+            const reportDate = document.getElementById('report-date').value;
 
-
-
-        //
-function generateComplaintsReport() {
-    const reportPeriod = document.getElementById('report-period').value;
-    const reportDate = document.getElementById('report-date').value;
-
-    // Front-end Validation
-    if (!reportPeriod || !reportDate) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Please select both report period and date.'
-        });
-        return;
-    }
-
-    // Confirmation Prompt
-    Swal.fire({
-        title: 'Generate Report',
-        text: `Do you want to generate a ${capitalizeFirstLetter(reportPeriod)} report for ${reportDate}?`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#28a745',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, generate it!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Show loading spinner
-            Swal.fire({
-                title: 'Generating Report...',
-                text: 'Please wait while your report is being generated.',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-
-            // Construct the URL with query parameters
-            const url = new URL("{{ route('admin.complaint.statisticsReport') }}", window.location.origin);
-            url.searchParams.append('report_period', reportPeriod);
-            url.searchParams.append('report_date', reportDate);
-
-            fetch(url, { // Use GET with query parameters
-                method: 'GET',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(errorData => {
-                        throw new Error(errorData.message || 'Unknown error');
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                Swal.close(); // Close the loading spinner
-
-                if (data.success) {
-                    // Automatically open the generated PDF in a new tab
-                    window.open(data.report_url, '_blank');
-
-                    // Optional: Notify the user
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Report Generated',
-                        text: 'Your Complaints Statistics Report has been generated successfully and opened in a new tab.',
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message || 'An error occurred while generating the report.'
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error generating report:', error);
-
+            // Front-end Validation
+            if (!reportPeriod || !reportDate) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: error.message || 'An unexpected error occurred while generating the report.'
+                    text: 'Please select both report period and date.'
                 });
+                return;
+            }
+
+            // Confirmation Prompt
+            Swal.fire({
+                title: 'Generate Report',
+                text: `Do you want to generate a ${capitalizeFirstLetter(reportPeriod)} report for ${reportDate}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, generate it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading spinner
+                    Swal.fire({
+                        title: 'Generating Report...',
+                        text: 'Please wait while your report is being generated.',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Construct the URL with query parameters
+                    const url = new URL("{{ route('admin.complaint.statisticsReport') }}", window.location.origin);
+                    url.searchParams.append('report_period', reportPeriod);
+                    url.searchParams.append('report_date', reportDate);
+
+                    fetch(url, { // Use GET with query parameters
+                        method: 'GET',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(errorData => {
+                                throw new Error(errorData.message || 'Unknown error');
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        Swal.close(); // Close the loading spinner
+
+                        if (data.success) {
+                            // Automatically open the generated PDF in a new tab
+                            window.open(data.report_url, '_blank');
+
+                            // Optional: Notify the user
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Report Generated',
+                                text: 'Your Complaints Statistics Report has been generated successfully and opened in a new tab.',
+                                timer: 3000,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'An error occurred while generating the report.'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error generating report:', error);
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: error.message || 'An unexpected error occurred while generating the report.'
+                        });
+                    });
+                }
             });
         }
-    });
-}
 
-        // Generate Appointment Statistics Report with SweetAlert
-
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('complaint-modal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
     </script>
+
 </x-app-layout>

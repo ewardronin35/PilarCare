@@ -21,20 +21,18 @@ class DoctorDashboardController extends Controller
 { 
     protected function getAuthenticatedDoctor()
     {
-        $user = Auth::user();
-        if (!$user) {
-            Log::error("No authenticated user found.");
+        // Fetch doctor by matching the `id_number` in Doctor with the `id_number` of the logged-in user
+        $doctor = Doctor::where('id_number', Auth::user()->id_number)->with('user')->first();
+
+        if (!$doctor) {
+            Log::error("Doctor profile not found for ID Number: " . Auth::user()->id_number);
             return null;
         }
 
-        $doctor = Doctor::where('id_number', $user->id_number)->first();
-
-        if (!$doctor) {
-            Log::error("Doctor profile not found for User ID Number: {$user->id_number}");
-        }
-
+        Log::info("Doctor and associated user found", ['doctor' => $doctor->toArray()]);
         return $doctor;
     }
+    
     public function index()
     {
         // Get the currently authenticated doctor
@@ -44,6 +42,7 @@ class DoctorDashboardController extends Controller
             // Redirect back with an error message if Doctor profile not found
             return redirect()->back()->withErrors(['error' => 'Doctor profile not found.']);
         }
+
         // 1. Count of appointments for this doctor
         $doctorAppointmentsCount = Appointment::where('doctor_id', $doctor->id)->count();
 
@@ -71,7 +70,8 @@ class DoctorDashboardController extends Controller
         // 6. Monthly User Data for Charts
         $roles = ['Student', 'Teacher', 'Staff', 'Parent', 'Doctor', 'Nurse'];
         $monthlyUserData = [];
-
+        $firstName = optional($doctor->user)->first_name;
+        $lastName = optional($doctor->user)->last_name;
         foreach ($roles as $role) {
             $monthlyCounts = User::selectRaw('MONTH(created_at) as month, COUNT(*) as count')
                 ->where('role', $role)
@@ -89,24 +89,29 @@ class DoctorDashboardController extends Controller
 
         // 7. Appointment Statistics (e.g., Monthly Appointments)
         $monthlyAppointments = Appointment::selectRaw('MONTH(appointment_date) as month, COUNT(*) as count')
-        ->where('doctor_id', $doctor->id)
-        ->whereYear('appointment_date', date('Y'))
-        ->groupBy('month')
-        ->pluck('count', 'month')
-        ->toArray();
+            ->where('doctor_id', $doctor->id)
+            ->whereYear('appointment_date', date('Y'))
+            ->groupBy('month')
+            ->pluck('count', 'month')
+            ->toArray();
 
-    $appointmentsPerMonth = [];
-    for ($i = 1; $i <= 12; $i++) {
-        $appointmentsPerMonth[] = $monthlyAppointments[$i] ?? 0;
-    }
-        // 8. Recent Complaints (optional for display)
-
-        // Pass all data to the view
+        $appointmentsPerMonth = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $appointmentsPerMonth[] = $monthlyAppointments[$i] ?? 0;
+        }
+        Log::info('Doctor Profile Debug', [
+            'doctor_id' => $doctor->id,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'user_data' => $doctor->user->toArray() ?? 'No User Data',
+        ]);
+        // Pass all data to the view, including 'doctor'
         return view('doctor.DoctorDashboard', compact(
             'doctorAppointmentsCount',
             'complaintCount',
             'pendingApprovalCount',
             'students',
+            'doctor', // Ensure doctor is passed here
             'staff',
             'parents',
             'dentalRecordCount',
@@ -116,6 +121,8 @@ class DoctorDashboardController extends Controller
             'nurses',
             'monthlyUserData',
             'appointmentsPerMonth',
+            'doctor',
+            'firstName', 'lastName'// Add this line
         ));
     }
 

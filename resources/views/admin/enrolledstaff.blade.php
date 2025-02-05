@@ -74,7 +74,7 @@
             display: flex;
             gap: 20px;
             flex-wrap: wrap;
-            justify-content: space-between;
+            justify-content: center; /* Changed from space-between to center */
             margin-top: 30px;
             margin-bottom: 40px;
         }
@@ -84,8 +84,8 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            flex: 1 1 45%;
-            max-width: 48%;
+            flex: 1 1 100%; /* Allow full width on smaller screens */
+            max-width: 500px; /* Set a maximum width for larger screens */
             box-sizing: border-box;
             animation: fadeInUp 0.5s ease-in-out;
         }
@@ -155,7 +155,8 @@
         .toggle-button,
         .save-button,
         .delete-button,
-        .edit-button {
+        .edit-button,
+        .view-button {
             background-color: #00d1ff;
             color: white;
             padding: 10px 15px;
@@ -208,6 +209,16 @@
 
         .edit-button:hover {
             background-color: #0069d9;
+        }
+
+        .view-button {
+            background-color: #17a2b8;
+            width: 100%;
+            max-width: 150px;
+        }
+
+        .view-button:hover {
+            background-color: #138496;
         }
 
         /* Forms */
@@ -350,7 +361,7 @@
 
         /* Modal Styles */
         .modal {
-            display: none;
+            display: none; /* Hidden by default */
             position: fixed;
             z-index: 1000;
             top: 0;
@@ -359,12 +370,17 @@
             height: 100%;
             overflow: auto;
             background-color: rgba(0, 0, 0, 0.4);
-            justify-content: center;
-            align-items: center;
+            justify-content: center; /* Center horizontally */
+            align-items: center;     /* Center vertically */
             padding: 20px;
             box-sizing: border-box;
         }
 
+        .modal.active {
+            display: flex; /* Activate Flexbox */
+        }
+
+        /* Modal Content Styles */
         .modal-content {
             background-color: #fff;
             padding: 20px;
@@ -373,9 +389,6 @@
             width: 100%;
             max-width: 600px;
             animation: slideIn 0.5s ease-out;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
         }
 
         /* Close Button */
@@ -451,11 +464,11 @@
         @media (max-width: 768px) {
             .forms-container {
                 flex-direction: column;
-                align-items: center;
+                align-items: center; /* Center forms vertically */
             }
 
             .form-wrapper {
-                max-width: 100%;
+                max-width: 90%; /* Increase max-width on smaller screens */
             }
 
             .staff-table th,
@@ -507,6 +520,7 @@
         }
     </style>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 
     <div class="main-content">
         <!-- Tabs -->
@@ -546,25 +560,7 @@
                 </div>
 
                 <!-- Add Late Staff Form -->
-                <div class="form-wrapper">
-                    <h2><i class="fas fa-user-plus"></i> Add Late Staff</h2>
-                    <form id="late-staff-form">
-                        @csrf
-                        <label for="late-id_number">ID Number</label>
-                        <input type="text" id="late-id_number" name="late-id_number" required maxlength="7" pattern="[A-Za-z][0-9]{6}" title="ID number must start with a letter followed by 6 digits.">
-                        
-                        <label for="late-first_name">First Name</label>
-                        <input type="text" id="late-first_name" name="late-first_name" required>
-                        
-                        <label for="late-last_name">Last Name</label>
-                        <input type="text" id="late-last_name" name="late-last_name" required>
-                        
-                        <label for="late-department">Department</label>
-                        <input type="text" id="late-department" name="late-department" required>
-                        
-                        <button type="submit" class="preview-button"><i class="fas fa-user-plus"></i> Add Staff</button>
-                    </form>
-                </div>
+                <!-- If you have an additional form for adding late staff, include it here -->
             </div>
         </div>
 
@@ -576,12 +572,14 @@
                 @if($staff->isEmpty())
                     <p>No staff enrolled yet.</p>
                 @else
+                   
                     <table class="staff-table" id="staff-table">
                         <thead>
                             <tr>
                                 <th><i class="fas fa-id-card"></i> ID</th>
                                 <th><i class="fas fa-user"></i> First Name</th>
                                 <th><i class="fas fa-user"></i> Last Name</th>
+                                <th><i class="fas fa-building"></i> Position</th> <!-- New Department Column -->
                                 <th><i class="fas fa-info-circle"></i> Status</th>
                                 <th><i class="fas fa-toggle-on"></i> Toggle Status</th>
                                 <th><i class="fas fa-tools"></i> Actions</th>
@@ -593,6 +591,7 @@
                                     <td>{{ $s->id_number }}</td>
                                     <td>{{ $s->first_name }}</td>
                                     <td>{{ $s->last_name }}</td>
+                                    <td>{{ $s->position }}</td> <!-- Display Department -->
                                     <td>
                                         <button class="preview-button status-button" style="background-color: {{ $s->approved ? '#28a745' : '#dc3545' }};">
                                             {{ $s->approved ? 'Active' : 'Inactive' }}
@@ -605,6 +604,9 @@
                                         </label>
                                     </td>
                                     <td>
+                                        <button class="preview-button view-button" data-staff-id="{{ $s->id }}">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
                                         <button class="preview-button edit-button" data-staff-id="{{ $s->id }}">
                                             <i class="fas fa-edit"></i> Edit
                                         </button>
@@ -620,16 +622,17 @@
             </div>
 
             <!-- Edit Staff Modal -->
-            <div id="edit-staff-modal" class="modal">
+            <div id="edit-staff-modal" class="modal" role="dialog" aria-labelledby="edit-staff-title" aria-modal="true">
                 <div class="modal-content">
-                    <span class="close">&times;</span>
-                    <h2>Edit Staff</h2>
+                    <span class="close" aria-label="Close">&times;</span>
+                    <h2 id="edit-staff-title">Edit Staff</h2>
                     <form id="edit-staff-form">
                         @csrf
+                        @method('PUT') <!-- Use PUT method for updates -->
                         <input type="hidden" name="id" id="edit-staff-id">
                         
                         <label for="edit-id-number">ID Number</label>
-                        <input type="text" name="id_number" id="edit-id-number" required>
+                        <input type="text" name="id_number" id="edit-id-number" required maxlength="10" pattern="[A-Za-z][0-9]{6,9}" title="ID number must start with a letter followed by 6-9 digits.">
                         
                         <label for="edit-first-name">First Name</label>
                         <input type="text" name="first_name" id="edit-first-name" required>
@@ -637,11 +640,36 @@
                         <label for="edit-last-name">Last Name</label>
                         <input type="text" name="last_name" id="edit-last-name" required>
                         
-                        <label for="edit-department">Department</label>
-                        <input type="text" name="department" id="edit-department" required>
+                        <label for="edit-position">Position</label>
+                        <input type="text" name="position" id="edit-position" required>
+                        
                         
                         <button type="submit" class="save-button"><i class="fas fa-save"></i> Save</button>
                     </form>
+                </div>
+            </div>
+
+            <!-- View Staff Modal -->
+            <div id="view-staff-modal" class="modal" role="dialog" aria-labelledby="view-staff-title" aria-modal="true">
+                <div class="modal-content">
+                    <span class="close" aria-label="Close">&times;</span>
+                    <h2 id="view-staff-title">View Staff Details</h2>
+                    <div id="view-staff-details">
+                        <!-- Staff details will be dynamically inserted here -->
+                        <p><strong>ID Number:</strong> <span id="view-id-number"></span></p>
+                        <p><strong>First Name:</strong> <span id="view-first-name"></span></p>
+                        <p><strong>Last Name:</strong> <span id="view-last-name"></span></p>
+                        <p><strong>Position:</strong> <span id="view-position"></span></p>
+                        <p><strong>Father's Name:</strong> <span id="view-father-name"></span></p>
+                        <p><strong>Mother's Name:</strong> <span id="view-mother-name"></span></p>
+                        <p><strong>Contact Number:</strong> <span id="view-contact-number"></span></p>
+                        <p><strong>Address:</strong> <span id="view-address"></span></p>
+                        <p><strong>Birthdate:</strong> <span id="view-birthdate"></span></p>
+                        <p><strong>Emergency Contact:</strong> <span id="view-emergency-contact"></span></p>
+                        <p><strong>Age:</strong> <span id="view-age"></span></p>
+                        <p><strong>Status:</strong> <span id="view-status"></span></p>
+                        <!-- Add more fields as necessary -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -652,105 +680,30 @@
 
         <!-- Font Awesome -->
         <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
         <script>
-            // Function to switch main tabs
-            function switchTab(tabId) {
-                document.querySelectorAll('.tab').forEach(tab => {
-                    tab.classList.remove('active');
-                });
-                document.querySelectorAll('.tab-content').forEach(content => {
-                    content.classList.remove('active');
-                });
-
-                document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
-                document.getElementById(tabId).classList.add('active');
-            }
-
-            // Initialize Main Tabs
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', function() {
-                    const targetTab = this.getAttribute('data-tab');
-                    switchTab(targetTab);
-                });
-            });
-
-            // Function to open the modal and populate it with staff data
-            function openEditModal(staff) {
-                document.getElementById('edit-staff-id').value = staff.id;
-                document.getElementById('edit-id-number').value = staff.id_number;
-                document.getElementById('edit-first-name').value = staff.first_name;
-                document.getElementById('edit-last-name').value = staff.last_name;
-                document.getElementById('edit-department').value = staff.department;
-
-                // Display the modal
-                document.getElementById('edit-staff-modal').style.display = 'flex';
-            }
-
-            // Close the modal when clicking the 'X' button
-            document.querySelectorAll('.close').forEach(closeBtn => {
-                closeBtn.addEventListener('click', function() {
-                    this.parentElement.parentElement.style.display = 'none';
-                });
-            });
-
-            // Close the modal when clicking outside the modal content
-            window.onclick = function(event) {
-                const modals = document.querySelectorAll('.modal');
-                modals.forEach(modal => {
-                    if (event.target == modal) {
-                        modal.style.display = "none";
-                    }
-                });
-            }
-
-            // Global deleteStaff function to be available on button click
-            function deleteStaff(staffId) {
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: "You won't be able to revert this!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, delete it!'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        fetch(`/admin/staff/${staffId}`, {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                _method: 'DELETE'
-                            })
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                Swal.fire('Deleted!', data.message, 'success');
-                                document.getElementById('staff-row-' + staffId).remove();
-                            } else {
-                                Swal.fire('Error!', 'There was a problem deleting the staff.', 'error');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            Swal.fire('Error!', 'There was a problem deleting the staff.', 'error');
-                        });
-                    }
-                });
-            }
-
             document.addEventListener('DOMContentLoaded', function() {
-                // Initialize modal
-                $('#staff-table').DataTable({
-                "pageLength": 10, // Set default page length
-                "searching": true, // Enable search
-                "ordering": true,  // Enable column ordering
-                "lengthChange": true // Enable changing the number of rows displayed
-            });
-                document.getElementById('edit-staff-modal').style.display = 'none';
+                // Initialize DataTable
+                var staffTable = $('#staff-table').DataTable({
+                    "pageLength": 10, // Set default page length
+                    "searching": true, // Enable search
+                    "ordering": true,  // Enable column ordering
+                    "lengthChange": true, // Enable changing the number of rows displayed
+                    "responsive": true, // Enable responsive layout
+                    "language": {
+                        "search": "Search Staff:"
+                    }
+                });
+
+                // Handle Tab Switching
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', function() {
+                        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                        this.classList.add('active');
+                        document.getElementById(this.getAttribute('data-tab')).classList.add('active');
+                    });
+                });
 
                 // File selection feedback
                 document.getElementById('file').addEventListener('change', function(event) {
@@ -760,15 +713,20 @@
                     } else {
                         document.getElementById('file-name').textContent = 'No file chosen';
                     }
-                    
                 });
-
-             
 
                 // Upload form submission
                 document.getElementById('upload-form').addEventListener('submit', function(event) {
                     event.preventDefault();
                     var formData = new FormData(this);
+
+                    Swal.fire({
+                        title: 'Uploading...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading()
+                        }
+                    });
 
                     fetch('{{ route('admin.staff.import') }}', {
                         method: 'POST',
@@ -779,6 +737,7 @@
                     })
                     .then(response => response.json())
                     .then(data => {
+                        Swal.close();
                         if (data.success) {
                             Swal.fire({
                                 icon: 'success',
@@ -810,51 +769,104 @@
                     });
                 });
 
-                // Add late staff form submission
-                document.getElementById('late-staff-form').addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    var formData = new FormData(this);
+                // Delete staff function
+                window.deleteStaff = function(staffId) {
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "You won't be able to revert this!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, delete it!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            Swal.fire({
+                                title: 'Deleting...',
+                                allowOutsideClick: false,
+                                didOpen: () => {
+                                    Swal.showLoading()
+                                }
+                            });
 
-                    fetch('{{ route('admin.staff.add') }}', {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: data.message,
-                                showConfirmButton: false,
-                                timer: 1500
+                            fetch(`/admin/staff/${staffId}`, {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    _method: 'DELETE'
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                Swal.close();
+                                if (data.success) {
+                                    Swal.fire('Deleted!', data.message, 'success');
+                                    staffTable.row('#staff-row-' + staffId).remove().draw();
+                                } else {
+                                    Swal.fire('Error!', 'There was a problem deleting the staff.', 'error');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                Swal.close();
+                                Swal.fire('Error!', 'There was a problem deleting the staff.', 'error');
                             });
-                            fetchAndUpdateStaffTable(); // Re-fetch and update the table
-                            document.getElementById('late-staff-form').reset();
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                html: data.errors.join('<br>'),
-                                showConfirmButton: true,
-                            });
                         }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'There was a problem adding the staff member.',
-                            showConfirmButton: true,
-                        });
+                    });
+                }
+
+                // Function to open the Edit Staff modal and populate it with staff data
+                function openEditModal(staff) {
+                    document.getElementById('edit-staff-id').value = staff.id;
+                    document.getElementById('edit-id-number').value = staff.id_number;
+                    document.getElementById('edit-first-name').value = staff.first_name;
+                    document.getElementById('edit-last-name').value = staff.last_name;
+                    document.getElementById('edit-position').value = staff.position;
+
+                    // Show the modal by adding 'active' class
+                    document.getElementById('edit-staff-modal').classList.add('active');
+                }
+
+                // Function to open the View Staff modal and populate it with staff data
+                function openViewModal(staff) {
+                    document.getElementById('view-id-number').textContent = staff.id_number;
+                    document.getElementById('view-first-name').textContent = staff.first_name;
+                    document.getElementById('view-last-name').textContent = staff.last_name;
+                    document.getElementById('view-position').textContent = staff.position;
+                    document.getElementById('view-father-name').textContent = staff.father_name || 'N/A';
+                    document.getElementById('view-mother-name').textContent = staff.mother_name || 'N/A';
+                    document.getElementById('view-contact-number').textContent = staff.contact_number || 'N/A';
+                    document.getElementById('view-address').textContent = staff.address || 'N/A';
+                    document.getElementById('view-birthdate').textContent = staff.birthdate || 'N/A';
+                    document.getElementById('view-emergency-contact').textContent = staff.emergency_contact || 'N/A';
+                    document.getElementById('view-age').textContent = staff.age || 'N/A';
+                    document.getElementById('view-status').textContent = staff.approved ? 'Active' : 'Inactive';
+                    
+                    // Show the modal by adding 'active' class
+                    document.getElementById('view-staff-modal').classList.add('active');
+                }
+
+                // Close the Edit and View modals when clicking the 'X' button
+                document.querySelectorAll('.modal .close').forEach(closeBtn => {
+                    closeBtn.addEventListener('click', function() {
+                        this.parentElement.parentElement.classList.remove('active');
                     });
                 });
 
-                // Fetch updated staff table
+                // Close the modals when clicking outside the modal content
+                window.onclick = function(event) {
+                    const modals = document.querySelectorAll('.modal');
+                    modals.forEach(modal => {
+                        if (event.target == modal) {
+                            modal.classList.remove('active');
+                        }
+                    });
+                }
+
+                // Fetch and update staff table
                 function fetchAndUpdateStaffTable() {
                     fetch('{{ route('admin.staff.enrolled') }}', {
                         method: 'GET',
@@ -868,6 +880,7 @@
                     })
                     .catch(error => {
                         console.error('Error:', error);
+                        Swal.fire('Error', 'Unable to fetch staff data.', 'error');
                     });
                 }
 
@@ -887,6 +900,7 @@
                             <td>${staffMember.id_number}</td>
                             <td>${staffMember.first_name}</td>
                             <td>${staffMember.last_name}</td>
+                            <td>${staffMember.position}</td>
                             <td>
                                 <button class="preview-button status-button" style="background-color: ${staffMember.approved ? '#28a745' : '#dc3545'};">
                                     ${staffMember.approved ? 'Active' : 'Inactive'}
@@ -899,14 +913,34 @@
                                 </label>
                             </td>
                             <td>
-                                <button class="preview-button edit-button" data-staff-id="${staffMember.id}"><i class="fas fa-edit"></i> Edit</button>
-                                <button class="delete-button" onclick="deleteStaff(${staffMember.id})"><i class="fas fa-trash-alt"></i> Delete</button>
+                                <button class="preview-button view-button" data-staff-id="${staffMember.id}">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <button class="preview-button edit-button" data-staff-id="${staffMember.id}">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <button class="delete-button" onclick="deleteStaff(${staffMember.id})">
+                                    <i class="fas fa-trash-alt"></i> Delete
+                                </button>
                             </td>
                         `;
                         tbody.appendChild(row);
                     });
+                    // Re-initialize DataTable to recognize new rows
+                    staffTable.destroy();
+                    staffTable = $('#staff-table').DataTable({
+                        "pageLength": 10,
+                        "searching": true,
+                        "ordering": true,
+                        "lengthChange": true,
+                        "responsive": true,
+                        "language": {
+                            "search": "Filter records:"
+                        }
+                    });
                     attachToggleApprovalEvents();
-                    attachEditEvents();
+                    attachEditEvents(); 
+                    attachViewEvents();
                 }
 
                 // Toggle approval events
@@ -921,6 +955,14 @@
 
                             var actionUrl = `/admin/staff/${staffId}/toggle-approval`;
 
+                            Swal.fire({
+                                title: 'Updating Approval Status...',
+                                allowOutsideClick: false,
+                                didOpen: () => {
+                                    Swal.showLoading()
+                                }
+                            });
+
                             fetch(actionUrl, {
                                 method: 'POST',
                                 body: formData,
@@ -930,6 +972,7 @@
                             })
                             .then(response => response.json())
                             .then(data => {
+                                Swal.close();
                                 if (data.success) {
                                     Swal.fire({
                                         icon: 'success',
@@ -952,6 +995,7 @@
                             })
                             .catch(error => {
                                 console.error('Error:', error);
+                                Swal.close();
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Error',
@@ -973,16 +1017,16 @@
                         return;
                     }
 
-                    var button = row.querySelector('.status-button');
+                    var statusButton = row.querySelector('.status-button');
                     var checkbox = row.querySelector(`input[data-staff-id="${staffId}"]`);
 
-                    // Update button text and background color
+                    // Update status button text and color
                     if (staff.approved == 1) {
-                        button.textContent = 'Active';
-                        button.style.backgroundColor = '#28a745';
+                        statusButton.textContent = 'Active';
+                        statusButton.style.backgroundColor = '#28a745';
                     } else {
-                        button.textContent = 'Inactive';
-                        button.style.backgroundColor = '#dc3545';
+                        statusButton.textContent = 'Inactive';
+                        statusButton.style.backgroundColor = '#dc3545';
                     }
 
                     // Update checkbox state
@@ -998,8 +1042,12 @@
                             // Fetch staff data and open the modal
                             fetch(`/admin/staff/${staffId}`)
                                 .then(response => response.json())
-                                .then(staff => {
-                                    openEditModal(staff); // Open the modal with the staff data
+                                .then(data => {
+                                    if (data.staff) {
+                                        openEditModal(data.staff);
+                                    } else {
+                                        Swal.fire('Error', 'Staff data not found.', 'error');
+                                    }
                                 })
                                 .catch(error => {
                                     console.error('Error fetching staff data:', error);
@@ -1009,7 +1057,31 @@
                     });
                 }
 
-                // Form submission inside the modal
+                // View button events
+                function attachViewEvents() {
+                    document.querySelectorAll('.view-button').forEach(button => {
+                        button.addEventListener('click', function() {
+                            var staffId = this.getAttribute('data-staff-id');
+
+                            // Fetch staff data and open the modal
+                            fetch(`/admin/staff/${staffId}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.staff) {
+                                        openViewModal(data.staff);
+                                    } else {
+                                        Swal.fire('Error', 'Staff data not found.', 'error');
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error fetching staff data:', error);
+                                    Swal.fire('Error', 'Unable to fetch staff data', 'error');
+                                });
+                        });
+                    });
+                }
+
+                // Form submission inside the Edit modal
                 document.getElementById('edit-staff-form').addEventListener('submit', function(event) {
                     event.preventDefault();
                     var formData = new FormData(this);
@@ -1033,7 +1105,8 @@
                                 timer: 1500
                             });
                             fetchAndUpdateStaffTable(); // Re-fetch and update the table
-                            document.getElementById('edit-staff-modal').style.display = 'none'; // Close the modal
+                            document.getElementById('edit-staff-form').reset();
+                            document.getElementById('edit-staff-modal').classList.remove('active'); // Close the modal
                         } else {
                             Swal.fire({
                                 icon: 'error',
@@ -1054,9 +1127,83 @@
                     });
                 });
 
-                // Initial fetch of staff
-                fetchAndUpdateStaffTable();
+                // Initialize all event attachments
+                attachToggleApprovalEvents();
+                attachEditEvents();
+                attachViewEvents();
             });
+
+            // Function to open the View Staff modal and populate it with staff data
+            function openViewModal(staff) {
+                document.getElementById('view-id-number').textContent = staff.id_number;
+                document.getElementById('view-first-name').textContent = staff.first_name;
+                document.getElementById('view-last-name').textContent = staff.last_name;
+                document.getElementById('view-position').textContent = staff.position;
+                document.getElementById('view-father-name').textContent = staff.father_name || 'N/A';
+                document.getElementById('view-mother-name').textContent = staff.mother_name || 'N/A';
+                document.getElementById('view-contact-number').textContent = staff.contact_number || 'N/A';
+                document.getElementById('view-address').textContent = staff.address || 'N/A';
+                document.getElementById('view-birthdate').textContent = staff.birthdate || 'N/A';
+                document.getElementById('view-emergency-contact').textContent = staff.emergency_contact || 'N/A';
+                document.getElementById('view-age').textContent = staff.age || 'N/A';
+                document.getElementById('view-status').textContent = staff.approved ? 'Active' : 'Inactive';
+                
+                // Show the modal by adding 'active' class
+                document.getElementById('view-staff-modal').classList.add('active');
+            }
+
+            // Close the View Staff modal when clicking the 'X' button
+            document.querySelectorAll('#view-staff-modal .close').forEach(closeBtn => {
+                closeBtn.addEventListener('click', function() {
+                    document.getElementById('view-staff-modal').classList.remove('active');
+                });
+            });
+
+            // Close the View Staff modal when clicking outside the modal content
+            window.onclick = function(event) {
+                const modals = document.querySelectorAll('.modal');
+                modals.forEach(modal => {
+                    if (event.target == modal) {
+                        modal.classList.remove('active');
+                    }
+                });
+            }
+
+            // Function to open the Edit Staff modal and populate it with staff data
+            function openEditModal(staff) {
+                document.getElementById('edit-staff-id').value = staff.id;
+                document.getElementById('edit-id-number').value = staff.id_number;
+                document.getElementById('edit-first-name').value = staff.first_name;
+                document.getElementById('edit-last-name').value = staff.last_name;
+                document.getElementById('edit-position').value = staff.position;
+
+                // Show the modal by adding 'active' class
+                document.getElementById('edit-staff-modal').classList.add('active');
+            }
         </script>
+
+        <!-- View Staff Modal -->
+        <div id="view-staff-modal" class="modal" role="dialog" aria-labelledby="view-staff-title" aria-modal="true">
+            <div class="modal-content">
+                <span class="close" aria-label="Close">&times;</span>
+                <h2 id="view-staff-title">View Staff Details</h2>
+                <div id="view-staff-details">
+                    <!-- Staff details will be dynamically inserted here -->
+                    <p><strong>ID Number:</strong> <span id="view-id-number"></span></p>
+                    <p><strong>First Name:</strong> <span id="view-first-name"></span></p>
+                    <p><strong>Last Name:</strong> <span id="view-last-name"></span></p>
+                    <p><strong>Position:</strong> <span id="view-position"></span></p>
+                    <p><strong>Father's Name:</strong> <span id="view-father-name"></span></p>
+                    <p><strong>Mother's Name:</strong> <span id="view-mother-name"></span></p>
+                    <p><strong>Contact Number:</strong> <span id="view-contact-number"></span></p>
+                    <p><strong>Address:</strong> <span id="view-address"></span></p>
+                    <p><strong>Birthdate:</strong> <span id="view-birthdate"></span></p>
+                    <p><strong>Emergency Contact:</strong> <span id="view-emergency-contact"></span></p>
+                    <p><strong>Age:</strong> <span id="view-age"></span></p>
+                    <p><strong>Status:</strong> <span id="view-status"></span></p>
+                    <!-- Add more fields as necessary -->
+                </div>
+            </div>
+        </div>
     </div>
 </x-app-layout>

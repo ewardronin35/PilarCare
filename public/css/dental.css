@@ -1037,3 +1037,20 @@ h3 {
 .svg-container .tooth {
     transition: fill 0.1s ease, stroke 0.1s ease, opacity 0.1s ease; /* Faster transitions */
 }
+#tooth-history-table.dataTable {
+    width: 100% !important;
+    border-collapse: collapse;
+  }
+  
+  #tooth-history-table thead th {
+    background-color: #007bff;
+    color: #fff;
+    padding: 10px;
+    text-align: left;
+    border-bottom: 2px solid #ddd;
+  }
+  
+  #tooth-history-table tbody td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #eee;
+  }

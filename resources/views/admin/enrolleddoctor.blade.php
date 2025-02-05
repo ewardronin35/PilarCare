@@ -1,4 +1,4 @@
-<x-app-layout :pageTitle="'Manage Doctors'">   
+<x-app-layout :pageTitle="'Manage Doctor'">   
     <style>
         /* Import Poppins Font */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
@@ -75,21 +75,21 @@
             display: flex;
             gap: 20px;
             flex-wrap: wrap;
-            justify-content: space-between;
+            justify-content: center;
             margin-top: 30px;
             margin-bottom: 40px;
         }
 
         .form-wrapper {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            flex: 1 1 45%;
-            max-width: 48%;
-            box-sizing: border-box;
-            animation: fadeInUp 0.5s ease-in-out;
-        }
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex: 0 1 60%; /* Adjusted flex properties */
+    max-width: 600px; /* Set a reasonable max-width */
+    box-sizing: border-box;
+    animation: fadeInUp 0.5s ease-in-out;
+}
 
         .form-wrapper h2 {
             margin-bottom: 10px;
@@ -130,7 +130,7 @@
             justify-content: center;
             background-color: #00d1ff;
             color: white;
-            padding: 10px 15px;
+            padding: 10px 3px;
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s ease-in-out;
@@ -150,13 +150,13 @@
             margin-top: 10px;
             word-break: break-all;
         }
-
         /* Buttons */
         .preview-button,
         .toggle-button,
         .save-button,
         .delete-button,
-        .edit-button {
+        .edit-button,
+        .view-button { /* Added .view-button */
             background-color: #00d1ff;
             color: white;
             padding: 10px 15px;
@@ -211,6 +211,16 @@
             background-color: #0069d9;
         }
 
+        .view-button { /* New styles for view-button */
+            background-color: #17a2b8;
+            width: 100%;
+            max-width: 150px;
+        }
+
+        .view-button:hover {
+            background-color: #138496;
+        }
+
         /* Forms */
         form {
             display: flex;
@@ -242,12 +252,12 @@
         }
 
         /* Doctors Table */
-        .doctors-section {
+        .doctor-section {
             overflow-y: auto;
             margin-top: 20px;
         }
 
-        .doctors-table {
+        .doctor-table {
             width: 100%;
             border-collapse: collapse;
             background-color: white;
@@ -257,14 +267,14 @@
             animation: fadeInUp 0.5s ease-in-out;
         }
 
-        .doctors-table th,
-        .doctors-table td {
+        .doctor-table th,
+        .doctor-table td {
             padding: 15px;
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
 
-        .doctors-table th {
+        .doctor-table th {
             background-color: #00d2ff;
             color: white;
             font-weight: bold;
@@ -273,14 +283,17 @@
             z-index: 1;
         }
 
-        .doctors-table td {
+        .doctor-table td {
             background-color: #fff;
         }
 
-        /* Status Text */
-        .status-text {
+        .status-button {
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: default;
+            color: white;
             font-size: 14px;
-            font-weight: 600;
         }
 
         /* Search Input */
@@ -488,8 +501,8 @@
                 max-width: 100%;
             }
 
-            .doctors-table th,
-            .doctors-table td {
+            .doctor-table th,
+            .doctor-table td {
                 padding: 10px;
                 font-size: 14px;
             }
@@ -503,380 +516,6 @@
                 width: 95%;
             }
         }
-        /* Large Desktops and Smaller (max-width: 1200px) */
-@media (max-width: 1200px) {
-    /* Forms Container */
-    .forms-container {
-        flex-direction: column;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 30px;
-    }
-
-    /* Form Wrapper */
-    .form-wrapper {
-        flex: 1 1 100%;
-        max-width: 100%;
-    }
-
-    /* Tabs */
-    .tabs {
-        flex-wrap: wrap;
-        gap: 5px;
-    }
-
-    /* Tab */
-    .tab {
-        flex: 1 1 45%;
-        justify-content: center;
-        padding: 8px 16px;
-        font-size: 15px;
-    }
-
-    /* File Upload Container */
-    .file-upload-container {
-        width: 100%;
-        padding: 15px;
-    }
-
-    /* File Upload Label */
-    .file-upload-container label {
-        font-size: 14px;
-        padding: 8px 12px;
-    }
-
-    /* Buttons */
-    .preview-button,
-    .toggle-button,
-    .save-button,
-    .delete-button,
-    .edit-button {
-        font-size: 14px;
-        padding: 8px 12px;
-    }
-
-    /* Doctors Table */
-    .doctors-table th,
-    .doctors-table td {
-        padding: 10px;
-        font-size: 14px;
-    }
-
-    /* Search Container */
-    .search-container {
-        justify-content: center;
-    }
-
-    .search-container input[type="text"] {
-        max-width: 250px;
-        width: 100%;
-    }
-
-    .search-container button {
-        padding: 8px 16px;
-        font-size: 14px;
-    }
-
-    /* Calendar Legend */
-    .calendar-legend {
-        justify-content: center;
-        gap: 10px;
-    }
-
-    .legend-item {
-        font-size: 0.85rem;
-    }
-
-    /* Download Template Button */
-    .download-template-button {
-        font-size: 14px;
-        padding: 10px 18px;
-    }
-}
-
-/* Tablets and Small Desktops (max-width: 992px) */
-@media (max-width: 992px) {
-    /* Tabs */
-    .tab {
-        flex: 1 1 100%;
-        justify-content: center;
-        padding: 8px 16px;
-        font-size: 14px;
-    }
-
-    /* Forms Container */
-    .forms-container {
-        gap: 10px;
-    }
-
-    /* Form Wrapper */
-    .form-wrapper {
-        flex: 1 1 100%;
-        max-width: 100%;
-    }
-
-    /* Form Headers */
-    .form-wrapper h2 {
-        font-size: 18px;
-    }
-
-    /* File Upload Container */
-    .file-upload-container {
-        padding: 15px;
-    }
-
-    /* File Upload Label */
-    .file-upload-container label {
-        font-size: 14px;
-        padding: 8px 12px;
-    }
-
-    /* Buttons */
-    .preview-button,
-    .toggle-button,
-    .save-button,
-    .delete-button,
-    .edit-button {
-        font-size: 14px;
-        padding: 8px 12px;
-    }
-
-    /* Doctors Table */
-    .doctors-table th,
-    .doctors-table td {
-        padding: 10px;
-        font-size: 14px;
-    }
-
-    /* Search Container */
-    .search-container input[type="text"] {
-        max-width: 200px;
-    }
-
-    .search-container button {
-        padding: 8px 16px;
-        font-size: 14px;
-    }
-
-    /* Calendar Legend */
-    .calendar-legend {
-        gap: 8px;
-    }
-
-    .legend-item {
-        font-size: 0.8rem;
-    }
-
-    /* Download Template Button */
-    .download-template-button {
-        font-size: 14px;
-        padding: 10px 18px;
-    }
-}
-
-/* Mobile Devices and Small Tablets (max-width: 768px) */
-@media (max-width: 768px) {
-    /* Forms Container */
-    .forms-container {
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-    }
-
-    /* Form Wrapper */
-    .form-wrapper {
-        padding: 15px;
-        max-width: 100%;
-    }
-
-    /* Tabs */
-    .tabs {
-        flex-direction: column;
-        align-items: center;
-        gap: 5px;
-    }
-
-    /* Tab */
-    .tab {
-        flex: 1 1 100%;
-        justify-content: center;
-        padding: 8px 16px;
-        font-size: 14px;
-    }
-
-    /* File Upload Container */
-    .file-upload-container {
-        width: 100%;
-        padding: 15px;
-    }
-
-    /* File Upload Label */
-    .file-upload-container label {
-        font-size: 14px;
-        padding: 8px 12px;
-    }
-
-    /* Buttons */
-    .preview-button,
-    .toggle-button,
-    .save-button,
-    .delete-button,
-    .edit-button {
-        font-size: 14px;
-        padding: 8px 12px;
-        width: 100%;
-        max-width: none;
-    }
-
-    /* Doctors Table */
-    .doctors-table th,
-    .doctors-table td {
-        padding: 8px;
-        font-size: 13px;
-    }
-
-    /* Search Container */
-    .search-container {
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .search-container input[type="text"] {
-        max-width: 100%;
-        width: 100%;
-    }
-
-    .search-container button {
-        width: 100%;
-        padding: 8px 16px;
-        font-size: 14px;
-    }
-
-    /* Calendar Legend */
-    .calendar-legend {
-        flex-direction: column;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .legend-item {
-        font-size: 0.75rem;
-    }
-
-    /* Download Template Button */
-    .download-template-button {
-        font-size: 14px;
-        padding: 10px 18px;
-        width: 100%;
-    }
-}
-
-/* Small Mobile Devices (max-width: 576px) */
-@media (max-width: 576px) {
-    /* Main Content */
-    .main-content {
-        padding: 10px;
-    }
-
-    /* Forms Container */
-    .forms-container {
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-    }
-
-    /* Form Wrapper */
-    .form-wrapper {
-        padding: 10px;
-        max-width: 100%;
-    }
-
-    /* Tabs */
-    .tabs {
-        flex-direction: column;
-        align-items: center;
-        gap: 5px;
-    }
-
-    /* Tab */
-    .tab {
-        flex: 1 1 100%;
-        justify-content: center;
-        padding: 6px 12px;
-        font-size: 13px;
-    }
-
-    /* File Upload Container */
-    .file-upload-container {
-        width: 100%;
-        padding: 10px;
-    }
-
-    /* File Upload Label */
-    .file-upload-container label {
-        font-size: 13px;
-        padding: 6px 10px;
-    }
-
-    /* Buttons */
-    .preview-button,
-    .toggle-button,
-    .save-button,
-    .delete-button,
-    .edit-button {
-        font-size: 13px;
-        padding: 6px 10px;
-        width: 100%;
-        max-width: none;
-    }
-
-    /* Doctors Table */
-    .doctors-table th,
-    .doctors-table td {
-        padding: 6px;
-        font-size: 12px;
-    }
-
-    /* Search Container */
-    .search-container {
-        flex-direction: column;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .search-container input[type="text"] {
-        max-width: 100%;
-        width: 100%;
-        font-size: 14px;
-        padding: 6px;
-    }
-
-    .search-container button {
-        width: 100%;
-        padding: 6px 12px;
-        font-size: 13px;
-    }
-
-    /* Calendar Legend */
-    .calendar-legend {
-        flex-direction: column;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .legend-item {
-        font-size: 0.7rem;
-    }
-
-    /* Download Template Button */
-    .download-template-button {
-        font-size: 13px;
-        padding: 8px 14px;
-        width: 100%;
-    }
-}
-
     </style>
 
     <div class="main-content">
@@ -884,20 +523,20 @@
         <div class="tabs">
             <div class="tab active" data-tab="upload-doctors-tab">
                 <i class="fas fa-upload"></i>
-                Upload Doctor List
+                Upload Doctors List
             </div>
-            <div class="tab" data-tab="view-doctors-tab">
+            <div class="tab" data-tab="doctors-tab">
                 <i class="fas fa-users"></i>
-                View Doctors
+                View Doctors List
             </div>
         </div>
 
-        <!-- Upload Doctor List Tab Content -->
+        <!-- Upload Doctors List Tab Content -->
         <div id="upload-doctors-tab" class="tab-content active">
             <div class="forms-container">
-                <!-- Upload Doctor List Form -->
+                <!-- Upload Doctors List Form -->
                 <div class="form-wrapper">
-                    <h2><i class="fas fa-file-upload"></i> Upload Doctor List</h2>
+                    <h2><i class="fas fa-file-upload"></i> Upload Doctors List</h2>
                     <p>Please ensure the Excel file follows the format: ID Number, First Name, Last Name, Specialization</p>
                     <a href="{{ route('admin.download.doctor') }}" class="download-template-button">
                         <i class="fas fa-download"></i> Download Excel Template
@@ -917,38 +556,20 @@
                 </div>
 
                 <!-- Add Doctor Form -->
-                <div class="form-wrapper">
-                    <h2><i class="fas fa-user-plus"></i> Add Doctor</h2>
-                    <form id="add-doctor-form">
-                        @csrf
-                        <label for="doctor-id_number">ID Number</label>
-                        <input type="text" id="doctor-id_number" name="id_number" required maxlength="7" pattern="[A-Za-z][0-9]{6}" title="ID number must start with a letter followed by 6 digits.">
-
-                        <label for="doctor-first_name">First Name</label>
-                        <input type="text" id="doctor-first_name" name="first_name" required>
-
-                        <label for="doctor-last_name">Last Name</label>
-                        <input type="text" id="doctor-last_name" name="last_name" required>
-
-                        <label for="doctor-specialization">Specialization</label>
-                        <input type="text" id="doctor-specialization" name="specialization" required>
-
-                        <button type="submit" class="preview-button"><i class="fas fa-user-plus"></i> Add Doctor</button>
-                    </form>
-                </div>
+                <!-- (Optional: If you have an add doctor form, include it here) -->
             </div>
         </div>
 
-        <!-- View Doctors Tab Content -->
-        <div id="view-doctors-tab" class="tab-content">
-            <div class="doctors-section">
+        <!-- View Doctors List Tab Content -->
+        <div id="doctors-tab" class="tab-content">
+            <div class="doctor-section">
                 <h2><i class="fas fa-users"></i> Enrolled Doctors</h2>
              
                 @if($doctors->isEmpty())
                     <p>No doctors enrolled yet.</p>
                 @else
                     <div class="table-responsive">
-                        <table class="doctors-table" id="doctors-table" aria-label="Enrolled Doctors Table">
+                        <table class="doctor-table" id="doctors-table" aria-label="Enrolled Doctors Table">
                             <thead>
                                 <tr>
                                     <th scope="col"><i class="fas fa-id-card" aria-hidden="true"></i> ID Number</th>
@@ -979,6 +600,9 @@
                                             </label>
                                         </td>
                                         <td>
+                                            <button class="view-button" data-doctor-id="{{ $doctor->id }}" aria-label="View Doctor">
+                                                <i class="fas fa-eye"></i> View
+                                            </button>
                                             <button class="edit-button" data-doctor-id="{{ $doctor->id }}" aria-label="Edit Doctor">
                                                 <i class="fas fa-edit"></i> Edit
                                             </button>
@@ -1004,7 +628,7 @@
                         <input type="hidden" name="id" id="edit-doctor-id">
 
                         <label for="edit-doctor-id_number">ID Number</label>
-                        <input type="text" name="id_number" id="edit-doctor-id_number" required maxlength="7" pattern="[A-Za-z][0-9]{6}" title="ID number must start with a letter followed by 6 digits.">
+                        <input type="text" name="id_number" id="edit-doctor-id_number" required maxlength="10" pattern="[A-Za-z][0-9]{6,9}" title="ID number must start with a letter followed by 6-9 digits.">
 
                         <label for="edit-doctor-first_name">First Name</label>
                         <input type="text" name="first_name" id="edit-doctor-first_name" required>
@@ -1019,22 +643,43 @@
                     </form>
                 </div>
             </div>
+
+            <!-- View Doctor Modal -->
+            <div id="view-doctor-modal" class="modal"> <!-- New Modal for Viewing Doctor -->
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>View Doctor</h2>
+                    <div id="view-doctor-details">
+                        <!-- Doctor details will be populated here via JavaScript -->
+                        <p><strong>ID Number:</strong> <span id="view-id-number"></span></p>
+                        <p><strong>First Name:</strong> <span id="view-first-name"></span></p>
+                        <p><strong>Last Name:</strong> <span id="view-last-name"></span></p>
+                        <p><strong>Specialization:</strong> <span id="view-specialization"></span></p>
+                        <p><strong>Status:</strong> <span id="view-status"></span></p>
+                        <p><strong>Email:</strong> <span id="view-email"></span></p>
+                        <p><strong>Approved:</strong> <span id="view-approved"></span></p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- SweetAlert2 -->
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrQkTyYW8pR7l+hEpp9tFC0Hc3Se1cO0uQXZjzMbQY5/0tBZBWXcE4qK4Zq6SGPsbQX0ZV5scAtMWB7xXQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
-<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+        <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                // Tab functionality
+                // Initialize DataTable
                 $('#doctors-table').DataTable({
-        "paging": true,
-        "searching": true,
-        "ordering": true,
-        "info": true
-    });
+                    "paging": true,
+                    "searching": true,
+                    "ordering": true,
+                    "info": true
+                });
+
+                // Tab functionality
                 document.querySelectorAll('.tab').forEach(tab => {
                     tab.addEventListener('click', function() {
                         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -1044,7 +689,7 @@
                     });
                 });
 
-                // File selection feedback for Upload Doctor List
+                // File selection feedback
                 document.getElementById('doctor-file').addEventListener('change', function(event) {
                     if(event.target.files.length > 0){
                         const fileName = event.target.files[0].name;
@@ -1054,9 +699,7 @@
                     }
                 });
 
-                // Search functionality for Doctors
-              
-                // Upload form submission for Doctors
+                // Upload form submission
                 document.getElementById('upload-form').addEventListener('submit', function(event) {
                     event.preventDefault();
                     var formData = new FormData(this);
@@ -1101,67 +744,27 @@
                     });
                 });
 
-                // Add doctor form submission
-                document.getElementById('add-doctor-form').addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    var formData = new FormData(this);
-
-                    fetch('{{ route('admin.doctors.add') }}', {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: data.message,
-                                showConfirmButton: false,
-                                timer: 1500
-                            });
-                            fetchAndUpdateDoctorsTable(); // Re-fetch and update the table
-                            document.getElementById('add-doctor-form').reset();
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                html: data.errors ? data.errors.join('<br>') : 'An error occurred.',
-                                showConfirmButton: true,
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'There was a problem adding the doctor.',
-                            showConfirmButton: true,
-                        });
-                    });
-                });
-
                 // Edit doctor modal functionality
-                const editDoctorModal = document.getElementById('edit-doctor-modal');
-                const closeDoctorModalButtons = editDoctorModal.querySelectorAll('.close');
+                const editModal = document.getElementById('edit-doctor-modal');
+                const viewModal = document.getElementById('view-doctor-modal'); // Reference to view modal
+                const closeModalButtons = [...editModal.querySelectorAll('.close'), ...viewModal.querySelectorAll('.close')];
 
-                closeDoctorModalButtons.forEach(btn => {
+                closeModalButtons.forEach(btn => {
                     btn.addEventListener('click', () => {
-                        editDoctorModal.style.display = 'none';
+                        btn.parentElement.parentElement.style.display = 'none';
                     });
                 });
 
                 window.onclick = function(event) {
-                    if (event.target == editDoctorModal) {
-                        editDoctorModal.style.display = 'none';
+                    if (event.target == editModal) {
+                        editModal.style.display = 'none';
+                    }
+                    if (event.target == viewModal) { // Close view modal when clicking outside
+                        viewModal.style.display = 'none';
                     }
                 }
 
-                // Form submission inside the modal for editing doctor
+                // Form submission inside the edit modal
                 document.getElementById('edit-doctor-form').addEventListener('submit', function(event) {
                     event.preventDefault();
                     var formData = new FormData(this);
@@ -1192,7 +795,7 @@
                                 timer: 1500
                             });
                             fetchAndUpdateDoctorsTable(); // Re-fetch and update the table
-                            editDoctorModal.style.display = 'none'; // Close the modal
+                            editModal.style.display = 'none'; // Close the modal
                         } else {
                             Swal.fire({
                                 icon: 'error',
@@ -1210,6 +813,29 @@
                             text: 'There was a problem updating the doctor.',
                             showConfirmButton: true,
                         });
+                    });
+                });
+
+                // View doctor modal functionality
+                document.querySelectorAll('.view-button').forEach(button => {
+                    button.addEventListener('click', function() {
+                        var doctorId = this.getAttribute('data-doctor-id');
+
+                        // Fetch doctor data and open the view modal
+                        fetch(`/admin/doctors/${doctorId}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) { // Adjust based on your response structure
+                                    populateViewModal(data.doctor);
+                                    document.getElementById('view-doctor-modal').style.display = 'flex';
+                                } else {
+                                    Swal.fire('Error', data.message || 'Doctor not found.', 'error');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error fetching doctor data:', error);
+                                Swal.fire('Error', 'Unable to fetch doctor data.', 'error');
+                            });
                     });
                 });
 
@@ -1251,7 +877,7 @@
                             <td>${doctor.last_name}</td>
                             <td>${doctor.specialization}</td>
                             <td>
-                                <button class="preview-button status-button" style="background-color: ${doctor.approved ? '#28a745' : '#dc3545'};" aria-label="Doctor Status">
+                                <button class="preview-button status-button" style="background-color: ${doctor.approved ? '#28a745' : '#dc3545'};">
                                     ${doctor.approved ? 'Active' : 'Inactive'}
                                 </button>
                             </td>
@@ -1262,6 +888,9 @@
                                 </label>
                             </td>
                             <td>
+                                <button class="view-button" data-doctor-id="${doctor.id}" aria-label="View Doctor">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
                                 <button class="edit-button" data-doctor-id="${doctor.id}" aria-label="Edit Doctor">
                                     <i class="fas fa-edit"></i> Edit
                                 </button>
@@ -1273,6 +902,7 @@
                     });
                     attachToggleApprovalEvents();
                     attachEditEvents();
+                    attachViewEvents(); // Attach view button events
                 }
 
                 // Function to attach toggle approval events
@@ -1331,40 +961,20 @@
                     });
                 }
 
-                // Function to update doctor row status after toggle
-                function updateDoctorRow(doctorId, doctor) {
-                    var row = document.getElementById('doctor-row-' + doctorId);
-                    if (!row) {
-                        console.error(`Row for doctorId ${doctorId} not found`);
-                        return;
-                    }
-
-                    var statusButton = row.querySelector('.status-button');
-
-                    // Update button text and background color
-                    if (doctor.approved == 1) {
-                        statusButton.textContent = 'Active';
-                        statusButton.style.backgroundColor = '#28a745';
-                    } else {
-                        statusButton.textContent = 'Inactive';
-                        statusButton.style.backgroundColor = '#dc3545';
-                    }
-                }
-
                 // Function to attach edit button events
                 function attachEditEvents() {
                     document.querySelectorAll('.edit-button').forEach(button => {
                         button.addEventListener('click', function() {
                             var doctorId = this.getAttribute('data-doctor-id');
 
-                            // Fetch doctor data and open the modal
+                            // Fetch doctor data and open the edit modal
                             fetch(`/admin/doctors/${doctorId}`)
                                 .then(response => response.json())
-                                .then(doctor => {
-                                    if (doctor.success) {
-                                        openEditModal(doctor.doctor); // Open the modal with the doctor data
+                                .then(data => {
+                                    if (data.success) { // Adjust based on your response structure
+                                        openEditModal(data.doctor); // Open the modal with the doctor data
                                     } else {
-                                        Swal.fire('Error', doctor.message || 'Unable to fetch doctor data.', 'error');
+                                        Swal.fire('Error', data.message || 'Doctor not found.', 'error');
                                     }
                                 })
                                 .catch(error => {
@@ -1375,6 +985,42 @@
                     });
                 }
 
+                // Function to attach view button events
+                function attachViewEvents() {
+                    document.querySelectorAll('.view-button').forEach(button => {
+                        button.addEventListener('click', function() {
+                            var doctorId = this.getAttribute('data-doctor-id');
+
+                            // Fetch doctor data and open the view modal
+                            fetch(`/admin/doctors/${doctorId}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) { // Adjust based on your response structure
+                                        populateViewModal(data.doctor);
+                                        document.getElementById('view-doctor-modal').style.display = 'flex';
+                                    } else {
+                                        Swal.fire('Error', data.message || 'Doctor not found.', 'error');
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error fetching doctor data:', error);
+                                    Swal.fire('Error', 'Unable to fetch doctor data.', 'error');
+                                });
+                        });
+                    });
+                }
+
+                // Function to populate the view modal with doctor data
+                function populateViewModal(doctor) {
+                    document.getElementById('view-id-number').textContent = doctor.id_number;
+                    document.getElementById('view-first-name').textContent = doctor.first_name;
+                    document.getElementById('view-last-name').textContent = doctor.last_name;
+                    document.getElementById('view-specialization').textContent = doctor.specialization;
+                    document.getElementById('view-status').textContent = doctor.approved ? 'Active' : 'Inactive';
+                    document.getElementById('view-email').textContent = doctor.user ? doctor.user.email : 'N/A';
+                    document.getElementById('view-approved').textContent = doctor.approved ? 'Yes' : 'No';
+                }
+
                 // Function to open the edit modal and populate it with doctor data
                 function openEditModal(doctor) {
                     document.getElementById('edit-doctor-id').value = doctor.id;
@@ -1383,7 +1029,7 @@
                     document.getElementById('edit-doctor-last_name').value = doctor.last_name;
                     document.getElementById('edit-doctor-specialization').value = doctor.specialization;
 
-                    // Display the modal
+                    // Display the edit modal
                     document.getElementById('edit-doctor-modal').style.display = 'flex';
                 }
 
@@ -1426,7 +1072,7 @@
                     });
                 }
 
-                // Function to update doctor row status after toggle (outside DOMContentLoaded for global access)
+                // Function to update doctor row status after toggle
                 function updateDoctorRow(doctorId, doctor) {
                     var row = document.getElementById('doctor-row-' + doctorId);
                     if (!row) {
@@ -1445,34 +1091,133 @@
                         statusButton.style.backgroundColor = '#dc3545';
                     }
                 }
-
-                // Function to attach edit button events
-                function attachEditEvents() {
-                    document.querySelectorAll('.edit-button').forEach(button => {
-                        button.addEventListener('click', function() {
-                            var doctorId = this.getAttribute('data-doctor-id');
-
-                            // Fetch doctor data and open the modal
-                            fetch(`/admin/doctors/${doctorId}`)
-                                .then(response => response.json())
-                                .then(doctor => {
-                                    if (doctor.success) {
-                                        openEditModal(doctor.doctor); // Open the modal with the doctor data
-                                    } else {
-                                        Swal.fire('Error', doctor.message || 'Unable to fetch doctor data.', 'error');
-                                    }
-                                })
-                                .catch(error => {
-                                    console.error('Error fetching doctor data:', error);
-                                    Swal.fire('Error', 'Unable to fetch doctor data.', 'error');
-                                });
-                        });
-                    });
-                }
             });
 
-            // Global deleteDoctor function outside DOMContentLoaded to ensure accessibility
-            function deleteDoctor(doctorId) {
+            // Function to attach event listeners for Edit and Toggle buttons after table update
+            function attachToggleApprovalEvents() {
+                document.querySelectorAll('.toggle-approval').forEach(input => {
+                    input.addEventListener('change', function() {
+                        var doctorId = this.getAttribute('data-doctor-id');
+                        var approved = this.checked ? 1 : 0;
+
+                        var formData = new FormData();
+                        formData.append('approved', approved);
+
+                        var actionUrl = `/admin/doctors/${doctorId}/toggle-approval`;
+
+                        fetch(actionUrl, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success',
+                                    text: data.message,
+                                    showConfirmButton: false,
+                                    timer: 1500
+                                });
+                                updateDoctorRow(doctorId, data.doctor);
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'There was a problem updating the doctor status.',
+                                    showConfirmButton: true,
+                                });
+                                // Revert the checkbox state
+                                this.checked = !approved;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'There was a problem updating the doctor status.',
+                                showConfirmButton: true,
+                            });
+                            // Revert the checkbox state
+                            this.checked = !approved;
+                        });
+                    });
+                });
+            }
+
+            function attachEditEvents() {
+                document.querySelectorAll('.edit-button').forEach(button => {
+                    button.addEventListener('click', function() {
+                        var doctorId = this.getAttribute('data-doctor-id');
+
+                        // Fetch doctor data and open the edit modal
+                        fetch(`/admin/doctors/${doctorId}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) { // Adjust based on your response structure
+                                    openEditModal(data.doctor); // Open the modal with the doctor data
+                                } else {
+                                    Swal.fire('Error', data.message || 'Doctor not found.', 'error');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error fetching doctor data:', error);
+                                Swal.fire('Error', 'Unable to fetch doctor data.', 'error');
+                            });
+                    });
+                });
+            }
+
+            function attachViewEvents() {
+                document.querySelectorAll('.view-button').forEach(button => {
+                    button.addEventListener('click', function() {
+                        var doctorId = this.getAttribute('data-doctor-id');
+
+                        // Fetch doctor data and open the view modal
+                        fetch(`/admin/doctors/${doctorId}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) { // Adjust based on your response structure
+                                    populateViewModal(data.doctor);
+                                    document.getElementById('view-doctor-modal').style.display = 'flex';
+                                } else {
+                                    Swal.fire('Error', data.message || 'Doctor not found.', 'error');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error fetching doctor data:', error);
+                                Swal.fire('Error', 'Unable to fetch doctor data.', 'error');
+                            });
+                    });
+                });
+            }
+
+            function populateViewModal(doctor) {
+                document.getElementById('view-id-number').textContent = doctor.id_number;
+                document.getElementById('view-first-name').textContent = doctor.first_name;
+                document.getElementById('view-last-name').textContent = doctor.last_name;
+                document.getElementById('view-specialization').textContent = doctor.specialization;
+                document.getElementById('view-status').textContent = doctor.approved ? 'Active' : 'Inactive';
+                document.getElementById('view-email').textContent = doctor.user ? doctor.user.email : 'N/A';
+                document.getElementById('view-approved').textContent = doctor.approved ? 'Yes' : 'No';
+            }
+
+            function openEditModal(doctor) {
+                document.getElementById('edit-doctor-id').value = doctor.id;
+                document.getElementById('edit-doctor-id_number').value = doctor.id_number;
+                document.getElementById('edit-doctor-first_name').value = doctor.first_name;
+                document.getElementById('edit-doctor-last_name').value = doctor.last_name;
+                document.getElementById('edit-doctor-specialization').value = doctor.specialization;
+
+                // Display the edit modal
+                document.getElementById('edit-doctor-modal').style.display = 'flex';
+            }
+
+            window.deleteDoctor = function(doctorId) {
                 Swal.fire({
                     title: 'Are you sure?',
                     text: "You won't be able to revert this!",
@@ -1497,10 +1242,7 @@
                         .then(data => {
                             if (data.success) {
                                 Swal.fire('Deleted!', data.message, 'success');
-                                const doctorRow = document.getElementById(`doctor-row-${doctorId}`);
-                                if (doctorRow) {
-                                    doctorRow.remove();
-                                }
+                                document.getElementById('doctor-row-' + doctorId).remove();
                             } else {
                                 Swal.fire('Error!', 'There was a problem deleting the doctor.', 'error');
                             }
@@ -1512,6 +1254,43 @@
                     }
                 });
             }
+
+            function updateDoctorRow(doctorId, doctor) {
+                var row = document.getElementById('doctor-row-' + doctorId);
+                if (!row) {
+                    console.error(`Row for doctorId ${doctorId} not found`);
+                    return;
+                }
+
+                var statusButton = row.querySelector('.status-button');
+
+                // Update button text and background color
+                if (doctor.approved == 1) {
+                    statusButton.textContent = 'Active';
+                    statusButton.style.backgroundColor = '#28a745';
+                } else {
+                    statusButton.textContent = 'Inactive';
+                    statusButton.style.backgroundColor = '#dc3545';
+                }
+            }
         </script>
+    </div>
+
+    <!-- View Doctor Modal -->
+    <div id="view-doctor-modal" class="modal"> <!-- New Modal for Viewing Doctor -->
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>View Doctor</h2>
+            <div id="view-doctor-details">
+                <!-- Doctor details will be populated here via JavaScript -->
+                <p><strong>ID Number:</strong> <span id="view-id-number"></span></p>
+                <p><strong>First Name:</strong> <span id="view-first-name"></span></p>
+                <p><strong>Last Name:</strong> <span id="view-last-name"></span></p>
+                <p><strong>Specialization:</strong> <span id="view-specialization"></span></p>
+                <p><strong>Status:</strong> <span id="view-status"></span></p>
+                <p><strong>Email:</strong> <span id="view-email"></span></p>
+                <p><strong>Approved:</strong> <span id="view-approved"></span></p>
+            </div>
+        </div>
     </div>
 </x-app-layout>

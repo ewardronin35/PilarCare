@@ -110,5 +110,23 @@ class AppServiceProvider extends ServiceProvider
             // Pass the approval status to the sidebar
             $view->with('healthExamination', $healthExamination);
         });
+        view()->composer('app', function ($view) {
+            $user = Auth::user();
+    
+            if ($user) {
+                // Load related model based on role
+                $user->load([
+                    'student',
+                    'teacher',
+                    'staffMember',
+                    'parentRelations',
+                    'nurse',
+                    'doctor',
+                ]);
+            }
+    
+            // Pass the user model with loaded relations
+            $view->with('user', $user);
+        });
     }
 }    

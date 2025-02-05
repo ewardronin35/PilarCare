@@ -33,4 +33,8 @@ class Teeth extends Model
     {
         return $this->belongsTo(DentalRecord::class, 'dental_record_id', 'dental_record_id'); // Relate to dental_records.id_number
     }
+    public function histories()
+    {
+        return $this->hasMany(ToothHistory::class, 'tooth_id', 'id');
+    }   
 }

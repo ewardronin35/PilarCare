@@ -4,19 +4,37 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use App\Models\Teacher;
+use App\Models\Enrollment;
+use App\Models\Staff;
 class Student extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'id_number',
+       'id_number',
         'first_name',
         'last_name',
+        'gender',
         'grade_or_course',
+        'section',
+        'education_level',
         'approved',
+        'enrollment_status',
+        'father_name',
+        'mother_name',
+        'contact_number',
+        'address',
+        'emergency_contact',
+        'birthdate',
+        'profile_picture',
+        'age',
     ];
-
+ 
+    public function teacher()
+    {
+        return $this->belongsTo(Teacher::class, 'course', 'course');
+    }
     public function dentalRecords()
     {
         return $this->hasMany(DentalRecord::class, 'id_number', 'id_number');
@@ -27,16 +45,8 @@ class Student extends Model
         return $this->belongsTo(User::class, 'id_number', 'id_number');
     }
 
-    public function parents()
-    {
-        return $this->belongsToMany(User::class, 'parents', 'student_id', 'id_number');
-    }
-    
 
-    public function information()
-    {
-        return $this->hasOne(Information::class, 'id_number', 'id_number');
-    }
+ 
 
     public function medicalRecords()
     {
@@ -47,4 +57,16 @@ class Student extends Model
     {
         return $this->hasMany(HealthExamination::class, 'id_number', 'id_number');
     }
+    public function enrollments()
+{
+    return $this->hasMany(Enrollment::class, 'student_id', 'id_number');
+}
+public function getFullNameAttribute()
+{
+    return "{$this->first_name} {$this->last_name}";
+}
+
+
+
+
 }

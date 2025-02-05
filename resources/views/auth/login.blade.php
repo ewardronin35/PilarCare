@@ -1,4 +1,3 @@
-<!-- resources/views/auth/login.blade.php -->
 
 <x-guest-layout>
     <!-- External Stylesheets -->
@@ -6,8 +5,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.nocaptcha.sitekey') }}"></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    <!-- Removed reCAPTCHA Script -->
+    
     <!-- Internal Styles -->
     <style>
         /* Body Styling */
@@ -258,6 +259,9 @@
             }
         }
     </style>
+    <!-- resources/views/auth/login.blade.php -->
+
+
     <div class="overlay"></div>
 
     <!-- Loading Overlay -->
@@ -280,18 +284,20 @@
 
         <!-- Login Form -->
         <form method="POST" action="{{ route('login.perform') }}" class="login-form" id="login-form">
+            
             @csrf
 
             <!-- ID Number Field -->
+
             <div class="mb-3 position-relative">
                 <x-input-label for="id_number" :value="__('ID Number')" class="label"/>
                 <div class="input-wrapper">
                     <i class="fa-regular fa-id-card"></i>
                     <x-text-input id="id_number" class="form-control ps-5"
-                                  type="text" name="id_number" :value="old('id_number')"
-                                  required autofocus autocomplete="username"
-                                  maxlength="7" pattern="[A-Za-z]{1}[0-9]{6}"
-                                  placeholder="Enter your ID number" />
+                      type="text" name="id_number" :value="old('id_number')"
+                      required autofocus autocomplete="username"
+                      maxlength="8" pattern="[A-Za-z0-9]{1,8}"
+                      placeholder="Enter your ID number" />
                 </div>
                 <x-input-error :messages="$errors->get('id_number')" class="mt-2" />
             </div>
@@ -305,13 +311,10 @@
                                   type="password" name="password"
                                   required autocomplete="current-password"
                                   placeholder="Enter your password" />
-                    <i class="fas fa-eye toggle-password" id="toggle-password"></i>
+                    <i class="fas fa-eye toggle-password" aria-label="Toggle password visibility"></i>
                 </div>
                 <x-input-error :messages="$errors->get('password')" class="mt-2" />
             </div>
-
-            <!-- reCAPTCHA v3 Token -->
-            <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
 
             <!-- Forgot Password Link -->
             <div class="text-center mt-4">
@@ -329,10 +332,7 @@
                 </button>
             </div>
 
-            <!-- Signup Link -->
-            <div class="text-center mt-2">
-                <p>Don't have an account? <a href="{{ route('register') }}" class="signup-link">Sign up</a></p>
-            </div>
+          
         </form>
     </div>
 
@@ -345,14 +345,16 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const loadingOverlay = document.getElementById('loading-overlay');
-            const togglePassword = document.getElementById('toggle-password');
-            const passwordInput = document.getElementById('password');
+            const togglePasswordElements = document.querySelectorAll('.toggle-password');
+            const passwordInputs = document.querySelectorAll('input[type="password"]');
 
             // Handle form submission
             document.getElementById('login-form').addEventListener('submit', function(event) {
                 event.preventDefault();
-                if (loadingOverlay) showLoadingOverlay();
-                generateRecaptchaTokenAndLogin();
+                if (validateForm()) {
+                    showLoadingOverlay(); // Show the loading spinner
+                    submitForm();
+                }
             });
 
             // Display Toastr success message if session('status') exists
@@ -366,13 +368,20 @@
             @endif
 
             // Show/Hide Password Toggle
-            togglePassword.addEventListener('click', function() {
-                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordInput.setAttribute('type', type);
-
-                // Toggle eye icon class for animation
-                this.classList.toggle('fa-eye-slash');
-                this.classList.toggle('fa-eye');
+            togglePasswordElements.forEach(function(togglePassword) {
+                togglePassword.addEventListener('click', function() {
+                    // Toggle the type attribute
+                    const target = this.previousElementSibling; // Assuming the input is immediately before the toggle
+                    if (target.type === 'password') {
+                        target.type = 'text';
+                        this.classList.remove('fa-eye');
+                        this.classList.add('fa-eye-slash');
+                    } else {
+                        target.type = 'password';
+                        this.classList.remove('fa-eye-slash');
+                        this.classList.add('fa-eye');
+                    }
+                });
             });
         });
 
@@ -392,92 +401,132 @@
             }
         }
 
-        // Generate reCAPTCHA Token and Initiate Login
-        function generateRecaptchaTokenAndLogin() {
-            grecaptcha.ready(function() {
-                grecaptcha.execute('{{ config('services.nocaptcha.sitekey') }}', { action: 'login' }).then(function(token) {
-                    document.getElementById('g-recaptcha-response').value = token;
-                    refreshTokenAndLogin();
-                });
-            });
-        }
+        // Validate Form Inputs
+        function validateForm() {
+            const idNumber = document.getElementById('id_number').value;
+            const idNumberPattern = /^[A-Za-z0-9]{1,8}$/;
+            const password = document.getElementById('password').value;
 
-        // Refresh CSRF Token and Proceed to Login
-        function refreshTokenAndLogin() {
-            fetch('/refresh-csrf', {
-                method: 'GET',
-                credentials: 'same-origin'
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.csrf_token);
-                document.querySelector('input[name="_token"]').value = data.csrf_token;
-                login();
-            })
-            .catch(error => {
-                hideLoadingOverlay();
-                console.error('Error:', error);
-                toastr.error('An unexpected error occurred while refreshing the CSRF token. Please try again later.', 'Error', {
+            if (!idNumberPattern.test(idNumber)) {
+                toastr.error('The ID number may only contain letters and numbers and must be up to 8 characters long.', 'Error', {
                     closeButton: true,
                     progressBar: true,
-                    positionClass: 'toast-top-center', // Center the Toastr notification
-                    timeOut: 4000,
+                    positionClass: 'toast-top-center',
+                    timeOut: 3000,
                 });
-            });
+                return false;
+            }
+
+            if (password.length < 8) {
+                toastr.error('Password must be at least 8 characters long.', 'Error', {
+                    closeButton: true,
+                    progressBar: true,
+                    positionClass: 'toast-top-center',
+                    timeOut: 3000,
+                });
+                return false;
+            }
+
+            return true;
         }
 
-        // Perform Login via AJAX
-        function login() {
-            const form = document.getElementById('login-form');
-            const formData = new FormData(form);
+        // Submit Form via AJAX
+       // Submit Form via AJAX
+async function submitForm() {
+    const form = document.getElementById('login-form');
+    const formData = new FormData(form);
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-            fetch('{{ route('login.perform') }}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json',
-                },
-                body: formData
-            })
-            .then(response => {
-                if (response.status === 419) {
-                    throw new Error('Session expired. Please refresh the page and try again.');
-                }
-                return response.json();
-            })
-            .then(data => {
-                hideLoadingOverlay();
-                if (data.success) {
-                    toastr.success('Login successful.', 'Success', {
-                        closeButton: true,
-                        progressBar: true,
-                        positionClass: 'toast-top-center',
-                        timeOut: 2000,
-                        onHidden: function() {
-                            showLoadingOverlay();
-                            window.location.href = data.redirect;
-                        }
-                    });
-                } else {
-                    const errors = Object.values(data.errors).flat().join('<br>');
-                    toastr.error(errors, 'Error', {
-                        closeButton: true,
-                        progressBar: true,
-                        positionClass: 'toast-top-center',
-                        timeOut: 4000,
-                    });
-                }
-            })
-            .catch(error => {
-                hideLoadingOverlay();
-                console.error('Error:', error);
-                toastr.error(error.message || 'An unexpected error occurred. Please try again later.', 'Error', {
+    console.log('FormData entries:', [...formData.entries()]);
+
+    try {
+        const response = await fetch(form.action, {
+    method: 'POST',
+    headers: {
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': csrfToken, // Include CSRF token here
+
+    },
+    body: formData,
+    credentials: 'include', // Changed from 'same-origin' to 'include'
+});
+        const status = response.status;
+
+        // Try to parse JSON response
+        let data;
+        try {
+            data = await response.json();
+        } catch (e) {
+            data = {};
+        }
+
+        // Update CSRF token if provided
+        if (data.csrfToken) {
+    document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.csrfToken);
+    document.querySelector('input[name="_token"]').value = data.csrfToken;
+
+        }
+
+        hideLoadingOverlay(); // Hide the spinner once the response is received
+
+        if (response.ok) {
+            // HTTP status code 200-299
+            if (data.success) {
+                toastr.success('Login successful.', 'Success', {
+                    closeButton: true,
+                    progressBar: true,
+                    positionClass: 'toast-top-center',
+                    timeOut: 2000,
+                    onHidden: function() {
+                        window.location.href = data.redirect;
+                    }
+                });
+            } else {
+                const errors = data.errors ? Object.values(data.errors).flat().join('<br>') : 'An error occurred.';
+                toastr.error(errors, 'Error', {
                     closeButton: true,
                     progressBar: true,
                     positionClass: 'toast-top-center',
                     timeOut: 4000,
                 });
+            }
+        } else if (status === 422) {
+            // Validation error
+            const errors = data.errors ? Object.values(data.errors).flat().join('<br>') : 'Validation error.';
+            toastr.error(errors, 'Error', {
+                closeButton: true,
+                progressBar: true,
+                positionClass: 'toast-top-center',
+                timeOut: 4000,
+            });
+        } else if (status === 419) {
+            // CSRF token mismatch or session expired
+            toastr.error('Session expired. Please refresh the page and try again.', 'Error', {
+                closeButton: true,
+                progressBar: true,
+                positionClass: 'toast-top-center',
+                timeOut: 4000,
+            });
+        } else {
+            const message = data.message || 'An unexpected error occurred.';
+            toastr.error(message, 'Error', {
+                closeButton: true,
+                progressBar: true,
+                positionClass: 'toast-top-center',
+                timeOut: 4000,
             });
         }
+    } catch (error) {
+        hideLoadingOverlay();
+        console.error('Error:', error);
+        toastr.error('An unexpected error occurred. Please try again later.', 'Error', {
+            closeButton: true,
+            progressBar: true,
+            positionClass: 'toast-top-center',
+            timeOut: 4000,
+        });
+    }
+}
+
     </script>
 </x-guest-layout>

@@ -21,7 +21,53 @@
             justify-content: space-between;
             animation: fadeInUp 0.8s ease-in-out;
         }
-        
+        .custom-modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5); /* Black with opacity */
+        }
+
+        .custom-modal-content {
+            background-color: #fff;
+            margin: 10% auto; /* 10% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Could be more or less, depending on screen size */
+            max-width: 500px;
+            border-radius: 10px;
+            text-align: center;
+            animation: fadeIn 0.5s;
+        }
+
+        .custom-modal-content h2 {
+            margin-top: 0;
+        }
+
+        .custom-modal-content button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .custom-modal-content button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Animation for modal */
+        @keyframes fadeIn {
+            from { opacity: 0 }
+            to { opacity: 1 }
+        }
         /* Form Containers */
         .form-container {
             flex: 1 1 48%;
@@ -152,32 +198,32 @@
             color: #555;
         }
     /* Hide the actual file input */
-.profile-section input[type="file"] {
-    display: none;
-}
-.password-strength {
-    height: 5px;
-    width: 100%;
-    background-color: #ddd;
-    border-radius: 3px;
-    margin-top: 5px;
-}
-
-.password-strength.strength-weak {
-    background-color: red;
-    width: 33%;
-}
-
-.password-strength.strength-medium {
-    background-color: orange;
-    width: 66%;
-}
-
-.password-strength.strength-strong {
-    background-color: green;
-    width: 100%;
-}
-
+    .profile-section input[type="file"] {
+        display: none;
+    }
+    .password-strength {
+        height: 5px;
+        width: 100%;
+        background-color: #ddd;
+        border-radius: 3px;
+        margin-top: 5px;
+    }
+    
+    .password-strength.strength-weak {
+        background-color: red;
+        width: 33%;
+    }
+    
+    .password-strength.strength-medium {
+        background-color: orange;
+        width: 66%;
+    }
+    
+    .password-strength.strength-strong {
+        background-color: green;
+        width: 100%;
+    }
+    
     </style>
 
     
@@ -185,33 +231,31 @@
         <!-- Left Form: Account Settings -->
         <div class="form-container">
             <h2>Account Settings</h2>
-            <form action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data" id="settingsForm">
+            <form action="{{ route('settings.update') }}" method="POST" enctype="multipart/form-data" id="settingsForm">
                 @csrf
                 @method('PUT')
                 @if ($errors->any())
-    <div class="error-message">
-        <ul>
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+                    <div class="error-message">
+                        <ul>
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
 
                 <!-- Profile Image Section -->
-        <!-- Profile Image Section -->
-<div class="profile-section">
-    <div class="profile-image-container">
-        <img src="{{ $information && $information->profile_picture ? asset('storage/' . $information->profile_picture) : asset('images/default-profile.jpg') }}" alt="Profile Image" id="profileImage">
-    </div>
-    <label for="imageUpload" class="change-image-btn">Change Profile Picture</label>
-    <input type="file" name="profile_picture" id="imageUpload" accept="image/*" onchange="previewProfileImage(event)">
-    <span id="fileName" class="file-name"></span>
-    @error('profile_picture')
-        <div class="error-message">{{ $message }}</div>
-    @enderror
-</div>
-
+                <div class="profile-section">
+                    <div class="profile-image-container">
+                        <img src="{{ $information && $information->profile_picture ? asset('storage/' . $information->profile_picture) : asset('images/default-profile.jpg') }}" alt="Profile Image" id="profileImage">
+                    </div>
+                    <label for="imageUpload" class="change-image-btn">Change Profile Picture</label>
+                    <input type="file" name="profile_picture" id="imageUpload" accept="image/*" onchange="previewProfileImage(event)">
+                    <span id="fileName" class="file-name"></span>
+                    @error('profile_picture')
+                        <div class="error-message">{{ $message }}</div>
+                    @enderror
+                </div>
                 
                 <!-- ID Number -->
                 <div class="form-group">
@@ -219,24 +263,35 @@
                     <input type="text" id="id_number" name="id_number" value="{{ $user->id_number }}" readonly>
                 </div>
 
-                <!-- First Name -->
-                <div class="form-group">
-                    <label for="first_name">First Name</label>
-                    <input type="text" id="first_name" name="first_name" value="{{ old('first_name', $user->first_name) }}" required>
-                    @error('first_name')
-                        <div class="error-message">{{ $message }}</div>
-                    @enderror
-                </div>
+                  <!-- Conditional Name Fields -->
+                  @if ($role === 'admin')
+                    <!-- Name (for Admins) -->
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <input type="text" id="name" name="name" value="{{ old('name', $name) }}" required>
+                        @error('name')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+                @else
+                    <!-- First Name (for Other Roles) -->
+                    <div class="form-group">
+                        <label for="first_name">First Name</label>
+                        <input type="text" id="first_name" name="first_name" value="{{ old('first_name', $firstName) }}" required>
+                        @error('first_name')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-                <!-- Last Name -->
-                <div class="form-group">
-                    <label for="last_name">Last Name</label>
-                    <input type="text" id="last_name" name="last_name" value="{{ old('last_name', $user->last_name) }}" required>
-                    @error('last_name')
-                        <div class="error-message">{{ $message }}</div>
-                    @enderror
-                </div>
-
+                    <!-- Last Name (for Other Roles) -->
+                    <div class="form-group">
+                        <label for="last_name">Last Name</label>
+                        <input type="text" id="last_name" name="last_name" value="{{ old('last_name', $lastName) }}" required>
+                        @error('last_name')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+                @endif
                 <!-- Email -->
                 <div class="form-group">
                     <label for="email">Email</label>
@@ -248,14 +303,14 @@
 
                 <!-- Password -->
                 <div class="form-group">
-    <label for="password">New Password (leave blank to keep current)</label>
-    <input type="password" id="password" name="password" minlength="8" pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$" title="Password must be at least 8 characters long and contain both letters and numbers.">
-    <div id="passwordStrength" class="password-strength"></div>
-    @error('password')
-        <div class="error-message">{{ $message }}</div>
-    @enderror
-    <small>Password must be at least 8 characters long and contain both letters and numbers.</small>
-</div>
+                    <label for="password">New Password (leave blank to keep current)</label>
+                    <input type="password" id="password" name="password" minlength="8" pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$" title="Password must be at least 8 characters long and contain both letters and numbers.">
+                    <div id="passwordStrength" class="password-strength"></div>
+                    @error('password')
+                        <div class="error-message">{{ $message }}</div>
+                    @enderror
+                    <small>Password must be at least 8 characters long and contain both letters and numbers.</small>
+                </div>
 
                 <!-- Save Changes Button -->
                 <div class="form-group">
@@ -270,7 +325,7 @@
         </div>
 
         <!-- Right Form: Additional Information -->
-      
+        <!-- [Include additional information form here if necessary] -->
     </div>
     <div id="emailVerificationModal" class="custom-modal">
         <div class="custom-modal-content">
@@ -297,7 +352,7 @@
         document.getElementById('saveChangesBtn').addEventListener('click', function(e) {
             e.preventDefault();  // Prevent default form submission
 
-            const originalEmail = "{{ $user->email }}";
+            const originalEmail = "{{ $originalEmail ?? $user->email }}"; // Ensure originalEmail is passed if needed
             const newEmail = document.getElementById('email').value.trim();
 
             let emailChanged = originalEmail !== newEmail;
@@ -345,40 +400,39 @@
                 }
             });
         }
-// Password Strength Indicator
-const passwordInput = document.getElementById('password');
-const passwordStrength = document.getElementById('passwordStrength');
 
-passwordInput.addEventListener('input', function() {
-    const value = passwordInput.value;
-    let strength = 0;
+        // Password Strength Indicator
+        const passwordInput = document.getElementById('password');
+        const passwordStrength = document.getElementById('passwordStrength');
 
-    // Check for letters
-    if (/[A-Za-z]/.test(value)) strength += 1;
+        passwordInput.addEventListener('input', function() {
+            const value = passwordInput.value;
+            let strength = 0;
 
-    // Check for numbers
-    if (/\d/.test(value)) strength += 1;
+            // Check for letters
+            if (/[A-Za-z]/.test(value)) strength += 1;
 
-    // Check for minimum length
-    if (value.length >= 8) strength += 1;
+            // Check for numbers
+            if (/\d/.test(value)) strength += 1;
 
-    // Update strength indicator
-    if (strength === 0) {
-        passwordStrength.className = 'password-strength';
-    } else if (strength === 1) {
-        passwordStrength.classList.remove('strength-medium', 'strength-strong');
-        passwordStrength.classList.add('strength-weak');
-    } else if (strength === 2) {
-        passwordStrength.classList.remove('strength-weak', 'strength-strong');
-        passwordStrength.classList.add('strength-medium');
-    } else if (strength === 3) {
-        passwordStrength.classList.remove('strength-weak', 'strength-medium');
-        passwordStrength.classList.add('strength-strong');
-    }
-});
+            // Check for minimum length
+            if (value.length >= 8) strength += 1;
 
-        // SweetAlert for additional information form submission
- 
+            // Update strength indicator
+            if (strength === 0) {
+                passwordStrength.className = 'password-strength';
+            } else if (strength === 1) {
+                passwordStrength.classList.remove('strength-medium', 'strength-strong');
+                passwordStrength.classList.add('strength-weak');
+            } else if (strength === 2) {
+                passwordStrength.classList.remove('strength-weak', 'strength-strong');
+                passwordStrength.classList.add('strength-medium');
+            } else if (strength === 3) {
+                passwordStrength.classList.remove('strength-weak', 'strength-medium');
+                passwordStrength.classList.add('strength-strong');
+            }
+        });
+
         // SweetAlert for account deletion
         document.getElementById('deleteAccountBtn').addEventListener('click', function(e) {
             e.preventDefault();
@@ -395,7 +449,7 @@ passwordInput.addEventListener('input', function() {
                     // Create a form to submit the DELETE request
                     const form = document.createElement('form');
                     form.method = 'POST';
-                    form.action = "{{ route('student.settings.delete') }}";
+                    form.action = "{{ route('settings.delete') }}"; // Use a generic route
 
                     // CSRF token
                     const csrfInput = document.createElement('input');
@@ -453,4 +507,4 @@ passwordInput.addEventListener('input', function() {
             });
         @endif
     </script>
-</x-app-layout>  
+</x-app-layout>

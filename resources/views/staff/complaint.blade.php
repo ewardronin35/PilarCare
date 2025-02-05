@@ -1,5 +1,4 @@
 <x-app-layout :pageTitle="'Complaints'">
->
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
     <!-- Font Awesome for Icons -->
@@ -367,7 +366,7 @@
       
         <!-- Complaints Section -->
         <div class="complaints-section">
-            <h2>Student Complaint History</h2>
+            <h2>Staff Complaint History</h2>
 
             <!-- Complaints Table -->
             <div class="table-container">
@@ -377,7 +376,6 @@
                             <th>Name</th>
                             <th>Description of Sickness</th>
                             <th>Pain Assessment</th>
-                            <th>Confine Status</th>
                             <th>Medicine Given</th>
                             <th>Record Date</th> <!-- Added Record Date -->
                             <th>Action</th>
@@ -390,7 +388,6 @@
                                 <td>{{ $complaint->first_name }} {{ $complaint->last_name }}</td>
                                 <td>{{ $complaint->sickness_description }}</td>
                                 <td>{{ $complaint->pain_assessment }}</td>
-                                <td>{{ ucwords(str_replace('_', ' ', $complaint->confine_status)) }}</td>
                                 <td>{{ $complaint->medicine_given }}</td>
                                 <td>{{ $complaint->created_at->format('M d, Y') }}</td> <!-- Record Date Based on created_at -->
                                 <td>
@@ -399,16 +396,12 @@
                                             <i class="fas fa-eye"></i> Preview
                                         </button>
                                         @if(isset($complaint->report_url))
-                                            <a href="{{ $complaint->report_url }}" target="_blank" class="pdf-button">
-                                                <i class="fas fa-file-pdf"></i> View PDF
-                                            </a>
+                                           
                                             <a href="{{ $complaint->report_url }}" download class="download-button">
                                                 <i class="fas fa-download"></i> Download PDF
                                             </a>
                                         @else
-                                            <button class="pdf-button" disabled title="PDF not available">
-                                                <i class="fas fa-file-pdf"></i> View PDF
-                                            </button>
+                                       
                                             <button class="download-button" disabled title="PDF not available">
                                                 <i class="fas fa-download"></i> Download PDF
                                             </button>

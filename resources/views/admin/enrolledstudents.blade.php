@@ -1,13 +1,22 @@
-<x-app-layout :pageTitle="'Manage Students'">   
-    <head>
 
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
-<script type="text/javascript" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
-<!-- DataTables FixedHeader CSS and JS -->
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/fixedheader/3.1.9/css/fixedHeader.dataTables.min.css">
-<script type="text/javascript" src="https://cdn.datatables.net/fixedheader/3.1.9/js/dataTables.fixedHeader.min.js"></script>
+<x-app-layout :pageTitle="'Manage Students'">
+<head>
+        <!-- DataTables CSS -->
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
+        <!-- DataTables FixedHeader CSS -->
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/fixedheader/3.1.9/css/fixedHeader.dataTables.min.css">
+        <!-- Font Awesome CSS -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 
-</head>
+        <!-- jQuery (required for DataTables) -->
+        <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+        <!-- DataTables JS -->
+        <script type="text/javascript" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+        <!-- DataTables FixedHeader JS -->
+       
+        <script type="text/javascript" src="https://cdn.datatables.net/fixedheader/3.1.9/js/dataTables.fixedHeader.min.js"></script>
+    </head>
+
     <style>
         /* Import Poppins Font */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
@@ -16,11 +25,10 @@
         body {
             font-family: 'Poppins', sans-serif;
             background-color: #f4f6f9;
-        
         }
 
         .main-content {
-       margin-top: 30px;
+            margin-top: 30px;
             box-sizing: border-box;
         }
 
@@ -84,9 +92,19 @@
             display: flex;
             gap: 20px;
             flex-wrap: wrap;
-            justify-content: space-between;
-            margin-top: 30px;
-            margin-bottom: 40px;
+            justify-content: center; /* Centers child forms horizontally */
+            align-items: center;    /* Centers child forms vertically (if necessary) */
+            margin: 30px auto;      /* Centers the container itself horizontally and adds top margin */
+            max-width: 1200px;      /* Optional: Limits the maximum width of the container */
+            padding: 0 20px;        /* Optional: Adds horizontal padding for better responsiveness */
+            box-sizing: border-box; /* Ensures padding is included in the total width */
+        }
+
+        @media (max-width: 768px) {
+            .form-wrapper {
+                flex: 1 1 100%; /* Stacks forms vertically on smaller screens */
+                max-width: 100%;
+            }
         }
 
         .form-wrapper {
@@ -235,6 +253,7 @@
         }
 
         form input[type="text"],
+        form select,
         form input[type="file"] {
             padding: 12px;
             border: 1px solid #ddd;
@@ -246,13 +265,13 @@
         }
 
         form input[type="text"]:hover,
+        form select:hover,
         form input[type="file"]:hover {
             border-color: #00d1ff;
         }
 
         /* Students Table */
         .students-section {
-            max-height: 600px;
             overflow-y: auto;
             margin-top: 20px;
         }
@@ -282,14 +301,6 @@
             top: 0;
             z-index: 1;
         }
-/* Additional style for sticky header row */
-.students-table thead th {
-    background-color: #00d2ff;
-    color: white;
-    position: sticky;
-    top: 0;
-    z-index: 2;
-}
 
         .students-table td {
             background-color: #fff;
@@ -369,33 +380,36 @@
 
         /* Modal Styles */
         .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.4);
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
-        }
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+    justify-content: center; /* Center horizontally */
+    align-items: center;     /* Center vertically */
+    padding: 20px;
+    box-sizing: border-box;
+}
+.modal.active {
+    display: flex; /* Activate Flexbox */
+}
 
-        .modal-content {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 600px;
-            animation: slideIn 0.5s ease-out;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
+
+
+.modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 600px;
+    animation: slideIn 0.5s ease-out;
+    /* Removed display: flex and related properties */
+}
 
         /* Close Button */
         .close {
@@ -492,38 +506,38 @@
                 width: 95%;
             }
         }
+
         /* Download Excel Template Button Styles */
-.download-template-button {
-    background-color: #ffc107; /* Amber color to stand out */
-    color: #fff;
-    padding: 12px 3px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    text-decoration: none; /* Remove underline from link */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
+        .download-template-button {
+            background-color: #ffc107; /* Amber color to stand out */
+            color: #fff;
+            padding: 12px 3px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none; /* Remove underline from link */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
 
-.download-template-button:hover {
-    background-color: #e0a800; /* Darker amber on hover */
-    transform: translateY(-2px); /* Slight lift effect */
-}
+        .download-template-button:hover {
+            background-color: #e0a800; /* Darker amber on hover */
+            transform: translateY(-2px); /* Slight lift effect */
+        }
 
-.download-template-button:active {
-    transform: translateY(0); /* Remove lift on click */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
+        .download-template-button:active {
+            transform: translateY(0); /* Remove lift on click */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
 
-.download-template-button i {
-    font-size: 18px; /* Slightly larger icon */
-}
-
+        .download-template-button i {
+            font-size: 18px; /* Slightly larger icon */
+        }
     </style>
 
     <div class="main-content">
@@ -547,14 +561,42 @@
                     <h2><i class="fas fa-file-upload"></i> Upload Student List</h2>
                     <p>Please ensure the Excel file follows the format: ID Number, First Name, Last Name, Grade/Course</p>
                     <a href="{{ route('admin.download.templates') }}" class="download-template-button">
-    <i class="fas fa-download"></i> Download Excel Template
-</a>
+                        <i class="fas fa-download"></i> Download Excel Template
+                    </a>
 
-
-                   
                     <div id="upload-section">
                         <form id="upload-form" enctype="multipart/form-data">
                             @csrf
+                            <!-- Grade/Course Selection -->
+                            <label for="grade_or_course_selection">Grade/Course</label>
+                            <select name="grade_or_course" id="grade_or_course_selection" required>
+                                <option value="">Select Grade/Course</option>
+                                
+                                <!-- Elementary Grades -->
+                                @for($grade = 1; $grade <= 6; $grade++)
+                                    <option value="GRADE {{ $grade }}">Grade {{ $grade }}</option>
+                                @endfor
+
+                                <!-- Junior High School Grades -->
+                                @for($grade = 7; $grade <= 10; $grade++)
+                                    <option value="GRADE {{ $grade }}">Grade {{ $grade }}</option>
+                                @endfor
+
+                                <!-- Senior High School Grades -->
+                                <option value="GRADE 11">Grade 11</option>
+                                <option value="GRADE 12">Grade 12</option>
+
+                                <!-- College Courses -->
+                                <option value="BSBA">BSBA</option>
+                                <option value="BSIT">BSIT</option>
+                                <option value="BSTM">BSTM</option>
+                                <option value="BSHM">BSHM</option>
+                                <option value="BSN">BSN</option>
+                                <option value="BLIS">BLIS</option>
+                                <option value="BEED">BEED</option>
+                            </select>
+
+                            <!-- File Upload -->
                             <div class="file-upload-container">
                                 <label for="file"><i class="fas fa-paperclip"></i> Choose File</label>
                                 <input type="file" name="file" id="file" required>
@@ -565,26 +607,6 @@
                     </div>
                 </div>
 
-                <!-- Add Late Students Form -->
-                <div class="form-wrapper">
-                    <h2><i class="fas fa-user-plus"></i> Add Late Students</h2>
-                    <form id="late-student-form">
-                        @csrf
-                        <label for="late-id_number">ID Number</label>
-                        <input type="text" id="late-id_number" name="late-id_number" required maxlength="7" pattern="[A-Za-z][0-9]{6}" title="ID number must start with a letter followed by 6 digits.">
-                        
-                        <label for="late-first_name">First Name</label>
-                        <input type="text" id="late-first_name" name="late-first_name" required>
-                        
-                        <label for="late-last_name">Last Name</label>
-                        <input type="text" id="late-last_name" name="late-last_name" required>
-                        
-                        <label for="late-grade_or_course">Grade/Course</label>
-                        <input type="text" id="late-grade_or_course" name="late-grade_or_course" required>
-                        
-                        <button type="submit" class="preview-button"><i class="fas fa-user-plus"></i> Add Student</button>
-                    </form>
-                </div>
             </div>
         </div>
 
@@ -592,55 +614,98 @@
         <div id="students-tab" class="tab-content">
             <div class="students-section">
                 <h2><i class="fas fa-users"></i> Enrolled Students</h2>
-              
-                @if($students->isEmpty())
-                    <p>No students enrolled yet.</p>
-                @else
-                    <div class="students-table-container">
-                    <table class="students-table" id="students-table">
-    <thead>
-        <tr>
-            <th><i class="fas fa-id-card"></i> ID</th>
-            <th><i class="fas fa-user"></i> First Name</th>
-            <th><i class="fas fa-user"></i> Last Name</th>
-            <th><i class="fas fa-graduation-cap"></i> Grade/Course</th>
-            <th><i class="fas fa-info-circle"></i> Status</th>
-            <th><i class="fas fa-toggle-on"></i> Toggle Status</th>
-            <th><i class="fas fa-tools"></i> Actions</th>
-        </tr>
-    </thead>
-    <tbody id="students-table-body">
-        @foreach($students as $student)
-            <tr id="student-row-{{ $student->id }}">
-                <td>{{ $student->id_number }}</td>
-                <td>{{ $student->first_name }}</td>
-                <td>{{ $student->last_name }}</td>
-                <td>{{ $student->grade_or_course }}</td>
-                <td>
-                    <button class="preview-button status-button" style="background-color: {{ $student->approved ? '#28a745' : '#dc3545' }};">
-                        {{ $student->approved ? 'Active' : 'Inactive' }}
-                    </button>
-                </td>
-                <td>
-                    <label class="switch">
-                        <input type="checkbox" class="toggle-approval" data-student-id="{{ $student->id }}" {{ $student->approved ? 'checked' : '' }}>
-                        <span class="slider"></span>
-                    </label>
-                </td>
-                <td>
-                    <button class="edit-button" data-student-id="{{ $student->id }}">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="delete-button" onclick="deleteStudent({{ $student->id }})">
-                        <i class="fas fa-trash-alt"></i> Delete
-                    </button>
-                </td>
-            </tr>
-        @endforeach
-    </tbody>
-</table>
+
+                <!-- Add Semester, School Year, and Grade/Course Filters -->
+                <div class="filter-container" style="margin-bottom: 20px; display: flex; gap: 20px; align-items: center;">
+                    <!-- Existing Semester Filter -->
+                    <div>
+                        <label for="filter-semester">Semester:</label>
+                        <select id="filter-semester" style="padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                            <option value="">All Semesters</option>
+                            <option value="FIRST SEMESTER">First Semester</option>
+                            <option value="SECOND SEMESTER">Second Semester</option>
+                            <option value="SUMMER">Summer</option>
+                        </select>
                     </div>
-                @endif
+                    <!-- Existing School Year Filter -->
+                    <div>
+                        <label for="filter-school_year">School Year:</label>
+                        <select id="filter-school_year" style="padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                            <option value="">All School Years</option>
+                            @php
+                                $currentYear = date('Y');
+                                // Determine the start year based on the current month (assuming academic year starts in August)
+                                $month = date('n');
+                                if ($month >= 8) { // August or later
+                                    $startYear = $currentYear;
+                                } else { // Before August
+                                    $startYear = $currentYear - 1;
+                                }
+                                $endYear = $startYear + 10; // Generate 10 years ahead
+                            @endphp
+                            @for($year = $startYear; $year < $endYear; $year++)
+                                <option value="{{ $year }}-{{ $year +1 }}">{{ $year }}-{{ $year +1 }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                    <!-- New Grade/Course Filter -->
+                    <div>
+                        <label for="filter-grade_course">Grade/Course:</label>
+                        <select id="filter-grade_course" style="padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                            <option value="">All Grades/Courses</option>
+                            <!-- Add your grade/course options here -->
+                            <!-- Elementary Grades -->
+                            @for($grade = 1; $grade <= 6; $grade++)
+                                <option value="GRADE {{ $grade }}">Grade {{ $grade }}</option>
+                            @endfor
+
+                            <!-- Junior High School Grades -->
+                            @for($grade = 7; $grade <= 10; $grade++)
+                                <option value="GRADE {{ $grade }}">Grade {{ $grade }}</option>
+                            @endfor
+
+                            <!-- Senior High School Grades -->
+                            <option value="GRADE 11">Grade 11</option>
+                            <option value="GRADE 12">Grade 12</option>
+
+                            <!-- College Courses -->
+                            <option value="BSBA">BSBA</option>
+                            <option value="BSIT">BSIT</option>
+                            <option value="BSTM">BSTM</option>
+                            <option value="BSHM">BSHM</option>
+                            <option value="BSN">BSN</option>
+                            <option value="BLIS">BLIS</option>
+                            <option value="BEED">BEED</option>
+                        </select>
+                    </div>
+                    <!-- Filter and Reset Buttons -->
+                    <div>
+                        <button id="filter-button" class="preview-button"><i class="fas fa-filter"></i> Filter</button>
+                        <button id="reset-button" class="preview-button" style="background-color: #6c757d;"><i class="fas fa-redo"></i> Reset</button>
+                    </div>
+                </div>
+
+                <div class="students-table-container">
+                    <table class="students-table" id="students-table" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                                <th>Grade/Course</th>
+                                <th>Section</th> <!-- New Column -->
+                                <th>Education Level</th>
+                                <th>Status</th>
+                                <th>Gender</th>
+                                <th>Toggle Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- DataTables will populate this -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- Edit Student Modal -->
@@ -650,447 +715,574 @@
                     <h2>Edit Student</h2>
                     <form id="edit-student-form">
                         @csrf
-                        <input type="hidden" name="id" id="edit-student-id">
+                        <input type="hidden" name="id_number" id="edit-student-id">
                         <label for="edit-id-number">ID Number</label>
-                        <input type="text" name="id_number" id="edit-id-number" required>
-                        
+                        <input type="text" name="id_number" id="edit-id-number" required maxlength="7" pattern="[A-Za-z][0-9]{6}" title="ID number must start with a letter followed by 6 digits." readonly>
+
                         <label for="edit-first-name">First Name</label>
                         <input type="text" name="first_name" id="edit-first-name" required>
-                        
+
                         <label for="edit-last-name">Last Name</label>
                         <input type="text" name="last_name" id="edit-last-name" required>
-                        
+
                         <label for="edit-grade-course">Grade/Course</label>
                         <input type="text" name="grade_or_course" id="edit-grade-course" required>
+
+                        <label for="edit-section">Section</label> <!-- New Field -->
+                        <input type="text" name="section" id="edit-section" required>
+
+                        <label for="edit-education-level">Education Level</label>
+                        <input type="text" name="education_level" id="edit-education-level">
+
+                        <label for="edit-gender">Gender</label>
+                        <input type="text" name="gender" id="edit-gender">
+
                         
+
                         <button type="submit" class="save-button"><i class="fas fa-save"></i> Save</button>
                     </form>
+                </div>
+            </div>  
+        </div>
+
+        <!-- View Student Modal -->
+        <div id="view-student-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-view">&times;</span>
+                <h2><i class="fas fa-eye"></i> Student Details</h2>
+                <div id="student-details">
+                    <!-- Student details will be populated here via JavaScript -->
                 </div>
             </div>
         </div>
 
         <!-- SweetAlert2 -->
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <!-- Font Awesome -->
-        <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
         <script>
-            // Function to switch main tabs
-            function switchTab(tabId) {
-                document.querySelectorAll('.tab').forEach(tab => {
-                    tab.classList.remove('active');
-                });
-                document.querySelectorAll('.tab-content').forEach(content => {
-                    content.classList.remove('active');
-                });
-
-                document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
-                document.getElementById(tabId).classList.add('active');
-            }
-
-            // Initialize Main Tabs
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', function() {
-                    const targetTab = this.getAttribute('data-tab');
-                    switchTab(targetTab);
-                });
-            });
-
-            // Function to open the modal and populate it with student data
-            function openEditModal(student) {
-                document.getElementById('edit-student-id').value = student.id;
-                document.getElementById('edit-id-number').value = student.id_number;
-                document.getElementById('edit-first-name').value = student.first_name;
-                document.getElementById('edit-last-name').value = student.last_name;
-                document.getElementById('edit-grade-course').value = student.grade_or_course;
-
-                // Display the modal
-                document.getElementById('edit-student-modal').style.display = 'flex';
-            }
-
-            // Close the modal when clicking the 'X' button
-            document.querySelector('.close').addEventListener('click', function() {
-                document.getElementById('edit-student-modal').style.display = 'none';
-            });
-
-            // Close the modal when clicking outside the modal content
-            window.onclick = function(event) {
-                const modal = document.getElementById('edit-student-modal');
-                if (event.target == modal) {
-                    modal.style.display = "none";
+     $(document).ready(function() {
+    // Initialize DataTable with AJAX
+    var table = $('#students-table').DataTable({
+        "processing": true,
+        "serverSide": false,
+        "ajax": {
+            "url": "{{ route('admin.students.enrolled') }}",
+            "type": "GET",
+            "data": function(d) {
+                d.semester = $('#filter-semester').val();
+                d.school_year = $('#filter-school_year').val();
+                d.grade_or_course = $('#filter-grade_course').val(); // Correct selector
+            },
+            "dataSrc": ""
+        },
+        "columns": [
+            { "data": "id_number" },
+            { "data": "first_name" },
+            { "data": "last_name" },
+            { "data": "grade_or_course" },
+            { "data": "section" }, // New Column
+            { "data": "education_level" },
+            {
+                "data": "is_enrolled",
+                "render": function(data, type, row) {
+                    var color = data ? '#28a745' : '#dc3545';
+                    var status = data ? 'Enrolled' : 'Not Enrolled';
+                    return `<button class="preview-button status-button" style="background-color: ${color};">
+                                ${status}
+                            </button>`;
+                }
+            },
+            { "data": "gender" },
+            {
+                "data": null,
+                "render": function(data, type, row) {
+                    var checked = row.is_enrolled ? 'checked' : '';
+                    return `<label class="switch">
+                                <input type="checkbox" class="toggle-enrollment" data-student-id="${row.id_number}" data-semester="${row.semester}" data-school-year="${row.school_year}" data-grade-course="${row.grade_or_course}" ${checked}>
+                                <span class="slider"></span>
+                            </label>`;
+                }
+            },
+            {
+                "data": null,
+                "orderable": true, "targets": 0,
+                "render": function(data, type, row) {
+                    return `<button class="preview-button view-button" data-student-id="${row.id_number}">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                            <button class="edit-button" data-student-id="${row.id_number}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="delete-button" onclick="deleteStudent('${row.id_number}')">
+                                <i class="fas fa-trash-alt"></i> Delete
+                            </button>`;
                 }
             }
+        ],
+        "fixedHeader": true,
+        "responsive": true
+    });
 
-            // Global deleteStudent function to be available on button click
-            function deleteStudent(studentId) {
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: "You won't be able to revert this!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, delete it!'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        fetch(`/admin/students/${studentId}`, {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                _method: 'DELETE'
-                            })
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                Swal.fire('Deleted!', data.message, 'success');
-                                document.getElementById('student-row-' + studentId).remove();
-                            } else {
-                                Swal.fire('Error!', 'There was a problem deleting the student.', 'error');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            Swal.fire('Error!', 'There was a problem deleting the student.', 'error');
-                        });
-                    }
-                });
+    // Handle Tab Switching
+    $('.tab').on('click', function() {
+        $('.tab').removeClass('active');
+        $('.tab-content').removeClass('active');
+        $(this).addClass('active');
+        $('#' + $(this).data('tab')).addClass('active');
+    });
+
+    // File selection feedback
+    $('#file').on('change', function() {
+        if(this.files && this.files.length > 0){
+            const fileName = this.files[0].name;
+            $('#file-name').text(fileName);
+        } else {
+            $('#file-name').text('No file chosen');
+        }
+    });
+
+    // Upload form submission
+    $('#upload-form').on('submit', function(e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+
+        Swal.fire({
+            title: 'Uploading...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading()
             }
-
-            document.addEventListener('DOMContentLoaded', function() {
-                // Initialize modal
-                $('#students-table').DataTable({
-            "paging": true,
-            "searching": true,
-            "ordering": true,
-            "info": true,
-            "autoWidth": false,
-            "responsive": true,
-            "fixedHeader": true  // Enable fixed header for sticky header
-
         });
-                document.getElementById('edit-student-modal').style.display = 'none';
-              
-                // File selection feedback
-                document.getElementById('file').addEventListener('change', function(event) {
-                    if(event.target.files.length > 0){
-                        const fileName = event.target.files[0].name;
-                        document.getElementById('file-name').textContent = fileName;
-                    } else {
-                        document.getElementById('file-name').textContent = 'No file chosen';
-                    }
-                });
 
-                // Toggle upload section
-     
-
-                // Upload form submission
-                document.getElementById('upload-form').addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    var formData = new FormData(this);
-
-                    fetch('{{ route('admin.students.import') }}', {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: data.message,
-                                showConfirmButton: false,
-                                timer: 1500
-                            });
-                            fetchAndUpdateStudentsTable(); // Re-fetch and update the table
-                            document.getElementById('upload-form').reset();
-                            document.getElementById('file-name').textContent = 'No file chosen';
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                html: data.errors.join('<br>'),
-                                showConfirmButton: true,
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'There was a problem uploading the file.',
-                            showConfirmButton: true,
-                        });
+        $.ajax({
+            url: '{{ route('admin.students.import') }}',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            headers: {
+                'Accept': 'application/json'
+            },
+            success: function(data) {
+                Swal.close();
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: data.message,
+                        showConfirmButton: false,
+                        timer: 1500
                     });
-                });
-
-                // Add late student form submission
-                document.getElementById('late-student-form').addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    var formData = new FormData(this);
-
-                    fetch('{{ route('admin.students.add') }}', {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: data.message,
-                                showConfirmButton: false,
-                                timer: 1500
-                            });
-                            fetchAndUpdateStudentsTable(); // Re-fetch and update the table
-                            document.getElementById('late-student-form').reset();
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                html: data.errors.join('<br>'),
-                                showConfirmButton: true,
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'There was a problem adding the student.',
-                            showConfirmButton: true,
-                        });
-                    });
-                });
-
-                // Fetch updated students table
-                function fetchAndUpdateStudentsTable() {
-                    fetch('{{ route('admin.students.enrolled') }}', {
-                        method: 'GET',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(students => {
-                        updateStudentsTable(students);
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
+                    $('#upload-form')[0].reset();
+                    $('#file-name').text('No file chosen');
+                    table.ajax.reload(); // Refresh DataTable
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Import Failed',
+                        html: data.errors.join('<br>'),
+                        showConfirmButton: true,
                     });
                 }
-
-                // Update students table
-                function updateStudentsTable(students) {
-                    var tbody = document.getElementById('students-table-body');
-                    if (!tbody) {
-                        console.error("Element with ID 'students-table-body' not found.");
-                        return;
-                    }
-                    tbody.innerHTML = '';
-                    students.forEach(student => {
-                        var row = document.createElement('tr');
-                        row.id = 'student-row-' + student.id;
-
-                        row.innerHTML = `
-                            <td>${student.id_number}</td>
-                            <td>${student.first_name}</td>
-                            <td>${student.last_name}</td>
-                            <td>${student.grade_or_course}</td>
-                            <td>
-                                <button class="preview-button status-button" style="background-color: ${student.approved ? '#28a745' : '#dc3545'};">
-                                    ${student.approved ? 'Active' : 'Inactive'}
-                                </button>
-                            </td>
-                            <td>
-                                <label class="switch">
-                                    <input type="checkbox" class="toggle-approval" data-student-id="${student.id}" ${student.approved ? 'checked' : ''}>
-                                    <span class="slider"></span>
-                                </label>
-                            </td>
-                            <td>
-                                <button class="edit-button" data-student-id="${student.id}">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                                <button class="delete-button" onclick="deleteStudent(${student.id})">
-                                    <i class="fas fa-trash-alt"></i> Delete
-                                </button>
-                            </td>
-                        `;
-                        tbody.appendChild(row);
+            },
+            error: function(xhr) {
+                Swal.close();
+                if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Import Failed',
+                        html: xhr.responseJSON.errors.join('<br>'),
+                        showConfirmButton: true,
                     });
-                    attachToggleApprovalEvents();
-                    attachEditEvents();
-                }
-
-                // Toggle approval events
-                function attachToggleApprovalEvents() {
-                    document.querySelectorAll('.toggle-approval').forEach(input => {
-                        input.addEventListener('change', function() {
-                            var studentId = this.getAttribute('data-student-id');
-                            var approved = this.checked ? 1 : 0;
-
-                            var formData = new FormData();
-                            formData.append('approved', approved);
-
-                            var actionUrl = `/admin/students/${studentId}/toggle-approval`;
-
-                            fetch(actionUrl, {
-                                method: 'POST',
-                                body: formData,
-                                headers: {
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                }
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Success',
-                                        text: data.message,
-                                        showConfirmButton: false,
-                                        timer: 1500
-                                    });
-                                    updateStudentRow(studentId, data.student);
-                                } else {
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Error',
-                                        text: 'There was a problem updating the student status.',
-                                        showConfirmButton: true,
-                                    });
-                                    // Revert the checkbox state
-                                    this.checked = !approved;
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error:', error);
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: 'There was a problem updating the student status.',
-                                    showConfirmButton: true,
-                                });
-                                // Revert the checkbox state
-                                this.checked = !approved;
-                            });
-                        });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'There was a problem uploading the file.',
+                        showConfirmButton: true,
                     });
                 }
-
-                // Update student row
-                function updateStudentRow(studentId, student) {
-                    var row = document.getElementById('student-row-' + studentId);
-                    if (!row) {
-                        console.error(`Row for studentId ${studentId} not found`);
-                        return;
-                    }
-
-                    var button = row.querySelector('.status-button');
-                    var checkbox = row.querySelector(`input[data-student-id="${studentId}"]`);
-
-                    // Update button text and background color
-                    if (student.approved == 1) {
-                        button.textContent = 'Active';
-                        button.style.backgroundColor = '#28a745';
-                    } else {
-                        button.textContent = 'Inactive';
-                        button.style.backgroundColor = '#dc3545';
-                    }
-
-                    // Update checkbox state
-                    checkbox.checked = student.approved == 1;
-                }
-
-                // Edit button events
-                function attachEditEvents() {
-                    document.querySelectorAll('.edit-button').forEach(button => {
-                        button.addEventListener('click', function() {
-                            var studentId = this.getAttribute('data-student-id');
-
-                            // Fetch student data and open the modal
-                            fetch(`/admin/students/${studentId}`)
-                .then(response => response.json())
-                .then(student => {
-                    // Populate modal with student data
-                    document.getElementById('edit-student-id').value = student.id;
-                    document.getElementById('edit-id-number').value = student.id_number;
-                    document.getElementById('edit-first-name').value = student.first_name;
-                    document.getElementById('edit-last-name').value = student.last_name;
-                    document.getElementById('edit-grade-course').value = student.grade_or_course;
-
-                    // Open the modal
-                    document.getElementById('edit-student-modal').style.display = 'flex';
-                })
-                .catch(error => {
-                    console.error('Error fetching student data:', error);
-                    Swal.fire('Error', 'Unable to fetch student data', 'error');
-                });
+            }
         });
     });
-                }
 
-                // Form submission inside the modal
-                document.getElementById('edit-student-form').addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    var formData = new FormData(this);
-                    var studentId = document.getElementById('edit-student-id').value;
-
-                    fetch(`/admin/students/${studentId}/edit`, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: data.message,
-                                showConfirmButton: false,
-                                timer: 1500
-                            });
-                            fetchAndUpdateStudentsTable(); // Re-fetch and update the table
-                            document.getElementById('edit-student-modal').style.display = 'none'; // Close the modal
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                html: data.errors.join('<br>'),
-                                showConfirmButton: true,
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'There was a problem updating the student.',
-                            showConfirmButton: true,
-                        });
-                    });
+    // Delete student function
+    window.deleteStudent = function(id_number) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Deleting...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    }
                 });
 
-                // Initial fetch of students
-                fetchAndUpdateStudentsTable();
+                $.ajax({
+                    url: `/admin/students/${id_number}`,
+                    type: 'DELETE',
+                    dataType: 'json',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    success: function(data) {
+                        Swal.close();
+                        if (data.success) {
+                            Swal.fire('Deleted!', data.message, 'success');
+                            table.ajax.reload(); // Refresh DataTable
+                        } else {
+                            Swal.fire('Error!', 'There was a problem deleting the student.', 'error');
+                        }
+                    },
+                    error: function() {
+                        Swal.close();
+                        Swal.fire('Error!', 'There was a problem deleting the student.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    // Toggle enrollment event using event delegation
+    $('#students-table').on('change', '.toggle-enrollment', function() {
+        var studentIdNumber = $(this).data('student-id');
+        var isEnrolled = $(this).is(':checked') ? 1 : 0;
+        var gradeOrCourse = $(this).data('grade-course'); // Now correctly retrieved
+
+        // Determine semester and school year programmatically
+        var semester = determineCurrentSemester();
+        var schoolYear = determineCurrentSchoolYear();
+
+        if (!semester || !schoolYear) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Missing Information',
+                text: 'Unable to determine the current semester and school year.',
+                showConfirmButton: true,
             });
+            // Revert the checkbox state
+            $(this).prop('checked', !isEnrolled);
+            return;
+        }
+
+        var formData = new FormData();
+        formData.append('is_enrolled', isEnrolled);
+        formData.append('semester', semester);
+        formData.append('school_year', schoolYear);
+        formData.append('grade_or_course', gradeOrCourse);
+
+        Swal.fire({
+            title: 'Updating Enrollment Status...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading()
+            }
+        });
+
+        $.ajax({
+            url: `/admin/students/${studentIdNumber}/toggle-enrollment`,
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            dataType: 'json',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            success: function(data) {
+                Swal.close();
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: data.message,
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    table.ajax.reload(); // Refresh DataTable
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'There was a problem updating the enrollment status.',
+                        showConfirmButton: true,
+                    });
+                    // Revert the checkbox state
+                    $(this).prop('checked', !isEnrolled);
+                }
+            }.bind(this),
+            error: function() {
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'There was a problem updating the enrollment status.',
+                    showConfirmButton: true,
+                });
+                // Revert the checkbox state
+                $(this).prop('checked', !isEnrolled);
+            }.bind(this)
+        });
+    });
+
+    // Function to determine current semester based on current date
+    function determineCurrentSemester() {
+        var month = new Date().getMonth() + 1; // JavaScript months are 0-11
+        if (month >= 1 && month <= 4) {
+            return 'SUMMER';
+        } else if (month >= 5 && month <= 8) {
+            return 'FIRST SEMESTER';
+        } else {
+            return 'SECOND SEMESTER';
+        }
+    }
+
+    // Function to determine current school year based on current date
+    function determineCurrentSchoolYear() {
+        var today = new Date();
+        var year = today.getFullYear();
+        var month = today.getMonth() + 1;
+
+        if (month >= 8) { // August or later
+            return year + '-' + (year + 1);
+        } else { // Before August
+            return (year - 1) + '-' + year;
+        }
+    }
+
+    // Edit button event using event delegation
+    $('#students-table').on('click', '.edit-button', function() {
+        var studentIdNumber = $(this).data('student-id');
+
+        Swal.fire({
+            title: 'Fetching Student Data...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading()
+            }
+        });
+
+        $.ajax({
+            url: `/admin/students/${studentIdNumber}`,
+            type: 'GET',
+            dataType: 'json',
+            headers: {
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.student) {
+                    var student = response.student;
+                    var email = response.email || 'N/A';
+                    $('#edit-student-id').val(student.id_number); // Use id_number as identifier
+                    $('#edit-id-number').val(student.id_number);
+                    $('#edit-first-name').val(student.first_name);
+                    $('#edit-last-name').val(student.last_name);
+                    $('#edit-grade-course').val(student.grade_or_course);
+                    $('#edit-section').val(student.section); // Populate section
+                    $('#edit-education-level').val(student.education_level);
+                    $('#edit-gender').val(student.gender);
+                    $('#edit-is-scholar').prop('checked', student.is_scholar);
+
+                    $('#edit-student-modal').addClass('active'); // Show the modal
+                } else {
+                    Swal.fire('Error', 'Student data not found.', 'error');
+                }
+            },
+            error: function() {
+                Swal.close();
+                Swal.fire('Error', 'Unable to fetch student data.', 'error');
+            }
+        });
+    });
+
+    // Close the edit modal when clicking the 'X' button
+    $('.close').on('click', function() {
+        $('#edit-student-modal').removeClass('active'); // Hide the modal
+    });
+
+    // Close the edit modal when clicking outside the modal content
+    $(window).on('click', function(event) {
+        if ($(event.target).is('#edit-student-modal')) {
+            $('#edit-student-modal').removeClass('active'); // Hide the modal
+        }
+    });
+
+    // Edit student form submission
+    $('#edit-student-form').on('submit', function(e) {
+        e.preventDefault();
+        var studentIdNumber = $('#edit-student-id').val();
+        var formData = $(this).serialize();
+
+        Swal.fire({
+            title: 'Updating...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading()
+            }
+        });
+
+        $.ajax({
+            url: `/admin/students/${studentIdNumber}/edit`,
+            type: 'POST',
+            data: formData,
+            dataType: 'json',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            success: function(data) {
+                Swal.close();
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: data.message,
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    $('#edit-student-modal').removeClass('active'); // Hide the modal
+                    table.ajax.reload(); // Refresh DataTable
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        html: data.errors.join('<br>'),
+                        showConfirmButton: true,
+                    });
+                }
+            },
+            error: function(xhr) {
+                Swal.close();
+                if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        html: xhr.responseJSON.errors.join('<br>'),
+                        showConfirmButton: true,
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'There was a problem updating the student.',
+                        showConfirmButton: true,
+                    });
+                }
+            }
+        });
+    });
+
+    // View button event using event delegation
+    $('#students-table').on('click', '.view-button', function() {
+        var studentIdNumber = $(this).data('student-id');
+
+        Swal.fire({
+            title: 'Fetching Student Details...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading()
+            }
+        });
+
+        $.ajax({
+            url: `/admin/students/${studentIdNumber}`,
+            type: 'GET',
+            dataType: 'json',
+            headers: {
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.student) {
+                    var student = response.student;
+                    var email = response.email || 'N/A';
+                    var htmlContent = `
+                        <p><strong>ID Number:</strong> ${student.id_number}</p>
+                        <p><strong>First Name:</strong> ${student.first_name}</p>
+                        <p><strong>Last Name:</strong> ${student.last_name}</p>
+                        <p><strong>Grade/Course:</strong> ${student.grade_or_course}</p>
+                        <p><strong>Section:</strong> ${student.section}</p>
+                        <p><strong>Education Level:</strong> ${student.education_level}</p>
+                        <p><strong>Gender:</strong> ${student.gender}</p>
+                        <p><strong>Father's Name:</strong> ${student.father_name}</p>
+                        <p><strong>Mother's Name:</strong> ${student.mother_name}</p>
+                        <p><strong>Contact Number:</strong> ${student.contact_number}</p>
+                        <p><strong>Address:</strong> ${student.address}</p>
+                        <p><strong>Emergency Contact:</strong> ${student.emergency_contact}</p>
+                        <p><strong>Birthdate:</strong> ${student.birthdate}</p>
+                        <p><strong>Age:</strong> ${student.age}</p>
+                        <p><strong>Email:</strong> ${email}</p>
+                        <p><strong>Approved:</strong> ${student.approved ? 'Yes' : 'No'}</p>
+                    `;
+                    $('#student-details').html(htmlContent);
+                    
+                    // Show the view modal
+                    $('#view-student-modal').addClass('active');
+                } else {
+                    Swal.fire('Error', 'Student data not found.', 'error');
+                }
+            },
+            error: function(xhr) {
+                Swal.close();
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    Swal.fire('Error', xhr.responseJSON.error, 'error');
+                } else {
+                    Swal.fire('Error', 'Unable to fetch student data.', 'error');
+                }
+            }
+        });
+    });
+
+    // Close the view modal when clicking the 'X' button
+    $('.close-view').on('click', function() {
+        $('#view-student-modal').removeClass('active'); // Hide the modal
+    });
+
+    // Close the view modal when clicking outside the modal content
+    $(window).on('click', function(event) {
+        if ($(event.target).is('#view-student-modal')) {
+            $('#view-student-modal').removeClass('active'); // Hide the modal
+        }
+    });
+
+    // Filter button event
+    $('#filter-button').on('click', function() {
+        table.ajax.reload();
+    });
+
+    // Reset button event
+    $('#reset-button').on('click', function() {
+        $('#filter-semester').val('');
+        $('#filter-school_year').val('');
+        $('#filter-grade_course').val(''); // Clear the grade/course filter
+
+        table.ajax.reload();
+    });
+
+    // Initial fetch of students is handled by DataTables AJAX initialization
+});
+
         </script>
+
+    <!-- View Student Modal -->
+    <div id="view-student-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-view">&times;</span>
+            <h2><i class="fas fa-eye"></i> Student Details</h2>
+            <div id="student-details">
+                <!-- Student details will be populated here via JavaScript -->
+            </div>
+        </div>
+    </div>
     </div>
 </x-app-layout>

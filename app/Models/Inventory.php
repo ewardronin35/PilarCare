@@ -15,7 +15,7 @@ class Inventory extends Model
     protected $table = 'inventory';
 
     protected $fillable = [
-        'item_name', 'quantity', 'supplier', 'type', 'date_acquired', 'expiry_date'// Added Expiry Date
+        'item_name', 'quantity', 'generic_name', 'type', 'date_acquired', 'expiry_date'// Added Expiry Date
 
     ];
 }

@@ -70,26 +70,25 @@
             }
         }
 
-        /* Container for Forms */
         .forms-container {
             display: flex;
             gap: 20px;
             flex-wrap: wrap;
-            justify-content: space-between;
+            justify-content: center;
             margin-top: 30px;
             margin-bottom: 40px;
         }
 
         .form-wrapper {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            flex: 1 1 45%;
-            max-width: 48%;
-            box-sizing: border-box;
-            animation: fadeInUp 0.5s ease-in-out;
-        }
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex: 0 1 60%; /* Adjusted flex properties */
+    max-width: 600px; /* Set a reasonable max-width */
+    box-sizing: border-box;
+    animation: fadeInUp 0.5s ease-in-out;
+}
 
         .form-wrapper h2 {
             margin-bottom: 10px;
@@ -130,7 +129,7 @@
             justify-content: center;
             background-color: #00d1ff;
             color: white;
-            padding: 10px 15px;
+            padding: 10px 3px;
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s ease-in-out;
@@ -150,13 +149,13 @@
             margin-top: 10px;
             word-break: break-all;
         }
-
         /* Buttons */
         .preview-button,
         .toggle-button,
         .save-button,
         .delete-button,
-        .edit-button {
+        .edit-button,
+        .view-button { /* Added .view-button */
             background-color: #00d1ff;
             color: white;
             padding: 10px 15px;
@@ -209,6 +208,16 @@
 
         .edit-button:hover {
             background-color: #0069d9;
+        }
+
+        .view-button { /* New styles for view-button */
+            background-color: #17a2b8;
+            width: 100%;
+            max-width: 150px;
+        }
+
+        .view-button:hover {
+            background-color: #138496;
         }
 
         /* Forms */
@@ -546,25 +555,7 @@
                 </div>
 
                 <!-- Add Nurse Form -->
-                <div class="form-wrapper">
-                    <h2><i class="fas fa-user-plus"></i> Add Nurse</h2>
-                    <form id="add-nurse-form">
-                        @csrf
-                        <label for="nurse-id_number">ID Number</label>
-                        <input type="text" id="nurse-id_number" name="id_number" required maxlength="7" pattern="[A-Za-z][0-9]{6}" title="ID number must start with a letter followed by 6 digits.">
-
-                        <label for="nurse-first_name">First Name</label>
-                        <input type="text" id="nurse-first_name" name="first_name" required>
-
-                        <label for="nurse-last_name">Last Name</label>
-                        <input type="text" id="nurse-last_name" name="last_name" required>
-
-                        <label for="nurse-department">Department</label>
-                        <input type="text" id="nurse-department" name="department" required>
-
-                        <button type="submit" class="preview-button"><i class="fas fa-user-plus"></i> Add Nurse</button>
-                    </form>
-                </div>
+                <!-- (Optional: If you have an add nurse form, include it here) -->
             </div>
         </div>
 
@@ -608,6 +599,9 @@
                                             </label>
                                         </td>
                                         <td>
+                                            <button class="view-button" data-nurse-id="{{ $nurse->id }}" aria-label="View Nurse">
+                                                <i class="fas fa-eye"></i> View
+                                            </button>
                                             <button class="edit-button" data-nurse-id="{{ $nurse->id }}" aria-label="Edit Nurse">
                                                 <i class="fas fa-edit"></i> Edit
                                             </button>
@@ -648,22 +642,43 @@
                     </form>
                 </div>
             </div>
+
+            <!-- View Nurse Modal -->
+            <div id="view-nurse-modal" class="modal"> <!-- New Modal for Viewing Nurse -->
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>View Nurse</h2>
+                    <div id="view-nurse-details">
+                        <!-- Nurse details will be populated here via JavaScript -->
+                        <p><strong>ID Number:</strong> <span id="view-id-number"></span></p>
+                        <p><strong>First Name:</strong> <span id="view-first-name"></span></p>
+                        <p><strong>Last Name:</strong> <span id="view-last-name"></span></p>
+                        <p><strong>Department:</strong> <span id="view-department"></span></p>
+                        <p><strong>Status:</strong> <span id="view-status"></span></p>
+                        <p><strong>Email:</strong> <span id="view-email"></span></p>
+                        <p><strong>Approved:</strong> <span id="view-approved"></span></p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- SweetAlert2 -->
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrQkTyYW8pR7l+hEpp9tFC0Hc3Se1cO0uQXZjzMbQY5/0tBZBWXcE4qK4Zq6SGPsbQX0ZV5scAtMWB7xXQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
-<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+        <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                // Tab functionality
+                // Initialize DataTable
                 $('#nurses-table').DataTable({
-        "paging": true,
-        "searching": true,
-        "ordering": true,
-        "info": true
-    });
+                    "paging": true,
+                    "searching": true,
+                    "ordering": true,
+                    "info": true
+                });
+
+                // Tab functionality
                 document.querySelectorAll('.tab').forEach(tab => {
                     tab.addEventListener('click', function() {
                         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -682,9 +697,6 @@
                         document.getElementById('nurse-file-name').textContent = 'No file chosen';
                     }
                 });
-
-                // Search functionality for Nurses
-               
 
                 // Upload form submission
                 document.getElementById('upload-form').addEventListener('submit', function(event) {
@@ -731,57 +743,14 @@
                     });
                 });
 
-                // Add nurse form submission
-                document.getElementById('add-nurse-form').addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    var formData = new FormData(this);
-
-                    fetch('{{ route('admin.nurses.add') }}', {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: data.message,
-                                showConfirmButton: false,
-                                timer: 1500
-                            });
-                            fetchAndUpdateNursesTable(); // Re-fetch and update the table
-                            document.getElementById('add-nurse-form').reset();
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                html: data.errors ? data.errors.join('<br>') : 'An error occurred.',
-                                showConfirmButton: true,
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'There was a problem adding the nurse.',
-                            showConfirmButton: true,
-                        });
-                    });
-                });
-
                 // Edit nurse modal functionality
                 const editModal = document.getElementById('edit-nurse-modal');
-                const closeModalButtons = editModal.querySelectorAll('.close');
+                const viewModal = document.getElementById('view-nurse-modal'); // Reference to view modal
+                const closeModalButtons = [...editModal.querySelectorAll('.close'), ...viewModal.querySelectorAll('.close')];
 
                 closeModalButtons.forEach(btn => {
                     btn.addEventListener('click', () => {
-                        editModal.style.display = 'none';
+                        btn.parentElement.parentElement.style.display = 'none';
                     });
                 });
 
@@ -789,9 +758,12 @@
                     if (event.target == editModal) {
                         editModal.style.display = 'none';
                     }
+                    if (event.target == viewModal) { // Close view modal when clicking outside
+                        viewModal.style.display = 'none';
+                    }
                 }
 
-                // Form submission inside the modal
+                // Form submission inside the edit modal
                 document.getElementById('edit-nurse-form').addEventListener('submit', function(event) {
                     event.preventDefault();
                     var formData = new FormData(this);
@@ -840,6 +812,37 @@
                             text: 'There was a problem updating the nurse.',
                             showConfirmButton: true,
                         });
+                    });
+                });
+
+                // View nurse modal functionality
+                document.querySelectorAll('.view-button').forEach(button => {
+                    button.addEventListener('click', function() {
+                        var nurseId = this.getAttribute('data-nurse-id');
+
+                        // Fetch nurse data and open the view modal
+                        fetch(`/admin/nurses/${nurseId}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data) { // Adjust based on your response structure
+                                    document.getElementById('view-id-number').textContent = data.id_number;
+                                    document.getElementById('view-first-name').textContent = data.first_name;
+                                    document.getElementById('view-last-name').textContent = data.last_name;
+                                    document.getElementById('view-department').textContent = data.department;
+                                    document.getElementById('view-status').textContent = data.approved ? 'Active' : 'Inactive';
+                                    document.getElementById('view-email').textContent = data.user ? data.user.email : 'N/A';
+                                    document.getElementById('view-approved').textContent = data.approved ? 'Yes' : 'No';
+
+                                    // Display the view modal
+                                    viewModal.style.display = 'flex';
+                                } else {
+                                    Swal.fire('Error', 'Nurse not found.', 'error');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error fetching nurse data:', error);
+                                Swal.fire('Error', 'Unable to fetch nurse data.', 'error');
+                            });
                     });
                 });
 
@@ -892,6 +895,9 @@
                                 </label>
                             </td>
                             <td>
+                                <button class="view-button" data-nurse-id="${nurse.id}" aria-label="View Nurse">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
                                 <button class="edit-button" data-nurse-id="${nurse.id}" aria-label="Edit Nurse">
                                     <i class="fas fa-edit"></i> Edit
                                 </button>
@@ -903,6 +909,7 @@
                     });
                     attachToggleApprovalEvents();
                     attachEditEvents();
+                    attachViewEvents(); // Attach view button events
                 }
 
                 // Function to attach toggle approval events
@@ -961,40 +968,20 @@
                     });
                 }
 
-                // Function to update nurse row status after toggle
-                function updateNurseRow(nurseId, nurse) {
-                    var row = document.getElementById('nurse-row-' + nurseId);
-                    if (!row) {
-                        console.error(`Row for nurseId ${nurseId} not found`);
-                        return;
-                    }
-
-                    var statusButton = row.querySelector('.status-button');
-
-                    // Update button text and background color
-                    if (nurse.approved == 1) {
-                        statusButton.textContent = 'Active';
-                        statusButton.style.backgroundColor = '#28a745';
-                    } else {
-                        statusButton.textContent = 'Inactive';
-                        statusButton.style.backgroundColor = '#dc3545';
-                    }
-                }
-
                 // Function to attach edit button events
                 function attachEditEvents() {
                     document.querySelectorAll('.edit-button').forEach(button => {
                         button.addEventListener('click', function() {
                             var nurseId = this.getAttribute('data-nurse-id');
 
-                            // Fetch nurse data and open the modal
+                            // Fetch nurse data and open the edit modal
                             fetch(`/admin/nurses/${nurseId}`)
                                 .then(response => response.json())
                                 .then(nurse => {
-                                    if (nurse.success) {
-                                        openEditModal(nurse.nurse); // Open the modal with the nurse data
+                                    if (nurse) { // Adjust based on your response structure
+                                        openEditModal(nurse); // Open the modal with the nurse data
                                     } else {
-                                        Swal.fire('Error', nurse.message || 'Unable to fetch nurse data.', 'error');
+                                        Swal.fire('Error', 'Nurse not found.', 'error');
                                     }
                                 })
                                 .catch(error => {
@@ -1005,6 +992,42 @@
                     });
                 }
 
+                // Function to attach view button events
+                function attachViewEvents() {
+                    document.querySelectorAll('.view-button').forEach(button => {
+                        button.addEventListener('click', function() {
+                            var nurseId = this.getAttribute('data-nurse-id');
+
+                            // Fetch nurse data and open the view modal
+                            fetch(`/admin/nurses/${nurseId}`)
+                                .then(response => response.json())
+                                .then(nurse => {
+                                    if (nurse) { // Adjust based on your response structure
+                                        populateViewModal(nurse);
+                                        document.getElementById('view-nurse-modal').style.display = 'flex';
+                                    } else {
+                                        Swal.fire('Error', 'Nurse not found.', 'error');
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error fetching nurse data:', error);
+                                    Swal.fire('Error', 'Unable to fetch nurse data.', 'error');
+                                });
+                        });
+                    });
+                }
+
+                // Function to populate the view modal with nurse data
+                function populateViewModal(nurse) {
+                    document.getElementById('view-id-number').textContent = nurse.id_number;
+                    document.getElementById('view-first-name').textContent = nurse.first_name;
+                    document.getElementById('view-last-name').textContent = nurse.last_name;
+                    document.getElementById('view-department').textContent = nurse.department;
+                    document.getElementById('view-status').textContent = nurse.approved ? 'Active' : 'Inactive';
+                    document.getElementById('view-email').textContent = nurse.user ? nurse.user.email : 'N/A';
+                    document.getElementById('view-approved').textContent = nurse.approved ? 'Yes' : 'No';
+                }
+
                 // Function to open the edit modal and populate it with nurse data
                 function openEditModal(nurse) {
                     document.getElementById('edit-nurse-id').value = nurse.id;
@@ -1013,7 +1036,7 @@
                     document.getElementById('edit-nurse-last_name').value = nurse.last_name;
                     document.getElementById('edit-nurse-department').value = nurse.department;
 
-                    // Display the modal
+                    // Display the edit modal
                     document.getElementById('edit-nurse-modal').style.display = 'flex';
                 }
 
@@ -1056,58 +1079,6 @@
                     });
                 }
 
-                // Form submission inside the modal
-                document.getElementById('edit-nurse-form').addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    var formData = new FormData(this);
-                    var nurseId = document.getElementById('edit-nurse-id').value;
-
-                    // Convert FormData to JSON
-                    var data = {};
-                    formData.forEach((value, key) => {
-                        data[key] = value;
-                    });
-
-                    fetch(`/admin/nurses/${nurseId}/edit`, {
-                        method: 'POST',
-                        body: JSON.stringify(data),
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Content-Type': 'application/json'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: data.message,
-                                showConfirmButton: false,
-                                timer: 1500
-                            });
-                            fetchAndUpdateNursesTable(); // Re-fetch and update the table
-                            document.getElementById('edit-nurse-modal').style.display = 'none'; // Close the modal
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                html: data.errors ? data.errors.join('<br>') : data.message,
-                                showConfirmButton: true,
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'There was a problem updating the nurse.',
-                            showConfirmButton: true,
-                        });
-                    });
-                });
-
                 // Function to update nurse row status after toggle
                 function updateNurseRow(nurseId, nurse) {
                     var row = document.getElementById('nurse-row-' + nurseId);
@@ -1127,210 +1098,26 @@
                         statusButton.style.backgroundColor = '#dc3545';
                     }
                 }
-
-                // Function to attach edit button events
-                function attachEditEvents() {
-                    document.querySelectorAll('.edit-button').forEach(button => {
-                        button.addEventListener('click', function() {
-                            var nurseId = this.getAttribute('data-nurse-id');
-
-                            // Fetch nurse data and open the modal
-                            fetch(`/admin/nurses/${nurseId}`)
-                                .then(response => response.json())
-                                .then(nurse => {
-                                    if (nurse.success) {
-                                        openEditModal(nurse.nurse); // Open the modal with the nurse data
-                                    } else {
-                                        Swal.fire('Error', nurse.message || 'Unable to fetch nurse data.', 'error');
-                                    }
-                                })
-                                .catch(error => {
-                                    console.error('Error fetching nurse data:', error);
-                                    Swal.fire('Error', 'Unable to fetch nurse data.', 'error');
-                                });
-                        });
-                    });
-                }
-
-                // Initial fetch of nurses on page load
-                fetchAndUpdateNursesTable();
             });
+            </script>
+        </div>
 
-            // Function to attach event listeners for Edit and Toggle buttons after table update
-            function attachToggleApprovalEvents() {
-                document.querySelectorAll('.toggle-approval').forEach(input => {
-                    input.addEventListener('change', function() {
-                        var nurseId = this.getAttribute('data-nurse-id');
-                        var approved = this.checked ? 1 : 0;
-
-                        var formData = new FormData();
-                        formData.append('approved', approved);
-
-                        var actionUrl = `/admin/nurses/${nurseId}/toggle-approval`;
-
-                        fetch(actionUrl, {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            }
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Success',
-                                    text: data.message,
-                                    showConfirmButton: false,
-                                    timer: 1500
-                                });
-                                updateNurseRow(nurseId, data.nurse);
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: 'There was a problem updating the nurse status.',
-                                    showConfirmButton: true,
-                                });
-                                // Revert the checkbox state
-                                this.checked = !approved;
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: 'There was a problem updating the nurse status.',
-                                showConfirmButton: true,
-                            });
-                            // Revert the checkbox state
-                            this.checked = !approved;
-                        });
-                    });
-                });
-            }
-
-            function attachEditEvents() {
-                document.querySelectorAll('.edit-button').forEach(button => {
-                    button.addEventListener('click', function() {
-                        var nurseId = this.getAttribute('data-nurse-id');
-
-                        // Fetch nurse data and open the modal
-                        fetch(`/admin/nurses/${nurseId}`)
-                            .then(response => response.json())
-                            .then(nurse => {
-                                if (nurse.success) {
-                                    openEditModal(nurse.nurse); // Open the modal with the nurse data
-                                } else {
-                                    Swal.fire('Error', nurse.message || 'Unable to fetch nurse data.', 'error');
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error fetching nurse data:', error);
-                                Swal.fire('Error', 'Unable to fetch nurse data.', 'error');
-                            });
-                    });
-                });
-            }
-
-            function openEditModal(nurse) {
-                document.getElementById('edit-nurse-id').value = nurse.id;
-                document.getElementById('edit-nurse-id_number').value = nurse.id_number;
-                document.getElementById('edit-nurse-first_name').value = nurse.first_name;
-                document.getElementById('edit-nurse-last_name').value = nurse.last_name;
-                document.getElementById('edit-nurse-department').value = nurse.department;
-
-                // Display the modal
-                document.getElementById('edit-nurse-modal').style.display = 'flex';
-            }
-
-            // Close the modal when clicking the 'X' button or outside the modal
-            document.querySelectorAll('.close').forEach(closeBtn => {
-                closeBtn.addEventListener('click', function() {
-                    document.getElementById('edit-nurse-modal').style.display = 'none';
-                });
-            });
-
-            window.onclick = function(event) {
-                const modal = document.getElementById('edit-nurse-modal');
-                if (event.target == modal) {
-                    modal.style.display = "none";
-                }
-            }
-
-            // Form submission inside the modal
-            document.getElementById('edit-nurse-form').addEventListener('submit', function(event) {
-                event.preventDefault();
-                var formData = new FormData(this);
-                var nurseId = document.getElementById('edit-nurse-id').value;
-
-                // Convert FormData to JSON
-                var data = {};
-                formData.forEach((value, key) => {
-                    data[key] = value;
-                });
-
-                fetch(`/admin/nurses/${nurseId}/edit`, {
-                    method: 'POST',
-                    body: JSON.stringify(data),
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: data.message,
-                            showConfirmButton: false,
-                            timer: 1500
-                        });
-                        fetchAndUpdateNursesTable(); // Re-fetch and update the table
-                        document.getElementById('edit-nurse-modal').style.display = 'none'; // Close the modal
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            html: data.errors ? data.errors.join('<br>') : data.message,
-                            showConfirmButton: true,
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'There was a problem updating the nurse.',
-                        showConfirmButton: true,
-                    });
-                });
-            });
-
-            // Function to update nurse row status after toggle
-            function updateNurseRow(nurseId, nurse) {
-                var row = document.getElementById('nurse-row-' + nurseId);
-                if (!row) {
-                    console.error(`Row for nurseId ${nurseId} not found`);
-                    return;
-                }
-
-                var statusButton = row.querySelector('.status-button');
-
-                // Update button text and background color
-                if (nurse.approved == 1) {
-                    statusButton.textContent = 'Active';
-                    statusButton.style.backgroundColor = '#28a745';
-                } else {
-                    statusButton.textContent = 'Inactive';
-                    statusButton.style.backgroundColor = '#dc3545';
-                }
-            }
-        </script>
+        <!-- View Nurse Modal -->
+        <div id="view-nurse-modal" class="modal"> <!-- New Modal for Viewing Nurse -->
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>View Nurse</h2>
+                <div id="view-nurse-details">
+                    <!-- Nurse details will be populated here via JavaScript -->
+                    <p><strong>ID Number:</strong> <span id="view-id-number"></span></p>
+                    <p><strong>First Name:</strong> <span id="view-first-name"></span></p>
+                    <p><strong>Last Name:</strong> <span id="view-last-name"></span></p>
+                    <p><strong>Department:</strong> <span id="view-department"></span></p>
+                    <p><strong>Status:</strong> <span id="view-status"></span></p>
+                    <p><strong>Email:</strong> <span id="view-email"></span></p>
+                    <p><strong>Approved:</strong> <span id="view-approved"></span></p>
+                </div>
+            </div>
+        </div>
     </div>
 </x-app-layout>

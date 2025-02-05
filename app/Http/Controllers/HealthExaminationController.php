@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf; // <-- Correct namespace
 use Illuminate\Support\Facades\Route;
 use App\Models\SchoolYear; // <-- Import the SchoolYear model
+use App\Mail\HealthExaminationReminder;
+use App\Mail\StudentHealthExaminationReminder;
 
 
 class HealthExaminationController extends Controller
@@ -41,6 +43,8 @@ class HealthExaminationController extends Controller
     {
         $user = Auth::user();
         $role = strtolower($user->role);
+
+        
         $pendingExaminations = HealthExamination::where('is_approved', false)
         ->with('user') // Assuming a relationship is defined
         ->get();
@@ -67,7 +71,7 @@ class HealthExaminationController extends Controller
         }
     
         // Pass the school years and current school year to the view
-        return view("$role.uploadHealthExamination", compact('schoolYears', 'currentSchoolYear'));
+        return view("$role.upload-pictures",  compact('schoolYears', 'currentSchoolYear'));
     }
     
 
@@ -88,13 +92,13 @@ class HealthExaminationController extends Controller
             'xray_picture.array' => 'X-ray pictures must be an array.',
             'xray_picture.*.image' => 'Each X-ray file must be an image.',
             'xray_picture.*.mimes' => 'X-ray images must be of type: jpeg, png, jpg, gif.',
-            'xray_picture.*.max' => 'Each X-ray image must not exceed 10MB.',
+            'xray_picture.*.max' => 'Each X-ray image must not exceed 1MB.',
             
             'lab_result_picture.required' => 'Please upload at least one lab result picture.',
             'lab_result_picture.array' => 'Lab result pictures must be an array.',
             'lab_result_picture.*.image' => 'Each lab result file must be an image.',
             'lab_result_picture.*.mimes' => 'Lab result images must be of type: jpeg, png, jpg, gif.',
-            'lab_result_picture.*.max' => 'Each lab result image must not exceed 10MB.',
+            'lab_result_picture.*.max' => 'Each lab result image must not exceed 1MB.',
             
             'school_year.required' => 'The school year is required.',
             'school_year.exists' => 'The selected school year is invalid.',
@@ -102,13 +106,13 @@ class HealthExaminationController extends Controller
         
         $validated = $request->validate([
             'health_examination_picture' => 'required|array|max:10',
-            'health_examination_picture.*' => 'image|mimes:jpeg,png,jpg,gif|max:10048',
+            'health_examination_picture.*' => 'image|mimes:jpeg,png,jpg,gif|max:1148',
         
             'xray_picture' => 'required|array|max:10',
-            'xray_picture.*' => 'image|mimes:jpeg,png,jpg,gif|max:10048',
+            'xray_picture.*' => 'image|mimes:jpeg,png,jpg,gif|max:1148',
         
             'lab_result_picture' => 'required|array|max:10',
-            'lab_result_picture.*' => 'image|mimes:jpeg,png,jpg,gif|max:10048',
+            'lab_result_picture.*' => 'image|mimes:jpeg,png,jpg,gif|max:1148',
         
             'school_year' => 'required|string|exists:school_years,year',
         ], $messages);
@@ -184,7 +188,7 @@ class HealthExaminationController extends Controller
         return response()->json(['success' => false, 'message' => $e->validator->errors()->first()], 422);
     } catch (\Exception $e) {
         // Log the exception message
-        \Log::error('Error in HealthExaminationController@store: ' . $e->getMessage());
+        Log::error('Error in HealthExaminationController@store: ' . $e->getMessage());
 
         // Return a JSON response indicating failure
         return response()->json(['success' => false, 'message' => 'An error occurred while processing your request. Please try again later.'], 500);
@@ -696,44 +700,78 @@ class HealthExaminationController extends Controller
         return view('student.medical-record', compact('healthExamination'));
     }
     public function getPendingExaminations(Request $request)
-    {
+{
+    try {
+        // DataTables parameters
+        $draw = intval($request->input('draw'));
+        $start = intval($request->input('start'));
+        $length = intval($request->input('length'));
+        $search = $request->input('search.value', '');
+
         // Determine the role based on the route prefix (admin, nurse, doctor)
         $routePrefix = $request->route()->getPrefix(); // e.g., '/admin', '/nurse', '/doctor'
         $role = strtolower(str_replace('/', '', $routePrefix)); // Remove '/' if present
-    
+
         // Get the authenticated user
         $user = Auth::user();
-    
-        // Fetch search query correctly
-        $search = $request->input('search.value', '');
-    
+
         // Query pending examinations
         $query = HealthExamination::where('is_approved', false)
-            ->with('user');
-    
+            ->with(['user', 'user.student', 'user.teacher', 'user.staff']); // Eager load all possible role-specific relationships
+
         // Apply search filters if any
         if (!empty($search)) {
             $query->whereHas('user', function($q) use ($search) {
+                $q->where('id_number', 'like', "%{$search}%");
+            })
+            ->orWhereHas('user.student', function($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('id_number', 'like', "%{$search}%");
+                  ->orWhere('last_name', 'like', "%{$search}%");
+            })
+            ->orWhereHas('user.teacher', function($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%");
+            })
+            ->orWhereHas('user.staff', function($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%");
             });
         }
-    
+
         // Role-based logic (if needed)
         if (in_array($role, ['nurse', 'doctor'])) {
             $query->where('id_number', $user->id_number);
         }
-    
+
         // Implement pagination as per DataTables' requirements
-        $pendingExaminations = $query->orderBy('created_at', 'desc')->paginate($request->input('length', 10), ['*'], 'start', $request->input('start', 0) / $request->input('length', 10));
-    
-        // Transform data for JSON response
+        $pendingExaminations = $query->orderBy('created_at', 'desc')->paginate(
+            $length,
+            ['*'],
+            'page',
+            ($start / $length) + 1
+        );
+
+        // Transform data for DataTables
         $transformed = $pendingExaminations->map(function($exam) {
+            // Determine the user's role and fetch the appropriate name
+            $user = $exam->user;
+            $name = 'N/A';
+
+            if ($user->student) {
+                $name = "{$user->student->first_name} {$user->student->last_name}";
+            } elseif ($user->teacher) {
+                $name = "{$user->teacher->first_name} {$user->teacher->last_name}";
+            } elseif ($user->staff) {
+                $name = "{$user->staff->first_name} {$user->staff->last_name}";
+            } else {
+                // If user has no role-specific model, fallback to User model's fields if available
+                $name = trim("{$user->first_name} {$user->last_name}") ?: 'N/A';
+            }
+
             return [
                 'id' => $exam->id,
-                'user_name' => $exam->user->first_name . ' ' . $exam->user->last_name,
-                'id_number' => $exam->user->id_number,
+                'user_name' => $name,
+                'id_number' => $user->id_number,
                 'school_year' => $exam->school_year,
                 'health_examination_pictures' => array_map(function($pic) {
                     return asset('storage/' . $pic);
@@ -746,15 +784,21 @@ class HealthExaminationController extends Controller
                 }, $exam->lab_result_picture ?? []),
             ];
         });
-    
+
         // Prepare the response in DataTables expected format
         return response()->json([
-            'draw' => intval($request->input('draw')),
+            'draw' => $draw,
             'recordsTotal' => $pendingExaminations->total(),
             'recordsFiltered' => $pendingExaminations->total(),
             'data' => $transformed,
         ]);
+    } catch (\Exception $e) {
+        Log::error('Error fetching pending examinations: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+        return response()->json(['error' => 'Failed to fetch pending examinations.'], 500);
     }
+}
+
+    
     public function parentDownloadPdf($studentIdNumber)
     {
         try {
@@ -906,5 +950,332 @@ class HealthExaminationController extends Controller
             return redirect()->back()->with('error', 'Unable to download the Health Examination Report. Please try again later.');
         }
     }
+    public function getRemindersData(Request $request)
+    {
+        try {
+            // DataTables parameters
+            $draw = intval($request->input('draw'));
+            $start = intval($request->input('start'));
+            $length = intval($request->input('length'));
+            $search = $request->input('search.value', '');
     
+            // Get the current school year
+            $currentSchoolYear = SchoolYear::where('is_current', true)->first();
+            if (!$currentSchoolYear) {
+                return response()->json(['error' => 'Current school year not set.'], 400);
+            }
+    
+            // Fetch students who have submitted health examinations for the current school year
+            $submissions = HealthExamination::where('school_year', $currentSchoolYear->year)->pluck('id_number')->toArray();
+    
+            // Base query: students not in submissions and registered in users table with role 'Student'
+            $query = Student::whereNotIn('id_number', $submissions)
+                ->whereHas('user', function($q) {
+                    $q->where('role', 'Student');
+                })
+                ->with('user');
+    
+            // Apply search filter if provided
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->whereHas('user', function($subQ) use ($search) {
+                        $subQ->where('first_name', 'like', "%{$search}%")
+                             ->orWhere('last_name', 'like', "%{$search}%")
+                             ->orWhere('id_number', 'like', "%{$search}%");
+                    })
+                    ->orWhere('id_number', 'like', "%{$search}%")
+                    ->orWhere('grade_or_course', 'like', "%{$search}%")
+                    ->orWhere('section', 'like', "%{$search}%");
+                });
+            }
+    
+            // Get total records after filtering
+            $recordsFiltered = $query->count();
+    
+            // Get total records without filtering
+            $recordsTotal = Student::whereHas('user', function($q) {
+                $q->where('role', 'Student');
+            })->count();
+    
+            // Apply pagination
+            $students = $query->orderBy('created_at', 'desc')
+                ->skip($start)
+                ->take($length)
+                ->get();
+    
+            // Transform data for DataTables
+            $transformed = $students->map(function($student) {
+                $studentName = 'N/A';
+                if ($student->first_name && $student->last_name) {
+                    // Use the name from the Student model
+                    $studentName = "{$student->first_name} {$student->last_name}";
+                } elseif ($student->user && $student->user->first_name && $student->user->last_name) {
+                    // Fallback to the User model
+                    $studentName = "{$student->user->first_name} {$student->user->last_name}";
+                }
+                return [
+                    'id' => $student->id,
+                    'id_number' => $student->id_number,
+                    'student_name' => $studentName,
+                    'grade_or_course' => $student->grade_or_course ?? 'N/A',
+                    'section' => $student->section ?? 'N/A',
+                    'pending_since' => $student->created_at ? $student->created_at->diffForHumans() : 'N/A',
+                ];
+            });
+    
+            return response()->json([
+                'draw' => $draw,
+                'recordsTotal' => $recordsTotal,
+                'recordsFiltered' => $recordsFiltered,
+                'data' => $transformed,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching reminders data: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json(['error' => 'Failed to fetch reminders data.'], 500);
+        }
+    }
+    public function sendReminders(Request $request)
+    {
+        // Validate the incoming request
+        $request->validate([
+            'student_ids' => 'required|array',
+            'student_ids.*' => 'integer|exists:students,id',
+        ]);
+    
+        $studentIds = $request->input('student_ids');
+    
+        // Initialize counters
+        $successful = 0;
+        $failed = 0;
+    
+        DB::beginTransaction();
+    
+        try {
+            foreach ($studentIds as $studentId) {
+                $student = Student::with('user')->findOrFail($studentId);
+                $user = $student->user; // The student user
+    
+                if (!$user || !$user->email) {
+                    $failed++;
+                    Log::warning("Student user not found or missing email for student ID: {$student->id_number}");
+                    continue;
+                }
+    
+                // Log student info
+                Log::info("Processing student ID: {$student->id_number}, Name: {$user->first_name} {$user->last_name}");
+    
+                // Create notification for the student
+                Notification::create([
+                    'user_id' => $user->id_number,
+                    'title' => 'Reminder: Submit Health Examination',
+                    'message' => 'Please submit your health examination documents for the current school year.',
+                    'scheduled_time' => now(),
+                ]);
+    
+                // Send email to the student
+                \Mail::to($user->email)->queue(new \App\Mail\StudentHealthExaminationReminder($user));
+                Log::info("Notification and email sent to student ID: {$user->id_number}");
+    
+                // Fetch the program head for the student's course
+                $studentCourse = trim(strtolower($student->grade_or_course));
+                Log::info("Looking for program head for course: {$studentCourse}");
+    
+                $programHeadTeacher = Teacher::where('role', 'program_head')
+                    ->whereRaw('LOWER(course) = ?', [$studentCourse])
+                    ->first();
+    
+                if ($programHeadTeacher) {
+                    Log::info("Program head teacher found: {$programHeadTeacher->id_number}");
+    
+                    $programHeadUser = $programHeadTeacher->user;
+    
+                    if ($programHeadUser && $programHeadUser->email) {
+                        Log::info("Program head user found: {$programHeadUser->id_number}, Email: {$programHeadUser->email}");
+    
+                        // Create notification for the program head
+                        Notification::create([
+                            'user_id' => $programHeadUser->id_number,
+                            'title' => 'Reminder: Student Pending Health Examination',
+                            'message' => "Student {$student->first_name} {$student->last_name} has not submitted their health examination documents.",
+                            'scheduled_time' => now(),
+                        ]);
+    
+                        // Send email to the program head
+                        \Mail::to($programHeadUser->email)->queue(new \App\Mail\ProgramHeadHealthExaminationReminder($programHeadUser, $student));
+                        Log::info("Notification and email sent to program head ID: {$programHeadUser->id_number}");
+                    } else {
+                        Log::warning("Program head user not found or missing email for teacher ID: {$programHeadTeacher->id_number}");
+                    }
+                } else {
+                    Log::warning("No program head found for course: {$student->grade_or_course}");
+                }
+    
+                $successful++;
+            }
+    
+            DB::commit();
+    
+            return response()->json([
+                'success' => true,
+                'message' => "Reminders sent successfully to {$successful} student(s) and their program heads.",
+                'failed' => $failed,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error sending reminders: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to send reminders.'], 500);
+        }
+    }
+    
+    
+public function bulkReject(Request $request)
+{
+    $request->validate([
+        'examination_ids' => 'required|array',
+        'examination_ids.*' => 'integer|exists:health_examinations,id',
+    ], [
+        'examination_ids.required' => 'No examinations selected for rejection.',
+        'examination_ids.array' => 'Invalid data format for examination IDs.',
+        'examination_ids.*.integer' => 'Examination ID must be an integer.',
+        'examination_ids.*.exists' => 'Selected examination does not exist.',
+    ]);
+
+    $examinationIds = $request->input('examination_ids');
+    $rejectedCount = 0;
+    $failedRejections = [];
+
+    DB::beginTransaction();
+
+    try {
+        foreach ($examinationIds as $id) {
+            $examination = HealthExamination::find($id);
+
+            // Only reject examinations that are not already approved
+            if ($examination->is_approved) {
+                $failedRejections[] = $id;
+                continue;
+            }
+
+            // Delete the examination record
+            $examination->delete();
+
+            // Send notification to the user
+            $user = User::where('id_number', $examination->id_number)->first();
+
+            if ($user) {
+                Notification::create([
+                    'user_id' => $user->id_number,
+                    'title' => 'Health Examination Rejected',
+                    'message' => 'Your health examination has been rejected. Please upload proper pictures and try again.',
+                    'scheduled_time' => now(),
+                ]);
+
+                // Optionally, trigger an event for real-time notifications
+                event(new NewNotification($user, 'Health Examination Rejected', 'Your health examination has been rejected. Please upload proper pictures and try again.'));
+            }
+
+            $rejectedCount++;
+        }
+
+        DB::commit();
+
+        $message = "{$rejectedCount} examination(s) rejected successfully.";
+        if (count($failedRejections) > 0) {
+            $message .= " However, " . count($failedRejections) . " examination(s) were already approved and could not be rejected.";
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'rejected_count' => $rejectedCount,
+            'failed_rejections' => $failedRejections,
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Error in bulkReject: ' . $e->getMessage());
+
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred while rejecting examinations. Please try again later.',
+        ], 500);
+    }
+}
+public function generateReport(Request $request)
+{
+    // Validate the incoming request
+    $request->validate([
+        'period' => 'required|string|in:daily,weekly,monthly',
+    ]);
+
+    $period = $request->input('period');
+
+    // Determine the date range based on the selected period
+    $now = now();
+    switch ($period) {
+        case 'daily':
+            $startDate = $now->copy()->startOfDay();
+            $endDate = $now->copy()->endOfDay();
+            $reportPeriod = 'Daily';
+            break;
+        case 'weekly':
+            $startDate = $now->copy()->startOfWeek();
+            $endDate = $now->copy()->endOfWeek();
+            $reportPeriod = 'Weekly';
+            break;
+        case 'monthly':
+            $startDate = $now->copy()->startOfMonth();
+            $endDate = $now->copy()->endOfMonth();
+            $reportPeriod = 'Monthly';
+            break;
+        default:
+            return response()->json(['message' => 'Invalid report period selected.'], 400);
+    }
+
+    // Fetch health examinations within the date range
+    $healthExaminations = HealthExamination::whereBetween('created_at', [$startDate, $endDate])
+        ->where('is_approved', true)
+        ->with('user')
+        ->get();
+
+    // Prepare summary data
+    $totalExaminations = $healthExaminations->count();
+    $uniqueStudents = $healthExaminations->unique('id_number')->count();
+
+    // Additional statistics can be added as needed
+
+    // Prepare data for the PDF view
+    $pdfData = [
+        'logoBase64' => $this->getLogoBase64(),
+        'report_period' => $reportPeriod,
+        'report_date' => $now->format('F j, Y, g:i a'),
+        'totalExaminations' => $totalExaminations,
+        'uniqueStudents' => $uniqueStudents,
+        'healthExaminations' => $healthExaminations,
+    ];
+
+    // Load the PDF view
+    $pdf = Pdf::loadView('pdf.health-examination-report', $pdfData);
+
+    // Set paper size and orientation
+    $pdf->setPaper('A4', 'portrait');
+
+    // Define the filename
+    $filename = "Health_Examination_Report_{$reportPeriod}_{$now->format('YmdHis')}.pdf";
+
+    // Return the PDF as a download
+    return $pdf->download($filename);
+}
+
+/**
+ * Helper function to get the logo in Base64 format.
+ */
+private function getLogoBase64()
+{
+    $logoPath = public_path('images/pilarLogo.png'); // Ensure the path and extension are correct
+    if (file_exists($logoPath)) {
+        return 'data:image/' . pathinfo($logoPath, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($logoPath));
+    }
+    return '';
+}
+
 }

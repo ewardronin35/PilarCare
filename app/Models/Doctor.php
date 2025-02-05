@@ -17,6 +17,7 @@ class Doctor extends Model
         'approved',
     ];
 
+    protected $appends = ['full_name'];
 
 
     public function user()
@@ -25,13 +26,17 @@ class Doctor extends Model
     }
     public function appointments()
     {
-        return $this->hasMany(Appointment::class);
+        return $this->hasMany(Appointment::class, 'doctor_id', 'id');
     }
     public function dentalRecords()
     {
         return $this->hasMany(DentalRecord::class);
     }
+    public function getFullNameAttribute()
+    {
+        return "Dr. {$this->first_name} {$this->last_name}";
 
+    }
     /**
      * Relationship to Medical Records
      */

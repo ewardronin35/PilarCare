@@ -1040,9 +1040,30 @@ h1 {
     <!-- Existing Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <script>
+        // Debounce Function Definition
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func.apply(this, args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
  document.addEventListener('DOMContentLoaded', function() {
-    // Load BMI chart when the document is ready
+    $(document).ready(function(){
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+});
+
     const id_number = "{{ $user->id_number }}";  // Ensure the user variable is passed in Blade
     loadBMIChart(id_number);
     $('#health-exam-pictures-table').DataTable({
@@ -1584,15 +1605,18 @@ function submitMedicineIntakeForm(event) {
         }
 
         if (data.success) {
-            let newRow = `
-                <tr>
-                    <td>${data.medicineIntake.medicine_name}</td>
-                    <td>${data.medicineIntake.intake_time}</td>
-                    <td>${data.medicineIntake.dosage}</td>
-                    <td>${data.medicineIntake.notes ?? 'No notes'}</td>
-                </tr>
-            `;
-            document.getElementById('medicine-intake-history-body').innerHTML += newRow;
+            // Iterate over the array of medicine intakes and append each to the table
+            data.medicineIntakes.forEach(medicineIntake => {
+                let newRow = `
+                    <tr>
+                        <td>${medicineIntake.medicine_name || 'N/A'}</td>
+                        <td>${medicineIntake.dosage || 'N/A'}</td>
+                        <td>${medicineIntake.intake_time || 'N/A'}</td>
+                        <td>${medicineIntake.notes || 'No notes'}</td>
+                    </tr>
+                `;
+                document.getElementById('medicine-intake-history-body').innerHTML += newRow;
+            });
 
             Swal.fire({
                 icon: 'success',
@@ -1621,6 +1645,8 @@ function submitMedicineIntakeForm(event) {
         });
     });
 }
+
+
 
 
     </script>

@@ -1,4 +1,6 @@
 <x-app-layout :pageTitle="'Dashboard'">   
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
      <style>
         body {
             background-color: #f8f9fa;
@@ -7,7 +9,7 @@
 
         .main-content {
             
-            margin-top: 40px;
+            margin-top: 30px;
             transition: margin-left 0.3s ease-in-out;
             overflow-y: auto;
             
@@ -497,9 +499,8 @@
         <div class="profile-box">
             <img src="{{ asset('images/pilarLogo.jpg') }}" alt="Profile Image">
             <div class="profile-info">
-                <h2>{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</h2>
-                <p>{{ Auth::user()->role }}</p>
-                <a href="{{ route('profile.edit') }}" class="edit-profile-btn">Edit Profile</a>
+            <h2>{{ $adminName }}</h2>
+            <p>{{ Auth::user()->role }}</p>
             </div>
         </div>
 
@@ -526,7 +527,7 @@
                 </a>
             </div>
             <div class="stat-box">
-                <a href="{{ route('admin.uploadHealthExamination') }}">
+                <a href="{{ route('admin.health-examinations') }}">
                     <img src="https://img.icons8.com/?size=100&id=10247&format=png&color=000000" alt="Pending Approval Icon">
                     <h2>{{ $pendingApprovalCount }}</h2>
                     <p>Pending Approvals</p>
@@ -566,9 +567,7 @@
                     <li class="nav-item">
                         <a class="nav-link" id="staff-tab" data-toggle="tab" href="#staff" role="tab" aria-controls="staff" aria-selected="false">Staff</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" id="parent-tab" data-toggle="tab" href="#parent" role="tab" aria-controls="parent" aria-selected="false">Parent</a>
-                    </li>
+                    
                     <li class="nav-item">
                         <a class="nav-link" id="teacher-tab" data-toggle="tab" href="#teacher" role="tab" aria-controls="teacher" aria-selected="false">Teacher</a>
                     </li>
@@ -597,7 +596,7 @@
                                         <td>{{ $student->id_number }}</td>
                                         <td>{{ $student->first_name }}</td>
                                         <td>{{ $student->last_name }}</td>
-                                        <td>{{ $student->email }}</td>
+                                        <td>{{ $student->user->email ?? 'No Email' }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -619,34 +618,13 @@
                                     <td>{{ $staffMember->id_number }}</td>
                                         <td>{{ $staffMember->first_name }}</td>
                                         <td>{{ $staffMember->last_name }}</td>
-                                        <td>{{ $staffMember->email }}</td>
-                                    </tr>
+                                        <td>{{ $staffMember->user->email ?? 'No Email' }}</td>
+                                        </tr>
                                 @endforeach
                             </tbody>
                         </table>
                     </div>
-                    <div class="tab-pane fade" id="parent" role="tabpanel" aria-labelledby="parent-tab">
-                    <table class="data-table" id="parentTable">
-                            <thead>
-                                <tr>
-                                <th>ID No.</th>
-                                    <th>First Name</th>
-                                    <th>Last Name</th>
-                                    <th>Email</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($parents as $parent)
-                                    <tr>
-                                        <td>{{ $parent->id_number }}</td>
-                                        <td>{{ $parent->first_name }}</td>
-                                        <td>{{ $parent->last_name }}</td>
-                                        <td>{{ $parent->email }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                 
                     <div class="tab-pane fade" id="teacher" role="tabpanel" aria-labelledby="teacher-tab">
                     <table class="data-table" id="teacherTable">
                             <thead>
@@ -663,7 +641,7 @@
                                     <td>{{ $teacher->id_number }}</td>
                                         <td>{{ $teacher->first_name }}</td>
                                         <td>{{ $teacher->last_name }}</td>
-                                        <td>{{ $teacher->email }}</td>
+                                        <td>{{ $teacher->user->email ?? 'No Email' }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -685,7 +663,7 @@
                                         <td>{{ $doctor->id_number }}</td>
                                         <td>{{ $doctor->first_name }}</td>
                                         <td>{{ $doctor->last_name }}</td>
-                                        <td>{{ $doctor->email }}</td>
+                                        <td>{{ $doctor->user->email ?? 'No Email' }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -708,7 +686,7 @@
                                         <td>{{ $nurse->id_number }}</td>
                                         <td>{{ $nurse->first_name }}</td>
                                         <td>{{ $nurse->last_name }}</td>
-                                        <td>{{ $nurse->email }}</td>
+                                        <td>{{ $nurse->user->email ?? 'No Email' }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -743,12 +721,11 @@
             const monthlyUserData = @json($monthlyUserData);
         const ctx = document.getElementById('monthlyUsersChart').getContext('2d');
         const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const roles = ['Student', 'Teacher', 'Staff', 'Parent', 'Doctor', 'Nurse'];
+        const roles = ['Student', 'Teacher', 'Staff',  'Doctor', 'Nurse'];
         const colors = {
             'Student': 'rgba(75, 192, 192, 0.2)',
             'Teacher': 'rgba(255, 99, 132, 0.2)',
             'Staff': 'rgba(54, 162, 235, 0.2)',
-            'Parent': 'rgba(255, 206, 86, 0.2)',
             'Doctor': 'rgba(153, 102, 255, 0.2)',
             'Nurse': 'rgba(255, 159, 64, 0.2)'
         };
@@ -757,7 +734,6 @@
             'Student': 'rgba(75, 192, 192, 1)',
             'Teacher': 'rgba(255, 99, 132, 1)',
             'Staff': 'rgba(54, 162, 235, 1)',
-            'Parent': 'rgba(255, 206, 86, 1)',
             'Doctor': 'rgba(153, 102, 255, 1)',
             'Nurse': 'rgba(255, 159, 64, 1)'
         };

@@ -22,4 +22,8 @@ class Nurse extends Model
     {
         return $this->belongsTo(User::class, 'id_number', 'id_number');
     }
+    public function getNameAttribute()
+    {
+        return $this->first_name . ' ' . $this->last_name;
+    }
 }

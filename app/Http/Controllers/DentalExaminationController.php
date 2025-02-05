@@ -213,6 +213,7 @@ class DentalExaminationController extends Controller
                 Log::warning('Authenticated user does not have first_name, last_name, or name. Assigned "Unknown Dentist".');
             }
             $dentalExamination->is_downloaded = 0;
+            Log::info('About to save dental examination with data:', $request->all());
 
             // Save the Dental Examination
             $dentalExamination->save();
@@ -230,7 +231,6 @@ class DentalExaminationController extends Controller
             }
 
             // Fetch the parents of the user
-            $parents = $user->parents; // Ensure this relationship is correctly defined
 
             // **Check for User Role**
             // Assuming you have a roles table and a relationship defined
@@ -241,8 +241,13 @@ class DentalExaminationController extends Controller
             }
 
             // **Send email to the user (patient)**
-            Mail::to($user->email)->send(new NewDentalExaminationNotification($user, $dentalExamination, $this->teethData));
-
+            if (!empty($user->email) && filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
+                Mail::to($user->email)->send(new NewDentalExaminationNotification($user, $dentalExamination, $this->teethData));
+                Log::info('Sent NewDentalExaminationNotification email to user: ' . $user->email);
+            } else {
+                Log::warning('User email is missing or invalid for id_number: ' . $user->id_number);
+            }
+            
             Log::info('Sent NewDentalExaminationNotification email to user: ' . $user->email);
 
             // **Create Notification entry for user (patient)**
@@ -257,32 +262,9 @@ class DentalExaminationController extends Controller
             Log::info("Notification created for user ID Number {$user->id_number}");
 
             // **Send emails to each parent and create notifications**
-            foreach ($parents as $parent) {
-                // Check if the parent has an associated User and email
-                if ($parent->user && $parent->user->email) {
-                    // Pass the User instance to the Mailable
-                    Mail::to($parent->user->email)->send(new NewDentalExaminationParentNotification($parent->user, $user, $dentalExamination, $this->teethData));
-                    Log::info('Sent NewDentalExaminationParentNotification email to parent: ' . $parent->user->email);
+            Log::info('Dental examination saved', $dentalExamination->toArray());
 
-                    // Create Notification entry for parent
-                    Notification::create([
-                        'user_id' => $parent->id_number, // Assuming 'user_id' references 'id_number'
-                        'title' => 'Child\'s Dental Examination Recorded',
-                        'message' => "A new dental examination has been recorded for your child, {$user->first_name} {$user->last_name}.",
-                        'scheduled_time' => now(),
-                        'role' => $parent->user->role, // Fetch role from associated User
-                    ]);
-
-                    Log::info("Notification created for parent ID Number {$parent->id_number}");
-                } else {
-                    // Detailed warning if User or email is missing
-                    if (!$parent->user) {
-                        Log::warning('No associated User found for parent ID Number: ' . $parent->id_number);
-                    } elseif (!$parent->user->email) {
-                        Log::warning('Parent User does not have an email address: ' . $parent->id_number);
-                    }
-                }
-            }
+            
 
             // Commit the transaction
             DB::commit();

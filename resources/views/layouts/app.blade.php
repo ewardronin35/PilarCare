@@ -42,9 +42,6 @@
                 @case('Student')
                     <x-studentsidebar />
                     @break
-                @case('Parent')
-                    <x-parentsidebar />
-                    @break
                 @case('Teacher')
                     <x-teachersidebar />
                     @break
@@ -76,10 +73,20 @@
                         </div>
                     </div>
 
-                    <span class="username">{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</span>
-                    @php
-                        $profilePicturePath = Auth::user()->information->profile_picture ?? 'images/pilarLogo.jpg';
-                    @endphp
+                    <span class="username">
+    @if(Auth::check())
+        @php
+            $user = Auth::user();
+        @endphp
+        {{ $user->person_name }}
+    @endif
+</span>
+
+
+
+@php
+    $profilePicturePath = Auth::user()->profile_picture ?? 'images/pilarLogo.jpg';
+@endphp
 
                     <div class="user-avatar" id="user-avatar">
                         <img src="{{ asset('storage/' . $profilePicturePath) }}" alt="Profile Image">
@@ -256,7 +263,14 @@
                     });
                 });
             }
-
+            function debounce(func, wait) {
+                let timeout;
+                return function(...args) {
+                    const context = this;
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(context, args), wait);
+                };
+            }
             // Close dropdowns when clicking outside
             document.addEventListener('click', function(event) {
                 // Close Logout Dropdown if clicked outside

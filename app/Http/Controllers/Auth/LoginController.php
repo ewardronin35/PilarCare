@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use App\Models\Student;
@@ -14,36 +13,36 @@ use App\Models\Staff;
 use App\Models\Teacher;
 use App\Models\Nurse;
 use App\Models\Doctor;
+use App\Models\AuditLog;
 
 class LoginController extends Controller
 {
+    /**
+     * Show the login form.
+     *
+     * @return \Illuminate\View\View
+     */
     public function create()
     {
         return view('auth.login');
     }
 
+    /**
+     * Handle an incoming login request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     *
+     * @throws \Illuminate\Validation\ValidationException
+     */
     public function login(Request $request)
     {
+        // Updated validation rules: Removed reCAPTCHA
         $request->validate([
-            'id_number' => ['required', 'string', 'regex:/^[A-Za-z][0-9]{6}$/'],
-            'password' => ['required', 'string'],
-            'g-recaptcha-response' => ['required', 'string'],
+            'id_number' => ['required', 'string', 'regex:/^[A-Za-z0-9]{1,8}$/'],
+            'password' => ['required', 'string', 'min:8'], // Added 'min:8'
         ]);
 
-        $recaptchaResponse = $request->input('g-recaptcha-response');
-        $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
-            'secret' => config('services.nocaptcha.secret'),
-            'response' => $recaptchaResponse,
-            'remoteip' => $request->ip(),
-        ]);
-
-        $responseBody = json_decode($response->body());
-
-        if (!$responseBody->success) {
-            throw ValidationException::withMessages([
-                'g-recaptcha-response' => 'reCAPTCHA verification failed. Please try again.',
-            ]);
-        }
 
         $credentials = $request->only('id_number', 'password');
         Log::info('Login attempt for ID number: ' . $credentials['id_number']);
@@ -59,6 +58,8 @@ class LoginController extends Controller
                 return response()->json([
                     'success' => false,
                     'errors' => ['email' => 'You need to verify your email address.'],
+                    'csrfToken' => csrf_token(), // Include the new CSRF token
+
                 ], 422);
             }
 
@@ -69,6 +70,7 @@ class LoginController extends Controller
                     return response()->json([
                         'success' => false,
                         'errors' => ['approved' => 'Your account is not approved. Please contact the administrator.'],
+                        'csrfToken' => csrf_token(), // Include the new CSRF token
                     ], 422);
                 }
 
@@ -160,6 +162,7 @@ class LoginController extends Controller
                 'success' => true,
                 'message' => 'Login successful.',
                 'redirect' => $this->redirectTo($user),
+                'csrfToken' => csrf_token(), // Include the new CSRF token
             ]);
         }
 
@@ -167,9 +170,16 @@ class LoginController extends Controller
         return response()->json([
             'success' => false,
             'errors' => ['id_number' => 'The provided credentials do not match our records.'],
+            'csrfToken' => csrf_token(), // Include the new CSRF token
         ], 422);
     }
 
+    /**
+     * Determine the redirect path based on user role.
+     *
+     * @param  \App\Models\User  $user
+     * @return string
+     */
     protected function redirectTo($user)
     {
         switch (strtolower($user->role)) {
@@ -192,6 +202,12 @@ class LoginController extends Controller
         }
     }
 
+    /**
+     * Log the user out of the application.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function logout(Request $request)
     {
         Auth::logout();

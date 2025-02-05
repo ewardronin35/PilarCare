@@ -453,7 +453,7 @@
                             @foreach($dentalRecordLogs as $log)
                                 <tr>
                                     <td>Dental Records</td>
-                                    <td>Dental Record updated for {{ $log->user->first_name }} {{ $log->user->last_name }}</td>
+                                    <td>Dental Record updated for {{ $log->user->first_name ?? 'Unknown' }} {{ $log->user->last_name ?? '' }}</td>
                                     <td>{{ $log->updated_at->format('M d, Y h:i A') }}</td>
                                     <td>{{ $log->is_approved ? 'Approved' : 'Pending' }}</td>
                                 </tr>
@@ -485,7 +485,7 @@
                             @foreach($physicalDentalExamLogs as $log)
                                 <tr>
                                     <td>Physical & Dental Exams</td>
-                                    <td>Exam conducted for {{ $log->user->first_name }} {{ $log->user->last_name }}</td>
+                                    <td>Exam conducted for     {{ optional($log->user)->first_name ?? 'Unknown' }}                                     </td>
                                     <td>{{ $log->created_at->format('M d, Y h:i A') }}</td>
                                     <td>{{ $log->status }}</td>
                                 </tr>

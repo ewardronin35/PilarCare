@@ -17,8 +17,7 @@
         body {
             background-color: #f5f7fa;
             font-family: 'Poppins', sans-serif;
-            margin: 0;
-            padding: 0;
+
         }
 
         .main-content {
@@ -91,10 +90,11 @@
 
         /* Table Container */
         .table-container {
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 10px;
+            margin: 0 auto; /* Center align the table container */
+    max-width: 90%; /* Adjust the width to ensure it doesn't stretch too far */
+    padding: 10px; /* Add padding to create spacing */
+    text-align: center; /* Center align contents if needed */
+    overflow-x: auto; /* Enable horizontal scrolling for smaller screens */
             background-color: #fff;
         }
 /* Table Image Styling */
@@ -114,9 +114,9 @@
 
         /* Table Styling */
         table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 800px; /* Ensure table has a minimum width */
+            margin: 0 auto; /* Center align the table */
+    width: 100%; /* Ensure table takes full width of the container */
+    border-collapse: collapse;
         }
 
         table th, table td {
@@ -319,6 +319,14 @@ table thead th {
         }
         /* Responsive Design */
         @media (max-width: 768px) {
+            .table-container {
+        max-width: 100%; /* Allow full width for small screens */
+        padding: 5px; /* Reduce padding for smaller screens */
+    }
+
+    table {
+        width: 100%; /* Ensure table is responsive */
+    }
             .tabs {
                 flex-direction: column;
                 align-items: center;
@@ -386,13 +394,93 @@ table thead th {
         .reset-button:hover {
             background-color: #c82333;
         }
+        /* Button Styles */
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #0069d9;
+    border-color: #0062cc;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    border-radius: 5px;
+    color: #fff;
+    text-decoration: none;
+    margin: 5px;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.btn:hover {
+    transform: scale(1.05);
+}
+/* Button Group */
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .button-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+/* Report Options Styling */
+.report-options {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+#report-period {
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    outline: none;
+}
+
+#generate-report-btn {
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 1rem;
+}
+
+#generate-report-btn:hover {
+    background-color: #218838;
+}
+
     </style>
-
-
- <!-- resources/views/admin-health-examinations.blade.php -->
-
-
-
     <div class="main-content">
         <!-- Success Message -->
         @if(session('success'))
@@ -407,15 +495,30 @@ table thead th {
                 <i class="fas fa-file-medical"></i> Pending Approvals
             </button>
             <button class="tab-btn" data-role="school-year-reset" onclick="switchTab('school-year-reset')">
-                <i class="fas fa-calendar-alt"></i> School Year Reset
+                <i class="fas fa-calendar-alt"></i> School Year Change
+            </button>
+            <button class="tab-btn" data-role="reminders" onclick="switchTab('reminders')">
+                <i class="fas fa-bell"></i> Reminders
+            </button>
+            <button class="tab-btn" data-role="health-examination-report" onclick="switchTab('health-examination-report')">
+                <i class="fas fa-file-medical"></i> Health Examination Report
             </button>
         </div>
 
         <!-- Pending Approvals Tab Content -->
         <div class="table-container tab-content" id="pending-approvals">
+        <div class="button-group" style="margin-bottom: 10px;">
+        <button type="button" class="btn btn-success" id="bulk-approve-btn">
+            <i class="fas fa-check"></i> Bulk Approve
+        </button>
+        <button type="button" class="btn btn-danger" id="bulk-reject-btn">
+            <i class="fas fa-times"></i> Bulk Reject
+        </button>
+    </div>
             <table id="health-examinations-table" class="display nowrap" style="width:100%">
                 <thead>
                     <tr>
+                    <th><input type="checkbox" id="select-all-checkbox"></th>
                         <th>Patient Name</th>
                         <th>School Year</th>
                         <th>Health Exam Pictures</th>
@@ -432,7 +535,7 @@ table thead th {
 
         <!-- School Year Reset Tab Content -->
         <div class="school-year-container tab-content" id="school-year-reset" style="display: none;">
-            <h2>Select School Year to Reset Data</h2>
+            <h2>Select School Year to Change</h2>
             <select id="school-year-select">
                 @foreach($schoolYears as $year)
                     <option value="{{ $year }}">{{ $year }}</option>
@@ -442,6 +545,47 @@ table thead th {
             <button type="button" class="reset-button" id="reset-school-year">Reset School Year</button>
         </div>
     </div>
+    <div class="table-container tab-content" id="reminders" style="display: none;">
+    <h2>Reminders for Incomplete Health Examinations</h2>
+    <div class="button-group">
+        <button type="button" class="btn btn-primary" id="send-reminder-btn">
+            <i class="fas fa-paper-plane"></i> Send Reminder
+        </button>
+        <button type="button" class="btn btn-secondary" id="select-all-btn">
+            <i class="fas fa-check-square"></i> Select All
+        </button>
+    </div>
+    <table id="reminders-table" class="display nowrap" style="width:100%">
+        <thead>
+            <tr>
+                <th><input type="checkbox" id="select-all-checkbox"></th>
+                <th>Student ID</th>
+                <th>Student Name</th>
+                <th>Grade/Course</th>
+                <th>Section</th>
+                <th>Pending Since</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data will be loaded via AJAX -->
+        </tbody>
+    </table>
+</div>
+<!-- Health Examination Reports Tab Content -->
+<div class="table-container tab-content" id="health-examination-report" style="display: none;">
+    <h2>Generate Health Examination Reports</h2>
+    <div class="report-options">
+        <label for="report-period">Select Report Period:</label>
+        <select id="report-period">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+        </select>
+        <button type="button" class="btn btn-primary" id="generate-report-btn">
+            <i class="fas fa-download"></i> Generate PDF Report
+        </button>
+    </div>
+</div>
 
     <!-- Image Preview Modal -->
     <div id="image-modal" class="modal">
@@ -481,64 +625,57 @@ table thead th {
         }
 
         // Function to approve a health examination
-        function approveRecord(id) {
-    Swal.fire({
-        title: 'Are you sure?',
-        text: "You want to approve this medical record!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#28a745',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, approve it!'
-    }).then((result) => {
-        if (result.isConfirmed) {
+        function approveExamination(id) {
             Swal.fire({
-                title: 'Approving...',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading()
-                }
-            });
-
-            fetch(`/admin/medical-record/${id}/approve`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                Swal.close();
-                if (data.success) {
-                    Swal.fire(
-                        'Approved!',
-                        'The medical record has been approved.',
-                        'success'
-                    ).then(() => {
-                        location.reload();
+                title: 'Are you sure?',
+                text: "You want to approve this health examination!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, approve it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    showSpinner();
+                    fetch(`/admin/health-examination/${id}/approve`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        hideSpinner();
+                        if (data.success) {
+                            Swal.fire(
+                                'Approved!',
+                                data.message || 'The examination has been approved.',
+                                'success'
+                            ).then(() => {
+                                // Reload DataTable to reflect changes
+                                $('#health-examinations-table').DataTable().ajax.reload(null, false);
+                            });
+                        } else {
+                            Swal.fire(
+                                'Error!',
+                                data.message || 'The examination could not be approved.',
+                                'error'
+                            );
+                        }
+                    })
+                    .catch(error => {
+                        hideSpinner();
+                        console.error('Error:', error);
+                        Swal.fire(
+                            'Error!',
+                            'There was a problem with the approval process.',
+                            'error'
+                        );
                     });
-                } else {
-                    Swal.fire(
-                        'Error!',
-                        data.message || 'The medical record could not be approved.',
-                        'error'
-                    );
                 }
-            })
-            .catch(error => {
-                Swal.close();
-                console.error('Error:', error);
-                Swal.fire(
-                    'Error!',
-                    'An unexpected error occurred while approving the record.',
-                    'error'
-                );
             });
         }
-    });
-}
-
 
         // Function to reject a health examination
         function rejectExamination(id) {
@@ -595,39 +732,89 @@ table thead th {
 
         // Function to switch tabs
         function switchTab(tabId) {
-            showSpinner(); // Show spinner when switching tabs
+    showSpinner(); // Show spinner when switching tabs
 
-            // Remove 'active' class from all tab buttons
-            const tabButtons = document.querySelectorAll('.tab-btn');
-            tabButtons.forEach(button => button.classList.remove('active'));
+    // Remove 'active' class from all tab buttons
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(button => button.classList.remove('active'));
 
-            // Add 'active' class to the clicked tab
-            const activeTab = document.querySelector(`.tab-btn[data-role="${tabId}"]`);
-            if (activeTab) {
-                activeTab.classList.add('active');
-            }
+    // Add 'active' class to the clicked tab
+    const activeTab = document.querySelector(`.tab-btn[data-role="${tabId}"]`);
+    if (activeTab) {
+        activeTab.classList.add('active');
+    }
 
-            // Hide all tab contents
-            const tabContents = document.querySelectorAll('.tab-content');
-            tabContents.forEach(content => content.style.display = 'none');
+    // Hide all tab contents
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabContents.forEach(content => content.style.display = 'none');
 
-            // Show the selected tab content
-            const activeContent = document.getElementById(tabId);
-            if (activeContent) {
-                // Simulate data loading with a timeout (if data loading is not needed)
-                setTimeout(() => {
-                    activeContent.style.display = (tabId === 'school-year-reset') ? 'flex' : 'block';
-                    hideSpinner(); // Hide spinner after content is displayed
-                }, 500); // Adjust timeout as needed
-            } else {
-                hideSpinner(); // Hide spinner if content not found
-            }
+    // Show the selected tab content
+    const activeContent = document.getElementById(tabId);
+    if (activeContent) {
+        activeContent.style.display = (tabId === 'school-year-reset') ? 'flex' : 'block';
+        hideSpinner(); // Hide spinner after content is displayed
 
-            // Optionally, refresh data based on the active tab
-            if (tabId === 'pending-approvals') {
-                $('#health-examinations-table').DataTable().ajax.reload(null, false); // Reload DataTable via AJAX
-            }
+        // Initialize Reminders DataTable if not already initialized
+        if (tabId === 'reminders' && !$('#reminders-table').hasClass('dataTable')) {
+            initializeRemindersTable();
         }
+    } else {
+        hideSpinner(); // Hide spinner if content not found
+    }
+
+    // Optionally, refresh data based on the active tab
+    if (tabId === 'pending-approvals') {
+        $('#health-examinations-table').DataTable().ajax.reload(null, false); // Reload DataTable via AJAX
+    }
+}
+
+function initializeRemindersTable() {
+    $('#reminders-table').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: '{{ route("admin.healthExaminations.remindersData") }}',
+            type: 'GET',
+            dataSrc: function(json) {
+                if (json.error) {
+                    Swal.fire('Error!', json.error, 'error');
+                    return [];
+                }
+                return json.data;
+            },
+            error: function (xhr, error, thrown) {
+                hideSpinner();
+                console.error('Error fetching reminders data:', xhr.responseText);
+                Swal.fire(
+                    'Error!',
+                    'Failed to load reminders data. Please try again later.',
+                    'error'
+                );
+            }
+        },
+        columns: [
+            { 
+                data: 'id',
+                name: 'id',
+                render: function(data) {
+                    return `<input type="checkbox" class="select-student" data-student-id="${data}">`;
+                },
+                orderable: false,
+                searchable: false
+            },
+            { data: 'id_number', name: 'id_number' },
+            { data: 'student_name', name: 'student_name' },
+            { data: 'grade_or_course', name: 'grade_or_course' },
+            { data: 'section', name: 'section' },
+            { data: 'pending_since', name: 'pending_since' },
+        ],
+        order: [[1, 'asc']],
+        language: {
+            emptyTable: "No students pending health examinations."
+        }
+    });
+}
+
 
         // Spinner Functions
         function showSpinner() {
@@ -661,6 +848,15 @@ table thead th {
                     }
                 },
                 columns: [
+                    { 
+                data: 'id',
+                name: 'id',
+                render: function(data) {
+                    return `<input type="checkbox" class="select-exam" data-exam-id="${data}">`;
+                },
+                orderable: false,
+                searchable: false
+            },
                     { data: 'user_name', name: 'user_name' },
                     { data: 'school_year', name: 'school_year' },
                     {
@@ -730,7 +926,159 @@ table thead th {
             healthExaminationsTable.ajax.reload(null, false); // Load data via AJAX
             startRealTimeRefresh(); // Start real-time refresh
         });
+        $('#select-all-checkbox').on('change', function() {
+        const isChecked = $(this).is(':checked');
+        $('.select-exam').prop('checked', isChecked);
+    });
+    $(document).on('change', '.select-exam', function() {
+        if (!$(this).is(':checked')) {
+            $('#select-all-checkbox').prop('checked', false);
+        } else if ($('.select-exam:checked').length === $('.select-exam').length) {
+            $('#select-all-checkbox').prop('checked', true);
+        }
+    });
+    $('#bulk-approve-btn').on('click', function() {
+        const selectedExams = [];
+        $('.select-exam:checked').each(function() {
+            selectedExams.push($(this).data('exam-id'));
+        });
 
+        if (selectedExams.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'No Selection',
+                text: 'Please select at least one examination to approve.',
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: 'Bulk Approve',
+            text: `Are you sure you want to approve ${selectedExams.length} examination(s)?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, approve them!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                showSpinner();
+
+                // Send AJAX request for bulk approval
+                $.ajax({
+                    url: '/admin/health-examinations/bulk-approve',
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    data: JSON.stringify({
+                        examination_ids: selectedExams
+                    }),
+                    success: function(data) {
+                        hideSpinner();
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Approved!',
+                                text: data.message || `${data.approved_count} examination(s) approved successfully.`,
+                                showConfirmButton: false,
+                                timer: 2000
+                            });
+                            // Reload DataTable to reflect changes
+                            healthExaminationsTable.ajax.reload(null, false);
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: data.message || 'Failed to approve some examinations.',
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        hideSpinner();
+                        console.error('Error approving examinations:', xhr.responseText);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: xhr.responseJSON.message || 'Failed to approve examinations.',
+                        });
+                    }
+                });
+            }
+        });
+    });
+    $('#bulk-reject-btn').on('click', function() {
+        const selectedExams = [];
+        $('.select-exam:checked').each(function() {
+            selectedExams.push($(this).data('exam-id'));
+        });
+
+        if (selectedExams.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'No Selection',
+                text: 'Please select at least one examination to reject.',
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: 'Bulk Reject',
+            text: `Are you sure you want to reject ${selectedExams.length} examination(s)?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, reject them!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                showSpinner();
+
+                // Send AJAX request for bulk rejection
+                $.ajax({
+                    url: '/admin/health-examinations/bulk-reject',
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    data: JSON.stringify({
+                        examination_ids: selectedExams
+                    }),
+                    success: function(data) {
+                        hideSpinner();
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Rejected!',
+                                text: data.message || `${data.rejected_count} examination(s) rejected successfully.`,
+                                showConfirmButton: false,
+                                timer: 2000
+                            });
+                            // Reload DataTable to reflect changes
+                            healthExaminationsTable.ajax.reload(null, false);
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: data.message || 'Failed to reject some examinations.',
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        hideSpinner();
+                        console.error('Error rejecting examinations:', xhr.responseText);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: xhr.responseJSON.message || 'Failed to reject examinations.',
+                        });
+                    }
+                });
+            }
+        });
+    });
         // Real-Time Refresh Function
         function startRealTimeRefresh() {
             // Fetch and update the table every 10 seconds (10000 milliseconds)
@@ -815,6 +1163,198 @@ table thead th {
                 }
             });
         }
+        const remindersTable = $('#reminders-table').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: '{{ route("admin.healthExaminations.remindersData") }}',
+            type: 'GET',
+            error: function (xhr, error, thrown) {
+                hideSpinner();
+                console.error('Error fetching reminders data:', xhr.responseText);
+                Swal.fire(
+                    'Error!',
+                    'Failed to load reminders data. Please try again later.',
+                    'error'
+                );
+            }
+        },
+        columns: [
+            { 
+                data: 'id',
+                name: 'id',
+                render: function(data) {
+                    return `<input type="checkbox" class="select-student" data-student-id="${data}">`;
+                },
+                orderable: false,
+                searchable: false
+            },
+            { data: 'id_number', name: 'id_number' },
+            { data: 'student_name', name: 'student_name' },
+            { data: 'grade_or_course', name: 'grade_or_course' },
+            { data: 'section', name: 'section' },
+            { data: 'pending_since', name: 'pending_since' },
+        ],
+        order: [[1, 'asc']],
+        language: {
+            emptyTable: "No students pending health examinations."
+        }
+    });
+// Handle Generate Report Button Click
+$('#generate-report-btn').on('click', function() {
+    const period = $('#report-period').val(); // 'daily', 'weekly', 'monthly'
+
+    // Validate the selected period
+    if (!['daily', 'weekly', 'monthly'].includes(period)) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Invalid Selection',
+            text: 'Please select a valid report period.',
+        });
+        return;
+    }
+
+    // Show confirmation dialog
+    Swal.fire({
+        title: 'Generate Report',
+        text: `Are you sure you want to generate a ${period} health examination report?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#007bff',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, generate it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            showSpinner();
+
+            // Send AJAX request to generate the report
+            $.ajax({
+                url: `/admin/health-examinations/generate-report`,
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: JSON.stringify({ period }),
+                xhrFields: {
+                    responseType: 'blob' // Important for handling binary data
+                },
+                success: function(data, status, xhr) {
+                    hideSpinner();
+                    const filename = xhr.getResponseHeader('Content-Disposition').split('filename=')[1];
+                    const blob = new Blob([data], { type: 'application/pdf' });
+                    const link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = filename;
+                    link.click();
+                },
+                error: function(xhr, status, error) {
+                    hideSpinner();
+                    console.error('Error generating report:', xhr.responseText);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: xhr.responseJSON.message || 'Failed to generate the report.',
+                    });
+                }
+            });
+        }
+    });
+});
+
+    // Handle Select All Checkbox
+   // Handle Select All Checkbox
+$('#select-all-checkbox').on('change', function() {
+    const isChecked = $(this).is(':checked');
+    $('.select-student').prop('checked', isChecked);
+});
+
+// Handle individual checkbox changes to update Select All checkbox
+$(document).on('change', '.select-student', function() {
+    if (!$(this).is(':checked')) {
+        $('#select-all-checkbox').prop('checked', false);
+    } else if ($('.select-student:checked').length === $('.select-student').length) {
+        $('#select-all-checkbox').prop('checked', true);
+    }
+});
+    // Handle Send Reminder Button Click
+    $('#send-reminder-btn').on('click', function() {
+        const selectedStudents = [];
+        $('.select-student:checked').each(function() {
+            selectedStudents.push($(this).data('student-id'));
+        });
+
+        if (selectedStudents.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'No Selection',
+                text: 'Please select at least one student to send reminders.',
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: 'Send Reminders?',
+            text: `Are you sure you want to send reminders to ${selectedStudents.length} student(s)?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, send them!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                showSpinner();
+
+                // Send AJAX request to send reminders
+                $.ajax({
+                    url: '{{ route("admin.healthExaminations.sendReminders") }}',
+                    method: 'POST',
+                    data: {
+                        student_ids: selectedStudents,
+                        _token: csrfToken
+                    },
+                    success: function(data) {
+                        hideSpinner();
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: data.message,
+                                showConfirmButton: false,
+                                timer: 2000
+                            });
+                            // Reload Reminders DataTable
+                            remindersTable.ajax.reload(null, false);
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'Failed to send reminders.',
+                                showConfirmButton: true,
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        hideSpinner();
+                        console.error('Error sending reminders:', xhr.responseText);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: xhr.responseJSON.message || 'Failed to send reminders.',
+                            showConfirmButton: true,
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+    // Handle Select All Button Click
+    $('#select-all-btn').on('click', function() {
+        const isChecked = $('#select-all-checkbox').prop('checked');
+        $('.select-student').prop('checked', !isChecked);
+        $('#select-all-checkbox').prop('checked', !isChecked);
+    });
     </script>
 
 </x-app-layout>
