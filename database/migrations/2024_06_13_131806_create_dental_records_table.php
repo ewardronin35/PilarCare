@@ -11,13 +11,15 @@ class CreateDentalRecordsTable extends Migration
     {
         Schema::create('dental_records', function (Blueprint $table) {
             $table->id();
-            $table->string('dental_record_id');// Reference to id_number from students/teachers/staff
+            $table->string('dental_record_id')->unique();// Reference to id_number from students/teachers/staff
             $table->string('id_number')->unique();// Reference to id_number from students/teachers/staff
             $table->string('user_type'); // Store the type (student, teacher, or staff)
             $table->string('patient_name');
             $table->string('grade_section');
             $table->timestamps(); // Created at and updated at timestamp
             
+            $table->foreign('id_number')->references('id_number')->on('users')->onDelete('cascade');
+
         });
     }
 

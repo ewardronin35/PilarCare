@@ -9,24 +9,41 @@ class MedicalHistory extends Model
 {
     use HasFactory;
 
-    protected $table = 'medical_history';
-
     protected $fillable = [
-        'id_number',
+        'medical_record_id',
+        'name',
+        'birthdate',
+        'age',
+        'address',
+        'personal_contact_number',
+        'emergency_contact_number',
+        'father_name',
+        'mother_name',
         'past_illness',
         'chronic_conditions',
         'surgical_history',
         'family_medical_history',
         'allergies',
         'medical_condition',
-        'record_date',
-        'approval_status',
+        'medicines',
         'health_documents',
+        'profile_picture',
+        'is_approved',
+        'record_date',
     ];
 
-    // Relationship with MedicalRecord
+    protected $casts = [
+        'birthdate' => 'date',
+        'record_date' => 'datetime',
+        'medicines' => 'array',
+        'health_documents' => 'array',
+        'is_approved' => 'boolean',
+    ];
+
+    // Relationship to the current medical record
     public function medicalRecord()
     {
-        return $this->belongsTo(MedicalRecord::class, 'id_number', 'id_number');
+        return $this->belongsTo(\App\Models\MedicalRecord::class, 'medical_record_id', 'id_number');
     }
+    
 }

@@ -1,7 +1,9 @@
-<x-app-layout :pageTitle="' Medical Record'">
+<x-app-layout :pageTitle="'Medical Record'">   
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
 <meta name="csrf-token" content="{{ csrf_token() }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 
     <style>
         body {
@@ -153,7 +155,6 @@
         .form-group-inline {
             display: flex;
             gap: 20px;
-            margin-bottom: 20px;
         }
 
         .form-group {
@@ -750,21 +751,218 @@
             height: 120px;
         }
     }
+    /* Add this to your existing <style> section */
+#search-form {
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+#search-form.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+#search-form.visible {
+    opacity: 1;
+    visibility: visible;
+}
+/* Sub-Tabs Navigation */
+.sub-tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #ddd;
+    padding: 10px;
+    gap: 20px;
+}
+
+.sub-tab-buttons button {
+    background-color: transparent;
+    color: #007bff;
+    font-size: 1.1rem;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: none;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+
+.sub-tab-buttons button.active {
+    color: #007bff;
+    border-bottom: 2px solid #007bff;
+}
+
+/* Sub-Tabs Content */
+.sub-tab {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.sub-tab.active {
+    opacity: 1;
+    display: block;
+}
+
+.sub-tab.hidden {
+    display: none;
+}
+
+/* Adjust history-table margins for better spacing within sub-tabs */
+#medical-record-history-table,
+#physical-examination-history-table,
+#health-examination-uploads-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+#history.forms-container {
+    flex-direction: column;
+    align-items: center; /* Center the sub-tabs horizontally */
+}
+
+/* Ensure the sub-tab-content takes full width */
+#history .sub-tab-content {
+    width: 100%;
+    margin-top: 20px; 
+    margin-left: 150px;
+    /* Add some space between sub-tabs and content */
+}
+
+/* Optional: Adjust the width of sub-tabs buttons for better alignment */
+#history .sub-tabs {
+    width: 100%;
+}
+
+#history .sub-tab-buttons {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+    gap: 10px; /* Add space between buttons */
+}
+.sub-tab-content .history-table th,
+.sub-tab-content .history-table td {
+    padding: 12px;
+    text-align: left;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.sub-tab-content .history-table th {
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+    border-right: 2px solid white;
+}
+
+.sub-tab-content .history-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.sub-tab-content .history-table tr:hover {
+    background-color: #e9f1ff;
+}
+.btn-view {
+            background-color: #17a2b8; /* Bootstrap Info Color */
+            color: white;
+            margin-right: 5px;
+        }
+        
+        .btn-view:hover {
+            background-color: #138496;
+            color: white;
+        }
+        
+        .btn-download {
+            background-color: #28a745; /* Bootstrap Success Color */
+            color: white;
+        }
+        
+        .btn-download:hover {
+            background-color: #218838;
+            color: white;
+        }
+        .button-with-icon {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.form-container, .history-table {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
+}
+.button {
+    background-color: #007bff;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+.button:hover {
+    background-color: #0056b3;
+}
+#physical-examination-history .form-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.history-table-container {
+    flex: 1;
+    max-width: 50%;
+}
+
+.chart-container {
+    flex: 1;
+    max-width: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+@media (max-width: 992px) {
+    #physical-examination-history .form-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .history-table-container,
+    .chart-container {
+        max-width: 100%;
+    }
+}
+
     </style>
 
     <div class="main-content">
-        <div class="tabs">
+            <div class="tabs">
             <div class="tab-buttons">
-                <button id="medical-tab" class="active" onclick="showTab('medical')">Medical Record</button>
-                <button id="history-tab" onclick="showTab('history')">Health History</button>
-            </div>
-        </div>
+        <button id="medical-tab" class="active" onclick="showTab('medical')">
+            <i class="fas fa-user-md"></i> Medical Record
+        </button>
+        <button id="history-tab" onclick="showTab('history')">
+            <i class="fas fa-history"></i> Health History
+        </button>
+        <button id="all-records-tab" onclick="showTab('all-records')">
+            <i class="fas fa-file-medical-alt"></i> All Records
+        </button>
+    </div>
+</div>
+
 
         <form method="GET" action="{{ route('nurse.medical-record.search') }}" id="search-form">
-            <div class="search-bar">
-                <input type="text" placeholder="Search Records..." id="search-input" maxlength="7">
-                <button id="search-button">Search</button>
-            </div>
+           
         </form>
 
         <div id="medical" class="tab forms-container">
@@ -838,7 +1036,6 @@
                 <form method="POST" action="">
                     @csrf
                     <div class="form-section">
-                        <h2>Medical History</h2>
                     </div>
                     <div class="form-group-inline">
                         <div class="form-group">
@@ -868,19 +1065,36 @@
                     </div>
 
                     <div class="form-section">
-                        <h2>Medicines OK to give/apply at the clinic</h2>
-                        <div class="checkbox-group">
-                            <label><input type="checkbox" name="medicines[]" value="Paracetamol" @if(in_array('Paracetamol', json_decode($record->medicines ?? '[]'))) checked @endif> Paracetamol</label>
-                            <label><input type="checkbox" name="medicines[]" value="Ibuprofen" @if(in_array('Ibuprofen', json_decode($record->medicines ?? '[]'))) checked @endif> Ibuprofen</label>
-                            <label><input type="checkbox" name="medicines[]" value="Mefenamic Acid" @if(in_array('Mefenamic Acid', json_decode($record->medicines ?? '[]'))) checked @endif> Mefenamic Acid</label>
-                            <label><input type="checkbox" name="medicines[]" value="Citirizine/Loratadine" @if(in_array('Citirizine/Loratadine', json_decode($record->medicines ?? '[]'))) checked @endif> Citirizine/Loratadine</label>
-                            <label><input type="checkbox" name="medicines[]" value="Camphor + Menthol Liniment" @if(in_array('Camphor + Menthol Liniment', json_decode($record->medicines ?? '[]'))) checked @endif> Camphor + Menthol Liniment</label>
-                            <label><input type="checkbox" name="medicines[]" value="PPA" @if(in_array('PPA', json_decode($record->medicines ?? '[]'))) checked @endif> PPA</label>
-                            <label><input type="checkbox" name="medicines[]" value="Phenylephrine" @if(in_array('Phenylephrine', json_decode($record->medicines ?? '[]'))) checked @endif> Phenylephrine</label>
-                            <label><input type="checkbox" name="medicines[]" value="Antacid" @if(in_array('Antacid', json_decode($record->medicines ?? '[]'))) checked @endif> Antacid</label>
-                        </div>
-                    </div>
-                    
+            <h2>Medicines at the clinic that are OK to give</h2>
+            <div class="checkbox-group">
+                @php
+                    $availableMedicines = [
+                        'Paracetamol',
+                        'Ibuprofen',
+                        'Mefenamic Acid',
+                        'Citirizine/Loratadine',
+                        'Camphor + Menthol Liniment',
+                        'PPA',
+                        'Phenylephrine',
+                        'Antacid'
+                    ];
+                @endphp
+
+                @foreach($availableMedicines as $medicine)
+    <label for="medicine-{{ strtolower(str_replace([' ', '+', '/'], '-', $medicine)) }}">
+        <input 
+            type="checkbox" 
+            id="medicine-{{ strtolower(str_replace([' ', '+', '/'], '-', $medicine)) }}" 
+            name="medicines[]" 
+            value="{{ $medicine }}" 
+            @if(in_array($medicine, $record->medicines ?? [])) checked @endif
+        >
+        {{ $medicine }}
+    </label>
+@endforeach
+
+            </div>
+        </div>
                     <div class="form-group">
                     <button type="button" class="button" onclick="clearForm(this)">Clear</button>
                     </div>
@@ -959,7 +1173,112 @@
             <button type="submit" class="button" id="save-button" disabled>Save</button>
         </div>
     </form>
+
+            </div>
+        </div>
+</div>
+</div>
+<div id="history" class="tab forms-container hidden">
+    <!-- Sub-Tabs Navigation -->
+    <div class="sub-tabs">
+    <div class="sub-tab-buttons">
+        <button id="medical-record-history-tab" class="active" onclick="showSubTab('medical-record-history')">
+            <i class="fas fa-notes-medical"></i> Medical Record History
+        </button>
+        <button id="physical-examination-history-tab" onclick="showSubTab('physical-examination-history')">
+            <i class="fas fa-file-medical"></i> Physical Examination History
+        </button>
+        <button id="health-examination-uploads-tab" onclick="showSubTab('health-examination-uploads')">
+            <i class="fas fa-upload"></i> Health Examination Uploads
+        </button>
+        <button id="medicine-intake-history-tab" onclick="showSubTab('medicine-intake-history')">
+                        <i class="fas fa-pills"></i> Medicine Intake History
+                    </button>
+    </div>
+</div>
+
+    <!-- Sub-Tabs Content -->
+    <div class="sub-tab-content">
+        <!-- Medical Record History Sub-Tab -->
+        <div id="medical-record-history" class="sub-tab active">
+            <div class="form-containers">
+                <h2>Medical Record History</h2>
+                <div class="history-scrollable">
+                    <table class="history-table" id="medical-record-history-table">
+                        <thead>
+                            <tr>
+                                <th>Chronic Conditions</th>
+                                <th>Surgical History</th>
+                                <th>Family Medical History</th>
+                                <th>Allergies</th>
+                                <th>Medicines</th>
+                                <th>Health Documents</th> 
+                                <th>Approval Status</th> 
+                                <th>Current Record?</th> 
+                            </tr>
+                        </thead>
+                        <tbody id="medical-record-history-body">
+                            <!-- This section will be dynamically populated with JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Physical Examination History Sub-Tab -->
+        <div id="physical-examination-history" class="sub-tab hidden">
     <div class="form-container">
+        <!-- Left Side: Physical Examination History Table -->
+        <div class="history-table-container">
+            <h2>Physical Examination History</h2>
+            <div class="history-scrollable">
+                <table class="history-table" id="physical-examination-history-table">
+                    <thead>
+                        <tr>
+                            <th>Height in CM</th>
+                            <th>Weight in KG</th>
+                            <th>BMI</th>
+                            <th>Vision</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="physical-examination-history-body">
+                        <!-- This section will be dynamically populated with JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Right Side: BMI Chart -->
+        <div class="chart-container">
+            <h3>BMI Over Time</h3>
+            <canvas id="bmiChart" width="400" height="200"></canvas>
+        </div>
+    </div>
+</div>
+
+
+        <!-- Health Examination Uploads Sub-Tab -->
+        <div id="health-examination-uploads" class="sub-tab hidden">
+            <div class="form-container">
+                <h2>Health Examination Uploads</h2>
+                <div class="history-scrollable">
+                    <table class="history-table" id="health-examination-uploads-table">
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>File</th>
+                            </tr>
+                        </thead>
+                        <tbody id="health-examination-uploads-body">
+                            <!-- This section will be dynamically populated with JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div id="medicine-intake-history" class="sub-tab hidden">
+        <div class="form-container">
                 <div class="form-header">
                     <h2>Medicine Intake History</h2>
                 </div>
@@ -978,81 +1297,45 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
-</div>
-</div>
-
-        <div id="history" class="tab forms-container hidden">
-            <!-- Medical Record History -->
-            <div class="form-containers">
-                <h2>Medical Record History</h2>
-                <div class="history-scrollable">
-
-                <table class="history-table" id="medical-record-history-table">
-                <thead>
-                        <tr>
-                            <th>Chronic Conditions</th>
-                            <th>Surgical History</th>
-                            <th>Family Medical History</th>
-                            <th>Allergies</th>
-                            <th>Medicines</th>
-                            <th>Health Documents</th> 
-                            <th>Approval Status</th> 
-                            <th>Current Record?</th> 
-                        </tr>
-                    </thead>
-                    <tbody id="medical-record-history-body">
-                        <!-- This section will be dynamically populated with JavaScript -->
-                    </tbody>
-                </table>
-            </div>
+                </div>
+    </div>
 </div>
 
-            <!-- Physical Examination History -->
-            <div class="form-container">
-                <h2>Physical Examination History</h2>
-                <div class="history-scrollable">
-                <table class="history-table" id="physical-examination-history-table">
-                <thead>
-                        <tr>
-                            <th>Height in CM</th>
-                            <th>Weight in KG</th>
-                            <th>BMI</th> <!-- New BMI Column -->
-                            <th>Vision</th>
-                            <th>Remarks</th>
-                        </tr>
-                    </thead>
-                    <tbody id="physical-examination-history-body">
-                        <!-- This section will be dynamically populated with JavaScript -->
-                    </tbody>
-                </table>
-            </div>
-            </div>
-
-            <!-- Health Examination Uploads -->
-            <div class="form-container">
-                <h2>Health Examination Uploads</h2>
-                <div class="history-scrollable">
-                <table class="history-table" id="health-examination-uploads-table">
-                <thead>
-                        <tr>
-                            <th>Year</th>
-                            <th>File</th>
-                        </tr>
-                    </thead>
-                    <tbody id="health-examination-uploads-body">
-                        <!-- This section will be dynamically populated with JavaScript -->
-                    </tbody>
-                </table>
-            </div>
-            </div>
-
-
-        </div>
-     
 
     </div>
+    <div id="all-records" class="tab forms-container hidden">
+    <div class="form-container">
+        <div class="form-header">
+            <h2>All Medical Records</h2>
+        </div>
+      
+        <table class="history-table" id="all-records-table">
+            <thead>
+                <tr>
+                    <th>ID Number</th>
+                    <th>Patient Name</th>
+                    <th>Birthdate</th>
+                    <th>Age</th>
+                    <th>Address</th>
+                    <th>Personal Contact Number</th> <!-- Updated -->
+                    <th>Emergency Contact Number</th> <!-- Added -->
+                    <th>Father's Name</th>
+                    <th>Mother's Name</th>
+                    <th>Past Illness</th> <!-- Added -->
+                    <th>Chronic Conditions</th>
+                    <th>Surgical History</th>
+                    <th>Family Medical History</th>
+                    <th>Allergies</th>
+                    <th>Medicines</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="all-records-body">
+                <!-- Data will be populated via DataTables AJAX -->
+            </tbody>
+        </table>
+    </div>
+</div>
 
 @if(session('success'))
         <div class="alert alert-success">
@@ -1093,7 +1376,6 @@ let physicalExaminationTable;
 let healthExaminationUploadsTable;
 let medicineIntakeTable;
 
-// Function to show tab
 function showTab(tabId) {
     const tabs = document.querySelectorAll('.tab');
     tabs.forEach(tab => {
@@ -1114,9 +1396,193 @@ function showTab(tabId) {
     document.querySelectorAll('.tab-buttons button').forEach(button => {
         button.classList.remove('active');
     });
-
+    
     document.getElementById(tabId + '-tab').classList.add('active');
+
+    // Show or hide the search bar based on the selected tab
+    const searchForm = document.getElementById('search-form');
+    if (tabId === 'all-records') {
+        searchForm.style.display = 'none';
+    } else {
+        searchForm.style.display = 'block';
+    }
+
+    // Initialize or reload DataTables as needed
+    if (tabId === 'all-records') {
+        if (!$('#all-records-table').hasClass('dataTable')) {
+            initializeAllRecordsTable();
+        } else {
+            $('#all-records-table').DataTable().ajax.reload(null, false);
+        }
+    }
+
 }
+// Function to show sub-tabs within the Health History tab
+function showSubTab(subTabId) {
+    const subTabs = document.querySelectorAll('.sub-tab');
+    subTabs.forEach(tab => {
+        tab.style.opacity = 0;
+        setTimeout(() => {
+            tab.classList.add('hidden');
+            tab.classList.remove('active');
+        }, 400);
+    });
+
+    setTimeout(() => {
+        const selectedSubTab = document.getElementById(subTabId);
+        selectedSubTab.classList.remove('hidden');
+        setTimeout(() => {
+            selectedSubTab.style.opacity = 1;
+            selectedSubTab.classList.add('active');
+        }, 50);
+    }, 400);
+
+    // Update active state for sub-tab buttons
+    document.querySelectorAll('.sub-tab-buttons button').forEach(button => {
+        button.classList.remove('active');
+    });
+
+    document.getElementById(`${subTabId}-tab`).classList.add('active');
+}
+
+// Function to initialize the "All Records" DataTable
+function initializeAllRecordsTable() {
+    $('#all-records-table').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: '{{ route("nurse.medical-records.all-data") }}', // Ensure the route is correct
+            type: 'GET',
+            data: function (d) {
+                // Pass additional parameters for custom search if needed
+                d.searchQuery = $('#all-records-search-input').val();
+            },
+            error: function (xhr, error, thrown) {
+                hideSpinner();
+                console.error('Error fetching all medical records:', xhr.responseText);
+                Swal.fire(
+                    'Error!',
+                    'Failed to load all medical records. Please try again later.',
+                    'error'
+                );
+            }
+        },
+        columns: [
+            { data: 'id_number', name: 'id_number' },
+            { data: 'patient_name', name: 'patient_name' },
+            { data: 'birthdate', name: 'birthdate' },
+            { data: 'age', name: 'age' },
+            { data: 'address', name: 'address' },
+            { data: 'personal_contact_number', name: 'personal_contact_number' }, // Updated
+            { data: 'emergency_contact_number', name: 'emergency_contact_number' }, // Added
+            { data: 'father_name', name: 'father_name' },
+            { data: 'mother_name', name: 'mother_name' },
+            { data: 'past_illness', name: 'past_illness' }, // Added
+            { data: 'chronic_conditions', name: 'chronic_conditions' },
+            { data: 'surgical_history', name: 'surgical_history' },
+            { data: 'family_medical_history', name: 'family_medical_history' },
+            { data: 'allergies', name: 'allergies' },
+            { data: 'medicines', name: 'medicines' },
+           
+            { 
+                data: 'actions',
+                name: 'actions',
+                render: function(data, type, row) {
+                    return `
+                        <button class="btn btn-info btn-sm btn-view" onclick="viewMedicalRecord(${data})" title="View Record">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                        <button class="btn btn-success btn-sm btn-download" onclick="downloadMedicalRecord(${data})" title="Download PDF">
+                            <i class="fas fa-download"></i> Download PDF
+                        </button>
+                    `;
+                },
+                orderable: false,
+                searchable: false
+            }
+        ],
+        order: [[0, 'asc']],
+        language: {
+            emptyTable: "No medical records available."
+        }
+    });
+}
+
+
+// Function to handle custom search
+$('#all-records-search-button').on('click', function(e) {
+    e.preventDefault();
+    $('#all-records-table').DataTable().ajax.reload();
+});
+
+// Function to open document modal (for Health Documents)
+function openDocumentModal(documentPath) {
+    const fileExtension = documentPath.split('.').pop().toLowerCase();
+    let content = '';
+
+    if (['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(fileExtension)) {
+        content = `<img src="/storage/${documentPath}" alt="Health Document" style="width:100%;">`;
+    } else if (fileExtension === 'pdf') {
+        content = `<embed src="/storage/${documentPath}" type="application/pdf" width="100%" height="600px" />`;
+    } else {
+        content = `<p>Cannot preview this file type.</p>`;
+    }
+
+    Swal.fire({
+        title: 'Health Document Preview',
+        html: content,
+        showCloseButton: true,
+        showConfirmButton: false,
+        width: '80%',
+        heightAuto: true,
+    });
+}
+
+
+function viewMedicalRecord(recordId) {
+    // Fetch record details via AJAX
+    fetch(`/nurse/medical-records/${recordId}/view`) // Corrected URL
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Populate the form fields with the fetched data
+                populateFields(data);
+                
+                // Switch to the 'medical' tab to display the populated form
+                showTab('medical');
+                
+                // Optional: Show a success notification
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Record Loaded',
+                    text: 'Medical record data has been loaded into the form.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to fetch medical record details.',
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching medical record details:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred while fetching the medical record details.',
+            });
+        });
+}
+
+
+// Function to download medical record PDF
+function downloadMedicalRecord(recordId) {
+    window.location.href = `/nurse/medical-records/${recordId}/download-pdf`;
+}
+
 
 // Initialize tab on page load
 document.addEventListener('DOMContentLoaded', function () {
@@ -1202,7 +1668,7 @@ function populateFields(data) {
     console.log('Data received in populateFields:', data); // Debugging
     // Populate the medical record fields
     if (data.medicalRecord) {
-        document.getElementById('name').value = data.medicalRecord.name || '';
+        document.getElementById('name').value = data.medicalRecord.patient_name || '';
         document.getElementById('birthdate').value = data.medicalRecord.birthdate || '';
         document.getElementById('age').value = data.medicalRecord.age || '';
         document.getElementById('address').value = data.medicalRecord.address || '';
@@ -1218,10 +1684,13 @@ function populateFields(data) {
         document.getElementById('family-medical-history').value = data.medicalRecord.family_medical_history || '';
         document.getElementById('allergies').value = data.medicalRecord.allergies || '';
         document.getElementById('physical-exam-id_number').value = data.medicalRecord.id_number || '';
-        console.log('Set physical-exam-id_number to:', data.medicalRecord.id_number || '');
 
         // Medicines (assuming they are checkboxes)
-        let medicines = Array.isArray(data.medicalRecord.medicines) ? data.medicalRecord.medicines : JSON.parse(data.medicalRecord.medicines || '[]');
+        let medicines = data.medicalRecord.medicines;
+        if (!Array.isArray(medicines)) {
+            medicines = [];
+        }
+
         document.querySelectorAll("input[name='medicines[]']").forEach((checkbox) => {
             checkbox.checked = medicines.includes(checkbox.value);
         });
@@ -1232,7 +1701,6 @@ function populateFields(data) {
     // Populate Medical Record History
     if (data.medicalRecords) {
         populateMedicalRecordHistory(data.medicalRecords);
-        console.log('Setting id_number to:', data.medicalRecord.id_number);
         document.getElementById('physical-exam-id_number').value = data.medicalRecord.id_number || '';
         document.getElementById('save-button').disabled = false; // Enable the button
     } else {
@@ -1264,9 +1732,13 @@ function populateFields(data) {
         // If no records found, clear the table
         medicineIntakeTable.clear().draw();
     }
+    if (data.bmiData && data.bmiData.dates.length > 0) {
+        renderBMICChart(data.bmiData);
+    } else {
+        // Optionally, display a message or handle no BMI data
+        document.getElementById('bmiChart').parentElement.innerHTML += '<p>No BMI data available.</p>';
+    }
 }
-
-// Populate Medical Record History Table
 function populateMedicalRecordHistory(records) {
     console.log('Medical Records:', records); // Debugging
     medicalRecordTable.clear(); // Clear existing data
@@ -1275,42 +1747,15 @@ function populateMedicalRecordHistory(records) {
         // Medicines are already arrays due to model casting
         let medicines = Array.isArray(record.medicines) ? record.medicines.join(', ') : 'N/A';
 
-        // Handle Health Examination Pictures
-        let healthExamDocumentsHtml = '';
-        if (record.health_examination_picture && Array.isArray(record.health_examination_picture) && record.health_examination_picture.length > 0) {
-            healthExamDocumentsHtml = record.health_examination_picture.map((document, index) => `
-                <a href="javascript:void(0);" onclick="openImageModal('/storage/${document}')">Health Exam ${index + 1}</a>
+        // Handle Health Documents
+        let healthDocumentsHtml = '';
+        if (record.health_documents && Array.isArray(record.health_documents) && record.health_documents.length > 0) {
+            healthDocumentsHtml = record.health_documents.map((document, index) => `
+                <a href="javascript:void(0);" onclick="openDocumentModal('${document}')">Document ${index + 1}</a>
             `).join('<br>');
         } else {
-            healthExamDocumentsHtml = 'No Health Exam Documents';
+            healthDocumentsHtml = 'No Health Documents';
         }
-
-        // Handle Lab Result Pictures
-        let labResultDocumentsHtml = '';
-        if (record.lab_result_picture && Array.isArray(record.lab_result_picture) && record.lab_result_picture.length > 0) {
-            labResultDocumentsHtml = record.lab_result_picture.map((document, index) => `
-                <a href="javascript:void(0);" onclick="openImageModal('/storage/${document}')">Lab Result ${index + 1}</a>
-            `).join('<br>');
-        } else {
-            labResultDocumentsHtml = 'No Lab Result Documents';
-        }
-
-        // Handle X-ray Pictures
-        let xrayDocumentsHtml = '';
-        if (record.xray_picture && Array.isArray(record.xray_picture) && record.xray_picture.length > 0) {
-            xrayDocumentsHtml = record.xray_picture.map((document, index) => `
-                <a href="javascript:void(0);" onclick="openImageModal('/storage/${document}')">X-ray ${index + 1}</a>
-            `).join('<br>');
-        } else {
-            xrayDocumentsHtml = 'No X-ray Documents';
-        }
-
-        // Combine all documents into one HTML string
-        let healthDocumentsHtml = `
-            <strong>Health Exams:</strong><br>${healthExamDocumentsHtml}<br>
-            <strong>Lab Results:</strong><br>${labResultDocumentsHtml}<br>
-            <strong>X-rays:</strong><br>${xrayDocumentsHtml}
-        `;
 
         // Add row data as an array
         medicalRecordTable.row.add([
@@ -1327,6 +1772,8 @@ function populateMedicalRecordHistory(records) {
 
     medicalRecordTable.draw(); // Redraw the table with new data
 }
+
+
 
 // Populate Physical Examination History Table with BMI
 function populatePhysicalExaminationHistory(exams) {
@@ -1425,53 +1872,7 @@ function showNoDataAlert() {
 }
 
 // Search functionality when search button is clicked
-document.getElementById('search-button').addEventListener('click', function (event) {
-    event.preventDefault(); // Prevent form submission
-    const query = document.getElementById('search-input').value.trim();
 
-    // Simple validation for query
-    if (!query) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Empty Search',
-            text: 'Please enter an ID number',
-        });
-        return;
-    }
-
-    fetch(`${searchUrl}?query=${query}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok.');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Data received in search:', data); // Debugging
-            if (data.success) {
-                populateFields(data);
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: 'Medical record data found and populated successfully!',
-                    timer: 2000, // Auto-close after 2 seconds
-                    showConfirmButton: false
-                }).then(() => {
-                    // Optionally switch to the history tab after successful data fetch
-                });
-            } else {
-                showNoDataAlert();
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching search results:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'An error occurred while fetching the search results.',
-            });
-        });
-});
 
 // Function to calculate BMI and auto-update it
 function calculateBMI() {
@@ -1590,7 +1991,8 @@ document.getElementById('physical-examination-form').addEventListener('submit', 
     });
 });
 
-// Function to clear forms
+
+/// Function to clear forms
 function clearForm(button) {
     if (!button) {
         console.error('No button element provided to clearForm.');
@@ -1628,7 +2030,7 @@ function clearForm(button) {
         }
 
         // Optionally, disable the Save button if necessary
-        const saveButton = form.querySelector('#save-button');
+        const saveButton = form.querySelector('button[type="submit"]');
         if (saveButton) {
             saveButton.disabled = true;
         }
@@ -1652,6 +2054,7 @@ function clearForm(button) {
     }
 }
 
+
 // Function to preview profile picture
 function previewProfilePicture(event) {
     const preview = document.getElementById('profile-picture-preview');
@@ -1663,6 +2066,63 @@ function previewProfilePicture(event) {
         }
         reader.readAsDataURL(file);
     }
+}
+function renderBMICChart(bmiData) {
+    const ctx = document.getElementById('bmiChart').getContext('2d');
+
+    // Destroy existing chart instance if it exists to prevent duplication
+    if (window.bmiChartInstance) {
+        window.bmiChartInstance.destroy();
+    }
+
+    window.bmiChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: bmiData.dates,
+            datasets: [{
+                label: 'BMI',
+                data: bmiData.bmis,
+                backgroundColor: 'rgba(54, 162, 235, 0.2)', // Light blue
+                borderColor: 'rgba(54, 162, 235, 1)', // Blue
+                borderWidth: 2,
+                fill: true,
+                tension: 0.1,
+                pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(54, 162, 235, 1)',
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'BMI Over Time'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    suggestedMin: 15,
+                    suggestedMax: 40,
+                    title: {
+                        display: true,
+                        text: 'BMI'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                }
+            }
+        }
+    });
 }
 
     </script>

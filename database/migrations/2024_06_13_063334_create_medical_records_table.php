@@ -27,7 +27,7 @@ class CreateMedicalRecordsTable extends Migration
             $table->string('medical_condition');
             $table->json('medicines'); // Store as JSON
             $table->string('profile_picture');
-            $table->string('health_documents')->nullable();
+            $table->json('health_documents')->nullable();
             $table->boolean('is_approved')->default(false); // Approval status, default to false
             $table->boolean('is_current')->default(true); // Indicates if the record is the current one
             $table->date('record_date')->default(DB::raw('CURRENT_DATE')); // Default to the current date

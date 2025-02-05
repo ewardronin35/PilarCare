@@ -6,15 +6,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator; // Ensure Validator is imported
 use App\Models\User;
 use App\Models\Parents; // Adjust based on your actual model names
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\Information;
 use App\Models\Nurse;
+use App\Models\Admin;
 use App\Models\Doctor;
 use App\Models\Staff;
 use App\Notifications\CustomVerifyEmail; // Import the custom notification
+use App\Mail\EmailChangeNotification; // Import the custom notification
+use Illuminate\Support\Facades\Mail; // Ensure Mail is imported
+
 
 class SettingsController extends Controller
 {
@@ -24,77 +29,137 @@ class SettingsController extends Controller
     public function edit()
     {
         $user = Auth::user();
-
-        // Log the user's role for debugging
-        \Log::info('User role: ' . $user->role);
-
+    
         // Convert role to lowercase for consistency
         $role = strtolower($user->role);
-
+    
         // Define supported roles and corresponding view paths
         $supportedRoles = ['admin', 'nurse', 'doctor', 'teacher', 'staff', 'student', 'parent'];
-        $information = Information::where('id_number', $user->id_number)->first();
-
+    
         if (in_array($role, $supportedRoles)) {
-            $viewPath = "{$role}.settings"; // e.g., 'student.settings', 'parent.settings'
+            $viewPath = "{$role}.settings"; // e.g., 'student.settings', 'parent.settings', 'admin.settings'
         } else {
             abort(403, 'Unauthorized action.');
         }
-
+    
         // Check if the view exists, otherwise abort
         if (!view()->exists($viewPath)) {
             abort(404, 'Settings view not found.');
         }
-
-        // Fetch role-specific data
+    
+        // Initialize roleData, firstName, lastName, and name
         $roleData = null;
+        $firstName = $user->first_name;
+        $lastName = $user->last_name;
+        $name = null; // Initialize name
+    
+        // Fetch role-specific data using relationships
         switch ($role) {
+            case 'admin':
+                $roleData = $user->admin;
+                if ($roleData) {
+                    $name = $roleData->name ?? $name;
+                }
+                break;
             case 'parent':
                 $roleData = Parents::where('id_number', $user->id_number)->first();
+                if ($roleData) {
+                    $firstName = $roleData->first_name ?? $firstName;
+                    $lastName = $roleData->last_name ?? $lastName;
+                }
                 break;
             case 'student':
                 $roleData = Student::where('id_number', $user->id_number)->first();
+                if ($roleData) {
+                    $firstName = $roleData->first_name ?? $firstName;
+                    $lastName = $roleData->last_name ?? $lastName;
+                }
                 break;
             case 'teacher':
                 $roleData = Teacher::where('id_number', $user->id_number)->first();
+                if ($roleData) {
+                    $firstName = $roleData->first_name ?? $firstName;
+                    $lastName = $roleData->last_name ?? $lastName;
+                }
                 break;
             case 'nurse':
                 $roleData = Nurse::where('id_number', $user->id_number)->first();
+                if ($roleData) {
+                    $firstName = $roleData->first_name ?? $firstName;
+                    $lastName = $roleData->last_name ?? $lastName;
+                }
                 break;
             case 'doctor':
                 $roleData = Doctor::where('id_number', $user->id_number)->first();
+                if ($roleData) {
+                    $firstName = $roleData->first_name ?? $firstName;
+                    $lastName = $roleData->last_name ?? $lastName;
+                }
                 break;
             case 'staff':
                 $roleData = Staff::where('id_number', $user->id_number)->first();
+                if ($roleData) {
+                    $firstName = $roleData->first_name ?? $firstName;
+                    $lastName = $roleData->last_name ?? $lastName;
+                }
                 break;
+            // Add other cases if necessary
             default:
-                // No role-specific data
+                // For roles like admin, nurse, doctor, staff, use $user->first_name and $user->last_name
                 break;
         }
-
-        return view($viewPath, compact('user', 'roleData', 'information'));
+    
+        // Enhanced Logging
+        if ($role === 'admin') {
+            if ($roleData) {
+                \Log::info("Admin Data - ID Number: {$roleData->id_number}, Name: {$roleData->name}");
+            } else {
+                \Log::warning("Admin Record Not Found for User ID: {$user->id}, ID Number: {$user->id_number}");
+            }
+        }
+    
+        // Log the firstName, lastName, and name
+        \Log::info("Settings Edit - User ID: {$user->id}, Role: {$role}, FirstName: {$firstName}, LastName: {$lastName}, Name: {$name}");
+    
+        // Pass 'information' only if not admin
+        if ($role !== 'admin') {
+            $information = Information::where('id_number', $user->id_number)->first();
+        } else {
+            $information = null; // No Information for admin
+        }
+    
+        return view($viewPath, compact('user', 'roleData', 'information', 'firstName', 'lastName', 'name', 'role'));
     }
-
-    /**
-     * Update the user's account settings.
-     */
+    
+    
     public function update(Request $request)
     {
         $user = Auth::user();
-
-        // Updated validation rules with password complexity
+        $role = strtolower($user->role);
+    
+        // Store the original email for notification
+        $originalEmail = $user->email;
+    
+        // Define base validation rules
         $rules = [
-            'first_name'       => 'required|string|max:255',
-            'last_name'        => 'required|string|max:255',
             'email'            => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'password'         => [
                 'nullable',
+                'string',
                 'min:8',
                 'regex:/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/',
             ],
             'profile_picture'  => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ];
-
+    
+        // Add role-specific validation rules
+        if ($role === 'admin') {
+            $rules['name'] = 'required|string|max:255';
+        } else {
+            $rules['first_name'] = 'required|string|max:255';
+            $rules['last_name'] = 'required|string|max:255';
+        }
+    
         // Custom validation messages
         $messages = [
             'password.regex'            => 'Password must be at least 8 characters long and contain both letters and numbers.',
@@ -102,123 +167,146 @@ class SettingsController extends Controller
             'profile_picture.mimes'     => 'The profile picture must be a file of type: jpeg, png, jpg, gif.',
             'profile_picture.max'       => 'The profile picture may not be greater than 2MB.',
         ];
-
+    
         // Validate the request
-        $validatedData = $request->validate($rules, $messages);
-
+        $validator = Validator::make($request->all(), $rules, $messages);
+    
+        // If validation fails, redirect back with errors
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+    
+        // Retrieve validated data
+        $validatedData = $validator->validated();
+    
+        // Sanitize inputs
+        $validatedData['email'] = filter_var($validatedData['email'], FILTER_SANITIZE_EMAIL);
+        if ($role !== 'admin') {
+            $validatedData['first_name'] = filter_var($validatedData['first_name'], FILTER_SANITIZE_STRING);
+            $validatedData['last_name']  = filter_var($validatedData['last_name'], FILTER_SANITIZE_STRING);
+        } else {
+            $validatedData['name'] = filter_var($validatedData['name'], FILTER_SANITIZE_STRING);
+        }
+    
         // Update common user info
-        $user->first_name = $validatedData['first_name'];
-        $user->last_name  = $validatedData['last_name'];
-        $user->email      = $validatedData['email'];
-
+        $user->email = $validatedData['email'];
+    
         // Update password if provided
         if ($request->filled('password')) {
             $user->password = Hash::make($validatedData['password']);
         }
-
+    
         // Save user data
         $user->save();
-
-        // Update Information model
-        $information = Information::firstOrCreate(
-            ['id_number' => $user->id_number],
-            []
-        );
-
-        // Handle profile picture upload
-        if ($request->hasFile('profile_picture')) {
-            // Delete old image if exists
-            if ($information->profile_picture && Storage::disk('public')->exists($information->profile_picture)) {
-                Storage::disk('public')->delete($information->profile_picture);
-            }
-            // Store new image
-            $path = $request->file('profile_picture')->store('profile_pictures', 'public');
-            $information->profile_picture = $path;
+    
+        // Update role-specific model
+        switch ($role) {
+            case 'admin':
+                $roleData = $user->admin; // Utilize the relationship
+                if (!$roleData) {
+                    $roleData = new Admin();
+                    $roleData->id_number = $user->id_number;
+                }
+                $roleData->name = $validatedData['name'];
+                $roleData->save();
+                break;
+            case 'parent':
+                $roleData = Parents::where('id_number', $user->id_number)->first();
+                if ($roleData) {
+                    $roleData->first_name = $validatedData['first_name'];
+                    $roleData->last_name = $validatedData['last_name'];
+                    $roleData->save();
+                }
+                break;
+            case 'student':
+                $roleData = Student::where('id_number', $user->id_number)->first();
+                if ($roleData) {
+                    $roleData->first_name = $validatedData['first_name'];
+                    $roleData->last_name = $validatedData['last_name'];
+                    $roleData->save();
+                }
+                break;
+            case 'teacher':
+                $roleData = Teacher::where('id_number', $user->id_number)->first();
+                if ($roleData) {
+                    $roleData->first_name = $validatedData['first_name'];
+                    $roleData->last_name = $validatedData['last_name'];
+                    $roleData->save();
+                }
+                break;
+            case 'nurse':
+                $roleData = Nurse::where('id_number', $user->id_number)->first();
+                if ($roleData) {
+                    $roleData->first_name = $validatedData['first_name'];
+                    $roleData->last_name = $validatedData['last_name'];
+                    $roleData->save();
+                }
+                break;
+            case 'doctor':
+                $roleData = Doctor::where('id_number', $user->id_number)->first();
+                if ($roleData) {
+                    $roleData->first_name = $validatedData['first_name'];
+                    $roleData->last_name = $validatedData['last_name'];
+                    $roleData->save();
+                }
+                break;
+            case 'staff':
+                $roleData = Staff::where('id_number', $user->id_number)->first();
+                if ($roleData) {
+                    $roleData->first_name = $validatedData['first_name'];
+                    $roleData->last_name = $validatedData['last_name'];
+                    $roleData->save();
+                }
+                break;
+            // Add other cases if necessary
+            default:
+                // For roles like admin, nurse, doctor, staff, first_name and last_name are already updated in User model
+                break;
         }
-
-        $information->save();
-
+    
+        // Update Information model only for non-admin roles
+        if ($role !== 'admin') {
+            $information = Information::firstOrCreate(
+                ['id_number' => $user->id_number],
+                []
+            );
+    
+            // Handle profile picture upload
+            if ($request->hasFile('profile_picture')) {
+                // Delete old image if exists
+                if ($information->profile_picture && Storage::disk('public')->exists($information->profile_picture)) {
+                    Storage::disk('public')->delete($information->profile_picture);
+                }
+                // Store new image
+                $path = $request->file('profile_picture')->store('profile_pictures', 'public');
+                $information->profile_picture = $path;
+            }
+    
+            $information->save();
+        }
+    
         // Check if email was changed to require verification
         if ($user->wasChanged('email')) {
             $user->email_verified_at = null; // Invalidate email verification
             $user->save();
-
-            // Send custom verification email
-            $user->sendCustomEmailVerificationNotification();
-
+    
+            // Send email verification to the new email address
+            $user->sendEmailVerificationNotification();
+    
+            // Send notification to the old email address about the change
+            Mail::to($originalEmail)->send(new EmailChangeNotification($user, $originalEmail));
+    
             // Inform the user to verify the new email
             return redirect()->back()->with('email_verification_required', true);
         }
-
+    
+        // If no email change, return success
         return redirect()->back()->with('success', 'Profile updated successfully.');
     }
-    /**
-     * Update the user's additional information.
-     */
-    public function updateAdditional(Request $request)
-    {
-        $user = Auth::user();
-        $role = strtolower(trim($user->role));
-
-        // Define validation rules based on role
-        $rules = [
-            'address'   => 'required|string|max:500',
-            'birthdate' => 'required|date',
-        ];
-
-        if ($role === 'parent') {
-            $rules = array_merge($rules, [
-                'parent_name_father'       => 'nullable|string|max:255',
-                'parent_name_mother'       => 'nullable|string|max:255',
-                'guardian_name'            => 'nullable|string|max:255',
-                'guardian_relationship'    => 'nullable|string|max:255',
-            ]);
-        }
-
-        if (in_array($role, ['student', 'teacher', 'nurse', 'doctor', 'staff'])) {
-            $rules = array_merge($rules, [
-                'emergency_contact_number' => 'nullable|string|regex:/^\d{11}$/',
-                'personal_contact_number'  => 'nullable|string|regex:/^\d{11}$/',
-            ]);
-        }
-
-        // Custom validation messages
-        $messages = [
-            'emergency_contact_number.regex' => 'The emergency contact number must be exactly 11 digits.',
-            'personal_contact_number.regex'  => 'The personal contact number must be exactly 11 digits.',
-        ];
-
-        // Validate the request
-        $validatedData = $request->validate($rules, $messages);
-
-        // Update Information model
-        $information = Information::firstOrCreate(
-            ['id_number' => $user->id_number],
-            []
-        );
-
-        // Update common fields
-        $information->address = $validatedData['address'];
-        $information->birthdate = $validatedData['birthdate'];
-
-        // Update role-specific fields
-        if ($role === 'parent') {
-            $information->parent_name_father = $validatedData['parent_name_father'] ?? $information->parent_name_father;
-            $information->parent_name_mother = $validatedData['parent_name_mother'] ?? $information->parent_name_mother;
-            $information->guardian_name = $validatedData['guardian_name'] ?? $information->guardian_name;
-            $information->guardian_relationship = $validatedData['guardian_relationship'] ?? $information->guardian_relationship;
-        }
-
-        if (in_array($role, ['student', 'teacher', 'nurse', 'doctor', 'staff'])) {
-            $information->emergency_contact_number = $validatedData['emergency_contact_number'] ?? $information->emergency_contact_number;
-            $information->personal_contact_number  = $validatedData['personal_contact_number'] ?? $information->personal_contact_number;
-        }
-
-        $information->save();
-
-        return redirect()->back()->with('success', 'Additional information updated successfully.');
-    }
-
+    
+    
+    
+    
     /**
      * Delete the user's account.
      */

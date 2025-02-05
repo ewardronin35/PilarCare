@@ -1,5 +1,7 @@
 <x-app-layout :pageTitle="' Appointments'">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+
     <style>
         /* Legend Styling */
         .calendar-legend {
@@ -132,6 +134,7 @@
             font-weight: bold;
             font-size: 16px;
             text-align: center;
+            width: 100%;
             background-color: #e0e0e0;
             border-radius: 10px 10px 0 0;
         }
@@ -199,6 +202,50 @@
             transition: background-color 0.3s, transform 0.3s;
             font-size: 1rem;
         }
+     /* Set the prediction-chart-container to a fixed height */
+     .prediction-chart-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 600px; /* Adjust as needed */
+    margin: 0 auto 20px auto;
+}
+
+/* Canvas Styles */
+#nextAppointmentChart {
+    width: 100% !important;
+    height: auto !important;
+}
+/* Reschedule Button */
+.reschedule-btn {
+    background-color: #007bff; /* Standard blue */
+    color: white;
+}
+
+.reschedule-btn:hover {
+    background-color: #0056b3; /* Darker blue for hover */
+    transform: scale(1.05);
+}
+
+.reschedule-btn:active {
+    transform: scale(0.95);
+}
+
+/* Delete Button */
+.delete-btn {
+    background-color: #dc3545; /* Standard red */
+    color: white;
+}
+
+.delete-btn:hover {
+    background-color: #c82333; /* Darker red for hover */
+    transform: scale(1.05);
+}
+
+.delete-btn:active {
+    transform: scale(0.95);
+}
 
         .form-group .search-btn:hover {
             background-color: #00b8e6;
@@ -700,6 +747,36 @@
                 margin-left: 0;
             }
         }
+        .action-buttons .reschedule-btn {
+    background-color: #007bff !important; /* Standard blue */
+    color: white !important;
+    border: none !important;
+}
+
+.action-buttons .reschedule-btn:hover {
+    background-color: #0056b3 !important; /* Darker blue for hover */
+    transform: scale(1.05) !important;
+}
+
+.action-buttons .reschedule-btn:active {
+    transform: scale(0.95) !important;
+}
+
+.action-buttons .delete-btn {
+    background-color: #dc3545 !important; /* Standard red */
+    color: white !important;
+    border: none !important;
+}
+
+.action-buttons .delete-btn:hover {
+    background-color: #c82333 !important; /* Darker red for hover */
+    transform: scale(1.05) !important;
+}
+
+.action-buttons .delete-btn:active {
+    transform: scale(0.95) !important;
+}
+
     </style>
 
 
@@ -710,8 +787,16 @@
 
     <main class="main-content">
         <div class="tabs">
-            <div class="tab active" onclick="showTab('add-appointment-calendar')">Add Appointment & Calendar</div>
-            <div class="tab" onclick="showTab('appointment-list')">Appointment List</div>
+            <div class="tab active" onclick="showTab('add-appointment-calendar')">
+            <i class="fas fa-user-md"></i> <!-- Doctor Icon -->
+            Add Appointment & Calendar</div>
+            <div class="tab" onclick="showTab('appointment-list')">
+            <i class="fas fa-clipboard-list"></i> <!-- Clipboard List Icon -->
+            Appointment List</div>
+            <div class="tab" onclick="showTab('statistics-reports')">
+        <i class="fas fa-chart-line"></i> <!-- Chart Line Icon -->
+        <span>Statistics & Reports</span>
+    </div>
         </div>
 
         <!-- Add Appointment and Calendar Tab -->
@@ -786,8 +871,14 @@
             <div class="form-group">
                 <label for="doctor">Doctor</label>
                 <input type="hidden" id="doctor-id" name="doctor_id" value="{{ $currentDoctor->id }}">
-                <input type="text" value="{{ $currentDoctor->user->first_name }} {{ $currentDoctor->user->last_name }} ({{ $currentDoctor->specialization }})" readonly>
-            </div>
+                <input 
+        type="text" 
+        value="{{ $currentDoctor 
+            ? $currentDoctor->first_name . ' ' . $currentDoctor->last_name . ' (' . $currentDoctor->specialization . ')' 
+            : 'N/A' 
+        }}" 
+        readonly
+    >            </div>
         @else
             <div class="form-group">
                 <label for="doctor">Select Doctor <span style="color: red;">*</span></label>
@@ -852,67 +943,80 @@
         </div>
 
         <!-- Appointment List Tab -->
-        <div id="appointment-list" class="tab-content">
-            <div class="appointment-list-container">
-                <h2>Appointment List</h2>
-                <p>Total Appointments: {{ $appointments->count() }}</p> <!-- Debugging Line -->
-                <div class="filter-container" style="margin-bottom: 15px; display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
-                    <label for="status-filter">Filter by Status:</label>
-                    <select id="status-filter" onchange="filterAppointments()" style="width: 200px; padding: 8px; border-radius: 5px;">
-                        <option value="">All</option>
-                        <option value="pending">Pending</option>
-                        <option value="confirmed">Confirmed</option>
-                    </select>
-                </div>
-                <!-- Appointment Table -->
-                <table class="appointment-table">
-                    <thead>
-                        <tr>
-                            <th>ID Number</th>
-                            <th>Patient Name</th>
-                            <th>Appointment Date</th>
-                            <th>Appointment Time</th>
-                            <th>Appointment Type</th>
-                            <th>Status</th> <!-- Status Column -->
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($appointments as $appointment)
-                            <tr id="appointment-row-{{ $appointment->id }}">
-                                <td>{{ $appointment->id_number }}</td>
-                                <td>{{ $appointment->patient_name }}</td>
-                                <td>{{ \Carbon\Carbon::parse($appointment->appointment_date)->format('M d, Y') }}</td>
-                                <td>{{ \Carbon\Carbon::parse($appointment->appointment_time)->format('h:i A') }}</td>
-                                <td>{{ $appointment->appointment_type }}</td>
-                                <td>
-                                    @if ($appointment->status === 'confirmed')
-                                        <span style="color: green; font-weight: bold;">Confirmed</span>
-                                    @else
-                                        <span style="color: orange; font-weight: bold;">Pending</span>
-                                    @endif
-                                </td>
-                                <td>
-    <div class="action-buttons">
-        @if ($appointment->status !== 'confirmed')
-            <button class="btn confirm-btn" onclick="confirmAppointment({{ $appointment->id }})">Confirm</button>
-        @endif
-        
-        <button class="btn reschedule-btn" onclick="openEditModal({{ $appointment->id }})">Reschedule</button>
-
-        <button class="btn delete-btn" onclick="confirmDelete({{ $appointment->id }})">Delete</button>
-    </div>
-</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" style="text-align: center; color: #888;">No appointments found.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+        <!-- Appointment List Tab -->
+<div id="appointment-list" class="tab-content">
+    <div class="appointment-list-container">
+        <h2>Appointment List</h2>
+        <p>Total Appointments: {{ $appointments->count() }}</p> <!-- Debugging Line -->
+        <div class="filter-container" style="margin-bottom: 15px; display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
+            <label for="status-filter">Filter by Status:</label>
+            <select id="status-filter" onchange="filterAppointments()" style="width: 200px; padding: 8px; border-radius: 5px;">
+                <option value="">All</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+            </select>
         </div>
+        <!-- Appointment Table -->
+        <table class="appointment-table" id="appointments-table">
+            <thead>
+                <tr>
+                    <th>ID Number</th>
+                    <th>Patient Name</th>
+                    <th>Appointment Date</th>
+                    <th>Appointment Time</th>
+                    <th>Appointment Type</th>
+                    <th>Status</th> <!-- Status Column -->
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($appointments as $appointment)
+                    <tr id="appointment-row-{{ $appointment->id }}">
+                        <td>{{ $appointment->id_number }}</td>
+                        <td>{{ $appointment->patient_name }}</td>
+                        <td>{{ \Carbon\Carbon::parse($appointment->appointment_date)->format('M d, Y') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($appointment->appointment_time)->format('h:i A') }}</td>
+                        <td>{{ $appointment->appointment_type }}</td>
+                        <td>
+                            @if ($appointment->status === 'confirmed')
+                                <span style="color: green; font-weight: bold;">Confirmed</span>
+                            @else
+                                <span style="color: orange; font-weight: bold;">Pending</span>
+                            @endif
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                @if ($appointment->status !== 'confirmed')
+                                    <button class="btn confirm-btn" onclick="confirmAppointment({{ $appointment->id }})">Confirm</button>
+                                @endif
+                                
+                                <button class="btn reschedule-btn" onclick="openEditModal({{ $appointment->id }})">Reschedule</button>
+        
+                                <button class="btn delete-btn" onclick="confirmDelete({{ $appointment->id }})">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #888;">No appointments found.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Statistics & Reports Tab -->
+<!-- Statistics & Reports Tab -->
+<div id="statistics-reports" class="tab-content">
+    <div class="appointment-list-container">
+        <h2>Statistics & Reports</h2>
+        <div class="prediction-chart-container">
+            <canvas id="nextAppointmentChart" width="400" height="400"></canvas>
+        </div>
+    </div>
+</div>
+
 
         <!-- Edit Appointment Modal -->
      <!-- Edit Appointment Modal -->
@@ -1020,10 +1124,191 @@
     </main>
 
     <!-- Include SweetAlert2 Library -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Include Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
     // Tab Switching Function
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize Calendar
+        renderCalendar(currentMonth, currentYear);
+
+        // Initialize DataTables for Appointment List
+        $('#appointments-table').DataTable({
+            "paging": true,
+            "searching": true,
+            "ordering": true,
+            "info": true,
+            "autoWidth": false,
+            "responsive": true,
+            "language": {
+                "emptyTable": "No appointments found."
+            },
+            "columnDefs": [
+                { "orderable": false, "targets": [5, 6] } // Disable ordering on the Status and Actions columns (0-based index)
+            ]
+        });
+        console.log('DataTables initialized for Appointment List.');
+
+        // Initialize the Prediction Chart
+        initializeNextAppointmentChart();
+        setMinDate('appointment-date'); // For Add Appointment Form
+        setMinDate('edit-appointment-date'); // For Edit Appointment Modal
+    });
+
+     // Helper function to format time difference
+     function formatTimeDiff(milliseconds) {
+        const totalSeconds = Math.floor(milliseconds / 1000);
+        const days = Math.floor(totalSeconds / (3600 * 24));
+        const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        let parts = [];
+        if (days > 0) parts.push(`${days}d`);
+        if (hours > 0) parts.push(`${hours}h`);
+        if (minutes > 0) parts.push(`${minutes}m`);
+        parts.push(`${seconds}s`);
+
+        return parts.join(' ');
+    }
+
+    function initializeNextAppointmentChart() {
+        const ctx = document.getElementById('nextAppointmentChart').getContext('2d');
+
+        // Fetch the next appointment data from the server
+        fetch(`{{ route('doctor.appointment.next') }}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.nextAppointment) {
+                    const appointment = data.nextAppointment;
+                    const appointmentType = appointment.appointment_type;
+                    const patientName = appointment.patient_name;
+                    const appointmentDate = new Date(appointment.appointment_date);
+                    const appointmentTime = new Date(`1970-01-01T${appointment.appointment_time}Z`); // Time parsing
+
+                    const now = new Date();
+                    const appointmentDateTime = new Date(
+                        appointmentDate.getFullYear(),
+                        appointmentDate.getMonth(),
+                        appointmentDate.getDate(),
+                        appointmentTime.getHours(),
+                        appointmentTime.getMinutes(),
+                        appointmentTime.getSeconds()
+                    );
+
+                    // Calculate time difference in milliseconds
+                    const timeDiff = appointmentDateTime - now;
+
+                    if (timeDiff <= 0) {
+                        // Appointment time has passed
+                        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                        ctx.font = "16px Arial";
+                        ctx.fillText("No upcoming appointments.", 10, 50);
+                        return;
+                    }
+
+                    // Define maximum timeframe (e.g., 7 days)
+                    const maxTimeframe = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+
+                    // Calculate percentage for the chart
+                    let percentage = (timeDiff / maxTimeframe) * 100;
+                    percentage = Math.max(0, Math.min(percentage, 100)); // Clamp between 0 and 100
+
+                    const labels = ['Next Appointment Type', 'Others'];
+                    const values = [percentage, 100 - percentage];
+
+                    const nextAppointmentChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: values,
+                                backgroundColor: ['#007bff', '#6c757d'],
+                                hoverBackgroundColor: ['#0056b3', '#5a6268'],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true, // Set to false if you want to control the height
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        boxWidth: 20,
+                                        padding: 15
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            if (context.dataIndex === 0) {
+                                                return `Appointment Type: ${appointmentType}`;
+                                            }
+                                            return '';
+                                        }
+                                    }
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Next Appointment Type Prediction'
+                                },
+                                // Plugin to display text in center
+                                beforeDraw: function(chart) {
+                                    const width = chart.width,
+                                          height = chart.height,
+                                          ctx = chart.ctx;
+                                    ctx.restore();
+                                    const fontSize = (height / 114).toFixed(2);
+                                    ctx.font = `${fontSize}em sans-serif`;
+                                    ctx.textBaseline = "middle";
+
+                                    const text = appointmentType,
+                                          textX = Math.round((width - ctx.measureText(text).width) / 2),
+                                          textY = height / 2;
+
+                                    ctx.fillText(text, textX, textY);
+                                    ctx.save();
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    // No upcoming appointments
+                    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                    ctx.font = "16px Arial";
+                    ctx.fillText("No upcoming appointments.", 10, 50);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching next appointment:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to load next appointment.',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            });
+    }
+    
+    function setMinDate(inputId) {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+        const dd = String(today.getDate()).padStart(2, '0');
+
+        const minDate = `${yyyy}-${mm}-${dd}`;
+        const dateInput = document.getElementById(inputId);
+        if (dateInput) {
+            dateInput.setAttribute('min', minDate);
+        }
+    }
+
     function showTab(tabId) {
         const tabContents = document.querySelectorAll('.tab-content');
         tabContents.forEach(tabContent => {

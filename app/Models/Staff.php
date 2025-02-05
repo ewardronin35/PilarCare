@@ -13,8 +13,16 @@ class Staff extends Model
         'id_number',
         'first_name',
         'last_name',
-        'postion',
-        'approved'
+        'position',
+        'approved',
+        'father_name',
+        'mother_name',
+        'contact_number',
+        'address',
+        'birthdate',
+        'profile_picture',
+        'emergency_contact',
+        'age', // Optional
     ];
     public function dentalRecords()
     {

@@ -34,5 +34,13 @@ class Information extends Model
     {
         return $this->belongsTo(User::class, 'id_number', 'id_number');
     }
-    
+    public function student()
+    {
+        return $this->belongsTo(Student::class, 'id_number', 'id_number');
+    }
+
+    /**
+     * Relationship: Information belongs to a Parent.
+     */
+
 }

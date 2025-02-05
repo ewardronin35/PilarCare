@@ -347,26 +347,12 @@
             </li>
 
             <!-- Approvals (with Submenu) -->
-            <li class="has-submenu {{ 
-                Route::currentRouteName() == 'admin.health-examinations' || 
-                Route::currentRouteName() == 'admin.uploadMedicalDocu' || 
-                Route::currentRouteName() == 'admin.uploadDentalDocu' ? 'active' : '' }}">
-                <a href="#">
+            <li class="{{ Route::currentRouteName() == 'admin.health-examinations' ? 'active' : '' }}">
+                <a href="{{ route('admin.health-examinations') }}">
                     <span class="icon"><i class="fas fa-check-circle"></i></span>
-                    <span class="menu-text">Approvals</span>
-                    <span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span>
+                    <span class="menu-text">Medical Examination Approval</span>
                 </a>
-                <ul class="submenu">
-                    <li class="{{ Route::currentRouteName() == 'admin.health-examinations' ? 'active' : '' }}">
-                        <a href="{{ route('admin.health-examinations') }}">Health Approval</a>
-                    </li>
-                    <li class="{{ Route::currentRouteName() == 'admin.uploadMedicalDocu' ? 'active' : '' }}">
-                        <a href="{{ route('admin.uploadMedicalDocu') }}">Medical Approval</a>
-                    </li>
-                    <li class="{{ Route::currentRouteName() == 'admin.uploadDentalDocu' ? 'active' : '' }}">
-                        <a href="{{ route('admin.uploadDentalDocu') }}">Dental Approval</a>
-                    </li>
-                </ul>
+              
             </li>
 
             <!-- Manage Users (with Submenu) -->
@@ -392,9 +378,7 @@
                     <li class="{{ Route::currentRouteName() == 'admin.teachers.upload' ? 'active' : '' }}">
                         <a href="{{ route('admin.teachers.upload') }}">Teachers</a>
                     </li>
-                    <li class="{{ Route::currentRouteName() == 'admin.parents.upload' ? 'active' : '' }}">
-                        <a href="{{ route('admin.parents.upload') }}">Parents</a>
-                    </li>
+                   
                     <li class="{{ Route::currentRouteName() == 'admin.nurses.upload' ? 'active' : '' }}">
                         <a href="{{ route('admin.nurses.upload') }}">Nurse</a>
                     </li>

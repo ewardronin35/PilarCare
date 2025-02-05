@@ -3,6 +3,7 @@
     <style>
         /* Import Poppins Font */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+        
 
         /* General Sidebar Styles */
         .sidebar {
@@ -329,21 +330,28 @@
             </li>
 
             <!-- Records (with Submenu) -->
-            <li class="has-submenu {{ Route::currentRouteName() == 'student.medical-record' || Route::currentRouteName() == 'student.dental-record' ? 'active' : '' }}">
-                <a href="#">
-                    <span class="icon"><i class="fas fa-notes-medical"></i></span>
-                    <span class="menu-text">Records</span>
-                    <span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span>
-                </a>
-                <ul class="submenu">
-                    <li class="{{ Route::currentRouteName() == 'student.medical-record' ? 'active' : '' }}">
-                        <a href="{{ route('student.medical-record') }}">View Medical Record</a>
-                    </li>
-                    <li class="{{ Route::currentRouteName() == 'student.dental-record' ? 'active' : '' }}">
-                        <a href="{{ route('student.dental-record') }}">View Dental Record</a>
-                    </li>
-                </ul>
+            <li class="has-submenu {{ in_array(Route::currentRouteName(), ['student.medical-record', 'student.dental-record', 'student.upload-pictures']) ? 'active' : '' }}">
+    <a href="#">
+        <span class="icon"><i class="fas fa-notes-medical"></i></span>
+        <span class="menu-text">Records</span>
+        <span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span>
+    </a>
+    <ul class="submenu">
+        @if (!$healthExamination)
+            <li class="{{ Route::currentRouteName() == 'student.upload-pictures' ? 'active' : '' }}">
+                <a href="{{ route('student.upload-pictures') }}">Health Approval</a>
             </li>
+        @else
+            <li class="{{ Route::currentRouteName() == 'student.medical-record' ? 'active' : '' }}">
+                <a href="{{ route('student.medical-record') }}">View Medical Record</a>
+            </li>
+            @endif
+            <li class="{{ Route::currentRouteName() == 'student.dental-record' ? 'active' : '' }}">
+                <a href="{{ route('student.dental-record') }}">View Dental Record</a>
+            </li>
+    </ul>
+</li>
+
 
       
 
@@ -389,7 +397,6 @@
 
 <!-- Include SweetAlert -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <!-- JavaScript for Sidebar Functionality -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {

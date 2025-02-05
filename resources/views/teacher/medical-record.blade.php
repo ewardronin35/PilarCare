@@ -1584,15 +1584,18 @@ function submitMedicineIntakeForm(event) {
         }
 
         if (data.success) {
-            let newRow = `
-                <tr>
-                    <td>${data.medicineIntake.medicine_name}</td>
-                    <td>${data.medicineIntake.intake_time}</td>
-                    <td>${data.medicineIntake.dosage}</td>
-                    <td>${data.medicineIntake.notes ?? 'No notes'}</td>
-                </tr>
-            `;
-            document.getElementById('medicine-intake-history-body').innerHTML += newRow;
+            // Iterate over the array of medicine intakes and append each to the table
+            data.medicineIntakes.forEach(medicineIntake => {
+                let newRow = `
+                    <tr>
+                        <td>${medicineIntake.medicine_name || 'N/A'}</td>
+                        <td>${medicineIntake.dosage || 'N/A'}</td>
+                        <td>${medicineIntake.intake_time || 'N/A'}</td>
+                        <td>${medicineIntake.notes || 'No notes'}</td>
+                    </tr>
+                `;
+                document.getElementById('medicine-intake-history-body').innerHTML += newRow;
+            });
 
             Swal.fire({
                 icon: 'success',
@@ -1621,6 +1624,8 @@ function submitMedicineIntakeForm(event) {
         });
     });
 }
+
+
 
 
     </script>

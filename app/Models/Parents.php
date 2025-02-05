@@ -13,7 +13,6 @@ class Parents extends Model
         'id_number',
         'first_name',
         'last_name',
-        'student_id',
         'approved',
     ];
 
@@ -23,19 +22,32 @@ class Parents extends Model
     {
         return $this->belongsTo(User::class, 'id_number', 'id_number'); // Parent User
     }
-
     public function student()
     {
-        return $this->belongsTo(User::class, 'student_id', 'id_number'); // Student User
+        return $this->hasMany(Student::class, 'parent_id', 'id_number');
     }
 
+    public function students()
+    {
+        return $this->hasMany(Student::class, 'parent_id', 'id_number');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(Student::class, 'parent_id', 'id_number');
+    }
     public function information()
     {
-        return $this->hasOne(Information::class, 'id_number', 'student_id');
+        return $this->hasMany(Information::class, 'id_number', 'student_id');
     }
     
     public function getGuardianRelationshipAttribute()
     {
-        return $this->information ? $this->information->guardian_relationship : 'Not Specified';
+        if ($this->information->isEmpty()) {
+            return 'Not Specified';
+        }
+    
+        // Concatenate all guardian relationships
+        return $this->information->pluck('guardian_relationship')->filter()->unique()->join(', ');
     }
-}
+}    

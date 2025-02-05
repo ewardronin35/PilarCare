@@ -9,17 +9,27 @@ use App\Imports\StaffImport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Validators\ValidationException;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Password;
 
 class StaffController extends Controller
 {
+    /**
+     * Display the staff management view.
+     */
     public function showUploadForm()
     {
         $staff = Staff::all();
-        Log::info('Staff:', $staff->toArray());
+        Log::info('Displaying staff:', $staff->toArray());
         return view('admin.enrolledstaff', compact('staff'));
     }
 
+    /**
+     * Handle the import of staff via Excel.
+     */
     public function import(Request $request)
     {
         $request->validate([
@@ -30,13 +40,16 @@ class StaffController extends Controller
             $import = new StaffImport;
             Excel::import($import, $request->file('file'));
 
+            // Fetch all staff after import
             $staff = Staff::all();
+
+            // Check for duplicates (if any)
             $duplicates = $import->getDuplicates();
 
             if (count($duplicates) > 0) {
                 $duplicateMessages = [];
                 foreach ($duplicates as $duplicate) {
-                    $duplicateMessages[] = "Duplicate entry for ID Number: {$duplicate->id_number}";
+                    $duplicateMessages[] = "Duplicate or invalid entry for ID Number: {$duplicate->id_number}";
                 }
                 return response()->json(['success' => false, 'errors' => $duplicateMessages]);
             }
@@ -55,94 +68,181 @@ class StaffController extends Controller
         }
     }
 
+    /**
+     * Toggle the approval status of a staff member.
+     */
     public function toggleApproval(Request $request, $id)
     {
         $staffMember = Staff::findOrFail($id);
+
+        // Validate the 'approved' input
+        $validator = Validator::make($request->all(), [
+            'approved' => 'required|boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()->all()], 422);
+        }
+
+        // Update approval status
         $staffMember->approved = $request->input('approved');
         $staffMember->save();
-    
+
+        // Sync the approval status with the corresponding user account
         $user = User::where('id_number', $staffMember->id_number)->first();
         if ($user) {
             $user->approved = $staffMember->approved;
             $user->save();
         }
-    
-        // Return 'staff' instead of 'staffMember'
-        return response()->json(['success' => true, 'message' => 'Staff status updated successfully.', 'staff' => $staffMember]);
+
+        return response()->json(['success' => true, 'message' => 'Staff approval status updated successfully.', 'staff' => $staffMember]);
     }
 
+    /**
+     * Fetch all enrolled staff members.
+     */
     public function enrolledStaff()
     {
         $staff = Staff::all();
         return response()->json($staff);
     }
+
+    /**
+     * Download the staff Excel template.
+     */
     public function downloadTemplates()
     {
         $filePath = 'templates/staff_template.xlsx';
 
         if (Storage::exists($filePath)) {
-            try {
-                $fileSize = Storage::size($filePath);
-                Log::info('File size: ' . $fileSize);
-            } catch (\Exception $e) {
-                Log::error('Error retrieving file size: ' . $e->getMessage());
-            }
+            // Optionally, log the download attempt
+            Log::info('Downloading staff template.');
+
+            return Storage::download($filePath, 'staff_template.xlsx');
         } else {
-            Log::error('File not found: ' . $filePath);
+            Log::error('Staff template file not found: ' . $filePath);
+            return redirect()->back()->withErrors(['error' => 'Template file not found.']);
         }
-        
-        // If file exists, proceed with download
-        return Storage::download($filePath, 'staff_template.xlsx');
     }
-    
-    public function getDuplicates()
-    {
-        return $this->duplicates;
-    }
+
+    /**
+     * Edit a staff member's details.
+     */
     public function edit(Request $request, $id)
-{
-    $staffMember = Staff::findOrFail($id);
-    
-    // Validate the input
-    $request->validate([
-        'id_number' => 'required|max:10',
-        'first_name' => 'required|string|max:255',
-        'last_name' => 'required|string|max:255',
-    ]);
+    {
+        $staffMember = Staff::findOrFail($id);
 
-    // Update staff member details
-    $staffMember->id_number = $request->input('id_number');
-    $staffMember->first_name = $request->input('first_name');
-    $staffMember->last_name = $request->input('last_name');
-    $staffMember->save();
+        // Define validation rules
+        $validator = Validator::make($request->all(), [
+            'id_number'        => 'required|string|max:10|unique:staff,id_number,' . $staffMember->id,
+            'first_name'       => 'required|string|max:255',
+            'last_name'        => 'required|string|max:255',
+            'position'         => 'required|string|max:255',
+            'father_name'      => 'nullable|string|max:255',
+            'mother_name'      => 'nullable|string|max:255',
+            'contact_number'   => 'nullable|string|max:200',
+            'address'          => 'nullable|string|max:255',
+            'birthdate'        => 'nullable|date',
+            'emergency_contact'=> 'nullable|string|max:200',
+            'age'              => 'nullable|integer|min:0|max:150',
+            'email'            => 'nullable|email|unique:users,email,' . ($staffMember->user->id ?? 'NULL'),
+            'profile_picture'  => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'approved'         => 'sometimes|boolean',
+        ]);
 
-    // Sync the changes with the user table
-    $user = User::where('id_number', $staffMember->id_number)->first();
-    if ($user) {
-        $user->first_name = $staffMember->first_name;
-        $user->last_name = $staffMember->last_name;
-        $user->save();
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()->all()], 422);
+        }
+
+        // Handle File Upload
+        if ($request->hasFile('profile_picture')) {
+            // Delete the old profile picture if exists
+            if ($staffMember->profile_picture && Storage::disk('public')->exists(str_replace('storage/', '', $staffMember->profile_picture))) {
+                Storage::disk('public')->delete(str_replace('storage/', '', $staffMember->profile_picture));
+            }
+
+            $image      = $request->file('profile_picture');
+            $imageName  = Str::uuid() . '.' . $image->getClientOriginalExtension();
+            $path       = $image->storeAs('profile_pictures', $imageName, 'public');
+            $profilePic = 'storage/' . $path;
+        } else {
+            $profilePic = $staffMember->profile_picture;
+        }
+
+        // Update Staff Member
+        $staffMember->update([
+            'id_number'        => strtoupper(trim($request->input('id_number'))),
+            'first_name'       => ucfirst(trim($request->input('first_name'))),
+            'last_name'        => ucfirst(trim($request->input('last_name'))),
+            'position'         => ucfirst(trim($request->input('position'))),
+            'father_name'      => isset($request->father_name) ? ucfirst(trim($request->input('father_name'))) : null,
+            'mother_name'      => isset($request->mother_name) ? ucfirst(trim($request->input('mother_name'))) : null,
+            'contact_number'   => $request->input('contact_number'),
+            'address'          => $request->input('address'),
+            'birthdate'        => $request->input('birthdate'),
+            'emergency_contact'=> $request->input('emergency_contact'),
+            'age'              => $request->input('age'),
+            'profile_picture'  => $profilePic,
+            'approved'         => $request->has('approved') ? $request->input('approved') : $staffMember->approved,
+        ]);
+
+        // Sync with User
+        $user = User::where('id_number', $staffMember->id_number)->first();
+        if ($user) {
+            // Update user details
+            $user->update([
+                'email'     => $request->input('email') ?? $user->email,
+                'first_name'=> ucfirst(trim($request->input('first_name'))),
+                'last_name' => ucfirst(trim($request->input('last_name'))),
+                'position'  => ucfirst(trim($request->input('position'))),
+                'approved'  => $staffMember->approved,
+            ]);
+
+            // If email is updated, consider sending a verification email
+            if ($request->has('email') && $request->input('email') !== $user->email) {
+                $user->sendEmailVerificationNotification();
+            }
+        }
+
+        return response()->json(['success' => true, 'message' => 'Staff details updated successfully.', 'staff' => $staffMember]);
     }
 
-    return response()->json(['success' => true, 'message' => 'Staff details updated successfully.', 'staff' => $staffMember]);
-}
+    /**
+     * Delete a staff member and corresponding user account.
+     */
+    public function delete($id)
+    {
+        $staffMember = Staff::findOrFail($id);
 
-public function delete($id)
-{
-    $staffMember = Staff::findOrFail($id);
+        // Delete corresponding User
+        $user = User::where('id_number', $staffMember->id_number)->first();
+        if ($user) {
+            // Delete profile picture if exists
+            if ($user->profile_picture && Storage::disk('public')->exists(str_replace('storage/', '', $user->profile_picture))) {
+                Storage::disk('public')->delete(str_replace('storage/', '', $user->profile_picture));
+            }
 
-    // Also delete the user if exists
-    $user = User::where('id_number', $staffMember->id_number)->first();
-    if ($user) {
-        $user->delete();
+            $user->delete();
+            Log::info("Deleted user account for staff ID: {$staffMember->id_number}");
+        }
+
+        // Delete profile picture if exists
+        if ($staffMember->profile_picture && Storage::disk('public')->exists(str_replace('storage/', '', $staffMember->profile_picture))) {
+            Storage::disk('public')->delete(str_replace('storage/', '', $staffMember->profile_picture));
+        }
+
+        // Delete the staff member
+        $staffMember->delete();
+
+        Log::info("Deleted staff member ID: {$staffMember->id_number}");
+
+        return response()->json(['success' => true, 'message' => 'Staff member deleted successfully.']);
     }
 
-    // Delete the staff member
-    $staffMember->delete();
-
-    return response()->json(['success' => true, 'message' => 'Staff member deleted successfully.']);
-}
-public function show($id)
+    /**
+     * Show a specific staff member's details.
+     */
+    public function show($id)
 {
     // Find the staff member by ID
     $staff = Staff::find($id);
@@ -152,8 +252,16 @@ public function show($id)
         return response()->json(['message' => 'Staff not found'], 404);
     }
 
-    // Return the staff data
-    return response()->json($staff);
-}
+    // Optionally, include related user details
+    $user = User::where('id_number', $staff->id_number)->first();
 
+    // Combine staff and user data if needed
+    $staffData = $staff->toArray();
+    if ($user) {
+        $staffData['user'] = $user->toArray();
+    }
+
+    // Return the staff data
+    return response()->json(['staff' => $staffData]);
+}
 }

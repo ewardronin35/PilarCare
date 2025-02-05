@@ -1,5 +1,4 @@
 <!-- resources/views/pdf/complaint_statistics_report.blade.php -->
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -68,8 +67,8 @@
 
     <div class="report-info">
         <span><strong>Total Complaints:</strong> {{ $complaints->count() }}</span>
-        <span><strong>Most Used Medicine:</strong> {{ $mostUsedMedicine }} ({{ $mostUsedMedicineCount }} times)</span>
-    </div>
+        <span><strong>Most Used Medicine:</strong> {{ $mostUsedMedicine ?? 'N/A' }} ({{ $mostUsedMedicineCount ?? 0 }} times)</span>
+        </div>
 
     <table>
         <thead>
@@ -78,7 +77,6 @@
                 <th>First Name</th>
                 <th>Last Name</th>
                 <th>Record Date</th>
-                <th>Confine Status</th>
                 <th>Go Home Status</th>
                 <th>Description of Sickness</th>
                 <th>Pain Assessment</th>
@@ -91,8 +89,7 @@
                     <td>{{ $index + 1 }}</td>
                     <td>{{ $complaint->first_name }}</td>
                     <td>{{ $complaint->last_name }}</td>
-                    <td>{{ \Carbon\Carbon::parse($complaint->created_at)->format('Y-m-d') }}</td> <!-- Updated -->
-                    <td>{{ ucfirst(str_replace('_', ' ', $complaint->confine_status)) }}</td>
+                    <td>{{ \Carbon\Carbon::parse($complaint->created_at)->format('Y-m-d') }}</td>
                     <td>{{ ucfirst(str_replace('_', ' ', $complaint->go_home)) }}</td>
                     <td>{{ $complaint->sickness_description }}</td>
                     <td>{{ $complaint->pain_assessment }}</td>
@@ -103,7 +100,7 @@
     </table>
 
     <div class="summary">
-        <p><span>Most Used Medicine:</span> {{ $mostUsedMedicine }} was used {{ $mostUsedMedicineCount }} times during this period.</p>
+        <p><span>Most Used Medicine:</span> {{ $mostUsedMedicine ?? 'N/A' }} was used {{ $mostUsedMedicineCount ?? 'N/A' }} times during this period.</p>
     </div>
 </body>
 </html>

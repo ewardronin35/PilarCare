@@ -85,6 +85,22 @@
             font-size: 12px;
             color: #999;
         }
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+            padding: 0 50px;
+        }
+
+        .signature {
+            text-align: center;
+        }
+
+        .signature-line {
+            border-top: 1px solid #000;
+            width: 200px;
+            margin: 0 auto;
+        }
     </style>
 </head>
 <body>
@@ -114,21 +130,10 @@
             <th>Last Name</th>
             <td>{{ $complaint->last_name }}</td>
         </tr>
-        <tr>
-            <th>Age</th>
-            <td>{{ $complaint->age }}</td>
-        </tr>
-        <tr>
-            <th>Birthdate</th>
-            <td>{{ $complaint->birthdate }}</td>
-        </tr>
-        <tr>
-            <th>Personal Contact Number</th>
-            <td>{{ $complaint->personal_contact_number }}</td>
-        </tr>
+   
 
         <!-- Role-Specific Data -->
-        @if($role == 'student')
+        @if($role == 'Student')
             <tr>
                 <th>Grade</th>
                 <td>{{ $grade ?? 'N/A' }}</td>
@@ -137,12 +142,12 @@
                 <th>Section</th>
                 <td>{{ $section ?? 'N/A' }}</td>
             </tr>
-        @elseif($role == 'staff')
+        @elseif($role == 'Staff')
             <tr>
                 <th>Position</th>
                 <td>{{ $position ?? 'N/A' }}</td>
             </tr>
-        @elseif($role == 'teacher')
+        @elseif($role == 'Teacher')
             <tr>
                 <th>BED or HED</th>
                 <td>{{ $bed_or_hed ?? 'N/A' }}</td>
@@ -162,18 +167,7 @@
             <th>Description of Sickness</th>
             <td>{{ $complaint->sickness_description }}</td>
         </tr>
-        <tr>
-            <th>Confine Status</th>
-            <td>{{ ucfirst($complaint->confine_status) }}</td>
-        </tr>
-        <tr>
-            <th>Go Home Status</th>
-            <td>{{ ucfirst($complaint->go_home) }}</td>
-        </tr>
-        <tr>
-            <th>Status</th>
-            <td>{{ ucfirst($complaint->status) }}</td>
-        </tr>
+       
     </table>
 
     <!-- Additional Sections (Optional) -->
@@ -181,6 +175,17 @@
         <div class="section-title">Additional Information</div>
         <p style="padding-left: 20px;">{{ $complaint->additional_info }}</p>
     @endif
+    <!-- Signature Section -->
+    <div class="signatures">
+        <div class="signature">
+            <div class="signature-line"></div>
+            <p>School Nurse</p>
+        </div>
+        <div class="signature">
+            <div class="signature-line"></div>
+            <p>Prefect of Discipline</p>
+        </div>
+    </div>
 
     <!-- Footer -->
     <div class="footer">

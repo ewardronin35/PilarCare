@@ -1,7 +1,7 @@
 @component('mail::message')
 # Student Going Home Notification
 
-Dear {{ $student->parents->first()->user->first_name ?? 'Parent' }},
+Dear {{ $parent->user->first_name ?? 'Parent' }},
 
 We would like to inform you that your child, **{{ $student->first_name }} {{ $student->last_name }}**, has been marked as requiring to go home.
 

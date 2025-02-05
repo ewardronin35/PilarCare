@@ -1,10 +1,14 @@
-<x-app-layout :pageTitle="'Medical Inventory'">   
+
+    <!-- resources/views/admin/inventory.blade.php -->
+
+<x-app-layout :pageTitle="'Medical Inventory'">
     <!-- Google Fonts and Font Awesome -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <style>
-        /* Global Styles */
+        /* Existing Styles */
+        /* ... (omitted for brevity) ... */
         body {
             font-family: 'Poppins', sans-serif;
             opacity: 0;
@@ -357,15 +361,114 @@
     background-color: #c82333; /* Darker red on hover */
 }
 
+        /* Prediction Container Styles */
+        .prediction-container {
+            background-color: #f1f1f1;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            animation: fadeIn 1s forwards;
+        }
+
+        .prediction-container h2 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .prediction-item {
+            margin-bottom: 15px;
+        }
+
+        .prediction-item span {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* Responsive Chart Container */
+        .chart-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        .chart-container {
+    height: 400px; /* Set the desired fixed height */
+    max-height: 100%; /* Ensures the chart respects the max height */
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: #fff; /* Optional, makes chart area distinct */
+    border-radius: 10px;
+}
+
+        /* Adjust Action Buttons within Tables */
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        /* Enhanced Form Styles */
+        .form-container form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-container form .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+
+        .form-container form .form-group label {
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .form-container form .form-group input,
+        .form-container form .form-group select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-container form .form-group input:hover,
+        .form-container form .form-group select:hover {
+            border-color: #00d1ff;
+        }
+
+        /* Button Styles */
+        .form-container form .form-group button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #00d1ff;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s, transform 0.3s;
+            margin-top: 10px;
+        }
+
+        .form-container form .form-group button:hover {
+            background-color: #00b8e6;
+            transform: scale(1.05);
+        }
+
+        .form-container form .form-group button:active {
+            transform: scale(0.95);
+        }
     </style>
 
     <main class="main-content">
-        <h1><i class="fas fa-box"></i> Inventory Management</h1>
-      
         <!-- Tabs -->
         <div class="tabs">
-            <div class="tab active" id="inventory-tab" onclick="switchTab('inventory')"><i class="fas fa-clipboard-list"></i> Inventory Table</div>
-            <div class="tab" id="stats-tab" onclick="switchTab('stats')"><i class="fas fa-chart-bar"></i> Inventory Statistics</div>
+            <div class="tab active" id="inventory-tab" onclick="switchTab('inventory')">
+                <i class="fas fa-clipboard-list"></i> Inventory Table
+            </div>
+            <div class="tab" id="stats-tab" onclick="switchTab('stats')">
+                <i class="fas fa-chart-bar"></i> Inventory Statistics
+            </div>
         </div>
 
         <!-- Tab Content -->
@@ -377,31 +480,34 @@
                     <form id="add-form">
                         @csrf
                         <div class="form-group">
-                            <label for="item-name">Item Name</label>
-                            <input type="text" id="item-name" name="item_name" required>
+                            <label for="item-name">Item Name <span style="color: red;">*</span></label>
+                            <input type="text" id="item-name" name="item_name" placeholder="Enter item name" required>
                         </div>
                         <div class="form-group">
-                            <label for="quantity">Quantity</label>
-                            <input type="number" id="quantity" name="quantity" required>
+                            <label for="quantity">Quantity <span style="color: red;">*</span></label>
+                            <input type="number" id="quantity" name="quantity" min="1" placeholder="Enter quantity" required>
                         </div>
                         <div class="form-group">
-                            <label for="supplier">Brand</label>
-                            <input type="text" id="supplier" name="supplier" required>
+                            <label for="generic-name">Generic Name <span style="color: red;">*</span></label>
+                            <input type="text" id="generic-name" name="generic_name" placeholder="Enter the generic name of the medicine" required>
                         </div>
                         <div class="form-group">
-                            <label for="type">Type</label>
+                            <label for="type">Type <span style="color: red;">*</span></label>
                             <select id="type" name="type" required>
+                                <option value="">-- Select Type --</option>
                                 <option value="Equipment">Equipment</option>
                                 <option value="Medicine">Medicine</option>
                             </select>
                         </div>
+                        <!-- Additional Fields for Enhanced Management -->
+                        
                         <div class="form-group">
-                            <label for="date-acquired">Date Acquired</label>
+                            <label for="date-acquired">Date Acquired <span style="color: red;">*</span></label>
                             <input type="date" id="date-acquired" name="date_acquired" required>
                         </div>
                         <div class="form-group">
                             <label for="expiry-date">Expiry Date</label>
-                            <input type="date" id="expiry-date" name="expiry_date" required>
+                            <input type="date" id="expiry-date" name="expiry_date">
                         </div>
                         <div class="form-group">
                             <button type="button" onclick="addItem()">Add Item</button>
@@ -414,11 +520,11 @@
                 <div class="table-container">
                     <h2><i class="fas fa-table"></i> Inventory Table</h2>
                     <table id="inventory-table" class="inventory-table">
-                    <thead>
+                        <thead>
                             <tr>
                                 <th>Item Name</th>
                                 <th>Quantity</th>
-                                <th>Brand</th>
+                                <th>Generic Name</th>
                                 <th>Type</th>
                                 <th>Date Acquired</th>
                                 <th>Expiry Date</th>
@@ -430,25 +536,26 @@
                                 <tr id="item-row-{{ $item->id }}">
                                     <td>{{ $item->item_name }}</td>
                                     <td>{{ $item->quantity }}</td>
-                                    <td>{{ $item->supplier }}</td>
+                                    <td>{{ $item->generic_name }}</td>
                                     <td>{{ $item->type }}</td>
                                     <td>{{ \Carbon\Carbon::parse($item->date_acquired)->format('Y-m-d') }}</td>
                                     <td>{{ \Carbon\Carbon::parse($item->expiry_date)->format('Y-m-d') }}</td>
                                     <td>
-                                    <div class="action-buttons">
-    <button class="edit-button" onclick="openEditModal({{ $item->id }})"><i class="fas fa-edit"></i> Edit</button>
-    <button class="delete-button" onclick="confirmDelete({{ $item->id }})"><i class="fas fa-trash"></i> Delete</button>
-</div>
-
+                                        <div class="action-buttons">
+                                            <button class="edit-button" onclick="openEditModal({{ $item->id }})">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </button>
+                                            <button class="delete-button" onclick="confirmDelete({{ $item->id }})">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
-       
             </div>
-            
         </div>
 
         <!-- Inventory Statistics Tab Content -->
@@ -458,7 +565,24 @@
                     <!-- Inventory Statistics Chart -->
                     <div class="chart-container">
                         <h2><i class="fas fa-chart-line"></i> Inventory Statistics</h2>
-                        <canvas id="inventory-chart" style="max-width: 100%;"></canvas>
+                        <canvas id="inventory-chart" style="max-width: 100%; height: 300px;"></canvas>
+                    </div>
+
+                    <!-- Prediction Section -->
+                    <div class="prediction-container">
+                        <h2><i class="fas fa-poll"></i> Predictions</h2>
+                        <div class="prediction-item">
+                            <span>Next Likely Medicine to Restock:</span>
+                            <p id="next-medicine">Loading...</p>
+                        </div>
+                        <div class="prediction-item">
+                            <span>Next Likely Equipment to Maintain:</span>
+                            <p id="next-equipment">Loading...</p>
+                        </div>
+                        <!-- Prediction Charts -->
+                        <div class="chart-container" style="height: 300px;">
+                            <canvas id="prediction-chart"></canvas>
+                        </div>
                     </div>
 
                     <!-- Generate Inventory Statistics Report -->
@@ -467,15 +591,17 @@
                         <form id="inventory-report-form">
                             @csrf
                             <div class="form-group">
-                                <label for="report-period">Select Report Period</label>
+                                <label for="report-period">Select Report Period <span style="color: red;">*</span></label>
                                 <select id="report-period" name="report_period" required>
-                                    <option value="week">Weekly</option>
-                                    <option value="month">Monthly</option>
-                                    <option value="year">Yearly</option>
+                                    <option value="">-- Select Period --</option>
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="yearly">Yearly</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="report-date">Select Date</label>
+                                <label for="report-date">Select Date <span style="color: red;">*</span></label>
                                 <input type="date" id="report-date" name="report_date" required>
                             </div>
                             <div class="form-group">
@@ -486,7 +612,6 @@
                 </div>
             </div>
         </div>
-
     </main>
 
     <!-- Edit Modal HTML Structure -->
@@ -499,33 +624,35 @@
             <div class="modal-body">
                 <form id="edit-form">
                     @csrf
+                    @method('PUT')
                     <input type="hidden" id="edit-item-id" name="id">
                     <div class="form-group">
-                        <label for="edit-item-name">Item Name</label>
+                        <label for="edit-item-name">Item Name <span style="color: red;">*</span></label>
                         <input type="text" id="edit-item-name" name="item_name" required>
                     </div>
                     <div class="form-group">
-                        <label for="edit-quantity">Quantity</label>
-                        <input type="number" id="edit-quantity" name="quantity" required>
+                        <label for="edit-quantity">Quantity <span style="color: red;">*</span></label>
+                        <input type="number" id="edit-quantity" name="quantity" min="1" required>
                     </div>
                     <div class="form-group">
-                        <label for="edit-supplier">Brand</label>
-                        <input type="text" id="edit-supplier" name="supplier" required>
-                    </div>
+    <label for="edit-generic-name">Generic Name <span style="color: red;">*</span></label>
+    <input type="text" id="edit-generic-name" name="generic_name" required>
+</div>
                     <div class="form-group">
-                        <label for="edit-type">Type</label>
+                        <label for="edit-type">Type <span style="color: red;">*</span></label>
                         <select id="edit-type" name="type" required>
                             <option value="Equipment">Equipment</option>
                             <option value="Medicine">Medicine</option>
                         </select>
                     </div>
+                 
                     <div class="form-group">
-                        <label for="edit-date-acquired">Date Acquired</label>
+                        <label for="edit-date-acquired">Date Acquired <span style="color: red;">*</span></label>
                         <input type="date" id="edit-date-acquired" name="date_acquired" required>
                     </div>
                     <div class="form-group">
                         <label for="edit-expiry-date">Expiry Date</label>
-                        <input type="date" id="edit-expiry-date" name="expiry_date" required>
+                        <input type="date" id="edit-expiry-date" name="expiry_date">
                     </div>
                 </form>
             </div>
@@ -535,61 +662,66 @@
             </div>
         </div>
     </div>
+    <script>
+    const INVENTORY_BASE_URL = "{{ url('/admin/inventory') }}";
+</script>
 
     <!-- Script Section -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- DataTables CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
-<!-- DataTables JS and jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <!-- DataTables CSS and JS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-    // Initialize DataTables for the inventory table
-    $('#inventory-table').DataTable({
-        paging: true,
-        searching: true,
-        ordering: true,
-        order: [[4, 'desc']], // Example: Sort by Date Acquired by default
-        columnDefs: [
-            { orderable: false, targets: 6 } // Disable ordering on Actions column
-        ]
-    });
-});
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize DataTables for the inventory table
+            $('#inventory-table').DataTable({
+                paging: true,
+                searching: true,
+                ordering: true,
+                order: [[0, 'asc']], // Example: Sort by Date Acquired by default
+                columnDefs: [
+                    { orderable: false, targets: 6 } // Disable ordering on Actions column
+                ]
+            });
+
+            // Fetch inventory predictions
+            fetchInventoryPredictions();
+
+            // Render inventory statistics chart
+            renderInventoryChart();
+        });
 
         // Clear Add Form Function
         function clearAddForm() {
             document.getElementById('add-form').reset();
         }
 
-        // Clear Report Form Function
-        function clearReportForm() {
-            document.getElementById('inventory-report-form').reset();
-        }
-
-        // Open Edit Modal Function with Fade-In Animation
         function openEditModal(id) {
-            const item = document.getElementById(`item-row-${id}`);
-            if (!item) return;
+    const item = document.getElementById(`item-row-${id}`);
+    if (!item) return;
 
-            console.log(`Opening edit modal for item ID: ${id}`); // Debugging line
+    console.log(`Opening edit modal for item ID: ${id}`); // Debugging line
 
-            document.getElementById('edit-item-id').value = id;
-            document.getElementById('edit-item-name').value = item.children[0].innerText;
-            document.getElementById('edit-quantity').value = item.children[1].innerText;
-            document.getElementById('edit-supplier').value = item.children[2].innerText;
-            document.getElementById('edit-type').value = item.children[3].innerText;
-            document.getElementById('edit-date-acquired').value = formatDateForInput(item.children[4].innerText);
-            document.getElementById('edit-expiry-date').value = formatDateForInput(item.children[5].innerText);
+    document.getElementById('edit-item-id').value = id;
+    document.getElementById('edit-item-name').value = item.children[0].innerText;
+    document.getElementById('edit-quantity').value = item.children[1].innerText;
+    document.getElementById('edit-generic-name').value = item.children[2].innerText;
+    document.getElementById('edit-type').value = item.children[3].innerText;
+    document.getElementById('edit-date-acquired').value = formatDateForInput(item.children[4].innerText);
+    document.getElementById('edit-expiry-date').value = formatDateForInput(item.children[5].innerText);
 
-            const modal = document.getElementById('edit-modal');
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden'; // Prevent background scrolling
-            document.getElementById('edit-item-name').focus(); // Set focus to first input
-        }
+    const modal = document.getElementById('edit-modal');
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    document.getElementById('edit-item-name').focus(); // Set focus to first input
+}
 
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
         // Close Edit Modal Function with Fade-Out Animation
         function closeEditModal() {
             const modal = document.getElementById('edit-modal');
@@ -611,6 +743,19 @@
             const form = document.getElementById('add-form');
             const formData = new FormData(form);
 
+            // Front-end Validation
+            const expiryDate = formData.get('expiry_date');
+            const dateAcquired = formData.get('date_acquired');
+
+            if (expiryDate && new Date(expiryDate) < new Date(dateAcquired)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Dates',
+                    text: 'Expiry Date cannot be earlier than Date Acquired.'
+                });
+                return;
+            }
+
             // Show SweetAlert loading spinner
             Swal.fire({
                 title: 'Processing...',
@@ -627,7 +772,9 @@
             })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
+                    return response.json().then(errorData => {
+                        throw new Error(Object.values(errorData.errors || {}).flat().join(', ') || 'Unknown error');
+                    });
                 }
 
                 const contentType = response.headers.get('content-type');
@@ -644,6 +791,7 @@
                     Swal.fire({
                         icon: 'success',
                         title: 'Item Added',
+                        text: data.message,
                         timer: 3000,
                         showConfirmButton: false
                     }).then(() => location.reload());
@@ -673,79 +821,101 @@
 
         // Update Item Function
         function updateItem() {
-            const form = document.getElementById('edit-form');
-            const formData = new FormData(form);
-            const id = document.getElementById('edit-item-id').value;
-            
-            // Show SweetAlert loading spinner
-            Swal.fire({
-                title: 'Updating...',
-                text: 'Please wait while we update the item.',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
+    const form = document.getElementById('edit-form');
+    const formData = new FormData(form);
+    const id = document.getElementById('edit-item-id').value;
 
-            fetch(`{{ url('/admin/inventory/update/') }}/${id}`, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
+    // Front-end Validation
+    const expiryDate = formData.get('expiry_date');
+    const dateAcquired = formData.get('date_acquired');
 
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    throw new Error('Invalid JSON response');
-                }
+    if (expiryDate && new Date(expiryDate) < new Date(dateAcquired)) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Invalid Dates',
+            text: 'Expiry Date cannot be earlier than Date Acquired.'
+        });
+        return;
+    }
 
-                return response.json();
-            })
-            .then(data => {
-                Swal.close(); // Close the loading spinner
+    // Show SweetAlert loading spinner
+    Swal.fire({
+        title: 'Updating...',
+        text: 'Please wait while we update the item.',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
 
-                if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Item Updated',
-                        timer: 3000,
-                        showConfirmButton: false
-                    }).then(() => location.reload());
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message || 'Error updating item',
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
+    // Append the method override for PUT
+    formData.append('_method', 'PUT');
 
-                // Display error in SweetAlert
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: `An error occurred: ${error.message}`,
-                    timer: 5000,
-                    showConfirmButton: true
-                });
+    fetch(`${INVENTORY_BASE_URL}/update/${id}`, {
+        method: 'POST', // Use POST and override with PUT using _method
+        body: formData,
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}', // Ensure CSRF token is included
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(errorData => {
+                throw new Error(Object.values(errorData.errors || {}).flat().join(', ') || 'Unknown error');
             });
         }
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Invalid JSON response');
+        }
+
+        return response.json();
+    })
+    .then(data => {
+        Swal.close(); // Close the loading spinner
+
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Item Updated',
+                text: data.message,
+                timer: 3000,
+                showConfirmButton: false
+            }).then(() => location.reload());
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message || 'Error updating item',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+
+        // Display error in SweetAlert
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: `An error occurred: ${error.message}`,
+            timer: 5000,
+            showConfirmButton: true
+        });
+    });
+}
 
         // Confirm Delete Function
         function confirmDelete(id) {
             Swal.fire({
                 title: 'Are you sure?',
-                text: "You won't be able to revert this!",
+                text: "This action cannot be undone!",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
                 confirmButtonText: 'Yes, delete it!'
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -767,7 +937,9 @@
                     })
                     .then(response => {
                         if (!response.ok) {
-                            throw new Error(`HTTP error! Status: ${response.status}`);
+                            return response.json().then(errorData => {
+                                throw new Error(errorData.message || 'Unknown error');
+                            });
                         }
 
                         const contentType = response.headers.get('content-type');
@@ -784,6 +956,7 @@
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Item Deleted',
+                                text: data.message,
                                 timer: 3000,
                                 showConfirmButton: false
                             }).then(() => location.reload());
@@ -830,74 +1003,49 @@
         }
 
         // Render the chart for inventory stats
-        const ctx = document.getElementById('inventory-chart').getContext('2d');
-        const inventoryChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: {!! json_encode($inventoryStats['items']) !!}, 
-                datasets: [{
-                    label: 'Most Used Items',
-                    data: {!! json_encode($inventoryStats['usage']) !!},
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
+      // Render the chart for inventory stats
+function renderInventoryChart() {
+    const ctx = document.getElementById('inventory-chart').getContext('2d');
+    const inventoryChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {!! json_encode($inventoryStats['items']) !!}, 
+            datasets: [{
+                label: 'Item Usage',
+                data: {!! json_encode($inventoryStats['usage']) !!},
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, // Prevents aspect ratio from fixing the height
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
                     }
                 }
-            }
-        });
-
-        // Generate Inventory Report Function
-// Generate Inventory Statistics Report with SweetAlert
-function generateInventoryReport() {
-    const form = document.getElementById('inventory-report-form');
-    const formData = new FormData(form);
-
-    // Front-end Validation
-    const reportPeriod = formData.get('report_period');
-    const reportDate = formData.get('report_date');
-
-    if (!reportPeriod || !reportDate) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Please select both report period and date.'
-        });
-        return;
-    }
-
-    // Confirmation Prompt
-    Swal.fire({
-        title: 'Generate Report',
-        text: `Do you want to generate a ${capitalizeFirstLetter(reportPeriod)} report for ${reportDate}?`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#28a745',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, generate it!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Show loading spinner
-            Swal.fire({
-                title: 'Generating Report...',
-                text: 'Please wait while your report is being generated.',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
+            },
+            layout: {
+                padding: {
+                    top: 20, // Adjust padding for a more spacious layout
+                    bottom: 20
                 }
-            });
+            }
+        }
+    });
+}
 
-            // Send POST request to generate the report
-            fetch('{{ route("admin.inventory.generateReport") }}', {
-                method: 'POST',
-                body: formData,
+
+        // Fetch and Display Inventory Predictions on Statistics Tab Load
+        function fetchInventoryPredictions() {
+            fetch('{{ route("admin.inventory.predictions") }}', {
+                method: 'GET',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
                     'Accept': 'application/json'
                 }
             })
@@ -910,46 +1058,172 @@ function generateInventoryReport() {
                 return response.json();
             })
             .then(data => {
-                Swal.close(); // Close the loading spinner
-
                 if (data.success) {
-                    // Automatically open the generated PDF in a new tab
-                    window.open(data.pdf_url, '_blank');
+                    document.getElementById('next-medicine').textContent = data.next_medicine_to_restock;
+                    document.getElementById('next-equipment').textContent = data.next_equipment_to_maintain;
 
-                    // Notify the user of successful generation
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Report Generated',
-                        text: 'Your Inventory Statistics Report has been generated and opened in a new tab.',
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
+                    // Render Prediction Chart
+                    renderPredictionChart(data.next_medicine_to_restock, data.next_equipment_to_maintain);
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message || 'An error occurred while generating the report.'
-                    });
+                    document.getElementById('next-medicine').textContent = data.message;
+                    document.getElementById('next-equipment').textContent = data.message;
                 }
             })
             .catch(error => {
-                console.error('Error generating report:', error);
+                console.error('Error fetching inventory predictions:', error);
+                document.getElementById('next-medicine').textContent = 'Error loading prediction.';
+                document.getElementById('next-equipment').textContent = 'Error loading prediction.';
+            });
+        }
 
+        // Render Prediction Chart using Chart.js
+        function renderPredictionChart(nextMedicine, nextEquipment) {
+            const ctx = document.getElementById('prediction-chart').getContext('2d');
+
+            const data = {
+                labels: ['Next Medicine to Restock', 'Next Equipment to Maintain'],
+                datasets: [{
+                    label: 'Predictions',
+                    data: [1, 1], // Dummy data for representation
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(255, 206, 86, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(255,99,132,1)',
+                        'rgba(255, 206, 86, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            };
+
+            const options = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            afterLabel: function(context) {
+                                if (context.label === 'Next Medicine to Restock') {
+                                    return nextMedicine;
+                                } else if (context.label === 'Next Equipment to Maintain') {
+                                    return nextEquipment;
+                                }
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        display: false,
+                        beginAtZero: true
+                    }
+                }
+            };
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: data,
+                options: options
+            });
+        }
+
+        // Generate Inventory Report Function
+        function generateInventoryReport() {
+            const form = document.getElementById('inventory-report-form');
+            const formData = new FormData(form);
+
+            // Front-end Validation
+            const reportPeriod = formData.get('report_period');
+            const reportDate = formData.get('report_date');
+
+            if (!reportPeriod || !reportDate) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: error.message || 'An unexpected error occurred while generating the report.'
+                    text: 'Please select both report period and date.'
                 });
+                return;
+            }
+
+            // Confirmation Prompt
+            Swal.fire({
+                title: 'Generate Report',
+                text: `Do you want to generate a ${capitalizeFirstLetter(reportPeriod)} report for ${reportDate}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, generate it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading spinner
+                    Swal.fire({
+                        title: 'Generating Report...',
+                        text: 'Please wait while your report is being generated.',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Send POST request to generate the report
+                    fetch('{{ route("admin.inventory.generateReport") }}', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(errorData => {
+                                throw new Error(errorData.message || 'Unknown error');
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        Swal.close(); // Close the loading spinner
+
+                        if (data.success) {
+                            // Automatically open the generated PDF in a new tab
+                            window.open(data.pdf_url, '_blank');
+
+                            // Notify the user of successful generation
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Report Generated',
+                                text: 'Your Inventory Statistics Report has been generated and opened in a new tab.',
+                                timer: 3000,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'An error occurred while generating the report.'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error generating report:', error);
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: error.message || 'An unexpected error occurred while generating the report.'
+                        });
+                    });
+                }
             });
         }
-    });
-}
 
-// Helper function to capitalize the first letter
-function capitalizeFirstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
+        // Helper function to capitalize the first letter
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
 
         // Handle clicks outside the modal content to close it
         window.onclick = function(event) {
@@ -967,7 +1241,7 @@ function capitalizeFirstLetter(string) {
             }
         });
 
-        // Fade-Out Animation on Page Unload
+        // Fade-Out Animation on Page Unload (Optional)
         // window.onbeforeunload = function() {
         //     document.body.style.animation = 'fadeOut 1s forwards';
         // };

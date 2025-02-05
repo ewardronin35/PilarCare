@@ -14,6 +14,7 @@ return [
     */
 
     'name' => env('APP_NAME', 'PilarCare'),
+    'timezone' => 'Asia/Manila', // or your desired timezone
 
     /*
     |--------------------------------------------------------------------------
@@ -39,7 +40,7 @@ return [
     |
     */
 
-    'debug' => (bool) env('APP_DEBUG', false),
+    'debug' => (bool) env('APP_DEBUG', true),
 
     /*
     |--------------------------------------------------------------------------
@@ -65,7 +66,7 @@ return [
     |
     */
 
-    'timezone' => env('APP_TIMEZONE', 'UTC'),
+'timezone' => 'Asia/Manila',
 
     /*
     |--------------------------------------------------------------------------

@@ -27,7 +27,7 @@ class ParentDashboardController extends Controller
         }
 
         // Fetch all the students associated with this parent
-        $students = $parent->student()->with(['information', 'medicalRecords', 'dentalRecords', 'healthExaminations'])->get();
+        $students = $parent->students()->with(['information', 'medicalRecords', 'dentalRecords', 'healthExaminations'])->get();
 
         // Extract student IDs
         $studentIds = $students->pluck('id_number')->toArray();
@@ -73,7 +73,17 @@ class ParentDashboardController extends Controller
         // Check if any student's profile information is complete
         $showModal = $informations->count() < $students->count(); // Show modal if any student lacks information
 
-        // Pass all data to the view, including studentsStatus
+        // Define personName based on the parent record
+        $personName = 'N/A'; // Default value
+        if ($parent->first_name && $parent->last_name) {
+            $personName = $parent->first_name . ' ' . $parent->last_name;
+        } elseif ($parent->first_name) {
+            $personName = $parent->first_name;
+        } elseif ($parent->last_name) {
+            $personName = $parent->last_name;
+        }
+
+        // Pass all data to the view, including personName
         return view('parent.ParentDashboard', compact(
             'appointments',
             'appointmentCount',
@@ -84,7 +94,8 @@ class ParentDashboardController extends Controller
             'hasHealthExamination',
             'hasDentalRecord',
             'hasMedicalRecord',
-            'studentsStatus' // New data passed to the view
+            'studentsStatus',
+            'personName' // Pass personName to the view
         ));
     }
 }

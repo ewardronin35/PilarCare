@@ -3,7 +3,6 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.dataTables.min.css">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
     <style>
         body {
             background-color: #f5f7fa;
@@ -581,16 +580,111 @@ h1 {
     font-size: 14px;
 }
 
+/* Sub-Tab Buttons */
+.sub-tab-buttons {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    gap: 10px;
+}
+
+.sub-tab-buttons button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.physical-exam-container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+/* Physical Examination Table Styling */
+.physical-exam-table {
+    flex: 1;
+    min-width: 300px; /* Ensure table doesn't get too small */
+    overflow-x: auto;
+}
+
+/* Physical Examination Chart Styling */
+.physical-exam-chart {
+    flex: 1;
+    min-width: 300px; /* Ensure chart doesn't get too small */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* BMI Chart Canvas Styling */
+.physical-exam-chart canvas {
+    width: 100%;
+    height: 300px; /* Adjust as needed */
+}
+.sub-tab-buttons button.active {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+.sub-tab-buttons button:hover:not(.active) {
+    background-color: #0056b3;
+}
+
+/* Sub-Tab Content */
+.sub-tab-content {
+    display: none;
+    font-family: 'Poppins', sans-serif;
+
+    animation: fadeInUp 0.5s ease-in-out;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.sub-tab-content.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Adjustments for Responsive Design */
+@media (max-width: 768px) {
+    .sub-tab-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .sub-tab-buttons button {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .physical-exam-container {
+        flex-direction: column;
+    }
+
+    .physical-exam-chart {
+        width: 100%;
+    }
+}
 
     </style>
 
     <div class="main-content">
         
     <div class="tab-buttons">
-    <button id="tab1" class="active" onclick="showTab('medical-record')">Medical Record</button>
-    <button id="tab2" onclick="showTab('health-documents')">Health Documents</button>
-
-        </div>
+    <button id="tab1" class="active" onclick="showTab('medical-record')">
+        <i class="fas fa-notes-medical"></i> Medical Record
+    </button>
+    <button id="tab2" onclick="showTab('health-documents')">
+        <i class="fas fa-file-medical"></i> Health Documents
+    </button>
+</div>
         <div id="medical-record" class="tab-content active">
         <div class="forms-container">
                 <!-- Check if the latest medical record is approved or not -->
@@ -609,7 +703,7 @@ h1 {
                 <form method="POST" action="{{ route('student.medical-record.store') }}" enctype="multipart/form-data" id="medical-record-form" onsubmit="return checkSubmit()">
                     @csrf
                     <input type="hidden" name="is_current" value="true">
-
+                    
                     <div class="profile-picture">
         <img id="profile-picture-preview" src="{{ $information->profile_picture ? asset('storage/' . $information->profile_picture) : asset('images/pilarLogo.jpg') }}" alt="Profile Picture">
         <button id="profile-picture-button" class="button" type="button">Choose Profile Picture</button>
@@ -648,11 +742,11 @@ h1 {
                     </div>
                     <div class="form-group-inline">
                         <div class="form-group">
-                            <label for="father-name">Father's Name/Legal Guardian</label>
+                            <label for="father-name">Father's Name</label>
                             <input type="text" id="father_name" name="father_name" value="{{ $information->parent_name_father ?? '' }}" required>
                         </div>
                         <div class="form-group">
-                            <label for="mother-name">Mother's Name/Legal Guardian</label>
+                            <label for="mother-name">Mother's Name</label>
                             <input type="text" id="mother_name" name="mother_name" value="{{ $information->parent_name_mother ?? '' }}" required>
                         </div>
                     </div>
@@ -664,44 +758,43 @@ h1 {
                     <h2>Medical Information</h2>
                 </div>
                 <div class="form-group">
-    <label for="record_date">Record Date</label>
-    <input type="date" id="record_date" name="record_date" value="{{ now()->toDateString() }}" readonly>
-</div>
+    <input type="date" id="record_date" name="record_date" value="{{ now()->toDateString() }}" hidden>
+    </div>
 <div id="medical-info-message"></div>
 
                     <div class="form-group-inline">
                         <div class="form-group">
                             <label for="past-illness">Past Illnesses/Injuries</label>
-                            <input type="text" id="past-illness" name="past_illness" value="{{ $information->medical_history ?? '' }}" required>
+                            <input type="text" id="past-illness" name="past_illness" value="{{ $information->medical_history ?? '' }}">
                         </div>
                         <div class="form-group">
                             <label for="chronic-conditions">Chronic Conditions</label>
-                            <input type="text" id="chronic-conditions" name="chronic_conditions" value="{{ $information->chronic_conditions ?? '' }}" required>
+                            <input type="text" id="chronic-conditions" name="chronic_conditions" value="{{ $information->chronic_conditions ?? '' }}">
                         </div>
                     </div>
                     <div class="form-group-inline">
                         <div class="form-group">
                             <label for="surgical-history">Surgical History</label>
-                            <input type="text" id="surgical-history" name="surgical_history" value="{{ $information->surgical_history ?? '' }}" required>
+                            <input type="text" id="surgical-history" name="surgical_history" value="{{ $information->surgical_history ?? '' }}">
                         </div>
                         <div class="form-group">
                             <label for="family-medical-history">Family Medical History</label>
-                            <input type="text" id="family-medical-history" name="family_medical_history" value="{{ $information->family_medical_history ?? '' }}" required>
+                            <input type="text" id="family-medical-history" name="family_medical_history" value="{{ $information->family_medical_history ?? '' }}">
                         </div>
                     </div>
                     <div class="form-group-inline">
     <div class="form-group">
         <label for="allergies">Allergies</label>
-        <input type="text" id="allergies" name="allergies" value="{{ $information->allergies ?? '' }}" required>
+        <input type="text" id="allergies" name="allergies" value="{{ $information->allergies ?? '' }}">
     </div>
     <div class="form-group">
         <label for="medical-condition">Medical Condition</label>
-        <input type="text" id="medical-condition" name="medical_condition" value="{{ $information->medical_condition ?? '' }}" required>
+        <input type="text" id="medical-condition" name="medical_condition" value="{{ $information->medical_condition ?? '' }}">
     </div>
 
                     </div>
                     <div class="form-section">
-    <h2>Medicines OK to give/apply at the clinic</h2>
+    <h2>Medicines that are ok to give</h2>
     <div class="custom-dropdown">
     <button id="medicineDropdown" class="dropdown-toggle">Select Medicines</button>
     <div class="medicine-dropdown-menu" style="display: none;">
@@ -749,6 +842,9 @@ h1 {
 <input type="hidden" name="is_approved" value="0"> <!-- Assuming '1' means true -->
 
 <button type="submit" class="button">Save</button>
+<button id="create-medical-record" class="btn btn-primary" onclick="promptCreateMedicalRecord()">
+    Create Medical Record
+</button>
 </div>
 </form>
             </div>
@@ -795,233 +891,209 @@ h1 {
     </div>
     </div>
     <div id="health-documents" class="tab-content">
-        <div class="forms-container">
+    <!-- Sub-Tab Buttons -->
+    <div class="sub-tab-buttons">
+    <button id="sub-tab1" class="active" onclick="showSubTab('medical-record-history')">
+        <i class="fas fa-history"></i> Medical Record History
+    </button>
+    <button id="sub-tab2" onclick="showSubTab('physical-exam-history')">
+        <i class="fas fa-heartbeat"></i> Physical Examination History
+    </button>
+    <button id="sub-tab3" onclick="showSubTab('health-exam-documents')">
+        <i class="fas fa-file-alt"></i> Health Examination Documents
+    </button>
+</div>
+
+    <!-- Sub-Tab Content Containers -->
+    <div class="sub-tab-content active" id="medical-record-history">
+    <!-- Medical Record History Content -->
     <div class="form-container">
-    <div class="form-header">
-    <h1>Health Documents</h1>
-    @if(isset($medicalRecord))
-    <a href="{{ route('student.medical-record.downloadPdf', $medicalRecord->id) }}" class="btn btn-primary no-spinner">
-        Download Medical Record PDF
-    </a>
-@endif
-        <a href="{{ route('student.health-examination.downloadPdf', $healthExamination->id) }}" class="btn btn-primary no-spinner "> Download Examination Pictures PDF </a>
-        <div class="table-container">
-    <table class="history-table">
-    <thead>
-        <tr>
-            <th>School Year</th>
-            <th>Health Exam Picture</th>
-            <th>X-ray Pictures</th>
-            <th>Lab Result Pictures</th>
-        </tr>
-    </thead>
-    <tbody>
-    @if($healthExaminationPictures->isEmpty())
-        <tr>
-            <td colspan="4">No health examination pictures available.</td>
-        </tr>
-    @else
-        @foreach($healthExaminationPictures as $examination)
-            <tr>
-                <td>{{ $examination->school_year ?? 'Unknown' }}</td> <!-- Display School Year -->
-                <td>
-                    @if(is_array($examination->health_examination_picture) && !empty($examination->health_examination_picture))
-                        <div class="image-previews">
-                            @foreach($examination->health_examination_picture as $picture)
-                                <div class="image-container">
-                                    <img src="{{ asset('storage/' . $picture) }}" alt="Health Examination Picture">
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <span>No Health Exam Picture</span>
-                    @endif
-                </td>
-                    <td>
-                        <div class="image-previews">
-                            @if($examination->xray_picture)
-                            @foreach($examination->xray_picture as $xray)
-    <div class="image-container">
-        <img src="{{ asset('storage/' . $xray) }}" alt="X-ray Picture">
-    </div>
-@endforeach
-
-                            @else
-                                <span>No X-ray Pictures</span>
-                            @endif
-                        </div>
-                    </td>
-                    <td>
-                    <div class="image-previews">
-                @if($examination->lab_result_picture)
-                    @foreach($examination->lab_result_picture as $lab)
-                        <div class="image-container">
-                            <img src="{{ asset('storage/' . $lab) }}" alt="Lab Result Picture">
-                        </div>
-                    @endforeach
-                @else
-                    <span>No Lab Result Pictures</span>
-                @endif
-            </div>
-                    </td>
-                </tr>
-            @endforeach
-        @endif
-    </tbody>
-</table>
-</div>
-</div>
-<div class="form-container">
-    <div class="form-header">
-        <h2>Medicine Intake History</h2>
-    </div>
-    @if(isset($medicalRecord) && $medicalRecord->medicineIntakes && $medicalRecord->medicineIntakes->isNotEmpty())
-    <table class="history-table" id="medicine-intake-history-table">
-    <thead>
-            <tr>
-                <th>Medicine Name</th>
-                <th>Dosage</th>
-                <th>Time of Intake</th>
-                <th>Notes</th>
-            </tr>
-        </thead>
-        <tbody id="medicine-intake-history-body">
-            @foreach($medicalRecord->medicineIntakes as $intake)
-                <tr>
-                    <td>{{ $intake->medicine_name }}</td>
-                    <td>{{ $intake->dosage }}</td>
-                    <td>{{ $intake->intake_time }}</td>
-                    <td>{{ $intake->notes ?? 'No notes' }}</td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
-@else
-    <p>No medicine intake history available</p>
-@endif
-
-</div>
-    </div>
-    <div class="form-container" style="flex: 1;">
-            <div class="form-header">
-                <h2>BMI Chart</h2>
-            </div>
-            <canvas id="bmiChart"></canvas>
-            <div class="form-header" style="margin-top: 30px;">
-    <h2>Health Documents</h2>
-</div>
-
-<!-- Health Documents Table -->
-@if(isset($medicalRecords) && $medicalRecords->where('is_approved', 1)->isNotEmpty())
-    <table class="history-table" id="health-documents-table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-        <thead>
-            <tr>
-                <th>Document</th>
-                <th>Medical Condition</th>
-                <th>Allergies</th>
-                <th>Record Date</th>
-                <th>Is Current</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($medicalRecords->where('is_approved', 1) as $record) <!-- Only display approved records -->
-                <tr>
-                    <!-- Health Documents -->
-                    <td>
-                    @if($record->health_documents)
-    @php
-        $documents = is_array($record->health_documents) ? $record->health_documents : json_decode($record->health_documents, true);
-    @endphp
-
-    @foreach($documents as $document)
-        <a href="{{ asset('storage/' . $document) }}" target="_blank" style="text-decoration: none; color: #007bff;">
-            <i class="fas fa-file-alt"></i> View Document
-        </a>
-        <br>
-    @endforeach
-@endif
-
-                    </td>
-                    <!-- Medical Condition -->
-                    <td>{{ $record->medical_condition }}</td>
-                    <!-- Allergies -->
-                    <td>{{ $record->allergies }}</td>
-                    <!-- Record Date -->
-                    <td>{{ $record->record_date }}</td>
-                    <!-- Is Current -->
-                    <td>
-                        @if($record->is_current)
-                            <span style="color: green;">Yes</span>
-                        @else
-                            <span style="color: red;">No</span>
-                        @endif
-                    </td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
-@else
-    <p>No approved medical records available.</p>
-@endif
+        <div class="form-header">
+            <h2>Medical Record History</h2>
         </div>
-        
-            <!-- Medical Record History -->
-            <div class="form-container">
-    <div class="form-header">
-        <h2>Medical Record History</h2>
-    </div>
-    <table class="history-table" id="medical-record-history-table">
-    <thead>
-            <tr>
-                <th>Past Illnesses/Injuries</th>
-                <th>Chronic Conditions</th>
-                <th>Surgical History</th>
-                <th>Family Medical History</th>
-            </tr>
-        </thead>
-        <tbody id="medical-record-history-body">
-        @foreach($medicalRecords->where('is_approved', 1) as $record) <!-- Only display approved records -->
-        <tr>
-                    <td>{{ $record->past_illness }}</td>
-                    <td>{{ $record->chronic_conditions }}</td>
-                    <td>{{ $record->surgical_history }}</td>
-                    <td>{{ $record->family_medical_history }}</td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
-
-    <h2>Physical Examination History</h2>
-    <table class="history-table" id="physical-examination-history-table">
-    <thead>
-            <tr>
-                <th>Height in (cm)</th>
-                <th>Weight in (kg)</th>
-                <th>Vision</th>
-                <th>Remarks</th>
-                <th>MD Approved</th>
-            </tr>
-        </thead>
-        <tbody id="physical-examination-history-body">
-            @foreach($physicalExaminations as $examination)
+        <table class="history-table" id="medical-record-history-table">
+            <thead>
                 <tr>
-                    <td>{{ $examination->height }}</td>
-                    <td>{{ $examination->weight }}</td>
-                    <td>{{ $examination->vision }}</td>
-                    <td>{{ $examination->remarks }}</td>
-                    <td>{{ $examination->md_approved ? 'Yes' : 'No' }}</td>
+                    <th>Name</th>
+                    <th>Age</th>
+                    <th>Address</th>
+                    <th>Father's Name</th>
+                    <th>Mother's Name</th>
+                    <th>Past Illnesses/Injuries</th>
+                    <th>Chronic Conditions</th>
+                    <th>Surgical History</th>
+                    <th>Family Medical History</th>
+                    <th>Allergies</th>
+                    <th>Medical Condition</th>
+                    <th>Medicines</th>
+                    <th>Health Documents</th>
+                    <th>Record Date</th>
                 </tr>
-            @endforeach
-        </tbody>
-    </table>
+            </thead>
+            <tbody id="medical-record-history-body"> <!-- Added ID here -->
+            @foreach($medicalRecords->where('is_approved', 1) as $record) <!-- Only display approved records -->
+                    <tr>
+                        <td>{{ $record->name }}</td>
+                        <td>{{ $record->age }}</td>
+                        <td>{{ $record->address }}</td>
+                        <td>{{ $record->father_name }}</td>
+                        <td>{{ $record->mother_name }}</td>
+                        <td>{{ $record->past_illness }}</td>
+                        <td>{{ $record->chronic_conditions }}</td>
+                        <td>{{ $record->surgical_history }}</td>
+                        <td>{{ $record->family_medical_history }}</td>
+                        <td>{{ $record->allergies }}</td>
+                        <td>{{ $record->medical_condition }}</td>
+                        <td>
+    @if(is_array($record->medicines) && !empty($record->medicines))
+        {{ implode(', ', $record->medicines) }}
+    @else
+        N/A
+    @endif
+</td>
 
-    
+                        <td>
+                            @if($record->health_documents)
+                                @php
+                                    $documents = is_array($record->health_documents) ? $record->health_documents : json_decode($record->health_documents, true);
+                                @endphp
 
-        </tbody>
-    </table>
+                                @foreach($documents as $document)
+                                    <a href="{{ asset('storage/' . $document) }}" target="_blank" class="btn btn-sm btn-primary" style="margin-bottom: 5px;">
+                                        <i class="fas fa-file-alt"></i> View
+                                    </a><br>
+                                @endforeach
+                            @else
+                                N/A
+                            @endif
+                        </td>
+                        <td>{{ $record->record_date->format('Y-m-d') }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
 </div>
- </div>
+
+
+<div class="sub-tab-content" id="physical-exam-history">
+    <!-- Physical Examination History Content -->
+    <div class="form-container">
+        <div class="form-header">
+            <h2>Physical Examination History</h2>
+        </div>
+        <div class="physical-exam-container">
+            <div class="physical-exam-table">
+                <table class="history-table" id="physical-examination-history-table">
+                    <thead>
+                        <tr>
+                            <th>Height (cm)</th>
+                            <th>Weight (kg)</th>
+                            <th>Vision</th>
+                            <th>Remarks</th>
+                            <th>MD Approved</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($physicalExaminations as $examination)
+                            <tr>
+                                <td>{{ $examination->height }}</td>
+                                <td>{{ $examination->weight }}</td>
+                                <td>{{ $examination->vision }}</td>
+                                <td>{{ $examination->remarks }}</td>
+                                <td>{{ $examination->md_approved ? 'Yes' : 'No' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <div class="physical-exam-chart">
+                <canvas id="bmiChart"></canvas>
+            </div>
+        </div>
+    </div>
 </div>
+
+    <div class="sub-tab-content" id="health-exam-documents">
+        <!-- Health Examination Documents Content -->
+        <div class="form-container">
+            <div class="form-header">
+                <h2>Health Examination Documents</h2>
+                @if(isset($medicalRecord))
+                    <a href="{{ route('student.medical-record.downloadPdf', $medicalRecord->id) }}" class="btn btn-primary no-spinner">
+                        Download Medical Record PDF
+                    </a>
+                @endif
+                <a href="{{ route('student.health-examination.downloadPdf', $healthExamination->id) }}" class="btn btn-primary no-spinner">
+                    Download Examination Pictures PDF
+                </a>
+            </div>
+            <div class="table-container">
+                <table class="history-table" id="health-exam-pictures-table">
+                    <thead>
+                        <tr>
+                            <th>School Year</th>
+                            <th>Health Exam Picture</th>
+                            <th>X-ray Pictures</th>
+                            <th>Lab Result Pictures</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if($healthExaminationPictures->isEmpty())
+                            <tr>
+                                <td colspan="4">No health examination pictures available.</td>
+                            </tr>
+                        @else
+                            @foreach($healthExaminationPictures as $examination)
+                                <tr>
+                                    <td>{{ $examination->school_year ?? 'Unknown' }}</td> <!-- Display School Year -->
+                                    <td>
+                                        @if(is_array($examination->health_examination_picture) && !empty($examination->health_examination_picture))
+                                            <div class="image-previews">
+                                                @foreach($examination->health_examination_picture as $picture)
+                                                    <div class="image-container">
+                                                        <img src="{{ asset('storage/' . $picture) }}" alt="Health Examination Picture">
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <span>No Health Exam Picture</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div class="image-previews">
+                                            @if($examination->xray_picture)
+                                                @foreach($examination->xray_picture as $xray)
+                                                    <div class="image-container">
+                                                        <img src="{{ asset('storage/' . $xray) }}" alt="X-ray Picture">
+                                                    </div>
+                                                @endforeach
+                                            @else
+                                                <span>No X-ray Pictures</span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="image-previews">
+                                            @if($examination->lab_result_picture)
+                                                @foreach($examination->lab_result_picture as $lab)
+                                                    <div class="image-container">
+                                                        <img src="{{ asset('storage/' . $lab) }}" alt="Lab Result Picture">
+                                                    </div>
+                                                @endforeach
+                                            @else
+                                                <span>No Lab Result Pictures</span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @endif
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div id="imageModal" class="modal">
@@ -1040,9 +1112,15 @@ h1 {
     <!-- Existing Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
     <script>
-        // Debounce Function Definition
+    const storageBaseUrl = "{{ asset('storage') }}";
+    const storeMedicalRecordUrl = "{{ route('student.medical-record.store') }}";
+
+</script>
+
+    <script>
+
+
 function debounce(func, wait) {
     let timeout;
     return function(...args) {
@@ -1053,6 +1131,33 @@ function debounce(func, wait) {
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
     };
+}
+
+function showSubTab(tabId) {
+    // Get all sub-tab contents and sub-tab buttons
+    const subTabs = document.querySelectorAll('.sub-tab-content');
+    const subButtons = document.querySelectorAll('.sub-tab-buttons button');
+
+    // Hide all sub-tab contents
+    subTabs.forEach(tab => {
+        tab.classList.remove('active');
+    });
+
+    // Remove active class from all sub-tab buttons
+    subButtons.forEach(button => {
+        button.classList.remove('active');
+    });
+
+    // Show the selected sub-tab content and activate the corresponding button
+    const activeSubTab = document.getElementById(tabId);
+    if (activeSubTab) {
+        activeSubTab.classList.add('active');
+    }
+
+    const activeButton = document.querySelector(`.sub-tab-buttons button[onclick="showSubTab('${tabId}')"]`);
+    if (activeButton) {
+        activeButton.classList.add('active');
+    }
 }
 
  document.addEventListener('DOMContentLoaded', function() {
@@ -1066,6 +1171,7 @@ function debounce(func, wait) {
 
     const id_number = "{{ $user->id_number }}";  // Ensure the user variable is passed in Blade
     loadBMIChart(id_number);
+    
     $('#health-exam-pictures-table').DataTable({
                 "paging": true,
                 "searching": true,
@@ -1163,7 +1269,276 @@ function debounce(func, wait) {
     });
 
 });
+document.getElementById('medical-record-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    let form = this;
+    let formData = new FormData(form);
+    const requiredFields = ['name', 'birthdate', 'personal_contact_number', 'emergency_contact_number', 'father_name', 'mother_name'];
+    let isValid = true;
+
+    // Validate required fields (excluding medical information fields)
+    requiredFields.forEach(function(field) {
+        const input = document.getElementById(field);
+
+        if (input) {
+            if (!input.value) {
+                isValid = false;
+                input.style.border = '2px solid red'; // Highlight the missing fields
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: `Please fill out the ${input.previousElementSibling.innerText} field.`,
+                });
+            } else {
+                input.style.border = ''; // Reset the border if the input is valid
+            }
+        } else {
+            console.warn(`Element with ID ${field} does not exist.`);
+        }
+    });
+
+    // Check if at least one image is uploaded
+    const medicalPictures = document.getElementById('medical_pictures');
+    if (medicalPictures.files.length === 0) {
+        isValid = false;
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Please upload at least one medical picture before submitting.',
+        });
+    }
+
+    // If validation fails, stop the submission
+    if (!isValid) {
+        console.log("Form is invalid. Aborting submission.");
+        return;
+    }
+
+    // Check if any medical information fields are empty
+    const medicalInfoFields = ['past_illness', 'chronic_conditions', 'surgical_history', 'family_medical_history', 'allergies', 'medical_condition'];
+    let medicalInfoEmpty = false;
+
+    medicalInfoFields.forEach(function(field) {
+        const input = document.getElementById(field);
+        if (input && !input.value.trim()) {
+            medicalInfoEmpty = true;
+        }
+    });
+
+    if (medicalInfoEmpty) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Incomplete Information',
+            text: 'Some medical information fields are empty and will be set to null. Do you wish to proceed?',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, proceed',
+            cancelButtonText: 'No, cancel',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Proceed to submit the form via AJAX
+                submitMedicalRecordForm(formData);
+            }
+        });
+    } else {
+        // Proceed to submit the form via AJAX without warning
+        submitMedicalRecordForm(formData);
+    }
+});
+function promptCreateMedicalRecord() {
+    Swal.fire({
+        title: 'Create Medical Record',
+        text: "Medical information fields will be left empty. Profile information will be filled.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, create it!',
+        cancelButtonText: 'No, cancel',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Gather profile information from hidden inputs or existing fields
+            const profileData = {
+                id_number: $('#id_number').val(),
+                patient_name: $('#patient_name').val(),
+                is_current: true,
+                is_approved: false,
+                record_date: new Date().toISOString().split('T')[0],
+            };
+
+            // Send AJAX request to create the medical record with null medical info
+            $.ajax({
+                url: "{{ route('student.medical-record.store') }}",
+                type: 'POST',
+                data: profileData,
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Medical Record Created',
+                            text: 'Your medical record has been created and is pending approval.',
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Failed to create medical record.',
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Server error:', xhr);
+                    if (xhr.status === 422) {
+                        let errors = xhr.responseJSON.errors;
+                        let errorMessage = 'There was a problem creating the medical record.';
+
+                        if (errors) {
+                            errorMessage = Object.values(errors).map(err => err.join(', ')).join('<br>');
+                        }
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validation Error',
+                            html: errorMessage,
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'There was a problem creating the medical record. Please try again.',
+                        });
+                    }
+                }
+            });
+        }
+    });
+}
+
+function submitMedicalRecordForm(formData) {
+    $.ajax({
+        url: "{{ route('student.medical-record.store') }}",
+        type: 'POST',
+        data: formData,
+        contentType: false,
+        processData: false,
+        success: function(response) {
+            console.log('Server response:', response);
+
+            if (response && response.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Record Submitted',
+                    text: 'Your medical record has been submitted and is pending approval.',
+                });
+
+                // Optionally, reset the form or update the UI
+                formData.reset();
+                $('#medical-record-form')[0].reset();
+
+                // Optionally, reload the page or update parts of the page dynamically
+                setTimeout(() => {
+                    location.reload();
+                }, 3000);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: response.message || 'The server did not return the expected data.',
+                });
+            }
+        },
+        error: function(xhr) {
+            console.error('Server error:', xhr);
+
+            // Handle validation errors returned from the server
+            if (xhr.status === 422) {
+                let errors = xhr.responseJSON.errors;
+                let errorMessage = 'There was a problem saving the record.';
+
+                if (errors) {
+                    errorMessage = Object.values(errors).map(err => err.join(', ')).join('<br>');
+                }
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Error',
+                    html: errorMessage,
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'There was a problem saving the record. Please try again.',
+                });
+            }
+        }
+    });
+}
     
+
+// -------------------------------------------------
+// Function: Create a New Medical Record via AJAX
+// -------------------------------------------------
+function createMedicalRecord() {
+    var idNumber = $('#id_number').val(); // Ensure you have an input with id 'id_number'
+    var patientName = $('#patient_name').val(); // Ensure you have an input with id 'patient_name'
+
+    console.log('Creating new medical record for ID Number:', idNumber);
+
+    // Send AJAX POST request to create the medical record
+    $.ajax({
+        url: storeMedicalRecordUrl, // Define this URL in your Blade view
+        method: 'POST',
+        data: {
+            id_number: idNumber,
+            patient_name: patientName,
+            // Add any other necessary user information here
+        },
+        success: function(response) {
+            if (response.medical_record_id) {
+                // Set the medical_record_id in the main hidden input (if applicable)
+                medicalRecordId = response.medical_record_id;
+                $('#medical-record-id').val(medicalRecordId); // Ensure you have an input with id 'medical-record-id'
+
+                console.log('New Medical Record ID set:', medicalRecordId);
+
+                // Hide the create button to prevent duplicate records
+                $('#create-medical-record').hide(); // Ensure you have a button with id 'create-medical-record'
+
+                // Show success modal and reload the page after closing
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'A new medical record has been created successfully.',
+                    timer: 3000,
+                    showConfirmButton: false
+                }).then(() => {
+                    location.reload(); // Reload the page after SweetAlert closes
+                });
+            } else {
+                console.error('No Medical Record ID returned from the server.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to create medical record!',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            }
+        },
+        error: function(xhr) {
+            console.error('Error saving medical record:', xhr.responseText);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to create medical record!',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        }
+    });
+}
+
 function showTab(tabId) {
     // Get all tab contents and tab buttons
     const tabs = document.querySelectorAll('.tab-content');
@@ -1329,17 +1704,48 @@ window.onclick = function(event) {
 
                 // Append the new record to the medical record history table
                 const record = response.medical_record;
+
+// Define medicinesHtml
+let medicinesHtml = 'N/A';
+if (Array.isArray(record.medicines) && record.medicines.length > 0) {
+    medicinesHtml = record.medicines.join(', ');
+}
+
+// Define healthDocsHtml
+let healthDocsHtml = 'N/A';
+if (Array.isArray(record.health_documents) && record.health_documents.length > 0) {
+    healthDocsHtml = record.health_documents.map(doc => `
+        <a href="${storageBaseUrl}/${doc.trim()}" target="_blank" class="btn btn-sm btn-primary" style="margin-bottom: 5px;">
+            <i class="fas fa-file-alt"></i> View
+        </a><br>
+    `).join('');
+}
+
+// Construct the new table row
                 let newRow = `
-                    <tr>
-                        <td>${record.past_illness || 'N/A'}</td>
-                        <td>${record.chronic_conditions || 'N/A'}</td>
-                        <td>${record.surgical_history || 'N/A'}</td>
-                        <td>${record.family_medical_history || 'N/A'}</td>
-                        <td>${record.allergies || 'N/A'}</td>
-                        <td>${record.medical_condition || 'N/A'}</td>
-                        <td>${record.record_date || 'N/A'}</td>
-                    </tr>
-                `;
+        <tr>
+            <td>${record.id_number || 'N/A'}</td>
+            <td>${record.name || 'N/A'}</td>
+            <td>${record.birthdate || 'N/A'}</td>
+            <td>${record.age || 'N/A'}</td>
+            <td>${record.address || 'N/A'}</td>
+            <td>${record.personal_contact_number || 'N/A'}</td>
+            <td>${record.emergency_contact_number || 'N/A'}</td>
+            <td>${record.father_name || 'N/A'}</td>
+            <td>${record.mother_name || 'N/A'}</td>
+            <td>${record.past_illness || 'N/A'}</td>
+            <td>${record.chronic_conditions || 'N/A'}</td>
+            <td>${record.surgical_history || 'N/A'}</td>
+            <td>${record.family_medical_history || 'N/A'}</td>
+            <td>${record.allergies || 'N/A'}</td>
+            <td>${record.medical_condition || 'N/A'}</td>
+            <td>${medicinesHtml}</td>
+            <td>
+                ${healthDocsHtml}
+            </td>
+            <td>${record.record_date || 'N/A'}</td>
+        </tr>
+    `;
                 $('#medical-record-history-body').append(newRow);
 
                 const id_number = response.medical_record.id_number;

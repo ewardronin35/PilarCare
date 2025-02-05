@@ -9,9 +9,9 @@ class CreateInventoryTable extends Migration
     {
         Schema::create('inventory', function (Blueprint $table) {
             $table->id();
-            $table->string('item_name');
+            $table->string('item_name')->unique();
             $table->integer('quantity');
-            $table->string('supplier');
+            $table->string('generic_name');
             $table->string('type');
             $table->date('date_acquired');
             $table->timestamps();

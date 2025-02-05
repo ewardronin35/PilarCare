@@ -33,44 +33,68 @@ class DentalRecordController extends Controller
         31, 32, 33, 34, 35, 36, 37, 38,
         41, 42, 43, 44, 45, 46, 47, 48
     ];
+  
     public function index()
     {
         $user = auth()->user();
         $role = strtolower($user->role);
-    
-        // Fetch role-based information
+        
+        // Fetch role-based information and patient info from the same table
         if ($role === 'student') {
             $personInfo = DB::table('students')
                 ->where('id_number', $user->id_number)
-                ->first(['first_name', 'last_name', 'grade_or_course', 'id_number']);
+                ->first(['first_name', 'last_name',  'id_number', 'birthdate', 'age']);
+                $patientInfo = $personInfo; // For students, use the same record
         } elseif ($role === 'teacher') {
             $personInfo = DB::table('teacher')
                 ->where('id_number', $user->id_number)
-                ->first(['first_name', 'last_name', 'bed_or_hed', 'id_number']);
+                ->first(['first_name', 'last_name', 'bed_or_hed', 'id_number', 'birthdate', 'age']);
+                $patientInfo = $personInfo;
         } elseif ($role === 'staff') {
             $personInfo = DB::table('staff')
                 ->where('id_number', $user->id_number)
-                ->first(['first_name', 'last_name', 'position', 'id_number']);
+                ->first(['first_name', 'last_name', 'bed_or_hed', 'id_number', 'birthdate', 'age']);
+                $patientInfo = $personInfo;
+        } elseif ($role === 'admin') {
+            // For admin, if you have only 'name' in the admins table, you might not have birthdate.
+            $personInfo = DB::table('admins')
+                ->where('id_number', $user->id_number)
+                ->first(['name', 'id_number']);
+            // Optionally, set patientInfo to null or create a fallback:
+            $patientInfo = (object) ['birthdate' => null];
         } else {
             $personInfo = null;
+            $patientInfo = null;
             Log::error('No matching role for id_number: ' . $user->id_number);
         }
-    
-        $personName = $personInfo ? $personInfo->first_name . ' ' . $personInfo->last_name : 'Unknown';
-        $additionalInfo = $personInfo ? ($personInfo->grade_or_course ?? $personInfo->bed_or_hed ?? $personInfo->position) : 'Unknown';
+        
+        // Determine dentist name based on available fields and role
+        if ($personInfo) {
+            $dentistName = $role === 'admin' ? $personInfo->name : $personInfo->first_name . ' ' . $personInfo->last_name;
+            $additionalInfo = $personInfo->grade_or_course ?? $personInfo->bed_or_hed ?? $personInfo->position ?? 'Unknown';
+            $personName = $dentistName; // Assigning dentistName to personName
+        } else {
+            $dentistName = 'Unknown';
+            $additionalInfo = 'Unknown';
+            $personName = 'Unknown';
+        }
         
         $viewName = $role . '.dental-record';
         
+        // Fetch the user's dental record
         $dentalRecord = DentalRecord::where('id_number', $user->id_number)->first();
-        $patientInfo = DB::table('information')
-            ->where('id_number', $user->id_number)
-            ->first(['birthdate']);
         
+        // Use the fetched patient info (which includes birthdate) rather than a separate "information" table
+        // For example, if $patientInfo exists and has a birthdate field:
+        // (If no birthdate exists, it will be null.)
+        
+        // Fetch the latest dental examination
         $latestExamination = DB::table('dental_examinations')
             ->where('id_number', $user->id_number)
             ->orderBy('date_of_examination', 'desc')
             ->first();
     
+        // Fetch teeth associated with the dental record
         $teeth = $dentalRecord ? Teeth::where('dental_record_id', $dentalRecord->dental_record_id)->get() : collect();
         if (!$dentalRecord) {
             Log::error('No dental record found for id_number: ' . $user->id_number);
@@ -89,7 +113,7 @@ class DentalRecordController extends Controller
             ->orderBy('appointment_date', 'asc')
             ->first();
     
-        // Define teethData array
+        // Define teethData array for mapping tooth numbers to descriptions
         $teethData = [
             11 => 'Upper Right Central Incisor',
             12 => 'Upper Right Lateral Incisor',
@@ -124,29 +148,38 @@ class DentalRecordController extends Controller
             47 => 'Lower Right Second Molar',
             48 => 'Lower Right Third Molar'
         ];
-    
-        // Check if view exists
+        
+        // Check if the view exists
         if (!view()->exists($viewName)) {
             abort(404, "View for role '{$role}' not found");
         }
-    
-        // Pass teethData to the view
+        
+        // Fetch all dental records for listing (if needed in the view)
+        $records = DentalRecord::with('user')->get();
+        
+        // Ensure $personName is defined before passing to the view
+        $personName = $dentistName; // Or assign appropriately based on your logic
+        
+        // Pass data to the view, including 'personName' and the updated patient info
         return view($viewName, [
             'personInfo' => $personInfo,
             'dentalRecord' => $dentalRecord,
-            'patientInfo' => $patientInfo,
-            'personName' => $personName,
+            'patientInfo' => $patientInfo, // Now from the appropriate table
             'lastExamination' => $latestExamination,
             'additionalInfo' => $additionalInfo,
             'teeth' => $teeth,
-            'user' => $user,  
+            'user' => $user,
             'nextExamination' => $nextExamination,
             'role' => $user->role,
             'nextAppointment' => $nextAppointment,
-            'teethData' => $teethData, // Added
+            'teethData' => $teethData, // Teeth data mapping
+            'records' => $records, // Dental records for the table
+            'dentistName' => $dentistName, // Pass dentist name to the view
+            'personName' => $personName // Pass personName to the view
         ]);
     }
     
+
     
     public function viewAllRecords()
     {
@@ -220,9 +253,20 @@ class DentalRecordController extends Controller
             'dental_record_id' => $dentalRecord->dental_record_id // Return the unique string identifier
         ]);
     }
-    
     public function storeTooth(Request $request)
     {
+        // Retrieve the authenticated user
+        $user = auth()->user();
+    
+        // Define the roles that are allowed to access this method
+        $allowedRoles = ['admin', 'doctor', 'nurse'];
+    
+        // Check if the user's role is in the allowed roles
+        if (!in_array(strtolower($user->role), $allowedRoles)) {
+            Log::warning('Unauthorized access attempt by user: ' . $user->id_number);
+            return response()->json(['error' => 'Unauthorized action.'], 403);
+        }
+    
         Log::info('Incoming request data: ', $request->all());
     
         $rules = [
@@ -231,7 +275,7 @@ class DentalRecordController extends Controller
             'status' => 'required|string',
             'notes' => 'nullable|string',
             'svg_path' => 'required|string',
-            'update_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10048',
+            'update_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240', // Increased max size to 10MB
         ];
     
         // Validate the request
@@ -261,77 +305,117 @@ class DentalRecordController extends Controller
             }
         }
     
-        if ($existingTooth) {
-            Log::info('Updating existing tooth record.');
+        DB::beginTransaction();
     
-            if (!$existingTooth->is_approved) {
-                Log::warning('Tooth record is pending approval. Cannot update.');
+        try {
+            if ($existingTooth) {
+                Log::info('Updating existing tooth record.');
+    
+                if (!$existingTooth->is_approved) {
+                    Log::warning('Tooth record is pending approval. Cannot update.');
+                    return response()->json([
+                        'error' => 'This tooth is pending approval. Please wait for approval before updating again.',
+                    ], 422);
+                }
+    
+                // Save current state to tooth_histories before updating
+                $existingTooth->histories()->create([
+                    'tooth_number' => $existingTooth->tooth_number,
+                    'status' => $existingTooth->status,
+                    'notes' => $existingTooth->notes,
+                    'svg_path' => $existingTooth->svg_path,
+                    'dental_pictures' => $existingTooth->dental_pictures,
+                    'is_current' => $existingTooth->is_current,
+                    'is_approved' => $existingTooth->is_approved,
+                    'is_new' => $existingTooth->is_new,
+                    'updated_at' => now(),
+                ]);
+    
+                // Merge existing pictures with new ones
+                $existingPictures = is_array($existingTooth->dental_pictures) ? $existingTooth->dental_pictures : json_decode($existingTooth->dental_pictures, true) ?? [];
+                $updatedPictures = array_merge($existingPictures, $dentalPicturesPaths);
+    
+                // Update the existing tooth record
+                $updateData = [
+                    'status' => $validatedData['status'],
+                    'notes' => $validatedData['notes'] ?? $existingTooth->notes,
+                    'svg_path' => $validatedData['svg_path'],
+                    'dental_pictures' => $updatedPictures, // Pass array directly
+                    'is_approved' => true, // Automatically approve updates
+                    'is_new' => false, // Ensure 'is_new' is false after update
+                ];
+    
+                Log::info('Updating tooth with data: ', $updateData);
+    
+                $existingTooth->update($updateData);
+    
+                // Reload the model to ensure changes are reflected
+                $existingTooth->refresh();
+                Log::info('Tooth record updated successfully.', ['tooth' => $existingTooth->toArray()]);
+    
+                DB::commit();
+    
                 return response()->json([
-                    'error' => 'This tooth is pending approval. Please wait for approval before updating again.',
-                ], 422);
+                    'success' => true,
+                    'message' => 'Tooth details updated and automatically approved successfully!',
+                    'exists_in_database' => true, // This is an update
+                    'update' => true
+                ]);
+            } else {
+                Log::info('Creating new tooth record.');
+    
+                // Create a new tooth record
+                $newTooth = Teeth::create([
+                    'dental_record_id' => $validatedData['dental_record_id'],
+                    'tooth_number' => $validatedData['tooth_number'],
+                    'status' => $validatedData['status'],
+                    'notes' => $validatedData['notes'] ?? null,
+                    'svg_path' => $validatedData['svg_path'],
+                    'dental_pictures' => $dentalPicturesPaths, // Pass array directly
+                    'is_current' => true,
+                    'is_approved' => true, // Automatically approve new records
+                    'is_new' => false, // Mark as false second submission
+                ]);
+    
+                // Optionally, save the initial state in histories
+                $newTooth->histories()->create([
+                    'tooth_number' => $newTooth->tooth_number,
+                    'status' => $newTooth->status,
+                    'notes' => $newTooth->notes,
+                    'svg_path' => $newTooth->svg_path,
+                    'dental_pictures' => $newTooth->dental_pictures,
+                    'is_current' => $newTooth->is_current,
+                    'is_approved' => $newTooth->is_approved,
+                    'is_new' => $newTooth->is_new,
+                    'updated_at' => now(),
+                ]);
+    
+                Log::info('New tooth record created and automatically approved successfully.');
+    
+                DB::commit();
+    
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Tooth details saved and automatically approved successfully!',
+                    'exists_in_database' => false, // This is a new record
+                    'update' => false // Indicate that this is not an update
+                ]);
             }
-    
-            // Merge existing pictures with new ones
-            $existingPictures = $existingTooth->dental_pictures ?? [];
-            $updatedPictures = array_merge($existingPictures, $dentalPicturesPaths);
-    
-            // Update the existing tooth record
-            $updateData = [
-                'status' => $validatedData['status'],
-                'notes' => $validatedData['notes'] ?? $existingTooth->notes,
-                'svg_path' => $validatedData['svg_path'],
-                'dental_pictures' => $updatedPictures, // Pass array directly
-                'is_approved' => false, // Mark as pending approval
-                'is_new' => false, // Ensure 'is_new' is false after update
-            ];
-    
-            Log::info('Updating tooth with data: ', $updateData);
-    
-            $existingTooth->update($updateData);
-    
-            // Reload the model to ensure changes are reflected
-            $existingTooth->refresh();
-            Log::info('Tooth record updated successfully.', ['tooth' => $existingTooth->toArray()]);
-    
-            return response()->json([
-                'success' => true,
-                'message' => 'Tooth details updated successfully! Awaiting approval.',
-                'exists_in_database' => true, // This is an update
-                'update' => true
-            ]);
-        } else {
-            Log::info('Creating new tooth record.');
-    
-            // Create a new tooth record
-            Teeth::create([
-                'dental_record_id' => $validatedData['dental_record_id'],
-                'tooth_number' => $validatedData['tooth_number'],
-                'status' => $validatedData['status'],
-                'notes' => $validatedData['notes'] ?? null,
-                'svg_path' => $validatedData['svg_path'],
-                'dental_pictures' => $dentalPicturesPaths, // Pass array directly
-                'is_current' => true,
-                'is_approved' => true, // First-time save is automatically approved
-                'is_new' => false, // Mark as false second submission
-            ]);
-    
-            Log::info('New tooth record created successfully.');
-    
-            return response()->json([
-                'success' => true,
-                'message' => 'Tooth details saved successfully!',
-                'exists_in_database' => false, // This is a new record
-                'update' => false // Indicate that this is not an update
-            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error saving tooth record: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to save tooth record.'], 500);
         }
     }
     
-public function getToothStatus(Request $request)
+    
+    
+    public function getToothStatus(Request $request)
 {
     // Validate incoming request data
     $request->validate([
         'dental_record_id' => 'required|exists:dental_records,dental_record_id',
-        'tooth_number' => 'required|integer',
+        'tooth_number' => 'required|integer|min:11|max:48',
     ]);
 
     // Log the incoming parameters for debugging
@@ -363,7 +447,7 @@ public function getToothStatus(Request $request)
             'exists_in_database' => true,
             'status' => $tooth->status,
             'is_approved' => $tooth->is_approved,
-            'is_new' => $tooth->is_new, // Reflect the actual value from the database
+            'is_new' => $tooth->is_new,
             'notes' => $tooth->notes,
         ]);
     }
@@ -371,8 +455,6 @@ public function getToothStatus(Request $request)
 
 
 
-
-    
 
 public function searchRecords(Request $request)
 {
@@ -394,26 +476,33 @@ public function searchRecords(Request $request)
     // Initialize variables
     $name = '';
     $grade_section = '';
+    $birthdate = null;
 
-    // Fetch the additional information based on role
+    // Fetch the additional information based on role from the appropriate table
     switch ($role) {
         case 'student':
-            $personInfo = Student::where('id_number', $user->id_number)
-                ->first(['first_name', 'last_name', 'grade_or_course']);
+            $personInfo = DB::table('students')
+                ->where('id_number', $user->id_number)
+                ->first(['first_name', 'last_name', 'grade_or_course', 'birthdate']);
             $name = $personInfo ? $personInfo->first_name . ' ' . $personInfo->last_name : '';
             $grade_section = $personInfo ? $personInfo->grade_or_course : '';
+            $birthdate = $personInfo ? $personInfo->birthdate : null;
             break;
         case 'teacher':
-            $personInfo = Teacher::where('id_number', $user->id_number)
-                ->first(['first_name', 'last_name', 'bed_or_hed']);
+            $personInfo = DB::table('teacher')
+                ->where('id_number', $user->id_number)
+                ->first(['first_name', 'last_name', 'bed_or_hed', 'birthdate']);
             $name = $personInfo ? $personInfo->first_name . ' ' . $personInfo->last_name : '';
             $grade_section = $personInfo ? $personInfo->bed_or_hed : '';
+            $birthdate = $personInfo ? $personInfo->birthdate : null;
             break;
         case 'staff':
-            $personInfo = Staff::where('id_number', $user->id_number)
-                ->first(['first_name', 'last_name', 'position']);
+            $personInfo = DB::table('staff')
+                ->where('id_number', $user->id_number)
+                ->first(['first_name', 'last_name', 'position', 'birthdate']);
             $name = $personInfo ? $personInfo->first_name . ' ' . $personInfo->last_name : '';
             $grade_section = $personInfo ? $personInfo->position : '';
+            $birthdate = $personInfo ? $personInfo->birthdate : null;
             break;
         default:
             return response()->json(['message' => 'Invalid user role.'], 400);
@@ -423,16 +512,11 @@ public function searchRecords(Request $request)
         return response()->json(['message' => 'No person information found for the provided ID number.'], 404);
     }
 
-    // Fetch patient's birthdate from the Information table
-    $information = Information::where('id_number', $user->id_number)->first();
-
-    if (!$information) {
-        return response()->json(['message' => 'No information found for the provided ID number.'], 404);
+    if (!$birthdate) {
+        return response()->json(['message' => 'Birthdate not found for the provided ID number.'], 404);
     }
 
-    $birthdate = $information->birthdate;
-
-    // Calculate age
+    // Calculate age using Carbon
     $age = Carbon::parse($birthdate)->age;
 
     // Fetch dental record
@@ -452,24 +536,25 @@ public function searchRecords(Request $request)
     // Fetch tooth history with 'dental_pictures'
     $toothHistory = Teeth::where('dental_record_id', $dentalRecord->dental_record_id)
         ->orderBy('tooth_number')
-        ->get(['tooth_number', 'status', 'notes', 'updated_at', 'dental_pictures']); // Include 'dental_pictures'
+        ->get(['tooth_number', 'status', 'notes', 'updated_at', 'dental_pictures']);
 
     // Decode 'dental_pictures' JSON to array if necessary
     $toothHistory->transform(function ($tooth) {
-        $tooth->dental_pictures = is_string($tooth->dental_pictures) ? json_decode($tooth->dental_pictures, true) : $tooth->dental_pictures;
+        $tooth->dental_pictures = is_string($tooth->dental_pictures)
+            ? json_decode($tooth->dental_pictures, true)
+            : $tooth->dental_pictures;
         return $tooth;
     });
 
-    // Fetch next scheduled appointment if available for Dr. Sarah Uy-Gan
+    // Fetch next scheduled appointment (only future appointments)
     $nextAppointment = DB::table('appointments')
-        ->where('id_number', $user->id_number) // Use id_number for appointment search
-        ->where('appointment_date', '>=', Carbon::now()->toDateString()) // Only future appointments
+        ->where('id_number', $user->id_number)
+        ->where('appointment_date', '>=', Carbon::now()->toDateString())
         ->orderBy('appointment_date', 'asc')
         ->first();
 
     // Initialize teeth data with default status 'Healthy'
     $completeTeeth = [];
-
     $allToothNumbers = [
         11, 12, 13, 14, 15, 16, 17, 18,
         21, 22, 23, 24, 25, 26, 27, 28,
@@ -480,23 +565,21 @@ public function searchRecords(Request $request)
     foreach ($allToothNumbers as $toothNumber) {
         $tooth = $teeth->firstWhere('tooth_number', $toothNumber);
         if ($tooth) {
-            // Ensure status is properly capitalized
             $status = ucfirst(strtolower($tooth->status));
             $completeTeeth[] = [
                 'tooth_number' => $toothNumber,
                 'status' => $status,
                 'notes' => $tooth->notes,
                 'updated_at' => $tooth->updated_at,
-                'dental_pictures' => $tooth->dental_pictures, // Ensure this field is included
+                'dental_pictures' => $tooth->dental_pictures,
             ];
         } else {
-            // If no record exists, assume 'Healthy'
             $completeTeeth[] = [
                 'tooth_number' => $toothNumber,
                 'status' => 'Healthy',
                 'notes' => null,
                 'updated_at' => null,
-                'dental_pictures' => null, // No pictures
+                'dental_pictures' => null,
             ];
         }
     }
@@ -510,14 +593,16 @@ public function searchRecords(Request $request)
         'birthdate' => $birthdate,
         'age' => $age,
         'grade_section' => $grade_section,
-        'previousExaminations' => $previousExaminations, // Send all examinations
+        'previousExaminations' => $previousExaminations,
         'toothHistory' => $toothHistory,
         'nextAppointment' => $nextAppointment,
-        'role' => $role, // Include the role
+        'role' => $role,
     ];
 
     return response()->json($response);
 }
+
+
 
 
 public function generatePdf($id_number)
@@ -644,240 +729,16 @@ public function generatePdf($id_number)
         return redirect()->back()->with('error', 'Unable to generate PDF. Please try again later.');
     }
 }
+ 
+    
 
-
-public function approveTooth($id)
-{
-    // Find the Teeth record
-    $tooth = Teeth::findOrFail($id);
-    $tooth->is_approved = true;
-    $tooth->save();
-
-    // Fetch the associated DentalRecord
-    $dentalRecord = $tooth->dentalRecord;
-
-    if (!$dentalRecord) {
-        Log::error("DentalRecord not found for Teeth ID: {$id}");
-        return response()->json([
-            'success' => false,
-            'message' => 'Associated dental record not found.'
-        ], 404);
-    }
-
-    // Fetch the user associated with the DentalRecord (student)
-    $user = $dentalRecord->user;
-
-    if (!$user) {
-        Log::error("User not found for DentalRecord ID: {$dentalRecord->dental_record_id}");
-        return response()->json([
-            'success' => false,
-            'message' => 'Associated user not found.'
-        ], 404);
-    }
-    Log::info("User {$user->id_number} email: {$user->email}");
-
-    // Validate email format and verification
-    if (!filter_var($user->email, FILTER_VALIDATE_EMAIL) || !$user->email_verified_at) {
-        Log::error("User with ID {$user->id_number} has invalid or unverified email: {$user->email}");
-        return response()->json([
-            'success' => false,
-            'message' => 'The user\'s email is invalid or not verified.'
-        ], 400);
-    }
-
-    // Prepare email data for user (student)
-    $emailDataUser = [
-        'userName' => $user->first_name . ' ' . $user->last_name,
-        'patientName' => $dentalRecord->patient_name,
-        'toothNumber' => $tooth->tooth_number,
-        'status' => ucfirst($tooth->status),
-        'notes' => $tooth->notes,
-    ];
-
-    // Send email to user (student)
-    try {
-        Mail::to($user->email)->send(new ToothApprovedUser($emailDataUser));
-        Log::info("Approval email sent to user: {$user->email}");
-    } catch (\Exception $e) {
-        Log::error("Failed to send approval email to user: {$user->email}. Error: {$e->getMessage()}");
-    }
-
-    // Create notification for user (student)
-    try {
-        Notification::create([
-            'user_id' => $user->id_number,
-            'title' => 'Tooth Record Approved',
-            'message' => "Hello {$user->first_name}, your tooth record for tooth number {$tooth->tooth_number} has been approved.",
-            'is_read' => false,
-        ]);
-        Log::info("Approval notification created for user: {$user->email}");
-    } catch (\Exception $e) {
-        Log::error("Failed to create approval notification for user: {$user->email}. Error: {$e->getMessage()}");
-    }
-
-    $parents = $user->parents; // Assuming this fetches parent User models correctly
-
-    foreach ($parents as $parent) {
-        // Validate each parent's email format and verification
-        if (!filter_var($parent->email, FILTER_VALIDATE_EMAIL) || !$parent->email_verified_at) {
-            Log::warning("Parent with ID {$parent->id_number} has invalid or unverified email: {$parent->email}");
-            continue; // Skip sending email if invalid or unverified
-        }
-
-        // Prepare email data for parent
-        $emailDataParent = [
-            'parentName' => $parent->first_name . ' ' . $parent->last_name,
-            'userName' => $user->first_name . ' ' . $user->last_name,
-            'patientName' => $dentalRecord->patient_name,
-            'toothNumber' => $tooth->tooth_number,
-            'status' => ucfirst($tooth->status),
-            'notes' => $tooth->notes,
-        ];
-
-        // Send email to parent
-        try {
-            Mail::to($parent->email)->send(new ToothApprovedParent($emailDataParent));
-            Log::info("Approval email sent to parent: {$parent->email}");
-        } catch (\Exception $e) {
-            Log::error("Failed to send approval email to parent: {$parent->email}. Error: {$e->getMessage()}");
-        }
-
-        // Create notification for parent
-        try {
-            Notification::create([
-                'user_id' => $parent->id_number,
-                'title' => 'Tooth Record Approved',
-                'message' => "Hello {$parent->first_name}, the tooth record for {$user->first_name} has been approved.",
-                'is_read' => false,
-            ]);
-            Log::info("Approval notification created for parent: {$parent->email}");
-        } catch (\Exception $e) {
-            Log::error("Failed to create approval notification for parent: {$parent->email}. Error: {$e->getMessage()}");
-        }
-    }
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Tooth record approved successfully!'
-    ]);
-}
-
-public function rejectTooth($id)
-{
-    // Find the Teeth record
-    $tooth = Teeth::findOrFail($id);
-    $tooth->is_approved = false;
-    $tooth->save(); // Consider updating status instead of deleting
-
-    // Fetch the associated DentalRecord
-    $dentalRecord = $tooth->dentalRecord;
-
-    if (!$dentalRecord) {
-        Log::error("DentalRecord not found for Teeth ID: {$id}");
-        return response()->json([
-            'success' => false,
-            'message' => 'Associated dental record not found.'
-        ], 404);
-    }
-
-    // Fetch the user associated with the DentalRecord (student)
-    $user = $dentalRecord->user;
-
-    if (!$user) {
-        Log::error("User not found for DentalRecord ID: {$dentalRecord->dental_record_id}");
-        return response()->json([
-            'success' => false,
-            'message' => 'Associated user not found.'
-        ], 404);
-    }
-
-    // Fetch the parents associated with the user (student)
-    $parents = $user->parents; // Retrieves a Collection of User models (parents)
-
-    // Prepare email data for user (student)
-    $emailDataUser = [
-        'userName' => $user->first_name . ' ' . $user->last_name,
-        'patientName' => $dentalRecord->patient_name,
-        'toothNumber' => $tooth->tooth_number,
-        'status' => ucfirst($tooth->status),
-        'notes' => $tooth->notes,
-    ];
-
-    // Send email to user (student) if email exists
-    if ($user->email) {
-        try {
-            Mail::to($user->email)->send(new ToothRejectedUser($emailDataUser));
-            Log::info("Rejection email sent to user: {$user->email}");
-        } catch (\Exception $e) {
-            Log::error("Failed to send rejection email to user: {$user->email}. Error: {$e->getMessage()}");
-        }
-
-        // Create notification for user (student)
-        try {
-            Notification::create([
-                'user_id' => $user->id_number,
-                'title' => 'Tooth Record Rejected',
-                'message' => "Hello {$user->first_name}, your tooth record for tooth number {$tooth->tooth_number} has been rejected.",
-                'is_read' => false,
-            ]);
-            Log::info("Rejection notification created for user: {$user->email}");
-        } catch (\Exception $e) {
-            Log::error("Failed to create rejection notification for user: {$user->email}. Error: {$e->getMessage()}");
-        }
-    } else {
-        Log::warning("User with ID {$user->id_number} does not have an email address.");
-    }
-
-    // Prepare and send emails to all parents
-    foreach ($parents as $parent) {
-        // Prepare email data for parent
-        $emailDataParent = [
-            'parentName' => $parent->first_name . ' ' . $parent->last_name,
-            'userName' => $user->first_name . ' ' . $user->last_name,
-            'patientName' => $dentalRecord->patient_name,
-            'toothNumber' => $tooth->tooth_number,
-            'status' => ucfirst($tooth->status),
-            'notes' => $tooth->notes,
-        ];
-
-        // Send email to parent if email exists
-        if ($parent->email) {
-            try {
-                Mail::to($parent->email)->send(new ToothRejectedParent($emailDataParent));
-                Log::info("Rejection email sent to parent: {$parent->email}");
-            } catch (\Exception $e) {
-                Log::error("Failed to send rejection email to parent: {$parent->email}. Error: {$e->getMessage()}");
-            }
-
-            // Create notification for parent
-            try {
-                Notification::create([
-                    'user_id' => $parent->id_number,
-                    'title' => 'Tooth Record Rejected',
-                    'message' => "Hello {$parent->first_name}, the tooth record for {$user->first_name} has been rejected.",
-                    'is_read' => false,
-                ]);
-                Log::info("Rejection notification created for parent: {$parent->email}");
-            } catch (\Exception $e) {
-                Log::error("Failed to create rejection notification for parent: {$parent->email}. Error: {$e->getMessage()}");
-            }
-        } else {
-            Log::warning("Parent with ID {$parent->id_number} does not have an email address.");
-        }
-    }
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Tooth record rejected successfully!'
-    ]);
-}
     
 public function viewAllDentalRecords()
 {
     // Fetch all pending teeth records that are not approved
     $pendingTeethRecords = Teeth::where('is_approved', 0)
-        ->with('dentalRecord.user')  // Eager load relationships
-        ->get();
+    ->with(['dentalRecord.user.student.parent.user']) // Eager load nested relationships
+    ->get();
     
     Log::info('Fetched all pending teeth records.', ['records' => $pendingTeethRecords->toArray()]);
     
@@ -924,14 +785,7 @@ public function showDentalHistory($patientId)
                             ->get();
 
     // Fetch treatments performed
-    $treatmentsPerformed = Treatment::where('patient_id', $patientId)
-                            ->orderBy('date', 'desc')
-                            ->get();
 
-    // Fetch medications prescribed
-    $medicationsPrescribed = Medication::where('patient_id', $patientId)
-                            ->orderBy('date', 'desc')
-                            ->get();
 
     // Fetch next scheduled appointment with Dr. Sarah Uy
     $nextAppointment = Appointment::where('patient_id', $patientId)
@@ -943,8 +797,6 @@ public function showDentalHistory($patientId)
     return view('admin.dentalHistory', compact(
         'patient',
         'previousExaminations',
-        'treatmentsPerformed',
-        'medicationsPrescribed',
         'nextAppointment'
     ));
 }
@@ -996,22 +848,58 @@ public function history(Request $request)
 
 
 // Method to fetch Tooth History
+// app/Http/Controllers/DentalRecordController.php
 public function toothHistory(Request $request)
 {
-    $dentalRecordId = $request->input('dental_record_id');
-    if (!$dentalRecordId) {
-        return response()->json(['error' => 'Dental Record ID is required.'], 400);
+    // Validate incoming request data
+    $validated = $request->validate([
+        'dental_record_id' => 'required|exists:dental_records,dental_record_id',
+        'tooth_number' => 'required|integer|min:11|max:48',
+    ]);
+
+    $dentalRecordId = $validated['dental_record_id'];
+    $toothNumber = $validated['tooth_number'];
+
+    // Fetch the tooth with histories ordered by updated_at descending
+    $tooth = Teeth::where('dental_record_id', $dentalRecordId)
+                ->where('tooth_number', $toothNumber)
+                ->with(['histories' => function($query) {
+                    $query->orderBy('updated_at', 'desc');
+                }])
+                ->first();
+
+    if (!$tooth) {
+        return response()->json([
+            'success' => false,
+            'message' => 'No tooth found for the provided dental record ID and tooth number.'
+        ], 404);
     }
 
-    $toothHistory = Teeth::where('dental_record_id', $dentalRecordId)
-        ->orderBy('tooth_number')
-        ->get(['tooth_number', 'status', 'notes', 'updated_at', 'dental_pictures']); // Include 'dental_pictures'
+    $histories = $tooth->histories;
 
-    Log::info('Tooth History for Record ID ' . $dentalRecordId . ':', $toothHistory->toArray());
+    if ($histories->isEmpty()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'No tooth history found for the provided dental record ID and tooth number.'
+        ], 404);
+    }
 
-    return response()->json($toothHistory);
+    // Decode dental_pictures for each history entry if needed
+    $histories->transform(function($history) {
+        if (is_string($history->dental_pictures)) {
+            $history->dental_pictures = json_decode($history->dental_pictures, true) ?? [];
+        }
+        return $history;
+    });
+
+    return response()->json([
+        'success' => true,
+        'toothHistories' => $histories
+    ]);
 }
-public function fetchDentalRecords(Request $request)
+
+
+public function fetchDentalRecords(Request $request) 
 {
     $role = $request->input('role', 'student'); // Default to 'student'
     $search = $request->input('search', '');
@@ -1034,7 +922,9 @@ public function fetchDentalRecords(Request $request)
         ->get()
         ->map(function($tooth) {
             // Ensure dental_pictures is an array
-            $dentalPictures = is_array($tooth->dental_pictures) ? $tooth->dental_pictures : json_decode($tooth->dental_pictures, true) ?? [];
+            $dentalPictures = is_array($tooth->dental_pictures)
+                ? $tooth->dental_pictures
+                : json_decode($tooth->dental_pictures, true) ?? [];
             
             // Convert paths to full URLs
             $dentalPictures = collect($dentalPictures)->map(function($path) {
@@ -1042,18 +932,17 @@ public function fetchDentalRecords(Request $request)
             })->toArray();
 
             return [
-                'id' => $tooth->id,
+                'id_number' => $tooth->dentalRecord->id_number ?? 'N/A', // Ensure this exists
                 'patient_name' => $tooth->dentalRecord->patient_name ?? 'N/A',
                 'user_type' => ucfirst($tooth->dentalRecord->user_type ?? 'N/A'),
-                'tooth_number' => $tooth->tooth_number,
-                'notes' => $tooth->notes ?? 'N/A',
-                'status' => ucfirst($tooth->status),
-                'dental_pictures' => $dentalPictures,
+                'actions' => '<button class="preview-btn btn btn-primary" data-id="' . $tooth->dentalRecord->id_number . '"><i class="fas fa-eye"></i> Preview</button>',
             ];
         });
 
-    return response()->json($teethData);
+    return response()->json(['data' => $teethData]);
 }
+
+
 public function downloadDentalExamPdfByIdNumber($id_number)
 {
     // Log the method call with the provided ID number
@@ -1155,219 +1044,127 @@ public function downloadDentalExamPdfByIdNumber($id_number)
         return redirect()->back()->with('error', 'Unable to generate PDF. Please try again later.');
     }
 }
-public function generateParentPdf($id_number)
+public function previewRecord(Request $request)
 {
-    try {
-        // Log the call for debugging
-        Log::info("generateParentPdf called with ID number: {$id_number}");
+    // Validate incoming request data
+    $request->validate([
+        'dental_record_id' => 'required|exists:dental_records,dental_record_id',
+    ]);
 
-        // Retrieve the dental record and associated teeth
-        $dentalRecord = DentalRecord::with('teeth')->where('id_number', $id_number)->firstOrFail();
+    // Fetch the dental record with related teeth and user
+    $dentalRecord = DentalRecord::with(['teeth', 'user'])
+        ->where('dental_record_id', $request->dental_record_id)
+        ->first();
 
-        // Access teeth via relationship
-        $teeth = $dentalRecord->teeth;
-
-        // Process the teeth to include Base64-encoded images
-        $teethData = []; // Initialize an array to hold processed teeth data
-
-        foreach ($teeth as $tooth) {
-            $toothData = $tooth->toArray(); // Convert the tooth model to an array
-
-            // Decode dental_pictures if it's stored as JSON in the database
-            if (is_string($toothData['dental_pictures'])) {
-                $dental_pictures = json_decode($toothData['dental_pictures'], true);
-            } else {
-                $dental_pictures = $toothData['dental_pictures'];
-            }
-
-            $base64_pictures = [];
-            if (!empty($dental_pictures) && is_array($dental_pictures)) {
-                foreach ($dental_pictures as $picture) {
-                    // Get the storage path to the image
-                    $image_path = storage_path('app/public/' . $picture);
-                    if (file_exists($image_path)) {
-                        // Read the image file
-                        $image_data = file_get_contents($image_path);
-                        // Get the image mime type
-                        $image_mime = mime_content_type($image_path);
-                        // Encode the image data in Base64
-                        $base64_image = 'data:' . $image_mime . ';base64,' . base64_encode($image_data);
-                        $base64_pictures[] = $base64_image;
-                    } else {
-                        $base64_pictures[] = null; // Handle missing files as needed
-                    }
-                }
-            }
-
-            $toothData['dental_pictures'] = $dental_pictures; // Ensure dental_pictures is an array
-            $toothData['base64_pictures'] = $base64_pictures; // Add the Base64 images
-
-            $teethData[] = $toothData; // Add the processed tooth data to the array
-        }
-
-        // Retrieve additional patient information
-        $information = Information::where('id_number', $id_number)->firstOrFail();
-
-        // Prepare profile picture
-        $profilePicturePath = storage_path('app/public/' . $information->profile_picture);
-        $profilePictureBase64 = file_exists($profilePicturePath)
-            ? 'data:image/' . pathinfo($profilePicturePath, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($profilePicturePath))
-            : null;
-
-        // Prepare logo
-        $logoPath = public_path('images/pilarLogo.jpg');
-        $logoBase64 = file_exists($logoPath)
-            ? 'data:image/' . pathinfo($logoPath, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($logoPath))
-            : null;
-
-        // Define all possible tooth numbers based on the dental numbering system
-        $allToothNumbers = [
-            11,12,13,14,15,16,17,18,
-            21,22,23,24,25,26,27,28,
-            31,32,33,34,35,36,37,38,
-            41,42,43,44,45,46,47,48
-        ];
-
-        // Initialize teethStatus with all teeth set to 'healthy' by default
-        $teethStatus = [];
-        foreach ($allToothNumbers as $toothNumber) {
-            $toothClass = 'tooth-' . $toothNumber;
-            $tooth = $teeth->firstWhere('tooth_number', $toothNumber);
-            if ($tooth) {
-                // Map tooth status to colors
-                switch (strtolower($tooth->status)) {
-                    case 'healthy':
-                        $color = 'green';
-                        break;
-                    case 'missing':
-                        $color = 'gray';
-                        break;
-                    case 'aching':
-                        $color = 'red';
-                        break;
-                    default:
-                        $color = 'green'; // Default color if status is undefined
-                }
-            } else {
-                $color = 'green'; // Default color for healthy teeth if not in DB
-            }
-            $teethStatus[$toothClass] = $color;
-        }
-
-        // Prepare data for the view
-        $data = [
-            'dentalRecord' => $dentalRecord,
-            'teeth' => $teethData, // Use the processed teeth data
-            'teethStatus' => $teethStatus, // Pass the color mapping
-            'information' => $information,
-            'profilePictureBase64' => $profilePictureBase64,
-            'logoBase64' => $logoBase64,
-        ];
-
-        // Generate PDF from the Blade view tailored for the parent's side
-        $pdf = PDF::loadView('pdf.dental-record', $data);
-
-        // Log the completion of PDF generation
-        Log::info("PDF generated for parent download: Dental Record for ID {$id_number}");
-
-        // Return the PDF as a download
-        return $pdf->download('dental-record-' . $id_number . '.pdf');
-
-    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-        // Log the error if the dental record or information is not found
-        Log::error("Dental record or information not found for ID {$id_number}: " . $e->getMessage());
-
-        return redirect()->back()->with('error', 'Dental record not found for the provided ID number.');
-    } catch (\Exception $e) {
-        // Log any other error
-        Log::error("Error generating PDF for parent download with ID {$id_number}: " . $e->getMessage());
-
-        return redirect()->back()->with('error', 'Unable to generate PDF. Please try again later.');
+    if (!$dentalRecord) {
+        return response()->json(['message' => 'No dental record found for the provided ID.'], 404);
     }
+
+    // Fetch previous examinations
+    $previousExaminations = DentalExamination::where('id_number', $dentalRecord->id_number)
+        ->orderBy('date_of_examination', 'desc')
+        ->get();
+
+    // Fetch tooth history
+    $toothHistory = Teeth::where('dental_record_id', $dentalRecord->dental_record_id)
+        ->orderBy('tooth_number')
+        ->get(['tooth_number', 'status', 'notes', 'updated_at', 'dental_pictures']);
+
+    // Fetch next appointment
+    $nextAppointment = Appointment::where('id_number', $dentalRecord->id_number)
+        ->where('appointment_date', '>=', Carbon::now()->toDateString())
+        ->orderBy('appointment_date', 'asc')
+        ->first();
+
+    // Extract the latest examination as lastExamination
+    $lastExamination = $previousExaminations->first();
+
+    // Prepare complete teeth data with default status 'Healthy' for missing teeth
+    $allToothNumbers = [
+        11, 12, 13, 14, 15, 16, 17, 18,
+        21, 22, 23, 24, 25, 26, 27, 28,
+        31, 32, 33, 34, 35, 36, 37, 38,
+        41, 42, 43, 44, 45, 46, 47, 48
+    ];
+
+    $completeTeeth = [];
+    foreach ($allToothNumbers as $toothNumber) {
+        $tooth = $dentalRecord->teeth->firstWhere('tooth_number', $toothNumber);
+        if ($tooth) {
+            $status = ucfirst(strtolower($tooth->status));
+            $completeTeeth[] = [
+                'tooth_number'    => $toothNumber,
+                'status'          => $status,
+                'notes'           => $tooth->notes,
+                'updated_at'      => $tooth->updated_at,
+                'dental_pictures' => $tooth->dental_pictures,
+            ];
+        } else {
+            $completeTeeth[] = [
+                'tooth_number'    => $toothNumber,
+                'status'          => 'Healthy',
+                'notes'           => null,
+                'updated_at'      => null,
+                'dental_pictures' => null,
+            ];
+        }
+    }
+
+    // Retrieve the user and fetch extra patient information based on role
+    $user = $dentalRecord->user;
+    $role = strtolower($user->role);
+
+    if ($role === 'student') {
+        $information = \App\Models\Student::where('id_number', $user->id_number)->first();
+    } elseif ($role === 'teacher') {
+        $information = \App\Models\Teacher::where('id_number', $user->id_number)->first();
+    } elseif ($role === 'staff') {
+        $information = \App\Models\Staff::where('id_number', $user->id_number)->first();
+    } else {
+        $information = null;
+    }
+
+    // Extract birthdate and calculate age if available
+    $birthdate = $information ? $information->birthdate : null;
+    $age = $birthdate ? Carbon::parse($birthdate)->age : null;
+
+    // Construct the response data
+    $response = [
+        'dentalRecord'       => $dentalRecord->toArray(), // convert to array
+        'teeth'              => $completeTeeth, // already an array
+        'name'               => $dentalRecord->patient_name, // Ensure patient_name is set properly
+        'birthdate'          => $birthdate,
+        'age'                => $age,
+        'grade_section'      => $dentalRecord->grade_section,
+        'previousExaminations'=> $previousExaminations->toArray(),
+        'toothHistory'       => $toothHistory->toArray(),
+        'nextAppointment'    => $nextAppointment, // if null, it's fine
+        'role'               => strtolower($user->role),
+        'lastExamination'    => $lastExamination ? $lastExamination->toArray() : null,
+    ];
+
+    return response()->json($response);
 }
 
-public function downloadParentDentalExamPdfByIdNumber($id_number)
+
+
+
+// In DentalRecordController
+public function fetchAllRecordsJson()
 {
-    // Log the method call with the provided ID number
-    Log::info("downloadParentDentalExamPdfByIdNumber called with ID number: {$id_number}");
-
-    try {
-        // Fetch the dental examination record for parents to download
-        $dentalExamination = DentalExamination::where('id_number', $id_number)
-            ->orderBy('date_of_examination', 'desc')
-            ->firstOrFail();
-
-        // Log the fetched examination
-        Log::info("Fetched Dental Examination for Parent: ", $dentalExamination->toArray());
-
-        // Fetch the student information
-        $user = User::where('id_number', $id_number)->first();
-        if (!$user) {
-            Log::error("User not found for ID number: {$id_number}");
-            return redirect()->back()->with('error', 'User not found.');
-        }
-
-        // Teeth data mapping for the examination report
-        $teethData = [
-            11 => 'Upper Right Central Incisor',
-            12 => 'Upper Right Lateral Incisor',
-            13 => 'Upper Right Canine',
-            14 => 'Upper Right First Premolar',
-            15 => 'Upper Right Second Premolar',
-            16 => 'Upper Right First Molar',
-            17 => 'Upper Right Second Molar',
-            18 => 'Upper Right Third Molar',
-            21 => 'Upper Left Central Incisor',
-            22 => 'Upper Left Lateral Incisor',
-            23 => 'Upper Left Canine',
-            24 => 'Upper Left First Premolar',
-            25 => 'Upper Left Second Premolar',
-            26 => 'Upper Left First Molar',
-            27 => 'Upper Left Second Molar',
-            28 => 'Upper Left Third Molar',
-            31 => 'Lower Left Central Incisor',
-            32 => 'Lower Left Lateral Incisor',
-            33 => 'Lower Left Canine',
-            34 => 'Lower Left First Premolar',
-            35 => 'Lower Left Second Premolar',
-            36 => 'Lower Left First Molar',
-            37 => 'Lower Left Second Molar',
-            38 => 'Lower Left Third Molar',
-            41 => 'Lower Right Central Incisor',
-            42 => 'Lower Right Lateral Incisor',
-            43 => 'Lower Right Canine',
-            44 => 'Lower Right First Premolar',
-            45 => 'Lower Right Second Premolar',
-            46 => 'Lower Right First Molar',
-            47 => 'Lower Right Second Molar',
-            48 => 'Lower Right Third Molar'
-        ];
-
-
-        // Fetch and encode the clinic logo
-        $logoPath = public_path('images/pilarLogo.png');
-        $logoBase64 = file_exists($logoPath) ? base64_encode(file_get_contents($logoPath)) : null;
-
-        // Generate the PDF using the parent's specific view template
-        $pdf = PDF::loadView('pdf.dental_examination_report', [
-            'dentalExamination' => $dentalExamination,
-            'user' => $user,
-            'teethData' => $teethData,
-            'logoBase64' => $logoBase64,
-        ]);
-
-        // Return the PDF as a download for parents
-        return $pdf->download('Parent_Dental_Examination_' . $id_number . '.pdf');
-        
-    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-        // Log the error if no examination is found
-        Log::error("No dental examination found for ID {$id_number}: " . $e->getMessage());
-        return redirect()->back()->with('error', 'No dental examination found for the provided ID number.');
-    } catch (\Exception $e) {
-        // Log any other error
-        Log::error("Error downloading PDF for ID {$id_number}: " . $e->getMessage());
-        return redirect()->back()->with('error', 'Unable to generate PDF. Please try again later.');
-    }
+    $records = DentalRecord::select('id_number','patient_name','user_type','dental_record_id')->get();
+    // Return data in the shape DataTables expects
+    return response()->json([
+        'data' => $records->map(function($r) {
+            return [
+                'id_number' => $r->id_number,
+                'patient_name' => $r->patient_name ?? 'N/A',
+                'user_type' => ucfirst($r->user_type),
+                'actions' => '<button class="preview-btn btn btn-primary" data-id="' 
+                    . $r->dental_record_id . '"><i class="fas fa-eye"></i> Preview</button>'
+            ];
+        })
+    ]);
 }
 
 }

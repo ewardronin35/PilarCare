@@ -13,18 +13,14 @@ class Complaint extends Model
         'id_number',
         'first_name',
         'last_name',
-        'age',
-        'birthdate',
-        'year',
-        'personal_contact_number',
         'pain_assessment',
         'sickness_description',
-        'status',
         'role',
         'medicine_given',
-        'confine_status',
         'go_home',
         'report_url', // Ensure this field exists in your migrations
+        'grade_course',
+        'section',
     ];
 
     public $timestamps = true; // Ensure timestamps are enabled

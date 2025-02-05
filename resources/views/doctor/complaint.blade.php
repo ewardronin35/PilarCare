@@ -1017,7 +1017,12 @@ body{
             fetchAvailableMedicines();
             renderChart();
         });
-
+        function capitalizeFirstLetter(string) {
+    if (typeof string !== 'string' || !string) {
+        return 'N/A'; // Or any default value you prefer
+    }
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
         // Function to switch between main tabs
         function showTab(tabId, element) {
             console.log(`Switching to tab: ${tabId}`);

@@ -3,10 +3,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 class MedicalRecord extends Model
 {
+
+    
     use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'id_number', // Include user_id in fillable array
@@ -33,10 +38,13 @@ class MedicalRecord extends Model
     ];
 
     protected $casts = [
+        'birthdate' => 'date', // Casts to Carbon instance
+        'record_date' => 'datetime',
         'medicines' => 'array',
         'health_documents' => 'array', // Assuming you have this field
         'is_approved' => 'boolean',
         'is_current' => 'boolean',
+        
     ];
     public function user()
     {
@@ -54,6 +62,10 @@ class MedicalRecord extends Model
     {
         return $this->belongsTo(Nurse::class);
     }
+    public function healthExaminations()
+    {
+        return $this->hasMany(HealthExamination::class, 'id_number', 'id_number');
+    }
 
     /**
      * Get the doctor associated with the medical record.
@@ -62,6 +74,32 @@ class MedicalRecord extends Model
     {
         return $this->belongsTo(Doctor::class);
     }
+
+    public function student()
+    {
+        return $this->belongsTo(Student::class, 'id_number', 'id_number');
+    }
+    public function teacher()
+    {
+        return $this->belongsTo(Teacher::class, 'id_number', 'id_number');
+    }
+
+    public function staff()
+    {
+        return $this->belongsTo(Staff::class, 'id_number', 'id_number');
+    }
+    public function previousRecords()
+    {
+        return $this->hasMany(MedicalRecord::class, 'id_number', 'id_number')
+                    ->where('version', '<', $this->version)
+                    ->orderBy('version', 'desc');
+    }
+    public function histories()
+    {
+        return $this->hasMany(\App\Models\MedicalHistory::class, 'medical_record_id', 'id_number');
+    }
+    
+    
 }
 
 

@@ -322,12 +322,7 @@
             </li>
 
             <!-- Complaints -->
-            <li class="{{ Route::currentRouteName() == 'doctor.complaint' ? 'active' : '' }}">
-                <a href="{{ route('doctor.complaint') }}">
-                    <span class="icon"><i class="fas fa-comments"></i></span>
-                    <span class="menu-text">Complaints</span>
-                </a>
-            </li>
+            
 
             <!-- Records (with Submenu) -->
             <li class="has-submenu {{ Route::currentRouteName() == 'doctor.medical-record.index' || Route::currentRouteName() == 'doctor.dental-record.index' ? 'active' : '' }}">
@@ -347,28 +342,7 @@
             </li>
 
             <!-- Approvals (with Submenu) -->
-            <li class="has-submenu {{ 
-                Route::currentRouteName() == 'doctor.health-examinations' || 
-                Route::currentRouteName() == 'doctor.uploadMedicalDocu' || 
-                Route::currentRouteName() == 'doctor.uploadDentalDocu' ? 'active' : '' }}">
-                <a href="#">
-                    <span class="icon"><i class="fas fa-check-circle"></i></span>
-                    <span class="menu-text">Approvals</span>
-                    <span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span>
-                </a>
-                <ul class="submenu">
-                    <li class="{{ Route::currentRouteName() == 'doctor.health-examinations' ? 'active' : '' }}">
-                        <a href="{{ route('doctor.health-examinations') }}">Health Approval</a>
-                    </li>
-                    <li class="{{ Route::currentRouteName() == 'doctor.uploadMedicalDocu' ? 'active' : '' }}">
-                        <a href="{{ route('doctor.uploadMedicalDocu') }}">Medical Approval</a>
-                    </li>
-                    <li class="{{ Route::currentRouteName() == 'doctor.uploadDentalDocu' ? 'active' : '' }}">
-                        <a href="{{ route('doctor.uploadDentalDocu') }}">Dental Approval</a>
-                    </li>
-                </ul>
-            </li>
-
+    
 
             <!-- Appointment -->
             <li class="{{ Route::currentRouteName() == 'doctor.appointment' ? 'active' : '' }}">
@@ -378,15 +352,7 @@
                 </a>
             </li>
 
-            <!-- Inventory -->
-            <li class="{{ Route::currentRouteName() == 'doctor.inventory' ? 'active' : '' }}">
-                <a href="{{ route('doctor.inventory') }}">
-                    <span class="icon"><i class="fas fa-boxes"></i></span>
-                    <span class="menu-text">Inventory</span>
-                </a>
-            </li>
-
-    
+     
 
            
 

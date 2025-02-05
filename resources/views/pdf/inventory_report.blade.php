@@ -162,7 +162,7 @@
                 <tr>
                     <th>Item Name</th>
                     <th>Quantity</th>
-                    <th>Brand</th>
+                    <th>Generic Name</th> <!-- Updated Column Header -->
                     <th>Type</th>
                     <th>Date Acquired</th>
                     <th>Expiry Date</th>
@@ -173,7 +173,7 @@
                     <tr>
                         <td>{{ $item->item_name }}</td>
                         <td>{{ $item->quantity }}</td>
-                        <td>{{ $item->supplier }}</td>
+                        <td>{{ $item->generic_name }}</td> <!-- Updated Data Field -->
                         <td>{{ $item->type }}</td>
                         <td>{{ \Carbon\Carbon::parse($item->date_acquired)->format('Y-m-d') }}</td>
                         <td>{{ \Carbon\Carbon::parse($item->expiry_date)->format('Y-m-d') }}</td>

@@ -79,9 +79,9 @@ $(document).ready(function () {
         var idNumber = $('#id_number').val();
         var patientName = $('#patient_name').val();
         var additionalInfo = $('#additional-info').val();
-
+    
         console.log('Creating new dental record for ID Number:', idNumber);
-
+    
         // Send AJAX POST request to create the dental record
         $.ajax({
             url: storeDentalRecordUrl,
@@ -96,12 +96,12 @@ $(document).ready(function () {
                     // Set the dental_record_id in the main hidden input
                     dentalRecordId = response.dental_record_id;
                     $('#dental-record-id').val(dentalRecordId);
-
+    
                     console.log('New Dental Record ID set:', dentalRecordId);
-
+    
                     // Hide the save button
                     $('#save-dental-record').hide();
-
+    
                     // Show success modal and reload the page after closing
                     Swal.fire({
                         icon: 'success',
@@ -135,6 +135,7 @@ $(document).ready(function () {
             }
         });
     }
+    
 
     // -------------------------------------------------
     // 5. Function: Handle Individual Tooth Interaction

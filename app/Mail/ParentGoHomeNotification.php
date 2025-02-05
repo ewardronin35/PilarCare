@@ -14,6 +14,8 @@ class ParentGoHomeNotification extends Mailable
 
     public $complaint;
     public $student;
+    public $parent;
+
 
     /**
      * Create a new message instance.
@@ -24,6 +26,8 @@ class ParentGoHomeNotification extends Mailable
     {
         $this->complaint = $complaint;
         $this->student = $student;
+        $this->parent = $student->parent; // Ensure this relationship is defined
+
     }
 
     /**

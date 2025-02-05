@@ -62,5 +62,14 @@ class Kernel extends HttpKernel
     {
         // Schedule the command to run daily at midnight
         $schedule->command('inventory:check-expiring')->dailyAt('00:00');
+        $schedule->command('enrollment:update-status')
+        ->yearlyOn(11, 30, '23:59')  // End of First Semester (November 30th)
+        ->runInBackground();
+
+        $schedule->command('enrollment:update-status')
+        ->yearlyOn(4, 30, '23:59')  // End of Second Semester (April 30th)
+        ->runInBackground();
+        $schedule->command('reminders:send-daily')->dailyAt('07:00'); // Adjust the time as needed
+
     }
 }

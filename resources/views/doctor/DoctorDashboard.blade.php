@@ -628,9 +628,16 @@
         <div class="profile-box">
             <img src="{{ asset('images/pilarLogo.jpg') }}" alt="Profile Image">
             <div class="profile-info">
-                <h2>{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</h2>
-                <p>{{ Auth::user()->role }}</p>
-                <a href="{{ route('profile.edit') }}" class="edit-profile-btn">Edit Profile</a>
+            @if ($doctor)
+        <h2>{{ $doctor->full_name }}</h2>
+    @else
+        <h2>Doctor profile not found</h2>
+        <p style="color: red;">Associated user profile not found for the doctor.</p>
+    @endif
+
+
+
+            <p>{{ Auth::user()->role }}</p>
             </div>
         </div>
         @if ($errors->any())

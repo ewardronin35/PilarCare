@@ -10,14 +10,14 @@ class Appointment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'id_number',
-        'patient_name',
         'appointment_date',
         'appointment_time',
         'role',
         'doctor_id',          // Added doctor_id
         'appointment_type',
         'status',
+        'grade_or_course',
+        'section',
     ];
     protected $dates = ['appointment_date'];
     protected $casts = [
@@ -33,6 +33,10 @@ class Appointment extends Model
     public function getFormattedDateAttribute()
     {
         return Carbon::parse($this->appointment_date)->format('F j, Y');
+    }
+    public function child()
+    {
+        return $this->belongsTo(Student::class, 'id_number', 'id_number');
     }
     public function scopeUpcoming($query)
     {
