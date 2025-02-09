@@ -19,6 +19,8 @@
     padding: 20px;
     margin-left: 80px;
     margin-top: 28px; /* Adjust top margin to align with header */
+    width: calc(100% - 80px);
+
 }
    /* Modal Styling */
    .modal {
@@ -615,7 +617,39 @@
                 height: 60px;
             }
         }
-        
+        #guardian_relationship {
+        width: 100%;
+        padding: 8px; /* Adjust padding for the dropdown */
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 0.9rem; /* Adjust font size */
+        font-family: 'Poppins', sans-serif;
+        background-color: #fff;
+        color: #333;
+        appearance: none; /* Remove default arrow */
+        position: relative;
+        transition: border-color 0.3s ease;
+    }
+
+    #guardian_relationship:hover {
+        border-color: #007bff; /* Hover effect */
+    }
+
+    #guardian_relationship:focus {
+        outline: none;
+        border-color: #0056b3; /* Focus border color */
+    }
+
+    /* Add custom arrow for dropdown */
+    #guardian_relationship::after {
+        content: '\25BC'; /* Unicode for down arrow */
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #007bff;
+        pointer-events: none;
+    }
     </style>
 
   <!-- Main Content -->
@@ -639,8 +673,6 @@
         {{ 'User not authenticated' }}
     @endif
 </h2>
-
-
             <p>{{ Auth::user()->role }}</p>
         </div>
     </div>
@@ -723,28 +755,7 @@
             </div>
 
             <!-- Dental Record Status -->
-            <div class="stat-box">
-                <img src="https://img.icons8.com/ios-filled/50/000000/dental-braces.png" alt="Dental Record Icon">
-                @if($hasDentalRecord)
-                    <h2>Yes</h2>
-                    <p>Dental Record Submitted</p>
-                @else
-                    <h2>No</h2>
-                    <p>No Dental Record Submitted</p>
-                @endif
-            </div>
-
-            <!-- Medical Record Status -->
-            <div class="stat-box">
-                <img src="https://img.icons8.com/ios-filled/50/000000/medical-history.png" alt="Medical Record Icon">
-                @if($hasMedicalRecord)
-                    <h2>Yes</h2>
-                    <p>Medical Record Submitted</p>
-                @else
-                    <h2>No</h2>
-                    <p>No Medical Record Submitted</p>
-                @endif
-            </div>
+          
 
             <!-- Complaints Count -->
             <div class="stat-box">
@@ -772,100 +783,7 @@
             </div>
         </div>
 
-        <!-- Welcome Modal (Optional) -->
-        <div id="welcomeModal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <div id="welcomeMessage" class="welcome-message show">
-                    <img src="{{ asset('images/pilarLogo.jpg') }}" alt="PilarCare Logo" width="100">
-                    <h2>Welcome to PilarCare, {{ Auth::user()->first_name }}!</h2>
-                </div>
-                <div class="disclaimer" id="disclaimerSection">
-                    <h3>Data Privacy Disclaimer</h3>
-                    <p>
-                        In compliance with the Data Privacy Act of 2012, all gathered data from the participant will be treated with utmost confidentiality to protect the participant’s/respondent’s privacy.
-                    </p>
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="agree_disclaimer" name="agree_disclaimer" required>
-                            I have read and understood the above statement. I agree to participate voluntarily in this research without any force.
-                        </label>
-                    </div>
-                    <p>After agreeing to the terms, you will proceed to fill out your profile information.</p>
-                    <button type="button" class="next-button" id="nextButton" disabled>
-                        Next <span class="arrow">&rarr;</span>
-                    </button>
-                </div>
-
-                <form id="welcomeForm" action="{{ route('staff.profile.store') }}" method="POST" enctype="multipart/form-data" style="display: none;">
-                    @csrf
-                    <input type="hidden" id="guardian_first_name" name="guardian_first_name" value="">
-    <input type="hidden" id="guardian_last_name" name="guardian_last_name" value="">
-    <input type="hidden" id="guardian_relationship" name="guardian_relationship" value="">
-
-                    <div class="profile-picture-container">
-                        <img id="profile_preview" class="profile-pic-preview" src="{{ asset('images/default-profile.png') }}" alt="Profile Picture Preview" style="display: none;">
-                        <label for="profile_picture" class="profile-picture-label"><i class="fas fa-camera"></i> Change Profile Picture</label>
-                        <input type="file" id="profile_picture" name="profile_picture" accept="image/*" required onchange="previewImage(event)">
-                    </div>
-
-                    <div class="row">
-                        <div class="form-group">
-                            <label for="parent_name_father"><i class="fas fa-user"></i> Father's Name</label>
-                            <input type="text" id="parent_name_father" name="parent_name_father" required 
-                                oninput="validateLetters(this)" onblur="validateLetters(this)" onpaste="validateLetters(this)" pattern="[A-Za-z\s]+" title="Letters only">
-                        </div>
-                        <div class="form-group">
-                            <label for="parent_name_mother"><i class="fas fa-user"></i> Mother's Name</label>
-                            <input type="text" id="parent_name_mother" name="parent_name_mother" required 
-                                oninput="validateLetters(this)" onblur="validateLetters(this)" onpaste="validateLetters(this)" pattern="[A-Za-z\s]+" title="Letters only">
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="form-group">
-                            <label for="birthdate"><i class="fas fa-calendar-alt"></i> Your Birthdate</label>
-                            <input type="date" id="birthdate" name="birthdate" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="address"><i class="fas fa-map-marker-alt"></i> Address</label>
-                            <textarea id="address" name="address" rows="2" required></textarea>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="form-group">
-                            <label for="emergency_contact_number"><i class="fas fa-phone-alt"></i> Emergency Contact Number</label>
-                            <input type="text" id="emergency_contact_number" name="emergency_contact_number" required 
-                                maxlength="11" placeholder="09123456789"
-                                oninput="validatePhilippineNumber(this)" 
-                                pattern="09\d{9}" title="Must be 11 digits starting with 09">
-                        </div>
-                        <div class="form-group">
-                            <label for="personal_contact_number"><i class="fas fa-phone"></i> Personal Contact Number</label>
-                            <input type="text" id="personal_contact_number" name="personal_contact_number" required 
-                                maxlength="11" placeholder="09123456789"
-                                oninput="validatePhilippineNumber(this)" 
-                                pattern="09\d{9}" title="Must be 11 digits starting with 09">
-                        </div>
-                    </div>
-
-                   
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="agree_terms" name="agree_terms" required>
-                            I agree to the terms and conditions.
-                        </label>
-                    </div>
-
-                    <input type="hidden" name="id_number" value="{{ Auth::user()->id_number }}">
-
-                    <button type="submit" class="submit-button" id="submitButton" disabled>
-                        Submit <span class="arrow">&rarr;</span>
-                    </button>
-                </form>
-            </div>
-        </div>
+        
     </div>
 
     <!-- External JS Libraries -->
@@ -879,26 +797,11 @@
 </script>
 
     <!-- Internal JavaScript -->
-     <!-- Internal JavaScript -->
-     <script>
+    <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Initialize Chart.js
 
-        const parentNameFatherInput = document.getElementById('parent_name_father');
-        const parentNameMotherInput = document.getElementById('parent_name_mother');
-
-     
-        if (parentNameFatherInput) {
-            parentNameFatherInput.addEventListener('blur', function() {
-                capitalizeWords(this);
-            });
-        }
-
-        if (parentNameMotherInput) {
-            parentNameMotherInput.addEventListener('blur', function() {
-                capitalizeWords(this);
-            });
-        }
+         
             // Initialize Calendar
             renderCalendar(currentMonth, currentYear);
         });
@@ -907,21 +810,62 @@
         const currentDate = new Date();
         let currentMonth = currentDate.getMonth();
         let currentYear = currentDate.getFullYear();
-        const csrfToken = document.querySelector('meta[name="csrf-token"]');
-        const profilePreview = document.getElementById('profile_preview');
 
         /**
          * Render Calendar Function
-         */
-        function capitalizeWords(input) {
-        let words = input.value.split(' ');
-        for (let i = 0; i < words.length; i++) {
-            if (words[i].length > 0) {
-                words[i] = words[i][0].toUpperCase() + words[i].substr(1).toLowerCase();
-            }
+         */  function openPreviewModal(selectedDate, month, year) {
+            // Construct the date string in 'YYYY-MM-DD' format.
+            const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
+            // Update the modal's date display.
+            document.getElementById('preview-date').textContent = dateString;
+            // Set a loading message while fetching appointments.
+            const appointmentsList = document.getElementById('appointments-list');
+            appointmentsList.innerHTML = '<li>Loading...</li>';
+
+            // Fetch appointments for the selected date.
+            fetch(`${routes.getAppointmentsByDate}?date=${dateString}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+
+                .then(data => {
+                    appointmentsList.innerHTML = '';
+                    if (data.appointments && data.appointments.length > 0) {
+                        data.appointments.forEach(appointment => {
+                            const li = document.createElement('li');
+                            li.innerHTML = `<p>
+                                <strong>Grade:</strong> ${appointment.grade_or_course}<br>
+                                <strong>Section:</strong> ${appointment.section}<br>
+                                <strong>Time:</strong> ${appointment.appointment_time}<br>
+                                <strong>Type:</strong> ${appointment.appointment_type}<br>
+                                <strong>Status:</strong> ${appointment.status}<br>
+                                <strong>Doctor:</strong> ${appointment.doctor_name}
+                            </p>`;
+                            appointmentsList.appendChild(li);
+                        });
+                    } else {
+                        appointmentsList.innerHTML = '<li>No appointments found for this date.</li>';
+                    }
+                    // Display the modal.
+                    document.getElementById('preview-modal').style.display = 'flex';
+                })
+                .catch(error => {
+                    console.error('Error fetching appointments:', error);
+                    appointmentsList.innerHTML = `<li>Error fetching appointments: ${error.message}</li>`;
+                    document.getElementById('preview-modal').style.display = 'flex';
+                });
         }
-        input.value = words.join(' ');
-    }
+
+        /**
+         * CLOSE PREVIEW MODAL
+         */
+        function closePreviewModal() {
+            document.getElementById('preview-modal').style.display = 'none';
+        }
+       
 
         function renderCalendar(month, year) {
             const monthString = String(month + 1).padStart(2, '0');
@@ -939,15 +883,21 @@
                     const appointmentsByDate = {};
 
                     if (data.appointments && data.appointments.length > 0) {
-                        data.appointments.forEach(appointment => {
-                            // Assuming 'appointment_date' is in 'YYYY-MM-DD' format
-                            const date = appointment.appointment_date;
-                            if (!appointmentsByDate[date]) {
-                                appointmentsByDate[date] = [];
-                            }
-                            appointmentsByDate[date].push(appointment);
-                        });
+                data.appointments.forEach(appointment => {
+                    // Convert appointment_date into a Date object
+                    const appDate = new Date(appointment.appointment_date);
+                    // Format as "YYYY-MM-DD"
+                    const dateKey = appDate.getFullYear() + '-' +
+                        String(appDate.getMonth() + 1).padStart(2, '0') + '-' +
+                        String(appDate.getDate()).padStart(2, '0');
+                    console.log("Appointment date key:", dateKey);
+
+                    if (!appointmentsByDate[dateKey]) {
+                        appointmentsByDate[dateKey] = [];
                     }
+                    appointmentsByDate[dateKey].push(appointment);
+                });
+            }
 
                     renderCalendarDays(month, year, appointmentsByDate);
                 })
@@ -968,75 +918,75 @@
          * Render Calendar Days Function
          */
         function renderCalendarDays(month, year, appointmentsByDate) {
-            const calendarBody = document.getElementById('calendar-body');
-            calendarBody.innerHTML = '';
-            const monthYearText = document.getElementById('calendar-month-year');
-            const firstDay = new Date(year, month).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const monthNames = [
-                "January", "February", "March", "April", "May", "June",
-                "July", "August", "September", "October", "November", "December"
-            ];
-            monthYearText.textContent = `${monthNames[month]} ${year}`;
-            let date = 1;
+    const calendarBody = document.getElementById('calendar-body');
+    calendarBody.innerHTML = '';
+    const monthYearText = document.getElementById('calendar-month-year');
+    const firstDay = new Date(year, month).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+    monthYearText.textContent = `${monthNames[month]} ${year}`;
+    let date = 1;
 
-            for (let i = 0; i < 6; i++) { // 6 weeks max in a month
-                let row = document.createElement('tr');
-                for (let j = 0; j < 7; j++) { // 7 days a week
-                    let cell = document.createElement('td');
-                    if (i === 0 && j < firstDay) {
-                        cell.appendChild(document.createTextNode(''));
-                    } else if (date > daysInMonth) {
-                        break;
-                    } else {
-                        let selectedDate = date;
-                        cell.textContent = selectedDate;
+    for (let i = 0; i < 6; i++) { // 6 weeks max in a month
+        let row = document.createElement('tr');
+        for (let j = 0; j < 7; j++) { // 7 days a week
+            let cell = document.createElement('td');
+            if (i === 0 && j < firstDay) {
+                cell.appendChild(document.createTextNode(''));
+            } else if (date > daysInMonth) {
+                // Optionally, you can append empty cells if you want a complete row.
+                cell.appendChild(document.createTextNode(''));
+            } else {
+                let selectedDate = date;
+                cell.textContent = selectedDate;
 
-                        // Format dateString as 'YYYY-MM-DD'
-                        const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
+                // Format dateString as 'YYYY-MM-DD'
+                const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
 
-                        // Determine the class based on appointment statuses
-                        if (appointmentsByDate[dateString]) {
-                            const appointments = appointmentsByDate[dateString];
-                            let hasConfirmed = false;
-                            let hasPending = false;
+                // Determine the class based on appointment statuses
+                if (appointmentsByDate[dateString]) {
+                    const appointments = appointmentsByDate[dateString];
+                    let hasConfirmed = appointments.some(app =>
+                        app.status && app.status.toLowerCase().trim() === 'confirmed'
+                    );
+                    let hasPending = appointments.some(app =>
+                        app.status && app.status.toLowerCase().trim() === 'pending'
+                    );
 
-                            appointments.forEach(appointment => {
-                                const status = appointment.status.toLowerCase().trim();
-                                if (status === 'confirmed') {
-                                    hasConfirmed = true;
-                                } else if (status === 'pending') {
-                                    hasPending = true;
-                                }
-                            });
-
-                            if (hasConfirmed) {
-                                cell.classList.add('red'); // Confirmed appointments
-                            } else if (hasPending) {
-                                cell.classList.add('yellow'); // Pending appointments
-                            }
-                        } else {
-                            cell.classList.add('green'); // Free date
-                        }
-
-                        // Add click event to open preview modal
-                        cell.onclick = () => {
-                            openPreviewModal(selectedDate, month, year);
-                        };
-
-                        // Highlight today's date
-                        const today = new Date();
-                        if (selectedDate === today.getDate() && year === today.getFullYear() && month === today.getMonth()) {
-                            cell.classList.add('active');
-                        }
-
-                        row.appendChild(cell);
-                        date++;
+                    if (hasConfirmed) {
+                        cell.classList.add('red'); // Confirmed appointments
+                    } else if (hasPending) {
+                        cell.classList.add('yellow'); // Pending appointments
                     }
-                    calendarBody.appendChild(row);
+                } else {
+                    cell.classList.add('green'); // Free date
                 }
+
+                // Add click event to open the preview modal
+                cell.onclick = () => {
+                    openPreviewModal(selectedDate, month, year);
+                };
+
+                // Highlight today's date
+                const today = new Date();
+                if (selectedDate === today.getDate() &&
+                    year === today.getFullYear() &&
+                    month === today.getMonth()
+                ) {
+                    cell.classList.add('active');
+                }
+                date++;
             }
+            row.appendChild(cell);
         }
+        // Append the complete row once after processing all cells
+        calendarBody.appendChild(row);
+    }
+}
+
 
         /**
          * Change Month Function
@@ -1056,52 +1006,7 @@
         /**
          * Open Preview Modal Function
          */
-        function openPreviewModal(day, month, year) {
-            const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-
-            document.getElementById('preview-date').innerText = formattedDate;
-
-            fetch(`/staff/appointments/by-date?date=${formattedDate}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    const appointmentsList = document.getElementById('appointments-list');
-                    appointmentsList.innerHTML = ''; // Clear previous appointments
-
-                    if (data.appointments && data.appointments.length > 0) {
-                        data.appointments.forEach(appointment => {
-                            // Convert appointment_time to 12-hour AM/PM format
-                            const timeString = appointment.appointment_time;
-                            const timeFormatted = formatTimeTo12Hour(timeString);
-
-                            const li = document.createElement('li');
-                            li.innerHTML = `<p><span>${timeFormatted}</span> - ${appointment.appointment_type}</p>`;
-                            appointmentsList.appendChild(li);
-                        });
-                    } else {
-                        const li = document.createElement('li');
-                        li.innerText = 'No appointments for this day.';
-                        appointmentsList.appendChild(li);
-                    }
-
-                    const modal = document.getElementById('preview-modal');
-                    modal.style.display = 'flex'; // Show the modal
-                })
-                .catch(error => {
-                    console.error('Error fetching appointments:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Failed to load appointments.',
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
-                });
-        }
+        
 
         /**
          * Helper function to format time to 12-hour AM/PM
@@ -1120,70 +1025,24 @@
         /**
          * Close Preview Modal Function
          */
-        function closePreviewModal() {
-            const modal = document.getElementById('preview-modal');
-            modal.style.display = 'none';
-        }
-
+        
         /**
          * Profile Picture Preview
          */
-        function previewImage(event) {
-            const input = event.target; // Access the input element
-            const profilePreview = document.getElementById('profile_preview'); // Define it here
-
-            const reader = new FileReader();
-            reader.onload = function() {
-                profilePreview.src = reader.result;
-                profilePreview.style.display = 'block';
-            }
-            if (input.files && input.files[0]) {
-                reader.readAsDataURL(event.target.files[0]);
-            }
-        }
-
+        
         // Event listener for profile picture input
-        const profilePictureInput = document.getElementById('profile_picture');
-        if (profilePictureInput) {
-            profilePictureInput.addEventListener('change', previewImage);
-        }
-
-        /**
-         * Validation for letters only in names
-         */
-        function validateLetters(input) {
-            setTimeout(() => {
-                input.value = input.value.replace(/[^A-Za-z\s]/g, '');
-            }, 1);
-        }
-
+        
         /**
          * Validation for Philippine mobile number standard (09XXXXXXXXX)
          */
-        function validatePhilippineNumber(input) {
-            setTimeout(() => {
-                input.value = input.value.replace(/[^0-9]/g, ''); // Allow only numbers
-                if (input.value.length > 11) { // Limit to 11 digits
-                    input.value = input.value.slice(0, 11);
-                }
-            }, 1);
-        }
+        
 
         /**
          * Form Interaction and Submission Handling
          */
         document.addEventListener('DOMContentLoaded', function() {
-            const modal = document.getElementById("welcomeModal");
-            const nextButton = document.getElementById("nextButton");
-            const submitButton = document.getElementById("submitButton");
-            const welcomeForm = document.getElementById("welcomeForm");
-            const welcomeMessage = document.getElementById('welcomeMessage');
-            const agreeDisclaimer = document.getElementById("agree_disclaimer");
-            const agreeTerms = document.getElementById("agree_terms");
-            const profilePreview = document.getElementById('profile_preview');
-            const disclaimerSection = document.getElementById('disclaimerSection');
+        
 
-            let formInteraction = false;
 
             // Initialize the calendar
             const today = new Date();
@@ -1192,232 +1051,19 @@
             renderCalendar(currentMonth, currentYear);
 
             // Agree to disclaimer
-            if (agreeDisclaimer && nextButton) {
-                agreeDisclaimer.addEventListener('change', function() {
-                    nextButton.disabled = !this.checked;
-                });
-            }
-
+          
             // Countdown before enabling the next button and showing the form
-            if (nextButton) {
-                nextButton.addEventListener('click', function() {
-                    let countdown = 3;
-                    nextButton.disabled = true;
-                    nextButton.innerHTML = `Please wait ${countdown}s`;
+            
 
-                    const countdownInterval = setInterval(() => {
-                        countdown--;
-                        nextButton.innerHTML = `Please wait ${countdown}s`;
-
-                        if (countdown === 0) {
-                            clearInterval(countdownInterval);
-                            nextButton.innerHTML = `Next <span class="arrow">&rarr;</span>`;
-                            nextButton.disabled = false;
-
-                            // Hide welcome message and show form
-                            welcomeMessage.style.display = 'none';
-                            disclaimerSection.style.display = 'none';
-                            welcomeForm.style.display = 'block';
-
-                            // Animate the form coming into view
-                            welcomeForm.style.opacity = 0;
-                            welcomeForm.style.transform = 'translateY(20px)';
-                            setTimeout(() => {
-                                welcomeForm.style.transition = 'opacity 0.5s, transform 0.5s';
-                                welcomeForm.style.opacity = 1;
-                                welcomeForm.style.transform = 'translateY(0)';
-                            }, 100);
-                        }
-                    }, 1000);
-                });
-            }
-
-            // Attach event listeners to form inputs to detect interaction
-            if (welcomeForm) {
-                const inputs = welcomeForm.querySelectorAll('input, textarea, select');
-                inputs.forEach(input => {
-                    input.addEventListener('input', () => {
-                        formInteraction = true;
-                        enableBeforeUnload(); // Enable the prompt after user interaction
-                    });
+           
                 });
 
                 // Form submission with AJAX
-                welcomeForm.addEventListener('submit', function(event) {
-                    event.preventDefault();
+             
+                
+            
 
-                    // Disable the beforeunload prompt before form submission
-                    disableBeforeUnload();
-
-                    const formData = new FormData(welcomeForm);
-
-                    Swal.fire({
-                        title: 'Submit Profile',
-                        text: "Are you sure you want to submit your profile information?",
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonColor: '#00d1ff',
-                        cancelButtonColor: '#d33',
-                        confirmButtonText: 'Yes, submit it!'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            // Show loading spinner
-                            Swal.fire({
-                                title: 'Submitting...',
-                                allowOutsideClick: false,
-                                didOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            });
-
-                            fetch('{{ route('staff.profile.store') }}', {
-                                method: 'POST',
-                                body: formData,
-                                headers: {
-                                    'X-CSRF-TOKEN': csrfToken.getAttribute('content')
-                                }
-                            })
-                            .then(response => {
-                                if (response.status === 422) {
-                                    // Validation error
-                                    return response.json().then(data => {
-                                        throw data;
-                                    });
-                                }
-                                return response.json();
-                            })
-                            .then(data => {
-                                Swal.close(); // Close the loading spinner
-
-                                if (data.success) {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Success',
-                                    }).then(() => {
-                                        modal.style.display = 'none';
-                                        location.reload(); // Reload the page after successful submission
-                                    });
-                                } else {
-                                    // SweetAlert error message
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Error!',
-                                        text: data.message || 'There was an error updating your profile.',
-                                    });
-                                }
-                            })
-                            .catch(errorData => {
-    Swal.close(); // Close the loading spinner
-
-    if (errorData.errors) {
-        let errorMessages = '';
-        if (Array.isArray(errorData.errors)) {
-            // Handle errors returned as an array
-            errorData.errors.forEach(message => {
-                errorMessages += `${message}<br>`;
-            });
-        } else {
-            // Handle errors returned as an object
-            for (const [field, messages] of Object.entries(errorData.errors)) {
-                if (Array.isArray(messages)) {
-                    const formattedField = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                    errorMessages += `<strong>${formattedField}:</strong> ${messages.join('<br>')}<br><br>`;
-                } else {
-                    console.error(`Unexpected validation error format for field ${field}:`, messages);
-                }
-            }
-        }
-
-        Swal.fire({
-            icon: 'error',
-            title: 'Validation Errors',
-            html: errorMessages,
-            confirmButtonText: 'OK'
-        });
-    } else {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error!',
-            text: errorData.message || 'An unexpected error occurred.',
-        });
-                                }
-                            });
-                        }
-                    });
-                });
-            }
-
-            // Profile Picture Preview Function
-            function previewImage(event) {
-                const input = event.target; // Access the input element
-                const reader = new FileReader();
-                reader.onload = function() {
-                    profilePreview.src = reader.result;
-                    profilePreview.style.display = 'block';
-                }
-                if (input.files && input.files[0]) {
-                    reader.readAsDataURL(event.target.files[0]);
-                }
-            }
-
-            // Show modal if $showModal is true
-            if (modal) {
-                if ({{ json_encode($showModal) }}) {
-                    modal.style.display = 'flex';
-                }
-
-                const closeModal = document.querySelector('#welcomeModal .close');
-                if (closeModal) {
-                    closeModal.addEventListener('click', function() {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Incomplete Form',
-                            text: 'You need to complete the form before proceeding.',
-                        });
-                    });
-                }
-
-                window.addEventListener('click', function(event) {
-                    if (event.target === modal) {
-                        event.preventDefault();
-                    }
-                });
-
-                if (agreeDisclaimer && nextButton) {
-                    agreeDisclaimer.addEventListener('change', function() {
-                        nextButton.disabled = !this.checked;
-                    });
-                }
-            }
-
-            // Terms and conditions agreement before enabling the submit button
-            if (agreeTerms && submitButton) {
-                agreeTerms.addEventListener('change', function() {
-                    submitButton.disabled = !this.checked;
-                });
-            }
-        });
-
-        /**
-         * Enable the beforeunload prompt
-         */
-        function enableBeforeUnload() {
-            window.addEventListener('beforeunload', preventFormClose);
-        }
-
-        /**
-         * Disable the beforeunload prompt
-         */
-        function disableBeforeUnload() {
-            window.removeEventListener('beforeunload', preventFormClose);
-        }
-
-        /**
-         * Function to prevent form close
-         */
-        function preventFormClose(event) {
-            event.preventDefault();
-            event.returnValue = ''; // Standard way to trigger a warning dialog
-        }
+          
+        
     </script>
 </x-app-layout>

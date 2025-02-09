@@ -289,7 +289,8 @@ Route::middleware(['auth', 'verified', CheckRoleMiddleware::class . ':staff'])->
     Route::middleware([\App\Http\Middleware\CheckApproval::class])->group(function () {
         Route::get('/medical-record', [MedicalRecordController::class, 'create'])->name('medical-record.create');
         Route::post('/medical-record/store', [MedicalRecordController::class, 'store'])->name('medical-record.store');
-       
+        Route::post('/teeth/store', [DentalRecordController::class, 'storeTooth'])->name('teeth.store');
+
         Route::get('/medical-record/download/{id}', [MedicalRecordController::class, 'downloadPdf'])->name('medical-record.downloadPdf');
         Route::get('/physical-exam/bmi-data/{id_number}', [MedicalRecordController::class, 'getBMIData'])->name('physical-exam.bmiData');
         Route::post('/medical-history/store', [MedicalHistoryController::class, 'store'])->name('medical-history.store');
@@ -330,7 +331,6 @@ Route::middleware(['auth', 'verified', CheckRoleMiddleware::class . ':admin'])->
     Route::get('/profiles', [ProfileController::class, 'index'])->name('profiles.index');
     Route::post('/profiles/store', [UserController::class, 'store'])->name('profiles.store');
     Route::get('/complaint/statistics', [ComplaintController::class, 'getStatistics'])->name('complaint.statistics');
-    Route::get('/medical-records/pending', [MedicalRecordController::class, 'getPendingRecords'])->name('medical-records.pending');
 
 
 
@@ -534,9 +534,24 @@ Route::middleware(['auth', 'verified', CheckRoleMiddleware::class . ':admin'])->
 });
 
 Route::middleware(['auth', 'verified', CheckRoleMiddleware::class . ':doctor'])->prefix('doctor')->name('doctor.')->group(function () {
-    
+    Route::get('/tooth-history', [DentalRecordController::class, 'toothHistory'])->name('toothHistory');
+    Route::get('/fetch-all-records-json', [DentalRecordController::class, 'fetchAllRecordsJson'])->name('fetchAllRecordsJson');
+    Route::put('/medical-records/{id}', [MedicalRecordController::class, 'update'])->name('medical-record.update');
+    Route::post('/health-examinations/generate-report', [HealthExaminationController::class, 'generateReport'])->name('healthExaminations.generateReport');
+    Route::get('/reports/{filename}', [ComplaintController::class, 'downloadReport'])->name('reports.download');
+    Route::post('/teeth/store', [DentalRecordController::class, 'storeTooth'])->name('teeth.store');
+    Route::get('/medical-records/{id}/view', [MedicalRecordController::class, 'viewMedicalRecord'])
+             ->name('medical-record.view');
     // Dashboard Route
     Route::get('/appointment/next', [AppointmentController::class, 'getNextAppointment'])->name('appointment.next');
+    Route::post('physical-examination/store', [MedicalRecordController::class, 'storePhysicalExamination'])->name('physical-examination.store');
+    Route::get('/search-medical-record', [MedicalRecordController::class, 'search'])->name('medical-record.search');
+    Route::put('/medical-records/{id}', [MedicalRecordController::class, 'update'])->name('medical-record.update');
+
+    Route::get('/medical-records', [MedicalRecordController::class, 'index'])->name('medical-record.index');
+    Route::post('/medical-record/store', [HealthExaminationController::class, 'store'])->name('medical-record.store');
+    Route::get('/medical-records/history', [MedicalRecordController::class, 'history'])->name('medical-record.history');
+    Route::get('/upload-medical-docu', [MedicalRecordController::class, 'viewAllRecords'])->name('uploadMedicalDocu');
 
     Route::get('/complaint/report/{role}', [ComplaintController::class, 'generatePdfReport'])->name('complaint.report');
     Route::get('/fetch-profiles', [ProfileController::class, 'fetchProfiles'])->name('profiles.fetch');
@@ -549,10 +564,8 @@ Route::middleware(['auth', 'verified', CheckRoleMiddleware::class . ':doctor'])-
     Route::get('/appointment/get-doctors', [AppointmentController::class, 'getApprovedDoctors'])->name('appointment.getApprovedDoctors');
     Route::get('/dashboard', [DoctorDashboardController::class, 'index'])->name('dashboard');
     Route::get('/appointments', [DoctorDashboardController::class, 'appointments'])->name('appointments');
-Route::get('/complaints', [DoctorDashboardController::class, 'complaints'])->name('complaints');
-Route::get('/medical-records', [DoctorDashboardController::class, 'medicalRecords'])->name('medicalRecords');
-Route::get('/dental-records', [DoctorDashboardController::class, 'dentalRecords'])->name('dentalRecords');
-    Route::get('/medical-records/history', [MedicalRecordController::class, 'history'])->name('medical-records.history');
+    Route::get('/complaints', [DoctorDashboardController::class, 'complaints'])->name('complaints');
+    Route::get('/dental-records', [DoctorDashboardController::class, 'dentalRecords'])->name('dentalRecords');
     Route::get('/complaint', [ComplaintController::class, 'index'])->name('complaint');
     Route::get('/complaint/add', [ComplaintController::class, 'addComplaint'])->name('complaint.add');
     Route::post('/complaint/store', [ComplaintController::class, 'store'])->name('complaint.store');
@@ -604,9 +617,7 @@ Route::get('/dental-records', [DoctorDashboardController::class, 'dentalRecords'
 Route::get('/search-medical-record', [MedicalRecordController::class, 'search'])->name('medical-record.search');
 
     Route::get('/medical-records', [MedicalRecordController::class, 'index'])->name('medical-record.index');
-    Route::post('/medical-record/store', [HealthExaminationController::class, 'store'])->name('medical-record.store');
-    Route::post('/medical-record/{id}/approve', [HealthExaminationController::class, 'approve'])->name('medical-record.approve');
-    Route::post('/medical-record/{id}/reject', [HealthExaminationController::class, 'reject'])->name('medical-record.reject');
+
     Route::get('/get-student-info/{id}', [StudentController::class, 'getStudentInfo'])->name('get-student-info');
 
     // Appointment Routes
@@ -631,28 +642,34 @@ Route::get('/search-medical-record', [MedicalRecordController::class, 'search'])
 
 Route::middleware(['auth', 'verified', CheckRoleMiddleware::class . ':nurse'])->prefix('nurse')->name('nurse.')->group(function () {
     // Dashboard Route
+    Route::get('/tooth-history', [DentalRecordController::class, 'toothHistory'])->name('toothHistory');
+    Route::get('/fetch-all-records-json', [DentalRecordController::class, 'fetchAllRecordsJson'])->name('fetchAllRecordsJson');
+    Route::put('/medical-records/{id}', [MedicalRecordController::class, 'update'])->name('medical-record.update');
+    Route::post('/health-examinations/generate-report', [HealthExaminationController::class, 'generateReport'])->name('healthExaminations.generateReport');
+    Route::get('/reports/{filename}', [ComplaintController::class, 'downloadReport'])->name('reports.download');
+    Route::post('/teeth/store', [DentalRecordController::class, 'storeTooth'])->name('teeth.store');
+    Route::get('/medical-records/{id}/view', [MedicalRecordController::class, 'viewMedicalRecord'])->name('medical-record.view');
     Route::get('/dashboard', [NurseDashboardController::class, 'index'])->name('dashboard');
     Route::get('/appointment/available-doctors', [AppointmentController::class, 'availableDoctors'])->name('appointment.availableDoctors');
     Route::get('/complaint/predictions', [ComplaintController::class, 'getPredictions'])->name('complaint.predictions');
     Route::post('/medical-records/bulk-approve', [MedicalRecordController::class, 'bulkApprove'])->name('medical-records.bulk-approve');
-Route::post('/medical-records/bulk-reject', [MedicalRecordController::class, 'bulkReject'])->name('medical-records.bulk-reject');
-Route::post('/dental-records/bulk-approve', [DentalRecordController::class, 'bulkApprove'])->name('dental-records.bulk-approve');
-Route::get('/dental-records/preview', [DentalRecordController::class, 'previewRecord'])->name('dental-records.preview');
-Route::get('/health-examinations/reminders-data', [HealthExaminationController::class, 'getRemindersData'])->name('healthExaminations.remindersData');
-Route::post('/health-examinations/send-reminders', [HealthExaminationController::class, 'sendReminders'])->name('healthExaminations.sendReminders');
+    Route::post('/medical-records/bulk-reject', [MedicalRecordController::class, 'bulkReject'])->name('medical-records.bulk-reject');
+    Route::post('/dental-records/bulk-approve', [DentalRecordController::class, 'bulkApprove'])->name('dental-records.bulk-approve');
+    Route::get('/dental-records/preview', [DentalRecordController::class, 'previewRecord'])->name('dental-records.preview');
+    Route::get('/health-examinations/reminders-data', [HealthExaminationController::class, 'getRemindersData'])->name('healthExaminations.remindersData');
+    Route::post('/health-examinations/send-reminders', [HealthExaminationController::class, 'sendReminders'])->name('healthExaminations.sendReminders');
+    Route::get('/medical-record/history', [MedicalRecordController::class, 'history'])->name('medical-record.history');
 
 // Bulk Reject Route
-Route::post('/dental-records/bulk-reject', [DentalRecordController::class, 'bulkReject'])->name('dental-records.bulk-reject');
+    Route::post('/dental-records/bulk-reject', [DentalRecordController::class, 'bulkReject'])->name('dental-records.bulk-reject');
     Route::get('/medical-records/history', [MedicalRecordController::class, 'history'])->name('medical-records.history');
-    Route::post('physical-examination/store', [MedicalRecordController::class, 'storePhysicalExamination'])->name('physical-examination.store');
-    Route::put('/physical-exam/{id}', [PhysicalExaminationController::class, 'update'])->name('physical-exam.update');
+    Route::post('physical-examination/store', [MedicalRecordController::class, 'storePhysicalExamination'])->name('physical-examinations.store');
     Route::post('/inventory/report/generate', [InventoryController::class, 'generateStatisticsReport'])->name('inventory.generateReport');
     Route::get('/complaint/report/{role}', [ComplaintController::class, 'generatePdfReport'])->name('complaint.report');
     Route::get('/fetch-profiles', [ProfileController::class, 'fetchProfiles'])->name('profiles.fetch');
     Route::get('/profiles', [ProfileController::class, 'index'])->name('profiles.index');
     Route::post('/profiles/store', [UserController::class, 'store'])->name('profiles.store');
     Route::get('/complaint/statistics', [ComplaintController::class, 'getStatistics'])->name('complaint.statistics');
-    Route::get('/medical-records/pending', [MedicalRecordController::class, 'getPendingRecords'])->name('medical-records.pending');
     Route::get('/medical-records/all-data', [MedicalRecordController::class, 'getAllMedicalRecords'])->name('medical-records.all-data');
     Route::get('/inventory/predictions', [InventoryController::class, 'getInventoryPredictions'])->name('inventory.predictions');
 
@@ -692,10 +709,7 @@ Route::post('/dental-records/bulk-reject', [DentalRecordController::class, 'bulk
     Route::get('/search-dental-record', [DentalRecordController::class, 'searchRecords'])->name('searchRecords');
     Route::get('/appointments/statisticsReport', [AppointmentController::class, 'generateStatisticsReport'])->name('appointments.statisticsReport');
 
-    Route::patch('/physical_examinations/{physicalExamination}/approve', [PhysicalExaminationController::class, 'approve'])->name('physical_examinations.approve');
-    Route::get('/physical-examinations', [PhysicalExaminationController::class, 'index'])->name('physical_examinations.index');
-    Route::get('/physical-examinations/create', [PhysicalExaminationController::class, 'create'])->name('physical-examinations.create');
-    Route::post('/physical-examinations/store', [PhysicalExaminationController::class, 'store'])->name('physical-examinations.store');
+    Route::post('physical-examination/store', [MedicalRecordController::class, 'storePhysicalExamination'])->name('physical-examination.store');
     
     // Profiles View
     

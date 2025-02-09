@@ -38,7 +38,25 @@ class HealthExaminationController extends Controller
                 
         return view("$role.upload-pictures", compact('healthExaminations', 'currentSchoolYear'));
     }
-    
+    protected function getUserInformation($user)
+{
+    $role = strtolower($user->role);
+    switch ($role) {
+        case 'student':
+            return \App\Models\Student::where('id_number', $user->id_number)->first();
+        case 'teacher':
+            return \App\Models\Teacher::where('id_number', $user->id_number)->first();
+        case 'staff':
+            return \App\Models\Staff::where('id_number', $user->id_number)->first();
+        case 'doctor':
+            return \App\Models\Doctor::where('id_number', $user->id_number)->first();
+        case 'nurse':
+            return \App\Models\Nurse::where('id_number', $user->id_number)->first();
+        default:
+            return null;
+    }
+}
+
     public function Admin()
     {
         $user = Auth::user();
@@ -506,189 +524,159 @@ class HealthExaminationController extends Controller
     public function downloadPdf($id)
     {
         try {
-            // Log the initiation of the PDF download process
+            // Log the start of the process
             Log::info("Initiating PDF download for Health Examination ID: {$id}");
     
             // Fetch the health examination record
             $healthExamination = HealthExamination::findOrFail($id);
             Log::info("Health Examination found: ID {$healthExamination->id}");
     
-            // Fetch the user information using the 'id_number' field from the health examination
+            // Fetch the user using the id_number from the health examination
             $user = User::where('id_number', $healthExamination->id_number)->first();
             if (!$user) {
                 Log::warning("User not found with ID Number: {$healthExamination->id_number}");
                 return redirect()->back()->with('error', 'User not found.');
             }
-            Log::info("User found: ID {$user->id}, Name: {$user->first_name} {$user->last_name}");
+            Log::info("User found: ID {$user->id}");
     
-            // Fetch the user's additional information like birthdate, address
-            $information = Information::where('id_number', $user->id_number)->first();
+            // Use our helper method to get the additional information from the role-specific model
+            $information = $this->getUserInformation($user);
             if (!$information) {
-                Log::warning("Information not found for User ID Number: {$user->id_number}");
-                // Continue with 'N/A' if Information is optional
-            } else {
-                Log::info("Information found for User ID Number: {$user->id_number}");
+                Log::warning("No additional information found for User ID Number: {$user->id_number}");
             }
     
-            // Determine role-specific data
-            $role = strtolower($user->role); // Ensure role is in lowercase
-            $gradeOrCourse = 'N/A'; // Default to N/A if no role-specific data is found
-    
-            // Fetch grade_or_course or department based on the user's role
-            switch ($role) {
-                case 'student':
-                    $student = Student::where('id_number', $user->id_number)->first();
-                    $gradeOrCourse = $student ? $student->grade_or_course : 'N/A';
-                    if ($student) {
-                        Log::info("Student found: ID {$student->id}, Grade/Course: {$student->grade_or_course}");
-                    } else {
-                        Log::warning("Student record not found for User ID Number: {$user->id_number}");
-                    }
-                    break;
-                case 'teacher':
-                    $teacher = Teacher::where('id_number', $user->id_number)->first();
-                    $gradeOrCourse = $teacher ? $teacher->specialization : 'N/A'; // Replace 'specialization' with the relevant field
-                    if ($teacher) {
-                        Log::info("Teacher found: ID {$teacher->id}, Specialization: {$teacher->specialization}");
-                    } else {
-                        Log::warning("Teacher record not found for User ID Number: {$user->id_number}");
-                    }
-                    break;
-                case 'staff':
-                    $staff = Staff::where('id_number', $user->id_number)->first();
-                    $gradeOrCourse = $staff ? $staff->department : 'N/A'; // Replace 'department' with the relevant field
-                    if ($staff) {
-                        Log::info("Staff found: ID {$staff->id}, Department: {$staff->department}");
-                    } else {
-                        Log::warning("Staff record not found for User ID Number: {$user->id_number}");
-                    }
-                    break;
-                // Add other roles as needed
-                default:
-                    Log::warning("Unrecognized role '{$role}' for User ID Number: {$user->id_number}");
-                    $gradeOrCourse = 'N/A';
+            // Determine the user's full name.
+            // First, try the User model; if that is empty, try the role-specific model.
+            $name = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
+            if (empty($name) && $information) {
+                $name = trim(($information->first_name ?? '') . ' ' . ($information->last_name ?? ''));
+            }
+            if (empty($name)) {
+                $name = 'N/A';
             }
     
-            // If no data is found for user or information, default to 'N/A'
-            $name = $user ? "{$user->first_name} {$user->last_name}" : 'N/A';
-            $birthdate = $information ? $information->birthdate : 'N/A';
-            $address = $information ? $information->address : 'N/A';
+            // Get birthdate and address from the role-specific model if available
+            $birthdate = ($information && $information->birthdate) ? $information->birthdate : 'N/A';
+            $address = ($information && $information->address) ? $information->address : 'N/A';
     
-            Log::info("User Details - Name: {$name}, Birthdate: {$birthdate}, Address: {$address}");
+            // Determine role-specific field for course/department
+            $role = strtolower($user->role);
+            $gradeOrCourse = 'N/A';
+            if ($role === 'student' && $information) {
+                $gradeOrCourse = $information->grade_or_course ?? 'N/A';
+            } elseif ($role === 'teacher' && $information) {
+                // Change 'specialization' to whatever field holds the relevant information
+                $gradeOrCourse = $information->specialization ?? 'N/A';
+            } elseif ($role === 'staff' && $information) {
+                $gradeOrCourse = $information->department ?? 'N/A';
+            }
+    
+            Log::info("User Details - Name: {$name}, Birthdate: {$birthdate}, Address: {$address}, Grade/Course: {$gradeOrCourse}");
     
             // Handle profile picture
             $profilePictureBase64 = null;
             if ($information && $information->profile_picture) {
                 $profilePicturePath = storage_path('app/public/' . $information->profile_picture);
+                Log::info("Looking for profile picture at: {$profilePicturePath}");
                 if (file_exists($profilePicturePath)) {
-                    $profilePictureBase64 = 'data:image/' . pathinfo($information->profile_picture, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($profilePicturePath));
-                    Log::info("Profile picture found and encoded for User ID {$user->id}");
+                    $extension = pathinfo($information->profile_picture, PATHINFO_EXTENSION);
+                    $profilePictureBase64 = 'data:image/' . $extension . ';base64,' . base64_encode(file_get_contents($profilePicturePath));
+                    Log::info("Profile picture encoded for User ID {$user->id}");
                 } else {
-                    Log::warning("Profile picture file does not exist at path: {$profilePicturePath}");
+                    Log::warning("Profile picture file not found at: {$profilePicturePath}");
                 }
             }
     
-            // Fetch the Pilar College logo for the PDF
-            $logoPath = public_path('images/pilarLogo.png'); // Ensure the path and extension are correct
-            $logoBase64 = '';
-            if (file_exists($logoPath)) {
-                $logoBase64 = 'data:image/' . pathinfo($logoPath, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($logoPath));
-                Log::info("Logo found and encoded from path: {$logoPath}");
-            } else {
-                Log::warning("Logo file does not exist at path: {$logoPath}");
+            // Load the Pilar College logo
+            $logoPath = public_path('images/pilarLogo.png'); // Adjust filename/extension if needed
+            if (!file_exists($logoPath)) {
+                Log::warning("Logo not found at path: {$logoPath}");
+                return redirect()->back()->with('error', 'Logo not found.');
             }
+            $logoBase64 = 'data:image/' . pathinfo($logoPath, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($logoPath));
+            Log::info("Logo loaded from: {$logoPath}");
     
-            // Initialize images array with consistent structure (arrays for each category)
+            // Initialize images array for the PDF
             $images = [
                 'Health Examination' => [],
                 'X-ray' => [],
                 'Lab Exam' => [],
             ];
     
-            // Handle Health Examination Pictures
+            // Process Health Examination Pictures
             if (!empty($healthExamination->health_examination_picture)) {
-                // Ensure it's an array
-                $healthPictures = is_array($healthExamination->health_examination_picture) ? $healthExamination->health_examination_picture : [$healthExamination->health_examination_picture];
-    
-                foreach ($healthPictures as $pic) {
+                $healthPics = is_array($healthExamination->health_examination_picture)
+                    ? $healthExamination->health_examination_picture
+                    : [$healthExamination->health_examination_picture];
+                foreach ($healthPics as $pic) {
                     $picPath = storage_path('app/public/' . $pic);
+                    Log::info("Checking Health Examination image at: {$picPath}");
                     if (file_exists($picPath)) {
                         $images['Health Examination'][] = 'data:image/' . pathinfo($picPath, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($picPath));
-                        Log::info("Health Examination image added from path: {$picPath}");
+                        Log::info("Added Health Examination image from: {$picPath}");
                     } else {
-                        Log::warning("Health Examination image does not exist at path: {$picPath}");
+                        Log::warning("Health Examination image not found at: {$picPath}");
                     }
                 }
             }
     
-            // Handle X-ray images
-            $xrayImages = $healthExamination->xray_picture ?? [];
-            if (!empty($xrayImages)) {
-                // Ensure it's an array
-                $xrayPictures = is_array($xrayImages) ? $xrayImages : [$xrayImages];
-    
-                foreach ($xrayPictures as $xray) {
-                    $xrayPath = storage_path('app/public/' . $xray);
-                    if (file_exists($xrayPath)) {
-                        $images['X-ray'][] = 'data:image/' . pathinfo($xrayPath, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($xrayPath));
-                        Log::info("X-ray image added from path: {$xrayPath}");
-                    } else {
-                        Log::warning("X-ray image does not exist at path: {$xrayPath}");
-                    }
+            // Process X-ray Pictures
+            $xrayPics = $healthExamination->xray_picture ?? [];
+            $xrayPics = is_array($xrayPics) ? $xrayPics : [$xrayPics];
+            foreach ($xrayPics as $xray) {
+                $xrayPath = storage_path('app/public/' . $xray);
+                Log::info("Checking X-ray image at: {$xrayPath}");
+                if (file_exists($xrayPath)) {
+                    $images['X-ray'][] = 'data:image/' . pathinfo($xrayPath, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($xrayPath));
+                    Log::info("Added X-ray image from: {$xrayPath}");
+                } else {
+                    Log::warning("X-ray image not found at: {$xrayPath}");
                 }
             }
     
-            // Handle Lab Result images
-            $labImages = $healthExamination->lab_result_picture ?? [];
-            if (!empty($labImages)) {
-                // Ensure it's an array
-                $labPictures = is_array($labImages) ? $labImages : [$labImages];
-    
-                foreach ($labPictures as $lab) {
-                    $labPath = storage_path('app/public/' . $lab);
-                    if (file_exists($labPath)) {
-                        $images['Lab Exam'][] = 'data:image/' . pathinfo($labPath, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($labPath));
-                        Log::info("Lab Result image added from path: {$labPath}");
-                    } else {
-                        Log::warning("Lab Result image does not exist at path: {$labPath}");
-                    }
+            // Process Lab Result Pictures
+            $labPics = $healthExamination->lab_result_picture ?? [];
+            $labPics = is_array($labPics) ? $labPics : [$labPics];
+            foreach ($labPics as $lab) {
+                $labPath = storage_path('app/public/' . $lab);
+                Log::info("Checking Lab Result image at: {$labPath}");
+                if (file_exists($labPath)) {
+                    $images['Lab Exam'][] = 'data:image/' . pathinfo($labPath, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($labPath));
+                    Log::info("Added Lab Result image from: {$labPath}");
+                } else {
+                    Log::warning("Lab Result image not found at: {$labPath}");
                 }
             }
     
             // Prepare data for the PDF view
             $pdfData = [
-                'logoBase64' => $logoBase64,
-                'name' => $name,
-                'gradeOrCourse' => $gradeOrCourse,
-                'birthdate' => $birthdate,
-                'address' => $address,
-                'images' => $images,
-                'profilePictureBase64' => $profilePictureBase64,
+                'logoBase64'             => $logoBase64,
+                'name'                   => $name,
+                'gradeOrCourse'          => $gradeOrCourse,
+                'birthdate'              => $birthdate,
+                'address'                => $address,
+                'images'                 => $images,
+                'profilePictureBase64'   => $profilePictureBase64,
             ];
+            Log::info("PDF data prepared.");
     
-            Log::info("Prepared data for PDF generation.");
-    
-            // Load the PDF view with the data
+            // Load the PDF view and set options
             $pdf = PDF::loadView('pdf.health-examination', $pdfData);
-            Log::info("PDF view loaded successfully.");
-    
-            // Optionally, set paper size and orientation
+            // Enable remote assets if necessary (for external images)
+            $pdf->setOptions(['isRemoteEnabled' => true]);
             $pdf->setPaper('A4', 'portrait');
     
-            // Generate a meaningful filename
-            $filename = "Health_Examination_Report_{$user->first_name}_{$user->last_name}.pdf";
+            // Generate filename using the user's name (or 'N/A' if missing)
+            $filename = "Health_Examination_Report_{$name}.pdf";
             Log::info("PDF generated with filename: {$filename}");
     
-            // Download the PDF
             return $pdf->download($filename);
         } catch (\Exception $e) {
-            // Log the exception details
             Log::error("Error downloading Health Examination PDF: " . $e->getMessage());
-    
-            // Redirect back with an error message
             return redirect()->back()->with('error', 'Unable to download the Health Examination Report. Please try again later.');
         }
     }
+    
     
     
     public function show($id)
@@ -739,9 +727,7 @@ class HealthExaminationController extends Controller
         }
 
         // Role-based logic (if needed)
-        if (in_array($role, ['nurse', 'doctor'])) {
-            $query->where('id_number', $user->id_number);
-        }
+   
 
         // Implement pagination as per DataTables' requirements
         $pendingExaminations = $query->orderBy('created_at', 'desc')->paginate(
@@ -799,157 +785,7 @@ class HealthExaminationController extends Controller
 }
 
     
-    public function parentDownloadPdf($studentIdNumber)
-    {
-        try {
-            $user = Auth::user();
-            Log::info("Authenticated User ID: {$user->id}, Role: {$user->role}");
-    
-            // Check if the authenticated user is a parent
-            if (strtolower($user->role) !== 'parent') {
-                Log::warning("User {$user->id} attempted to download PDF without parent role.");
-                abort(403, 'Unauthorized action.');
-            }
-    
-            // Find the parent record
-            $parent = Parents::where('id_number', $user->id_number)->first();
-            if (!$parent) {
-                Log::warning("Parent record not found for user ID: {$user->id}");
-                abort(403, 'Parent record not found.');
-            }
-            Log::info("Parent found: ID {$parent->id}, Student ID Number: {$parent->student_id}");
-    
-            // Fetch the student using id_number
-            $student = Student::where('id_number', $studentIdNumber)->first();
-            if (!$student) {
-                Log::warning("Student not found with ID Number: {$studentIdNumber}");
-                abort(404, 'Student not found.');
-            }
-            Log::info("Student found: ID {$student->id}, ID Number: {$student->id_number}");
-    
-            // Ensure the parent is linked to the student
-            if ($parent->student_id !== $student->id_number) {
-                Log::warning("Parent ID {$parent->id} is not linked to Student ID Number {$student->id_number}");
-                abort(403, 'You are not authorized to access this student\'s records.');
-            }
-    
-            // Fetch all approved health examinations for the student
-            $healthExaminations = HealthExamination::where('id_number', $student->id_number)
-                ->where('is_approved', true)
-                ->orderBy('created_at', 'desc')
-                ->get();
-    
-            if ($healthExaminations->isEmpty()) {
-                Log::info("No approved health examinations found for Student ID {$student->id}");
-                return redirect()->back()->with('error', 'No approved health examinations found for this student.');
-            }
-    
-            // Fetch the student's personal information
-            $information = Information::where('id_number', $student->id_number)->first();
-            if (!$information) {
-                Log::warning("Information not found for Student ID {$student->id}");
-                abort(404, 'Student information not found.');
-            }
-            Log::info("Information found for Student ID {$student->id}");
-    
-            // Handle profile picture
-            $profilePictureBase64 = null;
-            if ($information->profile_picture) {
-                $profilePicturePath = storage_path('app/public/' . $information->profile_picture);
-                if (file_exists($profilePicturePath)) {
-                    $profilePictureBase64 = 'data:image/' . pathinfo($information->profile_picture, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($profilePicturePath));
-                    Log::info("Profile picture found and encoded for Student ID {$student->id}");
-                } else {
-                    Log::warning("Profile picture file does not exist at path: {$profilePicturePath}");
-                }
-            }
-    
-            // Fetch the Pilar College logo for the PDF
-            $logoPath = public_path('images/pilarLogo.jpg'); // Ensure the path and extension are correct
-            $logoBase64 = '';
-            if (file_exists($logoPath)) {
-                $logoBase64 = 'data:image/' . pathinfo($logoPath, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($logoPath));
-                Log::info("Logo found and encoded.");
-            } else {
-                Log::warning("Logo file does not exist at path: {$logoPath}");
-            }
-    
-            // Prepare images array for the PDF
-            $images = [
-                'Health Examination' => [],
-                'X-ray' => [],
-                'Lab Exam' => [],
-            ];
-    
-            foreach ($healthExaminations as $exam) {
-                // Handle Health Examination Pictures
-                if (!empty($exam->health_examination_picture)) {
-                    // Assuming model casting converts JSON to array
-                    foreach ($exam->health_examination_picture as $pic) {
-                        $picPath = storage_path('app/public/' . $pic);
-                        if (file_exists($picPath)) {
-                            $images['Health Examination'][] = 'data:image/' . pathinfo($pic, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($picPath));
-                            Log::info("Added Health Examination picture: {$pic}");
-                        } else {
-                            Log::warning("Health Examination image does not exist at path: {$picPath}");
-                        }
-                    }
-                }
-    
-                // Handle X-ray Pictures
-                if (!empty($exam->xray_picture)) {
-                    foreach ($exam->xray_picture as $xray) {
-                        $xrayPath = storage_path('app/public/' . $xray);
-                        if (file_exists($xrayPath)) {
-                            $images['X-ray'][] = 'data:image/' . pathinfo($xray, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($xrayPath));
-                            Log::info("Added X-ray picture: {$xray}");
-                        } else {
-                            Log::warning("X-ray image does not exist at path: {$xrayPath}");
-                        }
-                    }
-                }
-    
-                // Handle Lab Result Pictures
-                if (!empty($exam->lab_result_picture)) {
-                    foreach ($exam->lab_result_picture as $lab) {
-                        $labPath = storage_path('app/public/' . $lab);
-                        if (file_exists($labPath)) {
-                            $images['Lab Exam'][] = 'data:image/' . pathinfo($lab, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($labPath));
-                            Log::info("Added Lab Result picture: {$lab}");
-                        } else {
-                            Log::warning("Lab Result image does not exist at path: {$labPath}");
-                        }
-                    }
-                }
-            }
-    
-            // Pass the fetched data to the PDF view
-            $pdf = Pdf::loadView('pdf.health-examination', [
-                'logoBase64' => $logoBase64,
-                'name' => "{$student->first_name} {$student->last_name}",
-                'gradeOrCourse' => is_array($student->grade_or_course) ? implode(', ', $student->grade_or_course) : ($student->grade_or_course ?? 'N/A'),
-                'birthdate' => $information->birthdate ?? 'N/A',
-                'address' => $information->address ?? 'N/A',
-                'images' => $images,
-                'profilePictureBase64' => $profilePictureBase64,
-            ]);
-    
-            // Set paper size and orientation if needed
-            $pdf->setPaper('A4', 'portrait');
-    
-            // Generate a meaningful filename
-            $filename = "Clinic_Health_Examination_Report_{$student->first_name}_{$student->last_name}.pdf";
-    
-            // Return the PDF as a download
-            return $pdf->download($filename);
-        } catch (\Exception $e) {
-            // Log the error for debugging
-            Log::error('Error downloading Health Examination PDF for parent: ' . $e->getMessage());
-    
-            // Redirect back with an error message
-            return redirect()->back()->with('error', 'Unable to download the Health Examination Report. Please try again later.');
-        }
-    }
+  
     public function getRemindersData(Request $request)
     {
         try {

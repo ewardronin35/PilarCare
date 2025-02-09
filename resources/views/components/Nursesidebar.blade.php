@@ -1,4 +1,4 @@
-<!-- resources/views/partials/admin-sidebar.blade.php -->
+<!-- resources/views/partials/nurse-sidebar.blade.php -->
 <div class="sidebar">
     <!-- Inline CSS (Consider Moving to an External Stylesheet) -->
     <style>
@@ -347,29 +347,15 @@
             </li>
 
             <!-- Approvals (with Submenu) -->
-            <li class="has-submenu {{ 
-                Route::currentRouteName() == 'nurse.health-examinations' || 
-                Route::currentRouteName() == 'nurse.uploadMedicalDocu' || 
-                Route::currentRouteName() == 'nurse.uploadDentalDocu' ? 'active' : '' }}">
-                <a href="#">
+            <li class="{{ Route::currentRouteName() == 'nurse.health-examinations' ? 'active' : '' }}">
+                <a href="{{ route('nurse.health-examinations') }}">
                     <span class="icon"><i class="fas fa-check-circle"></i></span>
-                    <span class="menu-text">Approvals</span>
-                    <span class="submenu-toggle"><i class="fas fa-chevron-down"></i></span>
+                    <span class="menu-text">Medical Examination Approval</span>
                 </a>
-                <ul class="submenu">
-                    <li class="{{ Route::currentRouteName() == 'nurse.health-examinations' ? 'active' : '' }}">
-                        <a href="{{ route('nurse.health-examinations') }}">Health Approval</a>
-                    </li>
-                    <li class="{{ Route::currentRouteName() == 'nurse.uploadMedicalDocu' ? 'active' : '' }}">
-                        <a href="{{ route('nurse.uploadMedicalDocu') }}">Medical Approval</a>
-                    </li>
-                    <li class="{{ Route::currentRouteName() == 'nurse.uploadDentalDocu' ? 'active' : '' }}">
-                        <a href="{{ route('nurse.uploadDentalDocu') }}">Dental Approval</a>
-                    </li>
-                </ul>
+              
             </li>
 
-
+         
             <!-- Appointment -->
             <li class="{{ Route::currentRouteName() == 'nurse.appointment' ? 'active' : '' }}">
                 <a href="{{ route('nurse.appointment') }}">
@@ -386,10 +372,7 @@
                 </a>
             </li>
 
-    
-
            
-
             <!-- Profile Management (Renamed from Settings) -->
             <li class="{{ Route::currentRouteName() == 'nurse.settings.edit' ? 'active' : '' }}">
                 <a href="{{ route('nurse.settings.edit') }}">

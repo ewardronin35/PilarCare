@@ -1,6 +1,9 @@
 <x-app-layout :pageTitle="'Medical Record'">   
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+<link href="https://unpkg.com/filepond/dist/filepond.css" rel="stylesheet">
+<link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css" rel="stylesheet">
+
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -948,6 +951,9 @@
         <button id="medical-tab" class="active" onclick="showTab('medical')">
             <i class="fas fa-user-md"></i> Medical Record
         </button>
+        <button id="physical-examination-tab" onclick="showTab('physical-examination')">
+      <i class="fas fa-stethoscope"></i> Physical Examination
+    </button>
         <button id="history-tab" onclick="showTab('history')">
             <i class="fas fa-history"></i> Health History
         </button>
@@ -986,7 +992,13 @@
                             </div>
                         <div class="form-group">
                             <label for="birthdate">Birthdate</label>
-                            <input type="date" id="birthdate" name="birthdate" value="{{ old('birthdate', $record->birthdate ? $record->birthdate->format('Y-m-d') : '') }}" required>
+                            <input 
+    type="date" 
+    id="birthdate" 
+    name="birthdate" 
+    value="{{ old('birthdate', optional($medicalRecord)->birthdate ? $medicalRecord->birthdate->format('Y-m-d') : '') }}" 
+    required
+>
                             </div>
                     </div>
 
@@ -1096,6 +1108,28 @@
 
             </div>
         </div>
+        @php
+    // $healthDocs should be an array of file paths (without any default you don’t want kept)
+    $healthDocs = [];
+    if(isset($record->health_documents)) {
+        $docs = is_array($record->health_documents)
+            ? $record->health_documents
+            : json_decode($record->health_documents, true) ?? [];
+        // Remove any unwanted default values if needed:
+        foreach($docs as $doc) {
+            if($doc !== 'default/health_document.jpg'){
+                $healthDocs[] = $doc;
+            }
+        }
+    }
+@endphp
+        <div class="form-group">
+ 
+
+    <label for="health_documents">Upload Health Documents (PDF and Images Only)</label>
+    <input type="file" name="health_documents[]" id="health_documents" multiple accept="image/jpeg,image/png,application/pdf">
+    <input type="hidden" id="existing_health_documents" name="existing_health_documents" value="{{ json_encode($healthDocs) }}">
+</div>
         <div class="form-group-inline">
         <div class="form-group">
                                 <button type="submit" class="button">Update</button>
@@ -1109,81 +1143,53 @@
                 </div>
 
             <!-- Physical Examination -->
-       <div class="form-container">
-    <div class="form-header">
-        <h2>Physical Examination</h2>
-    </div>
-
-    <form method="POST" action="{{ route('admin.physical-examinations.store') }}" id="physical-examination-form">
-        @csrf
-        <input type="hidden" id="physical-exam-id_number" name="id_number" value="{{ $record->id_number ?? Auth::user()->id_number }}">
-        <input type="hidden" id="md-approved" name="md_approved" value="1">
-
-        <div class="form-group-inline">
-            <div class="form-group">
-                <label for="height">Height (cm)</label>
-                <!-- Changed type to number, added min and step attributes -->
-                <input
-                    type="number"
-                    id="height"
-                    name="height"
-                    required
-                    min="0"
-                    step="0.1"
-                    oninput="calculateBMI()"
-                    placeholder="e.g., 175.5"
-                >
-            </div>
-            <div class="form-group">
-                <label for="weight">Weight (kg)</label>
-                <!-- Changed type to number, added min and step attributes -->
-                <input
-                    type="number"
-                    id="weight"
-                    name="weight"
-                    required
-                    min="0"
-                    step="0.1"
-                    oninput="calculateBMI()"
-                    placeholder="e.g., 70.2"
-                >
-            </div>
-        </div>
-
-        <div class="form-group">
-            <p class="bmi-result">BMI: <span id="bmi-value">N/A</span></p>
-        </div>
-
-        <div class="form-group-inline">
-            <div class="form-group">
-                <label for="vision">Vision</label>
-                <!-- Changed type to number, added min and step attributes -->
-                <input
-                    type="number"
-                    id="vision"
-                    name="vision"
-                    required
-                    min="0"
-                    step="0.01"
-                    placeholder="e.g., 20.00"
-                >
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label for="remarks">Remarks</label>
-            <!-- Remarks remain as textarea without restrictions -->
-            <textarea id="remarks" name="remarks" rows="5" placeholder="Enter any additional remarks here..."></textarea>
-        </div>
-
-        <div class="form-group">
-            <button type="submit" class="button" id="save-button" disabled>Save</button>
-        </div>
-    </form>
-
-            </div>
-        </div>
+          
 </div>
+</div>
+<div id="physical-examination" class="tab forms-container hidden">
+        <div class="form-container">
+        <div class="form-header">
+            <h2>Physical Examination</h2>
+        </div>
+        <form method="POST" action="{{ route('admin.physical-examination.store') }}" id="physical-examination-form">
+            @csrf
+            <input type="hidden" id="physical-exam-id_number" name="id_number" value="{{ $record->id_number ?? Auth::user()->id_number }}">
+            <input type="hidden" id="md-approved" name="md_approved" value="1">
+    
+            <div class="form-group-inline">
+                <div class="form-group">
+                    <label for="height">Height (cm)</label>
+                    <input type="number" id="height" name="height" required min="0" step="0.1" oninput="calculateBMI()" placeholder="e.g., 175.5">
+                </div>
+                <div class="form-group">
+                    <label for="weight">Weight (kg)</label>
+                    <input type="number" id="weight" name="weight" required min="0" step="0.1" oninput="calculateBMI()" placeholder="e.g., 70.2">
+                </div>
+            </div>
+    
+            <div class="form-group">
+                <p class="bmi-result">BMI: <span id="bmi-value">N/A</span></p>
+            </div>
+    
+            <!-- Change vision input as described below -->
+            <div class="form-group-inline">
+                <div class="form-group">
+                    <label for="vision">Vision</label>
+                    <!-- See section 2 below for vision fixes -->
+                    <input type="text" id="vision" name="vision" required placeholder="20/20" pattern="^\d+\/\d+$" title="Enter a vision ratio (e.g. 20/20)">
+                    </div>
+            </div>
+    
+            <div class="form-group">
+                <label for="remarks">Remarks</label>
+                <textarea id="remarks" name="remarks" rows="5" placeholder="Enter any additional remarks here..."></textarea>
+            </div>
+    
+            <div class="form-group">
+                <button type="submit" class="button" id="save-button" disabled>Save</button>
+            </div>
+        </form>
+    </div>
 </div>
 <div id="history" class="tab forms-container hidden">
     <!-- Sub-Tabs Navigation -->
@@ -1220,6 +1226,7 @@
             <th>Surgical History</th>
             <th>Family Medical History</th>
             <th>Allergies</th>
+            <th>Medical Condition</th>
             <th>Medicines</th>
             <th>Health Documents</th> 
             <th>Approval Status</th> 
@@ -1370,6 +1377,7 @@
                     <th>Surgical History</th>
                     <th>Family Medical History</th>
                     <th>Allergies</th>
+                    <th>Medical Condition</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -1416,6 +1424,10 @@
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
+<script src="https://unpkg.com/filepond-plugin-file-validate-type/dist/filepond-plugin-file-validate-type.js"></script>
+<script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
+
     <script>
     // Define Routes using Laravel's route helper within Blade
     const Routes = {
@@ -1577,6 +1589,7 @@
                 { data: 'surgical_history', name: 'surgical_history' },
                 { data: 'family_medical_history', name: 'family_medical_history' },
                 { data: 'allergies', name: 'allergies' },
+                { data: 'medical_condition', name: 'medical_condition' },
                 { 
                     data: 'actions',
                     name: 'actions',
@@ -1612,26 +1625,28 @@
      * @param {string} documentPath
      */
     function openDocumentModal(documentPath) {
-        const fileExtension = documentPath.split('.').pop().toLowerCase();
-        let content = '';
+    const fileExtension = documentPath.split('.').pop().toLowerCase();
+    let content = '';
 
-        if (['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(fileExtension)) {
-            content = `<img src="/storage/${documentPath}" alt="Health Document" style="width:100%;">`;
-        } else if (fileExtension === 'pdf') {
-            content = `<embed src="/storage/${documentPath}" type="application/pdf" width="100%" height="600px" />`;
-        } else {
-            content = `<p>Cannot preview this file type.</p>`;
-        }
-
-        Swal.fire({
-            title: 'Health Document Preview',
-            html: content,
-            showCloseButton: true,
-            showConfirmButton: false,
-            width: '80%',
-            heightAuto: true,
-        });
+    if (['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(fileExtension)) {
+        // For images, show the image
+        content = `<img src="/storage/${documentPath}" alt="Health Document" style="width:100%;">`;
+    } else if (fileExtension === 'pdf') {
+        // For PDFs, embed the PDF so it appears inline in the modal
+        content = `<embed src="/storage/${documentPath}" type="application/pdf" width="100%" height="600px" />`;
+    } else {
+        content = `<p>Cannot preview this file type.</p>`;
     }
+
+    Swal.fire({
+        title: 'Health Document Preview',
+        html: content,
+        showCloseButton: true,
+        showConfirmButton: false,
+        width: '80%',
+        heightAuto: true,
+    });
+}
 
     /**
      * View a specific medical record by fetching its details via AJAX.
@@ -1820,6 +1835,24 @@
         } else {
             console.warn('No medical records found.');
         }
+        if (data.medicalRecord && data.medicalRecord.health_documents) {
+        // data.medicalRecord.health_documents should be an array of file paths.
+        const files = data.medicalRecord.health_documents;
+        // Get the FilePond instance (if already created).
+        const pond = FilePond.find(document.getElementById('health_documents'));
+        if (pond) {
+            // Remove all currently loaded files.
+            pond.removeFiles();
+            // Create an array of file objects for FilePond.
+            const newFiles = files.map(file => ({
+                source: file,
+                options: { type: 'local' }
+            }));
+            // Add the new files.
+            pond.addFiles(newFiles);
+            
+        }
+    }
 
         // Populate Medical Record History DataTable
         if (data.medicalHistories) {
@@ -1902,7 +1935,11 @@
     // Format the record date (use record_date if available, otherwise created_at)
     let recordDateTime = 'N/A';
     if (record.record_date) {
-      recordDateTime = new Date(record.record_date).toLocaleString();
+    // If it's a full "YYYY-MM-DD HH:mm:ss" string with no timezone,
+    // we can parse like so:
+    const parsed = new Date(record.record_date.replace(' ', 'T'));
+    recordDateTime = parsed.toLocaleString();
+
     } else if (record.created_at) {
       recordDateTime = new Date(record.created_at).toLocaleString();
     }
@@ -1915,6 +1952,7 @@
       record.surgical_history || 'N/A',
       record.family_medical_history || 'N/A',
       record.allergies || 'N/A',
+      record.medical_condition || 'N/A',
       medicines,
       healthDocumentsHtml,
       record.is_approved ? 'Approved' : 'Pending Approval',
@@ -2017,16 +2055,7 @@
      *
      * @param {string} documentPath
      */
-    function openDocumentModal(documentPath) {
-        Swal.fire({
-            imageUrl: `/storage/${documentPath}`,
-            imageAlt: 'Preview Image',
-            showCloseButton: true,
-            showConfirmButton: false,
-            width: '80%',
-            heightAuto: true,
-        });
-    }
+  
 
     /**
      * Show an alert when no data is found.
@@ -2352,7 +2381,13 @@
     const url = form.attr('action');
     const formData = new FormData(this);
     formData.append('_method', 'PUT'); // Append PUT method override
-
+    pond.getFiles().forEach(fileItem => {
+        // fileItem.origin will be FilePond.FileOrigin.LOCAL if it was already on the server.
+        if (fileItem.origin !== FilePond.FileOrigin.LOCAL) {
+            // Append the actual file object to the FormData
+            formData.append('health_documents[]', fileItem.file);
+        }
+    });
     $.ajax({
         url: url,
         type: 'POST', // Use POST with method override
@@ -2378,7 +2413,14 @@
         // For instance:
         const recordDate = new Date(record.record_date || record.created_at).toLocaleString();
         let medicines = Array.isArray(record.medicines) ? record.medicines.join(', ') : 'N/A';
-
+        let healthDocsHtml = 'No Documents';
+if (record.health_documents && record.health_documents.length > 0) {
+  healthDocsHtml = record.health_documents.map((doc, index) => {
+    // Replace any single quotes in doc to avoid breaking the string
+    const safeDoc = doc.replace(/'/g, "\\'");
+    return `<a href="javascript:void(0);" onclick="openDocumentModal('${safeDoc}')">Document ${index + 1}</a>`;
+  }).join('<br>');
+}
         // 3) Append a new row to your DataTable
         medicalRecordTable.row.add([
             record.name || 'N/A',
@@ -2387,8 +2429,9 @@
             record.surgical_history || 'N/A',
             record.family_medical_history || 'N/A',
             record.allergies || 'N/A',
+            record.medical_condition || 'N/A',
             medicines,
-            (record.health_documents && record.health_documents.length > 0) ? 'View Documents' : 'No Documents',
+            healthDocsHtml, // Use the HTML with clickable links
             record.is_approved ? 'Approved' : 'Pending Approval',
             record.is_current ? 'Yes' : 'No',
         ]).draw(false);
@@ -2426,6 +2469,79 @@
         showTab('medical'); // Show the 'medical' tab by default
         initializeDataTables(); // Initialize all DataTables
     });
+</script>
+<script>
+    // Register the FilePond plugin that validates file types
+ // Register the plugin
+ FilePond.registerPlugin(FilePondPluginFileValidateType, FilePondPluginImagePreview);
+
+// Configure FilePond (instantUpload: false means you handle the submission yourself)
+FilePond.setOptions({
+    server: {
+        load: (source, load, error, progress, abort, headers) => {
+            const url = `/storage/${source}`;
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Could not fetch file.');
+                    }
+                    return response.blob();
+                })
+                .then(load)
+                .catch(() => {
+                    error('Error loading file');
+                });
+        }
+    },
+    instantUpload: false
+});
+
+// Convert initial health document paths (passed from PHP as $healthDocs) into FilePond file objects
+const initialHealthDocuments = @json($healthDocs);
+const initialFiles = initialHealthDocuments.map(filePath => ({
+    source: filePath,
+    options: { type: 'local' }
+}));
+
+// Reference the hidden input that stores existing health document file paths
+const existingInput = document.getElementById('existing_health_documents');
+
+// Create the FilePond instance
+const healthDocumentsInput = document.getElementById('health_documents');
+const pond = FilePond.create(healthDocumentsInput, {
+    allowMultiple: true,
+    acceptedFileTypes: ['image/jpeg', 'image/png', 'application/pdf'],
+    labelFileTypeNotAllowed: 'Only PDF and image files are allowed.',
+    fileValidateTypeLabelExpectedTypes: 'Expects {allButLastType} or {lastType}',
+    files: initialFiles
+});
+pond.on('addfile', (error, fileItem) => {
+    if (!error) {
+        Swal.fire({
+            icon: 'success',
+            title: 'File loaded successfully',
+            timer: 1500,
+            showConfirmButton: false
+        });
+    }
+});
+// Update hidden input with files that originated from the server
+function updateExistingFiles() {
+    const currentFiles = pond.getFiles();
+    const validSources = [];
+    currentFiles.forEach(file => {
+        if (file.origin === FilePond.FileOrigin.LOCAL) {
+            if (typeof file.source === 'string' && file.source.trim() !== '') {
+                validSources.push(file.source);
+            }
+        }
+    });
+    existingInput.value = JSON.stringify(validSources);
+}
+pond.on('addfile', updateExistingFiles);
+pond.on('removefile', updateExistingFiles);
+
+  
 </script>
 
 

@@ -13,6 +13,7 @@
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 
+
     <style>
         /* Existing Styles */
         body {
@@ -21,6 +22,8 @@
 
         .main-content {
             margin-top: 30px;
+            width: calc(100% - 80px);
+
         }
 
         .container {
@@ -867,6 +870,7 @@
                             <thead>
                                 <tr>
                                 <th>Complaint Date</th>
+                                <th>Complaint Time </th>
                                     <th>Full Name</th>
                                     <th>Year and Section</th>
                                     <th>Description of Sickness</th>
@@ -880,8 +884,58 @@
                                 @foreach ($studentComplaints as $complaint)
                                     <tr id="complaint-row-{{ $complaint->id }}">
                                     <td>{{ \Carbon\Carbon::parse($complaint->created_at)->format('Y-m-d') }}</td>
-                                        <td>{{ $complaint->first_name }} {{ $complaint->last_name }}</td>
+                                    <td><time datetime="{{ $complaint->created_at->toIso8601String() }}">{{ $complaint->created_at->format('h:i A') }}</time></td>                                        
+                                    <td>{{ $complaint->first_name }} {{ $complaint->last_name }}</td>
                                         <td>{{ $complaint->grade_course ?? 'N/A' }} {{ $complaint->section ?? 'N/A' }}</td>
+                                        <td>{{ $complaint->sickness_description }}</td>
+                                        <td>{{ $complaint->medicine_given }}</td>
+                                        <td>{{ $complaint->pain_assessment }}</td>
+                                        <td>{{ ucfirst($complaint->go_home ?? 'N/A') }}</td>
+
+                                        <td>
+                                           
+                                            @if($complaint->report_url)
+                                               
+                                                <a href="{{ $complaint->report_url }}" download class="download-button">
+                                                    <i class="fas fa-download"></i> Download PDF
+                                                </a>
+                                            @else
+                                               
+                                                <button class="download-button" disabled title="PDF not available">
+                                                    <i class="fas fa-download"></i> Download PDF
+                                                </button>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Staff Complaints Tab -->
+                <div id="staff-complaints" class="inner-tab-content">
+                    <h2>Staff Complaints</h2>
+                    <div class="table-container">
+                        <table class="complaints-table" id="staff-complaints-table">
+                            <thead>
+                                <tr>
+                                <th>Complaint Date</th>
+                                <th>Complaint Time </th>
+                                    <th>Full Name</th>
+                                    <th>Description of Sickness</th>
+                                    <th>Medicine Given</th>
+                                    <th>Pain Assessment</th>
+                                    <th>Did Student Go Home?</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($staffComplaints as $complaint)
+                                <tr id="complaint-row-{{ $complaint->id }}">
+                                    <td>{{ \Carbon\Carbon::parse($complaint->created_at)->format('Y-m-d') }}</td>
+                                    <td><time datetime="{{ $complaint->created_at->toIso8601String() }}">{{ $complaint->created_at->format('h:i A') }}</time></td>                                        
+                                    <td>{{ $complaint->first_name }} {{ $complaint->last_name }}</td>
                                         <td>{{ $complaint->sickness_description }}</td>
                                         <td>{{ $complaint->medicine_given }}</td>
                                         <td>{{ $complaint->pain_assessment }}</td>
@@ -912,58 +966,6 @@
                     </div>
                 </div>
 
-                <!-- Staff Complaints Tab -->
-                <div id="staff-complaints" class="inner-tab-content">
-                    <h2>Staff Complaints</h2>
-                    <div class="table-container">
-                        <table class="complaints-table" id="staff-complaints-table">
-                            <thead>
-                                <tr>
-                                    <th>Full Name</th>
-                                    <th>Complaint Date</th>
-                                    <th>Go Home Status</th>
-                                    <th>Description of Sickness</th>
-                                    <th>Pain Assessment</th>
-                                    <th>Medicine Given</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($staffComplaints as $complaint)
-                                    <tr id="complaint-row-{{ $complaint->id }}">
-                                        <td>{{ $complaint->first_name }} {{ $complaint->last_name }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($complaint->created_at)->format('Y-m-d') }}</td>
-                                        <td>{{ ucfirst($complaint->go_home ?? 'N/A') }}</td>
-                                        <td>{{ $complaint->sickness_description }}</td>
-                                        <td>{{ $complaint->pain_assessment }}</td>
-                                        <td>{{ $complaint->medicine_given }}</td>
-                                        <td>
-                                            <button class="preview-button" onclick="openModal({{ $complaint->id }})">
-                                                <i class="fas fa-eye"></i> Preview
-                                            </button>
-                                            @if($complaint->report_url)
-                                                <a href="{{ $complaint->report_url }}" target="_blank" class="pdf-button">
-                                                    <i class="fas fa-file-pdf"></i> View PDF
-                                                </a>
-                                                <a href="{{ $complaint->report_url }}" download class="download-button">
-                                                    <i class="fas fa-download"></i> Download PDF
-                                                </a>
-                                            @else
-                                                <button class="pdf-button" disabled title="PDF not available">
-                                                    <i class="fas fa-file-pdf"></i> View PDF
-                                                </button>
-                                                <button class="download-button" disabled title="PDF not available">
-                                                    <i class="fas fa-download"></i> Download PDF
-                                                </button>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
                 <!-- Teacher Complaints Tab -->
                 <div id="teacher-complaints" class="inner-tab-content">
                     <h2>Teacher Complaints</h2>
@@ -971,22 +973,23 @@
                         <table class="complaints-table" id="teacher-complaints-table">
                             <thead>
                                 <tr>
+                                <th>Complaint Date</th>
+                                <th>Complaint Time </th>
                                     <th>Full Name</th>
-                                    <th>Complaint Date</th>
-                                    <th>Go Home Status</th>
                                     <th>Description of Sickness</th>
-                                    <th>Pain Assessment</th>
                                     <th>Medicine Given</th>
-                                    <th>Grade/Course</th>
-                                    <th>Section</th>
+                                    <th>Pain Assessment</th>
+                                    <th>Did Student Go Home?</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($teacherComplaints as $complaint)
                                     <tr id="complaint-row-{{ $complaint->id }}">
-                                        <td>{{ $complaint->first_name }} {{ $complaint->last_name }}</td>
                                         <td>{{ \Carbon\Carbon::parse($complaint->created_at)->format('Y-m-d') }}</td>
+                                        <td><time datetime="{{ $complaint->created_at->toIso8601String() }}">{{ $complaint->created_at->format('h:i A') }}</time></td>                                        
+                                        <td>{{ $complaint->first_name }} {{ $complaint->last_name }}</td>
+
                                         <td>{{ ucfirst($complaint->go_home ?? 'N/A') }}</td>
                                         <td>{{ $complaint->sickness_description }}</td>
                                         <td>{{ $complaint->pain_assessment }}</td>
@@ -1018,10 +1021,11 @@
                             </tbody>
                         </table>
                     </div>
+                    </div>
                 </div>
             </div>
         </div>
-
+    
         <!-- Statistics Tab -->
     <!-- Statistics Tab -->
 <div id="statistics" class="main-tab-content">
@@ -1128,13 +1132,13 @@
 
     <script>
         let complaintChart;
+        let studentTable, staffTable, teacherTable;
 
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize DataTables
-            $('#student-complaints-table').DataTable();
-            $('#staff-complaints-table').DataTable();
-            $('#teacher-complaints-table').DataTable();
-
+            studentTable = $('#student-complaints-table').DataTable();
+    staffTable = $('#staff-complaints-table').DataTable();
+    teacherTable = $('#teacher-complaints-table').DataTable();
             // Fetch available medicines for the dropdown
             fetchAvailableMedicines();
             fetchPredictions();
@@ -1500,151 +1504,163 @@ function renderPredictionChart(nextComplaint, likelyMedicine) {
 
         // Handle complaint form submission with AJAX and SweetAlert
         document.getElementById('complaint-form').addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevent the default form submission
+    event.preventDefault(); // Prevent the default form submission
 
-            const form = event.target;
-            const formData = new FormData(form); // Collect form data
+    const form = event.target;
+    const formData = new FormData(form); // Collect form data
 
+    Swal.fire({
+        title: 'Submit Complaint',
+        text: "Are you sure you want to submit this complaint?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#00d1ff',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, submit it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading spinner
             Swal.fire({
-                title: 'Submit Complaint',
-                text: "Are you sure you want to submit this complaint?",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#00d1ff',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, submit it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Show loading spinner
-                    Swal.fire({
-                        title: 'Submitting...',
-                        allowOutsideClick: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-
-                    fetch("{{ route('nurse.complaint.store') }}", { // Use the nurse route here
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        },
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        Swal.close(); // Close the loading spinner
-
-                        if (data.success) {
-                            // Clear all form fields
-                            form.reset();
-
-                            // Prepare the new complaint row HTML with Full Name
-                            let newRow = `
-                                <tr id="complaint-row-${data.complaint_id}">
-                                    <td>${data.full_name || 'N/A'}</td>
-                                    <td>${new Date().toISOString().split('T')[0]}</td> <!-- Record Date (current date) -->
-                                    <td>${capitalizeFirstLetter(data.go_home)}</td> <!-- Go Home Status -->
-                                    <td>${data.sickness_description}</td>
-                                    <td>${data.pain_assessment}</td>
-                                    <td>${data.medicine_given}</td>
-                                    <td>${data.grade_course || 'N/A'}</td>
-                                    <td>${data.section || 'N/A'}</td>
-                                    <td>
-                                        <button class="preview-button" onclick="openModal(${data.complaint_id})">
-                                            <i class="fas fa-eye"></i> Preview
-                                        </button>
-                                        ${data.report_url ? `
-                                            <a href="${data.report_url}" target="_blank" class="pdf-button">
-                                                <i class="fas fa-file-pdf"></i> View PDF
-                                            </a>
-                                            <a href="${data.report_url}" download class="download-button">
-                                                <i class="fas fa-download"></i> Download PDF
-                                            </a>
-                                        ` : `
-                                            <button class="pdf-button" disabled title="PDF not available">
-                                                <i class="fas fa-file-pdf"></i> View PDF
-                                            </button>
-                                            <button class="download-button" disabled title="PDF not available">
-                                                <i class="fas fa-download"></i> Download PDF
-                                            </button>
-                                        `}
-                                    </td>
-                                </tr>
-                            `;
-
-                            // Append the new row to the appropriate table based on role
-                            const role = data.role.toLowerCase();
-                            let tableId = '';
-
-                            switch(role) {
-                                case 'student':
-                                    tableId = 'student-complaints-table';
-                                    break;
-                                case 'staff':
-                                    tableId = 'staff-complaints-table';
-                                    break;
-                                case 'teacher':
-                                    tableId = 'teacher-complaints-table';
-                                    break;
-                                default:
-                                    tableId = 'student-complaints-table'; // Default to student
-                            }
-
-                            document.querySelector(`#${tableId} tbody`).insertAdjacentHTML('beforeend', newRow);
-
-                            // Optionally, update statistics and charts
-                            renderChart();
-
-                            // SweetAlert success message with option to view the PDF
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success!',
-                                text: 'Complaint submitted successfully.',
-                                showCancelButton: data.report_url ? true : false,
-                                confirmButtonText: data.report_url ? 'View Report' : 'Close',
-                                cancelButtonText: 'Close',
-                                reverseButtons: true
-                            }).then((result) => {
-                                if (result.isConfirmed && data.report_url) {
-                                    window.open(data.report_url, '_blank');
-                                }
-                            });
-                        } else {
-                            // Handle validation errors
-                            if (data.errors) {
-                                let errorMessages = '';
-                                for (let key in data.errors) {
-                                    errorMessages += `${data.errors[key][0]}<br>`;
-                                }
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Validation Error',
-                                    html: errorMessages
-                                });
-                            } else {
-                                // SweetAlert error message
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error!',
-                                    text: data.message || 'An error occurred while submitting the form.'
-                                });
-                            }
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-
-                        // SweetAlert error message for any network issues
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Oops...',
-                            text: 'Something went wrong. Please try again later.'
-                        });
-                    });
+                title: 'Submitting...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
                 }
             });
-        });
+
+            fetch("{{ route('nurse.complaint.store') }}", { // Use the admin route here
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.close(); // Close the loading spinner
+
+                if (data.success) {
+                    // Clear all form fields
+                    form.reset();
+
+                    // Prepare the new complaint row data in correct order
+                    let createdAt = new Date(data.created_at);
+
+                    let complaintDate = createdAt.toLocaleDateString('en-CA'); // Format as 'YYYY-MM-DD'
+                    let complaintTime = createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); // Format as 'HH:MM AM/PM'
+
+                    let fullName = `${data.first_name || ''} ${data.last_name || ''}`.trim();
+
+                    let yearAndSection = `${data.grade_course || 'N/A'} ${data.section || 'N/A'}`;
+
+                    let description = data.sickness_description || 'N/A';
+                    let medicine = data.medicine_given || 'N/A';
+                    let painAssessment = data.pain_assessment || 'N/A';
+                    let goHome = capitalizeFirstLetter(data.go_home);
+
+                    let actionButtons = `
+                        <button class="preview-button" onclick="openModal(${data.complaint_id})">
+                            <i class="fas fa-eye"></i> Preview
+                        </button>
+                        ${data.report_url ? `
+                           
+                            <a href="${data.report_url}" download class="download-button">
+                                <i class="fas fa-download"></i> Download PDF
+                            </a>
+                        ` : `
+                            
+                            <button class="download-button" disabled title="PDF not available">
+                                <i class="fas fa-download"></i> Download PDF
+                            </button>
+                        `}
+                    `;
+
+                    let newRowData = [
+                        complaintDate,
+                        complaintTime,
+                        fullName || 'N/A',
+                        yearAndSection,
+                        description,
+                        medicine,
+                        painAssessment,
+                        goHome,
+                        actionButtons
+                    ];
+
+                    // Determine which table to update based on role
+                    const role = data.role.toLowerCase();
+                    let tableInstance;
+
+                    switch(role) {
+                        case 'student':
+                            tableInstance = studentTable;
+                            break;
+                        case 'staff':
+                            tableInstance = staffTable;
+                            break;
+                        case 'teacher':
+                            tableInstance = teacherTable;
+                            break;
+                        default:
+                            tableInstance = studentTable; // Default to student
+                    }
+
+                    // Add the new row using DataTables API
+                    tableInstance.row.add(newRowData).draw(false);
+
+                    // Optionally, update statistics and charts
+                    renderChart();
+                    fetchPredictions(); // Update predictions as data has changed
+
+                    // SweetAlert success message with option to view the PDF
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Complaint submitted successfully.',
+                        showCancelButton: data.report_url ? true : false,
+                        confirmButtonText: data.report_url ? 'View Report' : 'Close',
+                        cancelButtonText: 'Close',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed && data.report_url) {
+                            window.open(data.report_url, '_blank');
+                        }
+                    });
+                } else {
+                    // Handle validation errors
+                    if (data.errors) {
+                        let errorMessages = '';
+                        for (let key in data.errors) {
+                            errorMessages += `${data.errors[key][0]}<br>`;
+                        }
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validation Error',
+                            html: errorMessages
+                        });
+                    } else {
+                        // SweetAlert error message
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: data.message || 'An error occurred while submitting the form.'
+                        });
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+
+                // SweetAlert error message for any network issues
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Something went wrong. Please try again later.'
+                });
+            });
+        }
+    });
+});
 
         // Generate Complaint Statistics Report with SweetAlert
         function generateComplaintsReport() {

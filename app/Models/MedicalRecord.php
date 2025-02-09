@@ -39,7 +39,7 @@ class MedicalRecord extends Model
 
     protected $casts = [
         'birthdate' => 'date', // Casts to Carbon instance
-        'record_date' => 'datetime',
+        'record_date' => 'datetime:Y-m-d H:i:s',
         'medicines' => 'array',
         'health_documents' => 'array', // Assuming you have this field
         'is_approved' => 'boolean',
@@ -96,7 +96,7 @@ class MedicalRecord extends Model
     }
     public function histories()
     {
-        return $this->hasMany(\App\Models\MedicalHistory::class, 'medical_record_id', 'id_number');
+        return $this->hasMany(MedicalHistory::class, 'medical_record_id', 'id_number');
     }
     
     

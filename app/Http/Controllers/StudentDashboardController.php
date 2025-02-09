@@ -26,10 +26,17 @@ class StudentDashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $appointments = Appointment::where('grade_or_course', $user->student->grade_or_course)
-        ->where('section', $user->student->section)
-        ->get();
-    $appointmentCount = $appointments->count();
+        $gradeOrCourse = optional($user->student)->grade_or_course;
+        $section = optional($user->student)->section;
+        
+        $appointments = Appointment::when($gradeOrCourse, function($query) use ($gradeOrCourse) {
+                return $query->where('grade_or_course', $gradeOrCourse);
+            })
+            ->when($section, function($query) use ($section) {
+                return $query->where('section', $section);
+            })
+            ->get();
+        $appointmentCount = $appointments->count();
     
         $complaints = Complaint::where('id_number', $user->id_number)->get();
         $complaintCount = $complaints->count();

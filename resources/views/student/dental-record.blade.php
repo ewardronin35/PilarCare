@@ -873,6 +873,8 @@
             <th>Notes</th>
             <th> Dental Pictures </th>
             <th>Last Updated</th>
+            <th>History</th>
+
         </tr>
     </thead>
     <tbody id="tooth-history-body">
@@ -909,58 +911,27 @@
             </div>
         </div>
 
-        <!-- Preview Modal -->
-    <!-- Modal to update tooth details, status, and upload images -->
-    <div id="previewModal" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Tooth Details</h2>
-        <form id="tooth-details-form" action="{{ route('student.teeth.store') }}" enctype="multipart/form-data">
-            @csrf
-            <div class="form-group">
-                <label for="modal-tooth">Tooth:</label>
-                @if ($dentalRecord)
-                    <input type="hidden" id="dental-record-id" name="dental_record_id" value="{{ $dentalRecord->dental_record_id }}">
-                @else
-                    <p>No dental record found for this user. A new dental record will be created automatically.</p>
-                @endif
-                <input type="text" id="modal-tooth" class="form-control" readonly>
+        <div id="toothHistoryModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Tooth History Details</h2>
+                <!-- Note the change in table ID -->
+                <table id="tooth-history-modal-table" class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Tooth Number</th>
+                            <th>Status</th>
+                            <th>Notes</th>
+                            <th>Dental Pictures</th>
+                            <th>Last Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- DataTables will populate this body via JS -->
+                    </tbody>
+                </table>
             </div>
-            <div class="form-group">
-                <label for="modal-status">Status:</label>
-                <select id="modal-status" name="status" class="form-control">
-                    <option value="Healthy">Healthy</option>
-                    <option value="Aching">Aching</option>
-                    <option value="Missing">Missing</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="modal-notes">Tooth Name:</label>
-                <textarea id="modal-notes" name="notes" class="form-control"></textarea>
-            </div>
-            <input type="hidden" id="modal-svg-path" name="svg_path" value="">
-            <!-- Keep only one hidden input for is_first_submission -->
-            <input type="hidden" id="modal-is-first-submission" name="is_first_submission" value="true">
-
-            <!-- Image Upload Section in the Modal -->
-            <div class="form-group" id="upload-images-section" style="display: none;">
-                <label for="modal-upload-images">Upload Dental Pictures:</label>
-                <div class="custom-file-upload">
-                    <label for="modal-upload-images" class="upload-label">
-                        <i class="fas fa-upload"></i> Choose Images
-                    </label>
-                    <input type="file" id="modal-upload-images" name="update_images[]" class="form-control" accept="image/*" multiple style="display: none;">
-                    <div id="image-preview-container" class="image-preview-container"></div>
-                    <input type="hidden" name="is_current" value="true">
-                    <small class="form-text text-muted">Please upload images as proof for the update.</small>
-                </div>
-            </div>
-
-            <button type="button" id="save-tooth-details" class="save-button">Save</button>
-        </form>
-    </div>
-</div>
-
+        </div>
 
 
     </body>

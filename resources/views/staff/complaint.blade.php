@@ -353,20 +353,13 @@
         @endif
 
         <!-- Filter Buttons -->
-        <div class="filter-buttons">
-            <a href="{{ route('staff.complaint', ['filter' => 'present']) }}" class="filter-button {{ request('filter') === 'present' ? 'active' : '' }}">
-                <i class="fas fa-sun"></i> Present Complaint
-            </a>
-            <a href="{{ route('staff.complaint', ['filter' => 'past']) }}" class="filter-button {{ request('filter') === 'past' ? 'active' : '' }}">
-                <i class="fas fa-moon"></i> Past Complaint
-            </a>
-        </div>
+       
 
         <!-- Search Form -->
       
         <!-- Complaints Section -->
         <div class="complaints-section">
-            <h2>Staff Complaint History</h2>
+            <h2>My Complaint History</h2>
 
             <!-- Complaints Table -->
             <div class="table-container">

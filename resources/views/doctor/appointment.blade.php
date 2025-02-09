@@ -810,17 +810,76 @@
         @csrf
         <!-- ID Number Field -->
         <div class="form-group">
-            <label for="id-number">ID Number</label>
-            <div style="display: flex; align-items: center;">
-                <input type="text" id="id-number" name="id_number" placeholder="Enter ID Number" required maxlength="7">
-                <button type="button" class="search-btn" onclick="fetchPatientName()">Search</button>
-            </div>
-        </div>
-        <!-- Patient Name Field -->
-        <div class="form-group">
-            <label for="patient-name">Patient Name</label>
-            <input type="text" id="patient-name" name="patient_name" required readonly>
-        </div>
+    <label for="grade_or_course_selection">Grade/Course / Position / BED-HED</label>
+    <select name="grade_or_course" id="grade_or_course_selection" required>
+        <option value="">Select Option</option>
+        
+        <optgroup label="Elementary Grades">
+            @for($grade = 1; $grade <= 6; $grade++)
+                <option value="GRADE {{ $grade }}">Grade {{ $grade }}</option>
+            @endfor
+        </optgroup>
+        
+        <optgroup label="Junior High School Grades">
+            @for($grade = 7; $grade <= 10; $grade++)
+                <option value="GRADE {{ $grade }}">Grade {{ $grade }}</option>
+            @endfor
+        </optgroup>
+        
+        <optgroup label="Senior High School Grades">
+            <option value="GRADE 11">Grade 11</option>
+            <option value="GRADE 12">Grade 12</option>
+        </optgroup>
+        
+        <optgroup label="College Courses">
+            <option value="BSBA">BSBA</option>
+            <option value="BSIT">BSIT</option>
+            <option value="BSTM">BSTM</option>
+            <option value="BSHM">BSHM</option>
+            <option value="BSN">BSN</option>
+            <option value="BLIS">BLIS</option>
+            <option value="BEED">BEED</option>
+        </optgroup>
+        
+        <optgroup label="Teacher (BED/HED)">
+            <option value="BED">BED</option>
+            <option value="HED">HED</option>
+        </optgroup>
+        
+        <optgroup label="Staff Positions">
+            <option value="Administrator">Administrator</option>
+            <option value="Secretary">Secretary</option>
+            <option value="Counselor">Counselor</option>
+            <option value="Other">Other</option>
+        </optgroup>
+    </select>
+
+    <label for="section_selection">Section</label>
+    <select name="section" id="section_selection" required>
+        <option value="">Select Section</option>
+        <!-- These options apply only for elementary, junior high, senior high, and college courses -->
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+
+        <option value="Section A">Section A</option>
+        <option value="Section B">Section B</option>
+        <option value="Section C">Section C</option>
+        <option value="Section D">Section D</option>
+        <option value="Elementary">Elementary</option>
+        <optgroup label=" Courses">
+            <option value="BSBA">BSBA</option>
+            <option value="BSIT">BSIT</option>
+            <option value="BSTM">BSTM</option>
+            <option value="BSHM">BSHM</option>
+            <option value="BSN">BSN</option>
+            <option value="BLIS">BLIS</option>
+            <option value="BEED">BEED</option>
+        </optgroup>
+        
+    </select>
+</div>
         <!-- Appointment Date and Time -->
         <div class="form-group input-row">
             <div class="input-column">
@@ -960,8 +1019,8 @@
         <table class="appointment-table" id="appointments-table">
             <thead>
                 <tr>
-                    <th>ID Number</th>
-                    <th>Patient Name</th>
+                    <th>Grade or Course</th>
+                    <th>Section</th>
                     <th>Appointment Date</th>
                     <th>Appointment Time</th>
                     <th>Appointment Type</th>
@@ -972,8 +1031,8 @@
             <tbody>
                 @forelse ($appointments as $appointment)
                     <tr id="appointment-row-{{ $appointment->id }}">
-                        <td>{{ $appointment->id_number }}</td>
-                        <td>{{ $appointment->patient_name }}</td>
+                        <td>{{ $appointment->grade_or_course }}</td>
+                        <td>{{ $appointment->section }}</td>
                         <td>{{ \Carbon\Carbon::parse($appointment->appointment_date)->format('M d, Y') }}</td>
                         <td>{{ \Carbon\Carbon::parse($appointment->appointment_time)->format('h:i A') }}</td>
                         <td>{{ $appointment->appointment_type }}</td>
@@ -1029,15 +1088,14 @@
             @method('PUT') <!-- Add method field for PUT request -->
             <input type="hidden" id="edit-appointment-id" name="id">
             <!-- ID Number Field -->
-            <div class="form-group">
-                <label for="edit-id-number">ID Number</label>
-                <input type="text" id="edit-id-number" name="id_number" required maxlength="7">
-            </div>
-            <!-- Patient Name Field -->
-            <div class="form-group">
-                <label for="edit-patient-name">Patient Name</label>
-                <input type="text" id="edit-patient-name" name="patient_name" required>
-            </div>
+           <div class="form-group">
+    <label for="edit-grade-or-course">Grade or Course</label>
+    <input type="text" id="edit-grade-or-course" name="grade_or_course" required>
+</div>
+<div class="form-group">
+    <label for="edit-section">Section</label>
+    <input type="text" id="edit-section" name="section" required>
+</div>
             <!-- Appointment Date and Time -->
             <div class="form-group input-row">
                 <div class="input-column">
@@ -2025,7 +2083,7 @@
                         const timeFormatted = formatTimeTo12Hour(timeString);
 
                         const li = document.createElement('li');
-                        li.innerText = `${appointment.patient_name} - ${timeFormatted} (${appointment.appointment_type}) - Status: ${capitalizeFirstLetter(appointment.status)}`;
+                        li.innerText = `${appointment.grade_or_course} - ${appointment.section} -  ${timeFormatted} (${appointment.appointment_type})`;
                         appointmentsList.appendChild(li);
                     });
                 } else {

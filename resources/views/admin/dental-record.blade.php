@@ -9,7 +9,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-   
+    <link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/3.3.2/css/fixedHeader.dataTables.min.css">
+
     <!-- Existing head content -->
     
     <!-- Font Awesome -->
@@ -123,6 +124,7 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <!-- Your Custom JS File -->
     <script src="{{ asset('js/admindental.js') }}"></script>
+    <script src="https://cdn.datatables.net/fixedheader/3.3.2/js/dataTables.fixedHeader.min.js"></script>
 
     <!-- Define AJAX Endpoint URLs -->
     <script>
@@ -154,6 +156,7 @@
             </div>
 
             <!-- Dental Records Table -->
+
             <table id="dental-records-table" class="display">
                 <thead>
                     <tr>
@@ -1265,8 +1268,7 @@
             </form>
     </div>
 </div>
-<!-- Tooth History Modal -->
-<!-- Tooth History Modal -->
+
 <!-- Tooth History Modal -->
 <div id="toothHistoryModal" class="modal">
   <div class="modal-content">

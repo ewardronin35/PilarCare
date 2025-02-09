@@ -43,7 +43,7 @@ class DentalRecordController extends Controller
         if ($role === 'student') {
             $personInfo = DB::table('students')
                 ->where('id_number', $user->id_number)
-                ->first(['first_name', 'last_name',  'id_number', 'birthdate', 'age']);
+                ->first(['first_name', 'last_name',  'id_number', 'birthdate', 'age', 'grade_or_course', 'section']);
                 $patientInfo = $personInfo; // For students, use the same record
         } elseif ($role === 'teacher') {
             $personInfo = DB::table('teacher')
@@ -53,13 +53,27 @@ class DentalRecordController extends Controller
         } elseif ($role === 'staff') {
             $personInfo = DB::table('staff')
                 ->where('id_number', $user->id_number)
-                ->first(['first_name', 'last_name', 'bed_or_hed', 'id_number', 'birthdate', 'age']);
+                ->first(['first_name', 'last_name', 'position', 'id_number', 'birthdate', 'age']);
                 $patientInfo = $personInfo;
         } elseif ($role === 'admin') {
             // For admin, if you have only 'name' in the admins table, you might not have birthdate.
             $personInfo = DB::table('admins')
                 ->where('id_number', $user->id_number)
                 ->first(['name', 'id_number']);
+            // Optionally, set patientInfo to null or create a fallback:
+            $patientInfo = (object) ['birthdate' => null];
+        } elseif ($role === 'doctor') {
+            // For admin, if you have only 'name' in the admins table, you might not have birthdate.
+            $personInfo = DB::table('doctors')
+                ->where('id_number', $user->id_number)
+                ->first(['first_name', 'last_name', 'id_number']);
+            // Optionally, set patientInfo to null or create a fallback:
+            $patientInfo = (object) ['birthdate' => null];
+        } elseif ($role === 'nurse') {
+            // For admin, if you have only 'name' in the admins table, you might not have birthdate.
+            $personInfo = DB::table('nurses')
+                ->where('id_number', $user->id_number)
+                ->first(['first_name', 'last_name', 'id_number']);
             // Optionally, set patientInfo to null or create a fallback:
             $patientInfo = (object) ['birthdate' => null];
         } else {
@@ -107,11 +121,19 @@ class DentalRecordController extends Controller
             ->first();
     
         // Fetch the next appointment
-        $nextAppointment = DB::table('appointments')
-            ->where('id_number', $user->id_number)
-            ->where('appointment_date', '>=', now())
-            ->orderBy('appointment_date', 'asc')
-            ->first();
+        $query = DB::table('appointments')
+        ->where('appointment_date', '>=', now());
+    
+    if (isset($patientInfo->grade_or_course)) {
+        $query->where('grade_or_course', $patientInfo->grade_or_course);
+    }
+    
+    if (isset($patientInfo->section)) {
+        $query->where('section', $patientInfo->section);
+    }
+    
+    $nextAppointment = $query->orderBy('appointment_date', 'asc')->first();
+    
     
         // Define teethData array for mapping tooth numbers to descriptions
         $teethData = [
@@ -604,7 +626,6 @@ public function searchRecords(Request $request)
 
 
 
-
 public function generatePdf($id_number)
 {
     try {
@@ -652,14 +673,33 @@ public function generatePdf($id_number)
             $teethData[] = $toothData; // Add the processed tooth data to the array
         }
 
-        // Retrieve additional patient information
-        $information = Information::where('id_number', $id_number)->firstOrFail();
+        // Retrieve the user based on the id_number
+        $user = User::where('id_number', $id_number)->firstOrFail();
 
-        // Prepare profile picture
-        $profilePicturePath = storage_path('app/public/' . $information->profile_picture);
-        $profilePictureBase64 = file_exists($profilePicturePath)
-            ? 'data:image/' . pathinfo($profilePicturePath, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($profilePicturePath))
-            : null;
+        // Load additional patient information based on the role
+        switch (strtolower($user->role)) {
+            case 'student':
+                $information = \App\Models\Student::where('id_number', $id_number)->firstOrFail();
+                break;
+            case 'teacher':
+                $information = \App\Models\Teacher::where('id_number', $id_number)->firstOrFail();
+                break;
+            case 'staff':
+                $information = \App\Models\Staff::where('id_number', $id_number)->firstOrFail();
+                break;
+            default:
+                $information = \App\Models\Information::where('id_number', $id_number)->firstOrFail();
+                break;
+        }
+
+        // Prepare profile picture with a check for an empty value
+        $profilePictureBase64 = null;
+        if (!empty($information->profile_picture)) {
+            $profilePicturePath = storage_path('app/public/' . $information->profile_picture);
+            if (file_exists($profilePicturePath)) {
+                $profilePictureBase64 = 'data:image/' . pathinfo($profilePicturePath, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($profilePicturePath));
+            }
+        }
 
         // Prepare logo
         $logoPath = public_path('images/pilarLogo.jpg');
@@ -703,12 +743,12 @@ public function generatePdf($id_number)
 
         // Prepare data for the view, including teeth pictures
         $data = [
-            'dentalRecord' => $dentalRecord,
-            'teeth' => $teethData, // Use the processed teeth data
-            'teethStatus' => $teethStatus, // Pass the color mapping
-            'information' => $information,
-            'profilePictureBase64' => $profilePictureBase64,
-            'logoBase64' => $logoBase64,
+            'dentalRecord'        => $dentalRecord,
+            'teeth'               => $teethData,       // Processed teeth data
+            'teethStatus'         => $teethStatus,     // Color mapping
+            'information'         => $information,
+            'profilePictureBase64'=> $profilePictureBase64,
+            'logoBase64'          => $logoBase64,
         ];
 
         // Generate PDF from the Blade view
@@ -718,18 +758,15 @@ public function generatePdf($id_number)
         return $pdf->download('dental_record_' . $id_number . '.pdf');
 
     } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-        // Handle not found exceptions
-        Log::error("Dental record or information not found for ID {$id_number}: " . $e->getMessage());
-
-        return redirect()->back()->with('error', 'Dental record not found for the provided ID number.');
+        Log::error("Dental record or patient information not found for ID {$id_number}: " . $e->getMessage());
+        return redirect()->back()->with('error', 'Dental record or patient information not found for the provided ID number.');
     } catch (\Exception $e) {
-        // Handle other exceptions
         Log::error("Error generating PDF for ID {$id_number}: " . $e->getMessage());
-
         return redirect()->back()->with('error', 'Unable to generate PDF. Please try again later.');
     }
 }
- 
+
+
     
 
     
@@ -848,55 +885,72 @@ public function history(Request $request)
 
 
 // Method to fetch Tooth History
-// app/Http/Controllers/DentalRecordController.php
 public function toothHistory(Request $request)
 {
-    // Validate incoming request data
+    // Make tooth_number optional
     $validated = $request->validate([
         'dental_record_id' => 'required|exists:dental_records,dental_record_id',
-        'tooth_number' => 'required|integer|min:11|max:48',
+        'tooth_number'     => 'sometimes|nullable|integer|min:11|max:48',
     ]);
 
     $dentalRecordId = $validated['dental_record_id'];
-    $toothNumber = $validated['tooth_number'];
 
-    // Fetch the tooth with histories ordered by updated_at descending
-    $tooth = Teeth::where('dental_record_id', $dentalRecordId)
-                ->where('tooth_number', $toothNumber)
-                ->with(['histories' => function($query) {
-                    $query->orderBy('updated_at', 'desc');
-                }])
-                ->first();
+    if (isset($validated['tooth_number'])) {
+        $toothNumber = $validated['tooth_number'];
 
-    if (!$tooth) {
-        return response()->json([
-            'success' => false,
-            'message' => 'No tooth found for the provided dental record ID and tooth number.'
-        ], 404);
-    }
+        // Fetch the specific tooth with its histories
+        $tooth = Teeth::where('dental_record_id', $dentalRecordId)
+            ->where('tooth_number', $toothNumber)
+            ->with(['histories' => function($query) {
+                $query->orderBy('updated_at', 'desc');
+            }])
+            ->first();
 
-    $histories = $tooth->histories;
-
-    if ($histories->isEmpty()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'No tooth history found for the provided dental record ID and tooth number.'
-        ], 404);
-    }
-
-    // Decode dental_pictures for each history entry if needed
-    $histories->transform(function($history) {
-        if (is_string($history->dental_pictures)) {
-            $history->dental_pictures = json_decode($history->dental_pictures, true) ?? [];
+        if (!$tooth) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tooth found for the provided dental record ID and tooth number.'
+            ], 404);
         }
-        return $history;
-    });
 
-    return response()->json([
-        'success' => true,
-        'toothHistories' => $histories
-    ]);
+        $histories = $tooth->histories;
+
+        if ($histories->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tooth history found for the provided dental record ID and tooth number.'
+            ], 404);
+        }
+
+        // Decode dental_pictures if needed
+        $histories->transform(function($history) {
+            if (is_string($history->dental_pictures)) {
+                $history->dental_pictures = json_decode($history->dental_pictures, true) ?? [];
+            }
+            return $history;
+        });
+
+        return response()->json([
+            'success'      => true,
+            'toothHistories' => $histories
+        ]);
+    } else {
+        // No tooth number provided; return history for all teeth in this dental record
+        $toothHistories = Teeth::where('dental_record_id', $dentalRecordId)
+            ->orderBy('tooth_number')
+            ->get(['tooth_number', 'status', 'notes', 'updated_at', 'dental_pictures']);
+
+        $toothHistories->transform(function ($tooth) {
+            $tooth->dental_pictures = is_string($tooth->dental_pictures)
+                ? json_decode($tooth->dental_pictures, true)
+                : $tooth->dental_pictures;
+            return $tooth;
+        });
+
+        return response()->json($toothHistories);
+    }
 }
+
 
 
 public function fetchDentalRecords(Request $request) 
@@ -1060,7 +1114,7 @@ public function previewRecord(Request $request)
         return response()->json(['message' => 'No dental record found for the provided ID.'], 404);
     }
 
-    // Fetch previous examinations
+    // Fetch previous examinations (assuming DentalExamination still uses the id_number from the dental record)
     $previousExaminations = DentalExamination::where('id_number', $dentalRecord->id_number)
         ->orderBy('date_of_examination', 'desc')
         ->get();
@@ -1070,11 +1124,34 @@ public function previewRecord(Request $request)
         ->orderBy('tooth_number')
         ->get(['tooth_number', 'status', 'notes', 'updated_at', 'dental_pictures']);
 
-    // Fetch next appointment
-    $nextAppointment = Appointment::where('id_number', $dentalRecord->id_number)
-        ->where('appointment_date', '>=', Carbon::now()->toDateString())
-        ->orderBy('appointment_date', 'asc')
-        ->first();
+    // Retrieve the user (patient) and determine their role
+    $user = $dentalRecord->user;
+    $role = strtolower($user->role);
+
+    // Fetch additional patient information based on role
+    if ($role === 'student') {
+        $information = \App\Models\Student::where('id_number', $user->id_number)->first();
+    } elseif ($role === 'teacher') {
+        $information = \App\Models\Teacher::where('id_number', $user->id_number)->first();
+    } elseif ($role === 'staff') {
+        $information = \App\Models\Staff::where('id_number', $user->id_number)->first();
+    } else {
+        $information = null;
+    }
+
+    // Fetch the next appointment using the new Appointment model.
+    // Since the appointments table no longer uses id_number, for students we filter by grade_or_course and section.
+    $nextAppointment = null;
+    if ($role === 'student' && $information) {
+        $nextAppointment = \App\Models\Appointment::where('grade_or_course', $information->grade_or_course)
+            ->where('section', $information->section)
+            ->where('appointment_date', '>=', Carbon::now()->toDateString())
+            ->orderBy('appointment_date', 'asc')
+            ->first();
+    } else {
+        // For other roles you can either leave this null or define another query based on your appointment logic.
+        $nextAppointment = null;
+    }
 
     // Extract the latest examination as lastExamination
     $lastExamination = $previousExaminations->first();
@@ -1110,42 +1187,27 @@ public function previewRecord(Request $request)
         }
     }
 
-    // Retrieve the user and fetch extra patient information based on role
-    $user = $dentalRecord->user;
-    $role = strtolower($user->role);
-
-    if ($role === 'student') {
-        $information = \App\Models\Student::where('id_number', $user->id_number)->first();
-    } elseif ($role === 'teacher') {
-        $information = \App\Models\Teacher::where('id_number', $user->id_number)->first();
-    } elseif ($role === 'staff') {
-        $information = \App\Models\Staff::where('id_number', $user->id_number)->first();
-    } else {
-        $information = null;
-    }
-
     // Extract birthdate and calculate age if available
     $birthdate = $information ? $information->birthdate : null;
     $age = $birthdate ? Carbon::parse($birthdate)->age : null;
 
     // Construct the response data
     $response = [
-        'dentalRecord'       => $dentalRecord->toArray(), // convert to array
-        'teeth'              => $completeTeeth, // already an array
-        'name'               => $dentalRecord->patient_name, // Ensure patient_name is set properly
-        'birthdate'          => $birthdate,
-        'age'                => $age,
-        'grade_section'      => $dentalRecord->grade_section,
+        'dentalRecord'        => $dentalRecord->toArray(), // Convert to array
+        'teeth'               => $completeTeeth,             // Already an array
+        'name'                => $dentalRecord->patient_name, // Ensure patient_name is set properly
+        'birthdate'           => $birthdate,
+        'age'                 => $age,
+        'grade_section'       => $dentalRecord->grade_section,
         'previousExaminations'=> $previousExaminations->toArray(),
-        'toothHistory'       => $toothHistory->toArray(),
-        'nextAppointment'    => $nextAppointment, // if null, it's fine
-        'role'               => strtolower($user->role),
-        'lastExamination'    => $lastExamination ? $lastExamination->toArray() : null,
+        'toothHistory'        => $toothHistory->toArray(),
+        'nextAppointment'     => $nextAppointment,           // Fetched using grade_or_course and section
+        'role'                => $role,
+        'lastExamination'     => $lastExamination ? $lastExamination->toArray() : null,
     ];
 
     return response()->json($response);
 }
-
 
 
 

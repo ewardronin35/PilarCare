@@ -19,99 +19,56 @@ class TeacherDashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $user->load('teacher');
-
-        $appointments = Appointment::where('id_number', $user->id_number)->get();
-        $appointmentCount = $appointments->count();
+        // Retrieve the staff’s assigned grade/course and section (adjust if your staff model uses different attribute names)
+        $gradeOrCourse = optional($user->teacher)->grade_or_course;
+        $section = optional($user->teacher)->section;
         
+        // Filter appointments by grade/course and section if available.
+        $appointments = Appointment::when($gradeOrCourse, function($query) use ($gradeOrCourse) {
+                return $query->where('grade_or_course', $gradeOrCourse);
+            })
+            ->when($section, function($query) use ($section) {
+                return $query->where('section', $section);
+            })
+            ->get();
+        $appointmentCount = $appointments->count();
+    
         $complaints = Complaint::where('id_number', $user->id_number)->get();
         $complaintCount = $complaints->count();
-        $notifications = Notification::where('user_id', Auth::user()->id_number)->get();
+        $notifications = Notification::where('user_id', $user->id_number)->get();
     
-        // Check if the user's profile information is complete
-        $information = Information::where('id_number', $user->id_number)->first();
-        $showModal = !$information; // If no information exists, show the modal
-    
-        // Fetch health examination for current school year
+        // Fetch the current school year
         $currentSchoolYear = SchoolYear::where('is_current', true)->first();
-        $healthExaminations = HealthExamination::where('id_number', $user->id_number)
-                                                ->whereYear('created_at', $currentSchoolYear)
-                                                ->get();
-        $hasHealthExamination = $healthExaminations->isNotEmpty(); // True if health records exist, otherwise false
     
-        // Fetch dental and medical records
+        // Fetch health examination for the current school year
+        $healthExamination = null;
+        $hasHealthExamination = false;
+        if ($currentSchoolYear) {
+            $healthExamination = HealthExamination::where('id_number', $user->id_number)
+                ->where('school_year', $currentSchoolYear->year)
+                ->first();
+            $hasHealthExamination = $healthExamination !== null;
+        }
+    
+        // Fetch dental records (if needed)
         $dentalRecords = DentalRecord::where('id_number', $user->id_number)->get();
-        $hasDentalRecord = $dentalRecords->isNotEmpty(); // True if dental records exist, otherwise false
+        $hasDentalRecord = $dentalRecords->isNotEmpty();
     
+        // Fetch medical records (if needed)
         $medicalRecords = MedicalRecord::where('id_number', $user->id_number)->get();
-        $hasMedicalRecord = $medicalRecords->isNotEmpty(); // True if medical records exist, otherwise false
+        $hasMedicalRecord = $medicalRecords->isNotEmpty();
     
         return view('teacher.TeacherDashboard', compact(
             'appointments',
             'appointmentCount',
             'complaints',
             'complaintCount',
-            'showModal',
             'notifications',
             'hasHealthExamination',
             'hasDentalRecord',
             'hasMedicalRecord',
-            'user' // Pass the user with the loaded teacher relationship
+            'user' // <-- Add this line
 
         ));
     }
-    
-    public function storeProfile(Request $request)
-    {
-        try {
-            $validated = $request->validate([
-                'parent_name_father' => ['nullable', 'regex:/^[A-Za-z\s]+$/'],
-                'parent_name_mother' => ['nullable', 'regex:/^[A-Za-z\s]+$/'],
-                'guardian_first_name' => ['nullable', 'string'],
-                'guardian_last_name' => ['nullable', 'string'],
-                'guardian_relationship' => ['nullable', 'string'],
-                'emergency_contact_number' => ['required', 'digits:11'],
-                'personal_contact_number' => ['required', 'digits:11'],
-                'birthdate' => 'required|date',
-                'address' => 'required|string|max:255',
-                'profile_picture' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            ]);
-            
-    
-            // Process the uploaded profile picture
-            $profilePicture = $request->file('profile_picture')->store('profile_pictures', 'public');
-    
-            // Save's information
-            Information::create([
-                'id_number' => $request->id_number,
-                'parent_name_father' => $request->parent_name_father,
-                'parent_name_mother' => $request->parent_name_mother,
-                'guardian_name' => $request->guardian_first_name . ' ' . $request->guardian_last_name,
-                'guardian_relationship' => $request->guardian_relationship,
-                'emergency_contact_number' => $request->emergency_contact_number,
-                'personal_contact_number' => $request->personal_contact_number,
-                'birthdate' => $request->birthdate,
-                'address' => $request->address,
-                'profile_picture' => $profilePicture,
-            ]);
-    
-            // Create parent account
-           
-    
-            // Return response including parent account details
-            return response()->json([
-                'success' => true,
-            ]);
-    
-        } catch (\Exception $e) {
-            // Log the detailed error message
-            \Log::error('Profile Update Error: ' . $e->getMessage());
-    
-            return response()->json([
-                'success' => false,
-                'message' => 'An unexpected error occurred. Please try again later.',
-            ], 500);
-        }
-    }
-    
 }  

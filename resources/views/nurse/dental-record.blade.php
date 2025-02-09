@@ -1,4 +1,5 @@
 <x-app-layout :pageTitle="'Dental Record'">   
+<head>
 
     <!-- Stylesheets -->
     <link rel="stylesheet" href="{{ asset('css/dental.css') }}">
@@ -8,7 +9,109 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+   
+    <!-- Existing head content -->
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"  crossorigin="anonymous" referrerpolicy="no-referrer" />
 
+    <!-- CSRF Token -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+</head>
+<style>
+  /* Enhanced table styling */
+#dental-records-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+#dental-records-table thead {
+    background-color: #007bff; /* Blue background for headers */
+    color: #ffffff;
+}
+
+#dental-records-table th,
+#dental-records-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #dddddd;
+    font-size: 0.95rem;
+    color: #333333;
+}
+
+#dental-records-table tbody tr:hover {
+    background-color: #f1f1f1; /* Light gray on hover */
+}
+
+#dental-records-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.preview-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    background-color: #17a2b8; /* Bootstrap Info Color */
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.3s ease;
+}
+
+.preview-btn i {
+    margin-right: 5px; /* Space between icon and text */
+}
+
+.preview-btn:hover {
+    background-color: #138496;
+}
+
+/* Responsive Design for Mobile Devices */
+@media (max-width: 768px) {
+    #dental-records-table thead {
+        display: none; /* Hide headers on small screens */
+    }
+
+    #dental-records-table, 
+    #dental-records-table tbody, 
+    #dental-records-table tr, 
+    #dental-records-table td {
+        display: block;
+        width: 100%;
+    }
+
+    #dental-records-table tr {
+        margin-bottom: 15px;
+        border-bottom: 2px solid #ddd;
+    }
+
+    #dental-records-table td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+    }
+
+    #dental-records-table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 15px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: bold;
+        color: #555555;
+    }
+}
+
+  </style>
     <!-- Scripts -->
     <!-- jQuery -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -23,11 +126,16 @@
 
     <!-- Define AJAX Endpoint URLs -->
     <script>
-        window.getDentalRecordPreviewUrl = "{{ route('nurse.dental-records.preview') }}";
-        window.searchRecordsUrl = "{{ route('nurse.searchRecords') }}";
         window.dentalExamStoreUrl = "{{ route('nurse.dental-examination.store') }}";
         window.getToothStatusUrl = "{{ route('nurse.getToothStatus') }}";
-    </script>
+        window.storeToothUrl = "{{ route('nurse.teeth.store') }}";
+        window.fetchDentalRecordsUrl = "{{ route('nurse.fetchAllRecordsJson') }}";
+        window.getToothHistoryUrl = "{{ route('nurse.toothHistory') }}"; // **Add this line**
+
+        window.searchRecordsUrl = "{{ route('nurse.searchRecords') }}";
+        window.getDentalRecordPreviewUrl = "{{ route('nurse.dental-records.preview') }}";
+        </script>
+
 
     <div class="main-container">
         <!-- Left Side: Dental Records List -->
@@ -56,18 +164,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($records as $record)
-                        <tr>
-                            <td>{{ $record->id_number }}</td>
-                            <td>{{ $record->patient_name ?? 'N/A' }}</td>
-                            <td>{{ ucfirst($record->user_type) }}</td>
-                            <td>
-                                <button class="preview-btn btn btn-primary" data-id="{{ $record->dental_record_id }}">
-                                    <i class="fas fa-eye"></i> Preview
-                                </button>
-                            </td>
-                        </tr>
-                    @endforeach
+                    <!-- Populated via JavaScript -->
                 </tbody>
             </table>
         </div>
@@ -96,7 +193,9 @@
                         </div>
                         <svg class="diagram" viewBox="0 0 300 400">
                             <!-- SVG Content -->
-                            <path
+                               <!-- Add SVG path data here for dental chart -->
+                                    <!-- Example Path: -->
+                                    <path
     class="tooth-11 tooth-11-parent"
     d="m 113.894,31.723601 c 0.0561,0.43476 3.08165,4.91178 3.84449,6.93412 1.03137,2.18327 2.67371,4.15697 7.0469,5.19412 3.57083,-0.36803 7.19248,-0.4467 10.19825,-4.03315 l 7.38989,-9.40518 1.34756,-2.99193 c 0.97308,-2.16029 -1.13419,-4.14679 -3.10702,-4.99829 l -5.34936,-1.19716 c -3.12438,-0.16807 -5.19809,-0.93656 -11.30278,0.59905 l -5.72815,1.04816 c -2.08382,0.77109 -4.86648,0.46927 -4.92056,4.35665 0.10953,1.48595 -0.58405,2.8577 0.58078,4.49361 z"
     style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"/>
@@ -824,6 +923,8 @@
     class="tooth-48"
     d="m 46.842051,219.06796 c 1.174729,-0.0304 2.284947,0.0529 3.643979,-0.304 1.942297,-1.82075 2.638975,-1.82329 3.874331,-2.61197 0.232343,-0.0586 2.680288,-2.19834 0.909097,-5.42624 -0.978091,-1.65176 -1.215436,-2.22236 -0.807156,-3.43336 -0.960239,-2.82396 -0.439585,-3.45978 -0.652953,-5.18009"
     style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"/>
+  </svg>
+                          
                         </svg>
                     </div>
 
@@ -1084,6 +1185,7 @@
                             <th>Notes</th>
                             <th>Dental Pictures</th>
                             <th>Last Updated</th>
+                            <th> History  </th>
                         </tr>
                     </thead>
                     <tbody id="preview-tooth-history-body">
@@ -1112,11 +1214,80 @@
             </div>
         </div>
     </div>
+<!-- Dental Examination Modal -->
+<div id="previewModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Tooth Details</h2>
+        <form id="tooth-details-form" action="{{ route('nurse.teeth.store') }}" enctype="multipart/form-data">
+            @csrf
+            <div class="form-group">
+                <label for="modal-tooth">Tooth:</label>
+                <!-- Hidden input field for dental_record_id -->
+                <input type="hidden" id="dental-record-id" name="dental_record_id" value="">
+                <input type="hidden" id="modal-tooth-number" name="tooth_number" value="">
 
-    <script>
-        window.dentalExamStoreUrl = "{{ route('nurse.dental-examination.store') }}";
-        window.getToothStatusUrl = "{{ route('nurse.getToothStatus') }}";
-        window.searchRecordsUrl = "{{ route('nurse.searchRecords') }}";
-    </script>
+            <input type="hidden" id="modal-svg-path" name="svg_path" value="">
+            <!-- Hidden input for is_first_submission -->
+            <input type="hidden" id="modal-is-first-submission" name="is_first_submission" value="true">
+                <input type="text" id="modal-tooth" class="form-control" readonly>
+            </div>
+            <div class="form-group">
+                <label for="modal-status">Status:</label>
+                <select id="modal-status" name="status" class="form-control">
+                    <option value="Healthy">Healthy</option>
+                    <option value="Aching">Aching</option>
+                    <option value="Missing">Missing</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="modal-notes">Notes:</label>
+                <textarea id="modal-notes" name="notes" class="form-control"></textarea>
+            </div>
+            <!-- Hidden field for tooth_number -->
+            
+
+            <!-- Image Upload Section in the Modal -->
+            <div class="form-group" id="upload-images-section" style="display: none;">
+                <label for="modal-upload-images">Upload Dental Pictures:</label>
+                <div class="custom-file-upload">
+                    <label for="modal-upload-images" class="upload-label">
+                        <i class="fas fa-upload"></i> Choose Images
+                    </label>
+                    <input type="file" id="modal-upload-images" name="update_images[]" class="form-control" accept="image/*" multiple style="display: none;">
+                    <div id="image-preview-container" class="image-preview-container"></div>
+                    <input type="hidden" name="is_current" value="true">
+                    <small class="form-text text-muted">Please upload images as proof for the update.</small>
+                </div>
+            </div>
+
+            <button type="button" id="save-tooth-details" class="save-button btn btn-success">Save</button>
+            </form>
+    </div>
+</div>
+
+<!-- Tooth History Modal -->
+<div id="toothHistoryModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Tooth History Details</h2>
+    <table id="tooth-history-table" class="history-table">
+      <thead>
+        <tr>
+          <th>Tooth Number</th>
+          <th>Status</th>
+          <th>Notes</th>
+          <th>Dental Pictures</th>
+          <th>Last Updated</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- DataTables will populate this body -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
 
 </x-app-layout>  

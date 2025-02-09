@@ -1,4 +1,5 @@
 
+    <!-- resources/views/nurse/inventory.blade.php -->
 
     <x-app-layout :pageTitle="'Medical Inventory'">
     <!-- Google Fonts and Font Awesome -->
@@ -718,7 +719,9 @@
     document.getElementById('edit-item-name').focus(); // Set focus to first input
 }
 
-
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
         // Close Edit Modal Function with Fade-Out Animation
         function closeEditModal() {
             const modal = document.getElementById('edit-modal');

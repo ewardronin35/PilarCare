@@ -92,7 +92,7 @@ class MedicineIntakeController extends Controller{
             \App\Jobs\SendMedicineIntakeReminder::dispatch($notification, $user)->delay($scheduledTime);
     
             // Schedule Email Reminder
-            \Mail::to($user->email)
+            Mail::to($user->email)
             ->send(new \App\Mail\MedicineIntakeReminderMail($medicineIntake, $user));
         }
     

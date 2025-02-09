@@ -441,195 +441,13 @@ $(document).ready(function () {
     // -------------------------------------------------
     // 10. Event Listener: Save Tooth Details
     // -------------------------------------------------
-    $('#save-tooth-details').off('click').on('click', function (e) {
-        e.preventDefault();  // Immediately prevent form submission
-        if (!dentalRecordId) {
-            console.error('No dental_record_id available.');
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Dental Record ID is missing. Please save the dental record first.',
-                timer: 3000,
-                showConfirmButton: false
-            });
-            return;
-        }
 
-        // Capture values from the form
-        var toothNumber = parseInt($('#modal-tooth').val().split(' ')[1], 10); // Convert to integer
-        var status = $('#modal-status').val();
-        var notes = $('#modal-notes').val();
-        var isFirstSubmission = $('#modal-is-first-submission').val() === 'true'; // Check if this is a first submission
-
-        // Debugging logs to check variables
-        console.log(`Modal open isFirstSubmission: ${$('#modal-is-first-submission').val()}`);
-        console.log(`Before submission - isFirstSubmission: ${isFirstSubmission}`);
-        console.log(`dentalRecordId: ${dentalRecordId}, toothNumber: ${toothNumber}`);
-        console.log(`status: ${status}, notes: ${notes}`);
-        console.log(`SVG Path: ${$('#modal-svg-path').val()}`); // Log the svg_path
-
-        var uploadImages = $('#modal-upload-images');
-        console.log('uploadImages length:', uploadImages.length);
-        var updateImages = uploadImages[0]?.files; // Optional chaining to prevent errors
-        console.log(`Number of files selected: ${updateImages ? updateImages.length : '0'}`);
-
-        // Validation: First submission does not require images, but subsequent submissions do
-        if (!isFirstSubmission && (!updateImages || updateImages.length === 0)) {
-            console.log('Image upload required for update but none provided.');
-
-            // Show error message and stop form submission
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'You must upload images for the Proof.',
-                timer: 3000,
-                showConfirmButton: false
-            });
-            return false;  // Halt form submission
-        }
-
-        // If validation passed, proceed with the form submission
-        console.log('All validation passed, proceeding with form submission.');
-
-        // Disable button to prevent multiple submissions
-        $('#save-tooth-details').prop('disabled', true);
-
-        // Prepare FormData to send
-        var formData = new FormData();
-        formData.append('dental_record_id', dentalRecordId);
-        formData.append('tooth_number', toothNumber);
-        formData.append('status', status);
-        formData.append('notes', notes);
-        formData.append('svg_path', $('#modal-svg-path').val()); // Include svg_path
-
-        // Append image files to FormData if not first submission
-        if (!isFirstSubmission && updateImages && updateImages.length > 0) {
-            console.log(`Appending ${updateImages.length} images.`);
-            for (let i = 0; i < updateImages.length; i++) {
-                formData.append('update_images[]', updateImages[i]);
-            }
-        }
-
-        // AJAX call to store tooth details
-        $.ajax({
-            url: storeToothUrl, // Use the URL passed from Blade
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            // Existing success handler
-            success: function (response) {
-                console.log('AJAX success response:', response);
-
-                if (response.update) {
-                    console.log('Tooth updated successfully!');
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: 'Tooth details updated successfully! Awaiting approval.',
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
-                    $('#previewModal').hide();
-
-                    // Update the teethStatuses to reflect the pending update
-                    teethStatuses[toothNumber] = {
-                        status: status,
-                        isApproved: false,
-                        isNew: false
-                    };
-
-                    // Disable further interactions for this tooth
-                    $(`.tooth-${toothNumber}`)
-                        .css('pointer-events', 'none')
-                        .css('opacity', '0.6')
-                        .attr('title', 'This tooth has a pending update and cannot be modified until approved.');
-                    console.log(`Tooth ${toothNumber} is now pending approval.`);
-                } else {
-                    console.log('First-time save!');
-                    $('#modal-is-first-submission').val('false'); // Ensure future submissions are marked as updates
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: 'Tooth details saved successfully!',
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
-
-                    $('#previewModal').hide();
-
-                    // Update the teethStatuses to reflect the approved status
-                    teethStatuses[toothNumber] = {
-                        status: status,
-                        isApproved: true,
-                        isNew: false
-                    };
-
-                    // Update the fill color of the tooth SVG based on the new status
-                    let fillColor = getColorBasedOnStatus(status);
-                    $(`.tooth-${toothNumber}`).css('fill', fillColor);
-
-                    // Keep the tooth enabled since it's approved
-                    $(`.tooth-${toothNumber}`)
-                        .css('pointer-events', 'auto')
-                        .css('opacity', '1')
-                        .attr('title', '');
-                    console.log(`Tooth ${toothNumber} is now approved and enabled.`);
-                }
-            },
-
-            error: function (xhr) {
-                console.error('Error saving tooth details:', xhr.responseText);
-
-                if (xhr.responseJSON && xhr.responseJSON.error) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: xhr.responseJSON.error,
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Failed to save tooth details!',
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
-                }
-
-                // Re-enable the button after error
-                $('#save-tooth-details').prop('disabled', false);
-            },
-            complete: function () {
-                // Always re-enable the button after completion
-                $('#save-tooth-details').prop('disabled', false);
-            }
-        });
-    });
 
 
     // -------------------------------------------------
     // 11. Event Listener: Handle Image Uploads and Previews
     // -------------------------------------------------
-    $('#modal-upload-images').change(function (event) {
-        $('#image-preview-container').empty(); // Clear previous previews
-        const files = event.target.files;
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const previewHtml = `
-                    <div class="image-preview" style="display: inline-block; margin-right: 10px;">
-                        <img src="${e.target.result}" alt="Dental Image Preview" class="preview-img img-thumbnail" style="max-width: 100px;">
-                    </div>`;
-                $('#image-preview-container').append(previewHtml);
-            };
-            reader.readAsDataURL(file); // Convert image to Base64 string
-        }
-    });
+  
 
     // -------------------------------------------------
     // 12. Event Listener: Toggle Form Visibility
@@ -820,7 +638,7 @@ $(document).ready(function () {
         tableBody.empty();
     
         if (data.length === 0) {
-            tableBody.append('<tr><td colspan="5">No tooth history found.</td></tr>');
+            tableBody.append('<tr><td colspan="6">No tooth history found.</td></tr>');
             return;
         }
     
@@ -861,6 +679,11 @@ $(document).ready(function () {
                     <td>${notes}</td>
                     <td>${dentalPicturesHtml}</td>
                     <td>${updatedAt}</td>
+                     <td>
+          <button class="history-btn" data-tooth-number="${toothNumber}" data-dental-record-id="${dentalRecordId}">
+              Preview History
+          </button>
+      </td>
                 </tr>
             `);
         });
@@ -908,7 +731,121 @@ $(document).ready(function () {
     // 18. Initialize DataTables for Static Tables (Optional)
     // -------------------------------------------------
     // If you have any static tables that don't get populated via AJAX, initialize DataTables here
- 
+    $('#tooth-history-table tbody').on('click', '.history-btn', function () {
+        const toothNumber = $(this).data('tooth-number');
+        const dentalRecordIdParam = $(this).data('dental-record-id');
+
+        if (!dentalRecordIdParam || !toothNumber) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Data',
+                text: 'Tooth number or dental record ID is missing.',
+            });
+            return;
+        }
+
+        // Show a loading indicator while fetching the tooth history
+        Swal.fire({
+            title: 'Loading...',
+            text: 'Fetching tooth history details.',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // AJAX request to fetch tooth history for this specific tooth
+        $.ajax({
+            url: getToothHistoryUrl,
+            method: 'GET',
+            data: {
+                dental_record_id: dentalRecordIdParam,
+                tooth_number: toothNumber
+            },
+            success: function (response) {
+                Swal.close(); // Close the loading alert
+
+                if (response.success && response.toothHistories && response.toothHistories.length > 0) {
+                    let tableRows = '';
+                    response.toothHistories.forEach(function(history) {
+                        // Build dental pictures HTML
+                        let picturesHtml = '';
+                        if (history.dental_pictures && history.dental_pictures.length > 0) {
+                            history.dental_pictures.forEach(function(pic) {
+                                picturesHtml += `<img src="/storage/${pic}" alt="Dental Picture" style="max-width: 50px; margin-right: 5px;">`;
+                            });
+                        } else {
+                            picturesHtml = 'N/A';
+                        }
+
+                        let updatedDate = history.updated_at ? new Date(history.updated_at).toLocaleDateString() : 'N/A';
+
+                        tableRows += `<tr>
+                            <td>${history.tooth_number}</td>
+                            <td>${history.status}</td>
+                            <td>${history.notes || 'N/A'}</td>
+                            <td>${picturesHtml}</td>
+                            <td>${updatedDate}</td>
+                        </tr>`;
+                    });
+
+                    // Populate the modal table (note the new ID)
+                    $('#tooth-history-modal-table tbody').html(tableRows);
+
+                    // If a DataTable instance already exists on the modal table, destroy it first
+                    if ($.fn.DataTable.isDataTable('#tooth-history-modal-table')) {
+                        $('#tooth-history-modal-table').DataTable().clear().destroy();
+                    }
+
+                    // Reinitialize the DataTable on the modal table
+                    $('#tooth-history-modal-table').DataTable({
+                        paging: true,
+                        searching: false, // Disable search if not needed
+                        ordering: true,
+                        info: false,
+                        autoWidth: false,
+                        responsive: true,
+                        language: {
+                            emptyTable: "No history records available."
+                        }
+                    });
+
+                    // Show the Tooth History Preview Modal
+                    $('#toothHistoryModal').css('display', 'flex').animate({ opacity: 1 }, 300);
+                } else {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'No History Found',
+                        text: 'No history available for this tooth.',
+                    });
+                }
+            },
+            error: function (xhr) {
+                Swal.close();
+                let errorMessage = 'An error occurred while fetching tooth history.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorMessage,
+                });
+            }
+        });
+    });
+
+    // Handle Modal Close for the Tooth History Modal
+    $('#toothHistoryModal .close').on('click', function () {
+        $('#toothHistoryModal').fadeOut(300);
+    });
+
+    // Optional: Close the modal if clicking outside its content
+    $(window).on('click', function (event) {
+        if ($(event.target).is('#toothHistoryModal')) {
+            $('#toothHistoryModal').fadeOut(300);
+        }
+    });
 
 
 });

@@ -29,20 +29,26 @@ class MedicalRecordController extends Controller
      * @param  \App\Models\User  $user
      * @return \App\Models\Student|\App\Models\Teacher|\App\Models\Staff|null
      */
-    private function getUserInformation($user)
+    public function getUserInformation($user)
     {
         $role = strtolower($user->role);
         switch ($role) {
             case 'student':
-                return Student::where('id_number', $user->id_number)->first();
+                return \App\Models\Student::where('id_number', $user->id_number)->first();
             case 'teacher':
-                return Teacher::where('id_number', $user->id_number)->first();
+                return \App\Models\Teacher::where('id_number', $user->id_number)->first();
             case 'staff':
-                return Staff::where('id_number', $user->id_number)->first();
+                return \App\Models\Staff::where('id_number', $user->id_number)->first();
+            case 'doctor':
+                return \App\Models\Doctor::where('id_number', $user->id_number)->first();
+            case 'nurse':
+                return \App\Models\Nurse::where('id_number', $user->id_number)->first();
             default:
                 return null;
         }
     }
+    
+    
 
     /**
      * Display the medical record creation form.
@@ -85,35 +91,38 @@ class MedicalRecordController extends Controller
         try {
             // Validate incoming request
             $validatedData = $request->validate([
-                'name' => 'required|string|max:255',
-                'birthdate' => 'required|date',
-                'age' => 'required|integer',
-                'address' => 'required|string|max:255',
-                'personal_contact_number' => 'required|string|max:15',
+                'name'                     => 'required|string|max:255',
+                'birthdate'                => 'required|date',
+                'age'                      => 'required|integer',
+                'address'                  => 'required|string|max:255',
+                'personal_contact_number'  => 'required|string|max:15',
                 'emergency_contact_number' => 'required|string|max:15',
-                'father_name' => 'required|string|max:255',
-                'mother_name' => 'required|string|max:255',
-                'past_illness' => 'nullable|string|max:255',
-                'chronic_conditions' => 'nullable|string|max:255',
-                'surgical_history' => 'nullable|string|max:255',
-                'family_medical_history' => 'nullable|string|max:255',
-                'allergies' => 'nullable|string|max:255',
-                'medical_condition' => 'nullable|string|max:255',
-                'medicines' => 'nullable|array',
-                'medicines.*' => 'nullable|string|max:255',
-                'health_documents' => 'nullable|array',
-                'health_documents.*' => 'file|mimes:jpg,png,jpeg,pdf|max:10008',
-                'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-                'record_date' => 'required|date',
-                'is_approved' => 'nullable|boolean',
-                'is_current' => 'nullable|boolean',
+                'father_name'              => 'required|string|max:255',
+                'mother_name'              => 'required|string|max:255',
+                'past_illness'             => 'nullable|string|max:255',
+                'chronic_conditions'       => 'nullable|string|max:255',
+                'surgical_history'         => 'nullable|string|max:255',
+                'family_medical_history'   => 'nullable|string|max:255',
+                'allergies'                => 'nullable|string|max:255',
+                'medical_condition'        => 'nullable|string|max:255',
+                'medicines'                => 'nullable|array',
+                'medicines.*'              => 'nullable|string|max:255',
+
+                // Uploadable files
+                'health_documents'         => 'nullable|array',
+                'health_documents.*'       => 'file|mimes:jpg,png,jpeg,pdf|max:10008',
+                'profile_picture'          => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+
+                // The rest
+                'is_approved'              => 'nullable|boolean',
+                'is_current'               => 'nullable|boolean',
             ]);
 
             // Check if the last medical record is not approved
             $lastMedicalRecord = MedicalRecord::where('id_number', Auth::user()->id_number)
                                               ->where('is_current', true)
                                               ->first();
-            if ($lastMedicalRecord && !$lastMedicalRecord->is_approved) {
+              if ($lastMedicalRecord && !$lastMedicalRecord->is_approved) {
                 return response()->json([
                     'success' => false,
                     'message' => 'You cannot create a new medical record until the previous one is approved.'
@@ -129,52 +138,64 @@ class MedicalRecordController extends Controller
                 }
             }
 
+
             // Handle profile picture upload and update in the respective model
             $profilePicture = null;
             if ($request->hasFile('profile_picture')) {
                 $profilePicture = $request->file('profile_picture')->store('profile_pictures', 'public');
-                $information = $this->getUserInformation(Auth::user());
-                if ($information) {
-                    // Delete old profile picture if exists
-                    if ($information->profile_picture && Storage::disk('public')->exists($information->profile_picture)) {
-                        Storage::disk('public')->delete($information->profile_picture);
+                $info = $this->getUserInformation(Auth::user());
+                if ($info && $info->profile_picture) {
+                    if (Storage::disk('public')->exists($info->profile_picture)) {
+                        Storage::disk('public')->delete($info->profile_picture);
                     }
-                    $information->update(['profile_picture' => $profilePicture]);
+                }
+                if ($info) {
+                    $info->update(['profile_picture' => $profilePicture]);
                 }
             }
-
+            
+            
             // Mark the previous medical records as not current
             MedicalRecord::where('id_number', Auth::user()->id_number)
-                ->update(['is_current' => false]);
+                         ->update(['is_current' => false]);
 
             // Create the new medical record
             $medicalRecord = MedicalRecord::create([
-                'id_number' => Auth::user()->id_number,
-                'name' => $validatedData['name'],
-                'birthdate' => $validatedData['birthdate'],
-                'age' => $validatedData['age'],
-                'address' => $validatedData['address'],
-                'personal_contact_number' => $validatedData['personal_contact_number'],
+                'id_number'                => Auth::user()->id_number,
+                'name'                     => $validatedData['name'],
+                'birthdate'                => $validatedData['birthdate'],
+                'age'                      => $validatedData['age'],
+                'address'                  => $validatedData['address'],
+                'personal_contact_number'  => $validatedData['personal_contact_number'],
                 'emergency_contact_number' => $validatedData['emergency_contact_number'],
-                'father_name' => $validatedData['father_name'],
-                'mother_name' => $validatedData['mother_name'],
-                'past_illness' => $validatedData['past_illness'] ?? null,
-                'chronic_conditions' => $validatedData['chronic_conditions'] ?? null,
-                'surgical_history' => $validatedData['surgical_history'] ?? null,
-                'family_medical_history' => $validatedData['family_medical_history'] ?? null,
-                'allergies' => $validatedData['allergies'] ?? null,
-                'medical_condition' => $validatedData['medical_condition'] ?? null,
-                'medicines' => $validatedData['medicines'] ?? [],
-                'health_documents' => $healthDocumentsPaths,
-                'profile_picture' => $profilePicture,
-                'record_date' => $validatedData['record_date'],
-                'is_approved' => $validatedData['is_approved'] ?? false,
-                'is_current' => $validatedData['is_current'] ?? true,
-                'version' => 1, // Initialize version
+                'father_name'              => $validatedData['father_name'],
+                'mother_name'              => $validatedData['mother_name'],
+                'past_illness'             => $validatedData['past_illness'] ?? null,
+                'chronic_conditions'       => $validatedData['chronic_conditions'] ?? null,
+                'surgical_history'         => $validatedData['surgical_history'] ?? null,
+                'family_medical_history'   => $validatedData['family_medical_history'] ?? null,
+                'allergies'                => $validatedData['allergies'] ?? null,
+                'medical_condition'        => $validatedData['medical_condition'] ?? null,
+                'medicines'                => $validatedData['medicines'] ?? [],
+                'health_documents'         => $healthDocumentsPaths,
+                'profile_picture'          => $profilePicture,
+
+                'record_date'              => Carbon::now(),   // **Time + date**
+                'is_approved' => true,
+                'is_current'  => true,
+                'version'                  => 1,
             ]);
 
             // Removed logging for production
-
+            Notification::create([
+                'user_id'        => Auth::user()->id_number,
+                'title'          => 'Medical Record Created',
+                'message'        => 'Your medical record has been created successfully.',
+                'scheduled_time' => now(),
+                'role'           => strtolower(Auth::user()->role),
+            ]);
+    
+    
             return response()->json([
                 'success' => true,
                 'message' => 'Medical record created successfully.',
@@ -196,81 +217,117 @@ class MedicalRecordController extends Controller
      * @return \Illuminate\View\View
      */
     public function index()
-    {
-        $user = Auth::user();
-        $role = strtolower($user->role);
+{
+    $user = Auth::user();
+    $role = strtolower($user->role);
+
+    // Determine detailed information from the related model
+
+    $information = null;
+    $firstName = 'N/A';
+    $lastName  = 'N/A';
+
+    switch ($role) {
+        case 'teacher':
+            $information = $user->teacher; // Using the teacher relationship
+            if ($information) {
+                $firstName = $information->first_name;
+                $lastName  = $information->last_name;
+            }
+            break;
+        case 'staff':
+            $information = $user->staff;
+            if ($information) {
+                $firstName = $information->first_name;
+                $lastName  = $information->last_name;
+            }
+            break;
+        case 'student':
+            $information = $user->student;
+            if ($information) {
+                $firstName = $information->first_name;
+                $lastName  = $information->last_name;
+            }
+            break;
+        default:
+            $information = $user;
+            $firstName = $user->first_name ?? 'N/A';
+            $lastName  = $user->last_name ?? 'N/A';
+            break;
+    }
     
-        // Initialize variables for first and last name
-        $firstName = 'N/A';
-        $lastName = 'N/A';
-    
-        switch ($role) {
-            case 'teacher':
-                $teacher = $user->teacher;
-                if ($teacher) {
-                    $firstName = $teacher->first_name;
-                    $lastName = $teacher->last_name;
-                }
-                break;
-            case 'staff':
-                $staff = $user->staff;
-                if ($staff) {
-                    $firstName = $staff->first_name;
-                    $lastName = $staff->last_name;
-                }
-                break;
-            case 'student':
-                $student = $user->student;
-                if ($student) {
-                    $firstName = $student->first_name;
-                    $lastName = $student->last_name;
-                }
-                break;
-            default:
-                $firstName = $user->first_name ?? 'N/A';
-                $lastName = $user->last_name ?? 'N/A';
-                break;
-        }
-    
-        $name = trim("{$firstName} {$lastName}");
-    
-        $latestMedicalRecord = MedicalRecord::where('id_number', $user->id_number)
-                                            ->where('is_current', true)
-                                            ->first();
-        $medicalRecord = MedicalRecord::with('medicineIntakes')
-                                       ->where('id_number', $user->id_number)
-                                       ->where('is_current', true)
-                                       ->first();
-        $medicalRecords = MedicalRecord::where('id_number', $user->id_number)->get();
-        $physicalExaminations = PhysicalExamination::where('id_number', $user->id_number)->get();
-        $healthExamination = HealthExamination::where('id_number', $user->id_number)->first();
-        $healthExaminationPictures = HealthExamination::where('id_number', $user->id_number)
-                                                ->select('school_year', 'health_examination_picture', 'xray_picture', 'lab_result_picture')
-                                                ->get();
-        $information = $this->getUserInformation($user);
+
+    $name = trim("$firstName $lastName");
+
+    // Retrieve medical record related data
+    $latestMedicalRecord = MedicalRecord::where('id_number', $user->id_number)
+    ->where('is_current', true)
+    ->first();
+
+    $historyRecords = $latestMedicalRecord
+    ? $latestMedicalRecord->histories()->orderBy('created_at', 'desc')->get()
+    : collect();
+    $medicalHistories = $latestMedicalRecord
+    ? collect([$latestMedicalRecord])->merge($historyRecords)
+    : collect();
+    $medicineIntakes = MedicineIntake::where('id_number', $user->id_number)->get();
+
+    $medicalRecord = MedicalRecord::with('medicineIntakes')
+                                  ->where('id_number', $user->id_number)
+                                  ->where('is_current', true)
+                                  ->first();
+
+    $medicalRecords = MedicalRecord::where('id_number', $user->id_number)->get();
+    $physicalExaminations = PhysicalExamination::where('id_number', $user->id_number)->get();
+    $healthExamination = HealthExamination::where('id_number', $user->id_number)->first();
+    $healthExaminationPictures = HealthExamination::where('id_number', $user->id_number)
+                                                   ->select('school_year', 'health_examination_picture', 'xray_picture', 'lab_result_picture')
+                                                   ->get();
+
+                                                   $previousRecords = $latestMedicalRecord 
+                                                   ? $latestMedicalRecord->histories()->orderBy('created_at', 'desc')->get()
+                                                   : collect();
+
+    // Use the detailed information model to get patient’s info
+    $birthdate = !empty($information->birthdate)
+        ? Carbon::parse($information->birthdate)->format('m/d/Y')
+        : 'N/A';
+    $address = $information->address ?? 'N/A';
+    $personal_contact_number = $information->contact_number ?? 'N/A';
+    $emergency_contact_number = $information->emergency_contact ?? 'N/A';
+    $father_name = $information->father_name ?? 'N/A';
+    $mother_name = $information->mother_name ?? 'N/A';
+
+    $age = !empty($information->birthdate)
+        ? Carbon::parse($information->birthdate)->age
+        : 'N/A';
         $record = $medicalRecord ?? new MedicalRecord();
-    
-        // Get historical records from the dedicated history table via the relationship
-        $previousRecords = $latestMedicalRecord 
-        ? $latestMedicalRecord->histories()->orderBy('created_at', 'desc')->get()
-        : collect();
-    
-    
+
+
         return view("$role.medical-record", compact(
             'user',
             'name',
             'healthExamination',
-            'medicalRecord',
+            'medicalRecord', // You may use $medicalRecord or $latestMedicalRecord here
             'medicalRecords',
             'physicalExaminations',
             'healthExaminationPictures',
             'latestMedicalRecord',
+            'previousRecords',  
+            'medicalHistories',    // merged current + history
+            // Pass the historical versions
+            'information',
+            'birthdate',
+            'address',
+            'personal_contact_number',
+            'emergency_contact_number',
+            'father_name',
+            'mother_name',
+            'age',
             'record',
-            'previousRecords',
-            'information'
+            'medicineIntakes'
         ));
-    }
-    
+}
 
     /**
      * Update the specified medical record in storage.
@@ -284,8 +341,11 @@ class MedicalRecordController extends Controller
         try {
             $existingRecord = MedicalRecord::findOrFail($id);
     
-            // Authorization: Ensure only the owner or admin can update
-            if (Auth::user()->id_number !== $existingRecord->id_number && strtolower(Auth::user()->role) !== 'admin') {
+            // Authorization: Ensure only the owner or admin (or nurse/doctor) can update.
+            if (
+                Auth::user()->id_number !== $existingRecord->id_number &&
+                ! in_array(strtolower(Auth::user()->role), ['admin', 'nurse', 'doctor'])
+            ) {
                 return response()->json(['error' => 'Unauthorized action.'], 403);
             }
     
@@ -307,6 +367,7 @@ class MedicalRecordController extends Controller
                 'allergies'                => 'required|string|max:255',
                 'medicines'                => 'required|array',
                 'medicines.*'              => 'string|max:255',
+                // Uploads
                 'health_documents'         => 'nullable|array',
                 'health_documents.*'       => 'file|mimes:jpg,png,jpeg,pdf|max:10008',
                 'profile_picture'          => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
@@ -316,48 +377,29 @@ class MedicalRecordController extends Controller
             $profilePicturePath = $existingRecord->profile_picture;
             if ($request->hasFile('profile_picture')) {
                 $profilePicturePath = $request->file('profile_picture')->store('profile_pictures', 'public');
-                $information = $this->getUserInformation($existingRecord->user);
-                if ($information) {
-                    if ($information->profile_picture && Storage::disk('public')->exists($information->profile_picture)) {
-                        Storage::disk('public')->delete($information->profile_picture);
+                $info = $this->getUserInformation($existingRecord->user);
+                if ($info) {
+                    if ($info->profile_picture && Storage::disk('public')->exists($info->profile_picture)) {
+                        Storage::disk('public')->delete($info->profile_picture);
                     }
-                    $information->update(['profile_picture' => $profilePicturePath]);
+                    $info->update(['profile_picture' => $profilePicturePath]);
                 }
             }
     
-            // Handle health documents upload
-            $healthDocumentsPaths = $existingRecord->health_documents ?? [];
+            // Process health documents
+            // The hidden input "existing_health_documents" holds any server–side paths.
+            $submittedDocs = json_decode($request->input('existing_health_documents'), true);
+            if (!is_array($submittedDocs)) {
+                $submittedDocs = [];
+            }
+            $newDocs = [];
             if ($request->hasFile('health_documents')) {
                 foreach ($request->file('health_documents') as $file) {
-                    $path = $file->store('health_documents', 'public');
-                    $healthDocumentsPaths[] = $path;
+                    $newDocs[] = $file->store('health_documents', 'public');
                 }
             }
-    
-            // Archive the existing record into the history table.
-            // This assumes you have set up a MedicalHistory model and the histories() relationship.
-            $existingRecord->histories()->create([
-                'medical_record_id'        => $existingRecord->id_number,
-                'name'                     => $existingRecord->name,
-                'birthdate'                => $existingRecord->birthdate,
-                'age'                      => $existingRecord->age,
-                'address'                  => $existingRecord->address,
-                'personal_contact_number'  => $existingRecord->personal_contact_number,
-                'emergency_contact_number' => $existingRecord->emergency_contact_number,
-                'father_name'              => $existingRecord->father_name,
-                'mother_name'              => $existingRecord->mother_name,
-                'past_illness'             => $existingRecord->past_illness,
-                'chronic_conditions'       => $existingRecord->chronic_conditions,
-                'surgical_history'         => $existingRecord->surgical_history,
-                'family_medical_history'   => $existingRecord->family_medical_history,
-                'allergies'                => $existingRecord->allergies,
-                'medical_condition'        => $existingRecord->medical_condition,
-                'medicines'                => $existingRecord->medicines,
-                'health_documents'         => $existingRecord->health_documents,
-                'profile_picture'          => $existingRecord->profile_picture,
-                'is_approved'              => $existingRecord->is_approved,
-                'record_date'              => $existingRecord->record_date,
-            ]);
+            // Merge the old (submitted via hidden input) with the new ones.
+            $healthDocumentsPaths = array_merge($submittedDocs, $newDocs);
     
             // Now update the current record with the new validated data.
             $existingRecord->update([
@@ -378,21 +420,60 @@ class MedicalRecordController extends Controller
                 'medicines'                => $validatedData['medicines'],
                 'health_documents'         => $healthDocumentsPaths,
                 'profile_picture'          => $profilePicturePath,
+                'record_date'              => Carbon::now(),
             ]);
-            $existingRecord->refresh(); // Refresh to get the latest data from DB if needed
-
     
+            // Refresh the model to get the latest values (including new health_documents)
+            $existingRecord->refresh();
+    
+            // Archive the updated record in the MedicalHistory table.
+            // (Now that the update is complete, we create a history record with the new health_documents.)
+            $existingRecord->histories()->create([
+                'medical_record_id'        => $existingRecord->id_number,
+                'name'                     => $existingRecord->name,
+                'birthdate'                => $existingRecord->birthdate,
+                'age'                      => $existingRecord->age,
+                'address'                  => $existingRecord->address,
+                'personal_contact_number'  => $existingRecord->personal_contact_number,
+                'emergency_contact_number' => $existingRecord->emergency_contact_number,
+                'father_name'              => $existingRecord->father_name,
+                'mother_name'              => $existingRecord->mother_name,
+                'past_illness'             => $existingRecord->past_illness,
+                'chronic_conditions'       => $existingRecord->chronic_conditions,
+                'surgical_history'         => $existingRecord->surgical_history,
+                'family_medical_history'   => $existingRecord->family_medical_history,
+                'allergies'                => $existingRecord->allergies,
+                'medical_condition'        => $existingRecord->medical_condition,
+                'medicines'                => $existingRecord->medicines,
+                'health_documents'         => $existingRecord->health_documents,
+                'profile_picture'          => $existingRecord->profile_picture,
+                'is_approved'              => $existingRecord->is_approved,
+                'record_date'              => Carbon::now(),
+            ]);
+            $user = \App\Models\User::where('id_number', $existingRecord->id_number)->first();
+        $userRole = $user ? strtolower($user->role) : 'unknown';
+
+        // Create a notification indicating the record has been updated.
+        Notification::create([
+            'user_id'        => $existingRecord->id_number,
+            'title'          => 'Medical Record Updated',
+            'message'        => 'Your medical record has been updated successfully.',
+            'scheduled_time' => now(),
+            'role'           => $userRole,
+        ]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Medical record updated successfully.',
                 'medical_record' => $existingRecord,
             ]);
-                } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
         } catch (\Exception $e) {
             return response()->json(['error' => 'An error occurred while updating the medical record.'], 500);
         }
     }
+    
     
 
     /**
@@ -552,7 +633,7 @@ class MedicalRecordController extends Controller
      */
     public function viewMedicalRecord($id)
     {
-        if (!in_array(strtolower(Auth::user()->role), ['admin', 'nurse', 'doctor', 'parent'])) {
+        if (!in_array(strtolower(Auth::user()->role), ['admin', 'nurse', 'doctor'])) {
             return response()->json(['error' => 'Unauthorized access.'], 403);
         }
 
@@ -618,16 +699,12 @@ class MedicalRecordController extends Controller
             'medicalHistories' => $previousRecords,
             'information' => $information,
         ];
-        Log::debug('viewMedicalRecord data', [
-            'record' => $record->toArray(),
-            'user' => $user->toArray(),
-            'information' => $information ? $information->toArray() : null,
-            'medicalRecords' => $medicalRecords->toArray(),
-            'physicalExaminations' => $physicalExaminations->toArray(),
-            'healthExaminations' => $healthExaminations->toArray(),
-            'medicineIntakes' => $medicineIntakes->toArray(),
-            'bmiData' => $bmiData,
-            'previousRecords' => $previousRecords->toArray(),
+        Notification::create([
+            'user_id'        => $record->id_number,
+            'title'          => 'Medical Record Viewed',
+            'message'        => 'Your medical record is  now being viewed.',
+            'scheduled_time' => now(),
+            'role'           => strtolower($user->role),
         ]);
         
         return response()->json($data);
@@ -669,7 +746,7 @@ class MedicalRecordController extends Controller
     
         $query = MedicalRecord::query();
     
-        if ($role !== 'admin') {
+        if (!in_array($role, ['admin', 'doctor', 'nurse'])) {
             $query->where('is_current', 1);
         }
     
@@ -997,20 +1074,5 @@ class MedicalRecordController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function checkApprovalStatus(Request $request)
-    {
-        $validated = $request->validate([
-            'id_number' => 'required|string|max:255',
-        ]);
-    
-        $record = MedicalRecord::where('id_number', $validated['id_number'])->first();
-        if (!$record) {
-            return response()->json(['success' => false, 'message' => 'Record not found.'], 404);
-        }
-    
-        return response()->json([
-            'success' => true,
-            'is_approved' => $record->is_approved
-        ]);
-    }
+  
 }

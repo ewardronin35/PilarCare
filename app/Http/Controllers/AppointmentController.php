@@ -268,81 +268,94 @@ $predictedAppointmentRecipients = $sectionAppointmentCounts->take(3)->map(functi
             ));
         }
     }
-    
     public function indexs(Request $request)
-{
-    $user = Auth::user();
-    $role = strtolower($user->role);
-
-    $date = $request->input('date');
-
-    if ($role === 'parent') {
-        // Fetch the parent's children by querying the students table where parent_id matches the parent's id_number
-        $childrenIds = Student::where('parent_id', $user->id_number)->pluck('id_number');
-
-        if ($childrenIds->isEmpty()) {
+    {
+        $user = Auth::user();
+        $role = strtolower($user->role);
+        $date = $request->input('date');
+    
+        if ($role === 'parent') {
+            // For a parent, fetch all appointments for each child using their grade and section.
             $appointments = collect();
             $upcomingAppointments = collect();
             $completedAppointments = collect();
-            Log::info("Parent {$user->id_number} has no associated children.");
+    
+            $children = $user->students;
+            if ($children->isEmpty()) {
+                Log::info("Parent {$user->id_number} has no associated children.");
+            } else {
+                foreach ($children as $child) {
+                    $childAppointments = Appointment::with('doctor')
+                        ->where('grade_or_course', $child->grade_or_course)
+                        ->where('section', $child->section)
+                        ->when($date, function ($query) use ($date) {
+                            return $query->whereDate('appointment_date', $date);
+                        })
+                        ->get();
+                    $appointments = $appointments->merge($childAppointments);
+    
+                    // Upcoming appointments for this child
+                    $childUpcoming = Appointment::with('doctor')
+                        ->where('grade_or_course', $child->grade_or_course)
+                        ->where('section', $child->section)
+                        ->where('appointment_date', '>=', now())
+                        ->get();
+                    $upcomingAppointments = $upcomingAppointments->merge($childUpcoming);
+    
+                    // Completed appointments for this child
+                    $childCompleted = Appointment::with('doctor')
+                        ->where('grade_or_course', $child->grade_or_course)
+                        ->where('section', $child->section)
+                        ->where('appointment_date', '<', now())
+                        ->get();
+                    $completedAppointments = $completedAppointments->merge($childCompleted);
+                }
+            }
         } else {
-            // Fetch all appointments for the parent's children
-            $appointments = Appointment::with('doctor')
-                ->whereIn('id_number', $childrenIds)
-                ->when($date, function ($query) use ($date) {
-                    return $query->whereDate('appointment_date', $date);
-                })
-                ->get();
-
-            // Filter upcoming appointments (appointments in the future)
-            $upcomingAppointments = Appointment::with('doctor')
-                ->whereIn('id_number', $childrenIds)
-                ->where('appointment_date', '>=', now())
-                ->get();
-
-            // Filter completed appointments (appointments in the past)
-            $completedAppointments = Appointment::with('doctor')
-                ->whereIn('id_number', $childrenIds)
-                ->where('appointment_date', '<', now())
-                ->get();
+            // For users such as students: use the student’s grade and section.
+            if (isset($user->student)) {
+                $appointments = Appointment::with('doctor')
+                    ->where('grade_or_course', $user->student->grade_or_course)
+                    ->where('section', $user->student->section)
+                    ->when($date, function ($query) use ($date) {
+                        return $query->whereDate('appointment_date', $date);
+                    })
+                    ->get();
+    
+                $upcomingAppointments = Appointment::with('doctor')
+                    ->where('grade_or_course', $user->student->grade_or_course)
+                    ->where('section', $user->student->section)
+                    ->where('appointment_date', '>=', now())
+                    ->get();
+    
+                $completedAppointments = Appointment::with('doctor')
+                    ->where('grade_or_course', $user->student->grade_or_course)
+                    ->where('section', $user->student->section)
+                    ->where('appointment_date', '<', now())
+                    ->get();
+            } else {
+                // For other roles, fallback to an empty collection.
+                $appointments = collect();
+                $upcomingAppointments = collect();
+                $completedAppointments = collect();
+                Log::warning("No student record found for user ID Number: {$user->id_number}");
+            }
         }
-    } else {
-        // Fetch all appointments for the logged-in user based on their id_number
-        $appointments = Appointment::with('doctor')
-            ->where('id_number', $user->id_number)
-            ->when($date, function ($query) use ($date) {
-                return $query->whereDate('appointment_date', $date);
-            })
-            ->get();
-
-        // Filter upcoming appointments (appointments in the future)
-        $upcomingAppointments = Appointment::with('doctor')
-            ->where('id_number', $user->id_number)
-            ->where('appointment_date', '>=', now())
-            ->get();
-
-        // Filter completed appointments (appointments in the past)
-        $completedAppointments = Appointment::with('doctor')
-            ->where('id_number', $user->id_number)
-            ->where('appointment_date', '<', now())
-            ->get();
+    
+        // Define the view path based on the role.
+        $viewPath = "{$role}.appointment";
+        if (!view()->exists($viewPath)) {
+            abort(404, "View for role '{$role}' not found");
+        }
+    
+        // Pass the calculated values to the view.
+        return view($viewPath, compact(
+            'appointments',
+            'upcomingAppointments',
+            'completedAppointments'
+        ));
     }
-
-    // Define the view path based on the role
-    $viewPath = "{$role}.appointment";
-
-    // Check if the view exists for the given role, otherwise return 404
-    if (!view()->exists($viewPath)) {
-        abort(404, "View for role '{$role}' not found");
-    }
-
-    // Pass the calculated values to the view
-    return view($viewPath, compact(
-        'appointments',
-        'upcomingAppointments',
-        'completedAppointments'
-    ));
-}
+    
 
 
 
@@ -501,260 +514,250 @@ public function add(Request $request)
     }
     
  // app/Http/Controllers/AppointmentController.php
-
-public function getAppointmentsByMonth(Request $request)
-{
-    $user = Auth::user();
-    $role = strtolower($user->role);
-    $monthParam = $request->input('month'); // Expected format: YYYY-MM
-
-    // Validate and extract year and month
-    if (!$monthParam || !preg_match('/^\d{4}-\d{2}$/', $monthParam)) {
-        return response()->json(['error' => 'Invalid month format. Expected YYYY-MM'], 400);
-    }
-
-    list($year, $month) = explode('-', $monthParam);
-
-    // Fetch appointments based on role
-    if (in_array($role, ['admin', 'nurse'])) {
-        // Admin and Nurse: Fetch all appointments for the specified month
-        $appointments = Appointment::with('doctor.user')
-            ->whereYear('appointment_date', $year)
-            ->whereMonth('appointment_date', $month)
-            ->get();
-    } elseif ($role === 'doctor') {
-        // Doctor: Fetch appointments assigned to this doctor for the specified month
-        $doctor = Doctor::where('id_number', $user->id_number)->first();
-        if ($doctor) {
-            $appointments = Appointment::with('doctor.user')
-                ->where('doctor_id', $doctor->id)
-                ->whereYear('appointment_date', $year)
-                ->whereMonth('appointment_date', $month)
-                ->get();
-        } else {
-            $appointments = collect();
-            Log::warning("Doctor profile not found for user ID Number: {$user->id_number}");
-        }
-    } elseif (in_array($role, ['parent', 'student'])) {
-        // Parent and Student: Fetch appointments based on id_number
-        if ($role === 'parent') {
-            $childrenIds = Parents::where('id_number', $user->id_number)->pluck('student_id');
-            $idNumbers = User::whereIn('id_number', $childrenIds)->pluck('id_number');
-        } else {
-            $idNumbers = collect([$user->id_number]);
-        }
-
-        $appointments = Appointment::with('doctor.user')
-            ->whereIn('id_number', $idNumbers)
-            ->whereYear('appointment_date', $year)
-            ->whereMonth('appointment_date', $month)
-            ->get();
-    } else {
-        // Other Roles (e.g., Student/Past User): Fetch appointments specific to their id_number
-        $appointments = Appointment::with('doctor.user')
-            ->where('id_number', $user->id_number)
-            ->whereYear('appointment_date', $year)
-            ->whereMonth('appointment_date', $month)
-            ->get();
-    }
-
-    return response()->json(['appointments' => $appointments]);
-}
-
-public function getAppointmentsByDate(Request $request)
-{
-    $user = Auth::user();
-
-    // Validate date format to ensure it is YYYY-MM-DD
-    $validated = $request->validate([
-        'date' => 'required|date_format:Y-m-d'
-    ]);
-
-    $date = $validated['date'];
-
-    Log::info('Fetching appointments for date: ' . $date . ' and user: ' . $user->id_number);
-
-    $role = strtolower($user->role);
-
-    if (in_array($role, ['admin', 'nurse'])) {
-        // Admin & Nurse: Fetch all appointments on that date
-        $appointments = Appointment::with('doctor') // Removed 'doctor.user'
-            ->whereDate('appointment_date', $date)
-            ->get();
-        Log::info("{$role} fetched {$appointments->count()} appointments on {$date}.");
-    } elseif ($role == 'doctor') {
-        // Doctor: Fetch appointments assigned to this doctor on the date
-        $doctor = Doctor::where('id_number', $user->id_number)->first();
-
-        if ($doctor) {
-            $appointments = Appointment::with('doctor') // Removed 'doctor.user'
-                ->where('doctor_id', $doctor->id)
-                ->whereDate('appointment_date', $date)
-                ->get();
-            Log::info("Doctor {$doctor->id_number} fetched {$appointments->count()} appointments on {$date}.");
-        } else {
-            $appointments = collect();
-            Log::warning("Doctor profile not found for user ID Number: {$user->id_number}");
-        }
-    } elseif ($role === 'parent') {
-        // Parent: Fetch appointments for all their children on the specified date
-        $parent = Parents::where('id_number', $user->id_number)->first();
-
-        if ($parent) {
-            // Fetch all children associated with this parent
-            $childrenIds = $parent->students()->pluck('id_number');
-
-            if ($childrenIds->isEmpty()) {
-                $appointments = collect();
-                Log::info("Parent {$user->id_number} has no associated children.");
-            } else {
-                $appointments = Appointment::with('doctor') // Removed 'doctor.user'
-                    ->whereIn('id_number', $childrenIds)
-                    ->whereDate('appointment_date', $date)
-                    ->get();
-                Log::info("Parent {$user->id_number} fetched {$appointments->count()} appointments on {$date}.");
-            }
-        } else {
-            $appointments = collect();
-            Log::warning("Parent profile not found for user ID Number: {$user->id_number}");
-        }
-    } else {
-        // For other users (e.g., student), fetch their own appointments
-        $appointments = Appointment::with('doctor') // Removed 'doctor.user'
-            ->where('id_number', $user->id_number)
-            ->whereDate('appointment_date', $date)
-            ->get();
-        Log::info("Patient {$user->id_number} fetched {$appointments->count()} appointments on {$date}.");
-    }
-
-    if ($appointments->isEmpty()) {
-        Log::info('No appointments found for this user on this date.');
-    } else {
-        Log::info('Appointments Fetched:', $appointments->toArray());
-    }
-
-    // Map appointments to include necessary fields
-    $appointments = $appointments->map(function($appointment) {
+ public function getAppointmentsByMonth(Request $request)
+ {
+     $user = Auth::user();
+     $role = strtolower($user->role);
+     $monthParam = $request->input('month'); // Expected format: YYYY-MM
+ 
+     // Validate and extract year and month
+     if (!$monthParam || !preg_match('/^\d{4}-\d{2}$/', $monthParam)) {
+         return response()->json(['error' => 'Invalid month format. Expected YYYY-MM'], 400);
+     }
+     list($year, $month) = explode('-', $monthParam);
+ 
+     if (in_array($role, ['admin', 'nurse'])) {
+         // Admin and Nurse: fetch all appointments for the specified month
+         $appointments = Appointment::with('doctor.user')
+             ->whereYear('appointment_date', $year)
+             ->whereMonth('appointment_date', $month)
+             ->get();
+     } elseif ($role === 'doctor') {
+         // Doctor: fetch appointments assigned to this doctor
+         $doctor = Doctor::where('id_number', $user->id_number)->first();
+         if ($doctor) {
+             $appointments = Appointment::with('doctor.user')
+                 ->where('doctor_id', $doctor->id)
+                 ->whereYear('appointment_date', $year)
+                 ->whereMonth('appointment_date', $month)
+                 ->get();
+         } else {
+             $appointments = collect();
+             Log::warning("Doctor profile not found for user ID Number: {$user->id_number}");
+         }
+     } elseif ($role === 'parent') {
+         // Parent: fetch appointments for each child using their grade and section
+         $appointments = collect();
+         // Assuming $user->students returns a collection of Student models
+         $children = $user->students;
+         if ($children->isEmpty()) {
+             Log::info("Parent {$user->id_number} has no associated children.");
+         } else {
+             foreach ($children as $child) {
+                 $childAppointments = Appointment::with('doctor.user')
+                     ->where('grade_or_course', $child->grade_or_course)
+                     ->where('section', $child->section)
+                     ->whereYear('appointment_date', $year)
+                     ->whereMonth('appointment_date', $month)
+                     ->get();
+                 $appointments = $appointments->merge($childAppointments);
+             }
+         }
+     } elseif ($role === 'student') {
+         // Student: fetch appointments by the student’s grade/course and section
+         if (isset($user->student)) {
+             $appointments = Appointment::with('doctor.user')
+                 ->where('grade_or_course', $user->student->grade_or_course)
+                 ->where('section', $user->student->section)
+                 ->whereYear('appointment_date', $year)
+                 ->whereMonth('appointment_date', $month)
+                 ->get();
+         } else {
+             $appointments = collect();
+             Log::warning("No student record found for user ID Number: {$user->id_number}");
+         }
+     } else {
+         // Fallback (if any other role) – you may adjust this as needed.
+         $appointments = collect();
+     }
+ 
+     return response()->json(['appointments' => $appointments]);
+ }
+ 
+ public function getAppointmentsByDate(Request $request)
+ {
+     $user = Auth::user();
+     // Validate that the date is in YYYY-MM-DD format.
+     $validated = $request->validate([
+         'date' => 'required|date_format:Y-m-d'
+     ]);
+     $date = $validated['date'];
+     Log::info("Fetching appointments for date: {$date} and user: {$user->id_number}");
+     $role = strtolower($user->role);
+ 
+     if (in_array($role, ['admin', 'nurse'])) {
+         // Admin & Nurse: fetch all appointments on that date
+         $appointments = Appointment::with('doctor')
+             ->whereDate('appointment_date', $date)
+             ->get();
+         Log::info("{$role} fetched {$appointments->count()} appointments on {$date}.");
+     } elseif ($role === 'doctor') {
+         $doctor = Doctor::where('id_number', $user->id_number)->first();
+         if ($doctor) {
+             $appointments = Appointment::with('doctor')
+                 ->where('doctor_id', $doctor->id)
+                 ->whereDate('appointment_date', $date)
+                 ->get();
+             Log::info("Doctor {$doctor->id_number} fetched {$appointments->count()} appointments on {$date}.");
+         } else {
+             $appointments = collect();
+             Log::warning("Doctor profile not found for user ID Number: {$user->id_number}");
+         }
+     } elseif ($role === 'parent') {
+         // Parent: fetch appointments for all children by iterating over each child
+         $appointments = collect();
+         $children = $user->students;
+         if ($children->isEmpty()) {
+             Log::info("Parent {$user->id_number} has no associated children.");
+         } else {
+             foreach ($children as $child) {
+                 $childAppointments = Appointment::with('doctor.user')
+                     ->where('grade_or_course', $child->grade_or_course)
+                     ->where('section', $child->section)
+                     ->whereDate('appointment_date', $date)
+                     ->get();
+                 $appointments = $appointments->merge($childAppointments);
+             }
+         }
+     } elseif ($role === 'student') {
+         // Student: fetch appointments using the student’s grade and section
+         if (isset($user->student)) {
+             $appointments = Appointment::with('doctor.user')
+                 ->where('grade_or_course', $user->student->grade_or_course)
+                 ->where('section', $user->student->section)
+                 ->whereDate('appointment_date', $date)
+                 ->get();
+         } else {
+             $appointments = collect();
+             Log::warning("No student record found for user ID Number: {$user->id_number}");
+         }
+     } else {
+         $appointments = collect();
+     }
+ 
+     // Map the appointments to include only the fields you need.
+     $appointments = $appointments->map(function ($appointment) {
         $doctorName = 'N/A';
-        if ($appointment->doctor) { // Accessing doctor directly
-            $doctorFirstName = $appointment->doctor->first_name ?? '';
-            $doctorLastName = $appointment->doctor->last_name ?? '';
-            $doctorName = $appointment->doctor ? $appointment->doctor->full_name : 'N/A';
+        if ($appointment->doctor && isset($appointment->doctor->user)) {
+            $doctorName = $appointment->doctor->full_name;
         }
-
         return [
-            'patient_name' => $appointment->patient_name,
-            'appointment_time' => $appointment->appointment_time,
-            'appointment_type' => $appointment->appointment_type,
-            'status' => $appointment->status,
-            'doctor_name' => $doctorName,
-            'appointment_date' => $appointment->appointment_date,
-            // Include other fields as needed
+            'patient_name'      => $appointment->patient_name,
+            'appointment_time'  => $appointment->appointment_time,
+            'appointment_type'  => $appointment->appointment_type,
+            'status'            => $appointment->status,
+            'doctor_name'       => $doctorName,
+            'appointment_date'  => $appointment->appointment_date,
+            'grade_or_course'   => $appointment->grade_or_course,
+            'section'           => $appointment->section,
         ];
     });
-
-    return response()->json([
-        'appointments' => $appointments
-    ]);
-}
-
-
-
-    
-    public function confirm($id)
-    {
-        $user = Auth::user(); // Define $user
-        
-        $appointment = Appointment::find($id);
-    
-        if ($appointment) {
-            // Check if already confirmed
-            if ($appointment->status === 'confirmed') {
-                Log::info("Appointment ID {$id} is already confirmed.");
-                return response()->json(['success' => false, 'message' => 'Appointment is already confirmed.'], 400);
-            }
-    
-            $appointment->status = 'confirmed';
-            $appointment->save();
-    
-            // Fetch the doctor and patient
-            $doctor = $appointment->doctor()->with('user')->first();
-            $patient = User::where('id_number', $appointment->id_number)->first();
-    
-            if ($doctor && $doctor->user && $patient) {
-                // Fetch the patient's parents
-                $parents = $patient->parents()->with('user')->get();
-    
-                // 1. Create and store database notifications
-    
-                // Notify the patient
-                Notification::create([
-                    'user_id' => $patient->id_number, // Correct reference
-                    'title' => 'Appointment Confirmed',
-                    'message' => "Your appointment on {$appointment->appointment_date} at {$appointment->appointment_time} has been confirmed by Dr. {$doctor->user->first_name} {$doctor->user->last_name}.",
-                    'scheduled_time' => now(),
-                    'role' => $patient->role,
-                ]);
-                Log::info("Notification created for patient ID Number {$patient->id_number}");
-    
-                // Notify the parents
-                foreach ($parents as $parent) {
-                    Notification::create([
-                        'user_id' => $parent->user->id_number, // Correct reference
-                        'title' => 'Child\'s Appointment Confirmed',
-                        'message' => "{$patient->first_name} {$patient->last_name}'s appointment on {$appointment->appointment_date} at {$appointment->appointment_time} with Dr. {$doctor->user->first_name} {$doctor->user->last_name} has been confirmed.",
-                        'scheduled_time' => now(),
-                        'role' => $parent->user->role, // Correct role reference
-                    ]);
-                    Log::info("Notification created for parent ID Number {$parent->user->id_number}");
-    
-                    // 2. Send confirmation email to parents
-                    if ($parent->user->email) { // Ensure parent has an email
-                        Mail::to($parent->user->email)->send(new AppointmentConfirmed($appointment, $doctor, $user));
-                        Log::info("Sent AppointmentConfirmed email to parent: {$parent->user->email}");
-                    } else {
-                        Log::warning("Parent ID Number {$parent->user->id_number} does not have an email address.");
-                    }
-                }
-    
-                // Notify admins and nurses
-                $admins = User::whereIn('role', ['admin', 'nurse'])->get();
-                foreach ($admins as $admin) {
-                    Notification::create([
-                        'user_id' => $admin->id_number, // Correct reference
-                        'title' => 'Appointment Confirmed',
-                        'message' => "Appointment ID {$appointment->id} has been confirmed by Dr. {$doctor->user->first_name} {$doctor->user->last_name}.",
-                        'scheduled_time' => now(),
-                        'role' => $admin->role,
-                    ]);
-                    Log::info("Notification created for admin/nurse ID Number {$admin->id_number}");
-    
-                    // Send confirmation email to admins/nurses
-                    if ($admin->email) {
-                        Mail::to($admin->email)->send(new AppointmentConfirmed($appointment, $doctor, $user));
-                        Log::info("Sent AppointmentConfirmed email to admin/nurse: {$admin->email}");
-                    } else {
-                        Log::warning("Admin/Nurse ID Number {$admin->id_number} does not have an email address.");
-                    }
-                }
-    
-                // 3. Send confirmation email to patient
-                if ($patient->email) {
-                    Mail::to($patient->email)->send(new AppointmentConfirmed($appointment, $doctor, $user));
-                    Log::info("Sent AppointmentConfirmed email to patient: {$patient->email}");
-                } else {
-                    Log::warning("Patient ID Number {$patient->id_number} does not have an email address.");
-                }
-    
-                return response()->json(['success' => true, 'message' => 'Appointment confirmed successfully']);
-            }
-    
-            return response()->json(['success' => false, 'message' => 'Doctor or patient information is incomplete.'], 500);
-        } else {
-            return response()->json(['success' => false, 'message' => 'Appointment not found'], 404);
-        }
-    }
-    
+ 
+     return response()->json(['appointments' => $appointments]);
+ }
+ public function confirm($id)
+ {
+     $user = Auth::user();
+     $appointment = Appointment::find($id);
+ 
+     if (!$appointment) {
+         return response()->json([
+             'success' => false,
+             'message' => 'Appointment not found'
+         ], 404);
+     }
+ 
+     // If already confirmed, return early.
+     if ($appointment->status === 'confirmed') {
+         Log::info("Appointment ID {$id} is already confirmed.");
+         return response()->json([
+             'success' => false,
+             'message' => 'Appointment is already confirmed.'
+         ], 400);
+     }
+ 
+     // Update the appointment status.
+     $appointment->status = 'confirmed';
+     $appointment->save();
+ 
+     // Fetch the related doctor (with its associated user record).
+     $doctor = $appointment->doctor()->with('user')->first();
+     if (!$doctor || !$doctor->user) {
+         return response()->json([
+             'success' => false,
+             'message' => 'Doctor information is incomplete.'
+         ], 500);
+     }
+ 
+     // Since this appointment is for a group (by grade/section) rather than an individual student,
+     // we do not fetch a single "patient" by id_number.
+     // Instead, we notify all students in the specified grade/course and section.
+ 
+     // 1. Create a batch notification for all students in the given grade/course and section.
+     $studentsInSection = \App\Models\Student::where('grade_or_course', $appointment->grade_or_course)
+         ->where('section', $appointment->section)
+         ->get();
+ 
+     foreach ($studentsInSection as $student) {
+         Notification::create([
+             // By setting 'user_id' to null, you indicate that this notification is meant for the whole section.
+             'user_id'         => null,
+             'grade_or_course' => $appointment->grade_or_course,
+             'section'         => $appointment->section,
+             'title'           => 'Section Appointment Confirmed',
+             'message'         => "An appointment for your section ({$appointment->grade_or_course} {$appointment->section}) has been confirmed by Dr. "
+                                  . "{$doctor->user->first_name} {$doctor->user->last_name} on " 
+                                  . Carbon::parse($appointment->appointment_date)->format('M d, Y')
+                                  . " at {$appointment->appointment_time}.",
+             'scheduled_time'  => now(),
+             'role'            => 'student' // or you may set it based on your logic
+         ]);
+         Log::info("Batch notification created for students in {$appointment->grade_or_course} {$appointment->section}");
+     }
+ 
+     // 2. Notify admins and nurses.
+     $admins = User::whereIn('role', ['admin', 'nurse'])->get();
+     foreach ($admins as $admin) {
+         Notification::create([
+             'user_id'         => $admin->id_number,
+             'title'           => 'Appointment Confirmed',
+             'message'         => "Appointment ID {$appointment->id} has been confirmed by Dr. "
+                                  . "{$doctor->user->first_name} {$doctor->user->last_name}.",
+             'scheduled_time'  => now(),
+             'role'            => $admin->role,
+         ]);
+         Log::info("Notification created for admin/nurse ID Number {$admin->id_number}");
+ 
+         if ($admin->email) {
+             try {
+                 Mail::to($admin->email)->send(new AppointmentConfirmed($appointment, $doctor, $user));
+                 Log::info("Sent AppointmentConfirmed email to admin/nurse: {$admin->email}");
+             } catch (\Exception $e) {
+                 Log::error("Failed to send email to admin/nurse {$admin->email}: " . $e->getMessage());
+             }
+         } else {
+             Log::warning("Admin/Nurse ID Number {$admin->id_number} does not have an email address.");
+         }
+     }
+ 
+     // 3. (Optional) Do not send an email to the patient since this is a section-wide appointment.
+ 
+     return response()->json([
+         'success' => true,
+         'message' => 'Appointment confirmed successfully'
+     ]);
+ }
+ 
     
     
     public function getApprovedDoctors()
@@ -846,7 +849,10 @@ public function getAppointmentsByDate(Request $request)
 
     public function update(Request $request, $id)
     {
-        // Define custom validation messages
+        $user = Auth::user();
+        $role = strtolower($user->role);
+    
+        // Define custom validation messages.
         $messages = [
             'appointment_date.required'       => 'The appointment date is required.',
             'appointment_date.date_format'      => 'The appointment date must be in the format YYYY-MM-DD.',
@@ -856,26 +862,28 @@ public function getAppointmentsByDate(Request $request)
             'appointment_type.required'         => 'The appointment type is required.',
             'doctor_id.required'                => 'Please select a doctor.',
             'doctor_id.exists'                  => 'The selected doctor does not exist.',
+            // The following messages are only for non-admin users.
+            'id_number.required'                => 'The student id number is required.',
             'patient_name.required'             => 'The patient name is required.',
         ];
     
-        // Define validation rules
-        $validator = Validator::make($request->all(), [
-            'id_number'         => 'required|string|max:7',
-            'appointment_date'  => 'required|date_format:Y-m-d|after_or_equal:today',
-            'appointment_time'  => 'required|date_format:H:i|after_or_equal:08:00|before_or_equal:16:00',
-            'appointment_type'  => 'required|string|max:255',
-            'doctor_id'         => 'required|exists:doctors,id',
-            'patient_name'      => 'required|string|max:255',
-        ], $messages);
+        // Build validation rules. For non-admin roles, require id_number and patient_name.
+        $rules = [
+            'appointment_date' => 'required|date_format:Y-m-d|after_or_equal:today',
+            'appointment_time' => 'required|date_format:H:i|after_or_equal:08:00|before_or_equal:16:00',
+            'appointment_type' => 'required|string|max:255',
+            'doctor_id'        => 'required|exists:doctors,id',
+        ];
+        if ($role !== 'admin') {
+            $rules['id_number'] = 'required|string|max:7';
+            $rules['patient_name'] = 'required|string|max:255';
+        }
     
+        $validator = Validator::make($request->all(), $rules, $messages);
         if ($validator->fails()) {
             Log::warning('Appointment update failed due to validation errors.', $validator->errors()->toArray());
             return response()->json(['error' => $validator->errors()->first()], 422);
         }
-    
-        $user = Auth::user();
-        $role = strtolower($user->role);
     
         // If the user is a doctor, ensure they can only assign themselves.
         if ($role === 'doctor') {
@@ -903,12 +911,11 @@ public function getAppointmentsByDate(Request $request)
                 $isRescheduled = true;
             }
     
-            // Check if the doctor already has an appointment on the selected date (excluding current appointment)
+            // Check if the selected doctor already has an appointment on the chosen date (excluding current appointment)
             $existingAppointment = Appointment::where('doctor_id', $request->doctor_id)
                 ->where('appointment_date', $request->appointment_date)
                 ->where('id', '!=', $id)
                 ->first();
-    
             if ($existingAppointment) {
                 Log::warning("Doctor ID {$request->doctor_id} already has an appointment on {$request->appointment_date}.");
                 return response()->json([
@@ -917,18 +924,29 @@ public function getAppointmentsByDate(Request $request)
                 ], 409);
             }
     
-            // Update appointment details.
-            $appointment->update([
-                'id_number'         => $request->id_number,
-                'patient_name'      => $request->patient_name,
-                'appointment_date'  => $request->appointment_date,
-                'appointment_time'  => $request->appointment_time,
-                'appointment_type'  => $request->appointment_type,
-                'doctor_id'         => $request->doctor_id,
-            ]);
+            // Prepare the data for update.
+            $dataToUpdate = [
+                'appointment_date' => $request->appointment_date,
+                'appointment_time' => $request->appointment_time,
+                'appointment_type' => $request->appointment_type,
+                'doctor_id'        => $request->doctor_id,
+            ];
+    
+            if ($role !== 'admin') {
+                // For non-admin users, update patient-related fields.
+                $dataToUpdate['id_number'] = $request->id_number;
+                $dataToUpdate['patient_name'] = $request->patient_name;
+            } else {
+                // Admins may optionally update the appointment status.
+                if ($request->has('status')) {
+                    $dataToUpdate['status'] = $request->status;
+                }
+            }
+    
+            $appointment->update($dataToUpdate);
             Log::info("Updated appointment details for appointment ID: {$id}");
     
-            // Fetch the updated doctor with the associated user.
+            // Fetch the updated doctor (with its associated user data).
             $doctor = Doctor::with('user')->find($request->doctor_id);
             if (!$doctor || !$doctor->user) {
                 Log::error("Doctor or associated user not found for doctor ID: {$request->doctor_id}");
@@ -936,15 +954,17 @@ public function getAppointmentsByDate(Request $request)
             }
             Log::info("Fetched doctor: ", $doctor->toArray());
     
-            // Fetch the patient user.
-            $patient = User::where('id_number', $request->id_number)->first();
-            if (!$patient) {
-                Log::error("Patient not found for id_number: {$request->id_number}");
-                return response()->json(['error' => 'Patient not found.'], 404);
+            // For non-admin users, fetch the patient (user) information.
+            if ($role !== 'admin') {
+                $patient = User::where('id_number', $request->id_number)->first();
+                if (!$patient) {
+                    Log::error("Patient not found for id_number: {$request->id_number}");
+                    return response()->json(['error' => 'Patient not found.'], 404);
+                }
+                Log::info("Fetched patient: ", $patient->toArray());
             }
-            Log::info("Fetched patient: ", $patient->toArray());
     
-            // Determine the extra information based on the user's role.
+            // Determine extra information based on the user's role.
             $extraInfo = '';
             if ($role === 'teacher') {
                 if ($user->teacher) {
@@ -955,15 +975,19 @@ public function getAppointmentsByDate(Request $request)
                     $extraInfo = ' (' . $user->staff->position . ')';
                 }
             } elseif ($role === 'student') {
-                // For students, use the appointment data for grade/course and section.
                 $extraInfo = " for {$appointment->grade_or_course} {$appointment->section}";
             }
     
+            // If the appointment was rescheduled, create notifications.
             if ($isRescheduled) {
-                // Build the notification messages using the extra info.
-                $doctorNotificationMsg = "An appointment for **{$patient->patient_name}**" . $extraInfo .
-                    " has been rescheduled to **{$appointment->appointment_date}** at **{$appointment->appointment_time}**.";
-                $patientNotificationMsg = "Your appointment has been rescheduled to **{$appointment->appointment_date}** at **{$appointment->appointment_time}** with Dr. {$doctor->user->first_name} {$doctor->user->last_name}" . $extraInfo . ".";
+                if ($role !== 'admin') {
+                    $doctorNotificationMsg = "An appointment for **{$patient->patient_name}**" . $extraInfo .
+                        " has been rescheduled to **{$appointment->appointment_date}** at **{$appointment->appointment_time}**.";
+                    $patientNotificationMsg = "Your appointment has been rescheduled to **{$appointment->appointment_date}** at **{$appointment->appointment_time}** with Dr. {$doctor->user->first_name} {$doctor->user->last_name}" . $extraInfo . ".";
+                } else {
+                    // For admin-initiated changes, you might want a generic message.
+                    $doctorNotificationMsg = "An appointment has been updated and rescheduled to **{$appointment->appointment_date}** at **{$appointment->appointment_time}**.";
+                }
     
                 // Notify the doctor.
                 Notification::create([
@@ -975,22 +999,19 @@ public function getAppointmentsByDate(Request $request)
                 ]);
                 Log::info("Notification created for doctor ID Number {$doctor->user->id_number}");
     
-                // Notify the patient.
-                Notification::create([
-                    'user_id'        => $patient->id_number,
-                    'title'          => 'Appointment Rescheduled',
-                    'message'        => $patientNotificationMsg,
-                    'scheduled_time' => now(),
-                    'role'           => $patient->role,
-                ]);
-                Log::info("Notification created for patient ID Number {$patient->id_number}");
+                if ($role !== 'admin') {
+                    // Notify the patient.
+                    Notification::create([
+                        'user_id'        => $patient->id_number,
+                        'title'          => 'Appointment Rescheduled',
+                        'message'        => $patientNotificationMsg,
+                        'scheduled_time' => now(),
+                        'role'           => $patient->role,
+                    ]);
+                    Log::info("Notification created for patient ID Number {$patient->id_number}");
     
-                // Send rescheduled email to the patient.
-                if ($patient->email) {
-                    Mail::to($patient->email)->send(new AppointmentRescheduled($appointment, $doctor, $user));
-                    Log::info("Sent AppointmentRescheduled email to patient: {$patient->email}");
-                } else {
-                    Log::warning("Patient ID Number {$patient->id_number} does not have an email address.");
+                    // Send an email to the patient.
+                  
                 }
     
                 Log::info("Appointment ID {$id} rescheduled successfully.");
@@ -998,8 +1019,7 @@ public function getAppointmentsByDate(Request $request)
                 Log::info("No changes detected. Appointment ID {$id} was not rescheduled.");
             }
     
-            DB::commit(); // Commit the transaction
-    
+            DB::commit();
             return response()->json(['success' => 'Appointment updated successfully!']);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -1007,6 +1027,7 @@ public function getAppointmentsByDate(Request $request)
             return response()->json(['error' => 'Something went wrong!'], 500);
         }
     }
+    
     
 
     

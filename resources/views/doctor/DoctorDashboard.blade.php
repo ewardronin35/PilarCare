@@ -959,7 +959,7 @@
                             const timeFormatted = formatTimeTo12Hour(timeString);
 
                             const li = document.createElement('li');
-                            li.innerText = `${appointment.patient_name} - ${timeFormatted} (${appointment.appointment_type}) - Status: ${capitalizeFirstLetter(appointment.status)}`;
+                            li.innerText = `${appointment.grade_or_course} - ${appointment.section} -  ${timeFormatted} (${appointment.appointment_type})`;
                             appointmentsList.appendChild(li);
                         });
                     } else {

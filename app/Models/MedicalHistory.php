@@ -34,7 +34,7 @@ class MedicalHistory extends Model
 
     protected $casts = [
         'birthdate' => 'date',
-        'record_date' => 'datetime',
+        'record_date' => 'datetime:Y-m-d H:i:s',
         'medicines' => 'array',
         'health_documents' => 'array',
         'is_approved' => 'boolean',

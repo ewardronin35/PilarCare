@@ -1397,6 +1397,11 @@
     <select name="section" id="section_selection" required>
         <option value="">Select Section</option>
         <!-- These options apply only for elementary, junior high, senior high, and college courses -->
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+
         <option value="Section A">Section A</option>
         <option value="Section B">Section B</option>
         <option value="Section C">Section C</option>
@@ -1670,13 +1675,13 @@
             @method('PUT') <!-- Add method field for PUT request -->
             <input type="hidden" id="edit-appointment-id" name="id">
             <div class="form-group">
-                <label for="edit-id-number">ID Number</label>
-                <input type="text" id="edit-id-number" name="id_number" required maxlength="7">
-            </div>
-            <div class="form-group">
-                <label for="edit-patient-name">Patient Name</label>
-                <input type="text" id="edit-patient-name" name="patient_name" required>
-            </div>
+    <label for="edit-grade-or-course">Grade or Course</label>
+    <input type="text" id="edit-grade-or-course" name="grade_or_course" required>
+</div>
+<div class="form-group">
+    <label for="edit-section">Section</label>
+    <input type="text" id="edit-section" name="section" required>
+</div>
             <div class="form-group input-row">
                 <div>
                     <label for="edit-appointment-date">Appointment Date</label>
@@ -1857,8 +1862,8 @@ function showTab(tabId) {
         function openEditModal(id) {
     const appointment = document.getElementById(`appointment-row-${id}`);
     document.getElementById('edit-appointment-id').value = id;
-    document.getElementById('edit-id-number').value = appointment.children[0].innerText;
-    document.getElementById('edit-patient-name').value = appointment.children[1].innerText;
+    document.getElementById('edit-grade-or-course').value = appointment.children[0].innerText.trim();
+    document.getElementById('edit-section').value = appointment.children[1].innerText.trim();
     document.getElementById('edit-appointment-date').value = formatDateForInput(appointment.children[2].innerText);
     document.getElementById('edit-appointment-time').value = formatTimeForInput(appointment.children[3].innerText);
     document.getElementById('edit-appointment-type').value = appointment.children[4].innerText;
@@ -2743,7 +2748,7 @@ function populateEditDoctorsDropdown() {
                         const timeFormatted = formatTimeTo12Hour(timeString);
 
                         const li = document.createElement('li');
-                        li.innerText = `${appointment.patient_name} - ${timeFormatted} (${appointment.appointment_type})`;
+                        li.innerText = `${appointment.grade_or_course} - ${appointment.section} -  ${timeFormatted} (${appointment.appointment_type})`;
                         appointmentsList.appendChild(li);
                     });
                 } else {

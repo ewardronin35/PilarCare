@@ -9,6 +9,10 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
+         .main-content
+        {
+            width: calc(100% - 80px);
+        }
         body {
             background-color: #f5f7fa;
             font-family: 'Poppins', sans-serif;

@@ -805,7 +805,58 @@
 
         /**
          * Render Calendar Function
+         */  function openPreviewModal(selectedDate, month, year) {
+            // Construct the date string in 'YYYY-MM-DD' format.
+            const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
+            // Update the modal's date display.
+            document.getElementById('preview-date').textContent = dateString;
+            // Set a loading message while fetching appointments.
+            const appointmentsList = document.getElementById('appointments-list');
+            appointmentsList.innerHTML = '<li>Loading...</li>';
+
+            // Fetch appointments for the selected date.
+            fetch(`${routes.getAppointmentsByDate}?date=${dateString}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+
+                .then(data => {
+                    appointmentsList.innerHTML = '';
+                    if (data.appointments && data.appointments.length > 0) {
+                        data.appointments.forEach(appointment => {
+                            const li = document.createElement('li');
+                            li.innerHTML = `<p>
+                                <strong>Grade:</strong> ${appointment.grade_or_course}<br>
+                                <strong>Section:</strong> ${appointment.section}<br>
+                                <strong>Time:</strong> ${appointment.appointment_time}<br>
+                                <strong>Type:</strong> ${appointment.appointment_type}<br>
+                                <strong>Status:</strong> ${appointment.status}<br>
+                                <strong>Doctor:</strong> ${appointment.doctor_name}
+                            </p>`;
+                            appointmentsList.appendChild(li);
+                        });
+                    } else {
+                        appointmentsList.innerHTML = '<li>No appointments found for this date.</li>';
+                    }
+                    // Display the modal.
+                    document.getElementById('preview-modal').style.display = 'flex';
+                })
+                .catch(error => {
+                    console.error('Error fetching appointments:', error);
+                    appointmentsList.innerHTML = `<li>Error fetching appointments: ${error.message}</li>`;
+                    document.getElementById('preview-modal').style.display = 'flex';
+                });
+        }
+
+        /**
+         * CLOSE PREVIEW MODAL
          */
+        function closePreviewModal() {
+            document.getElementById('preview-modal').style.display = 'none';
+        }
        
 
         function renderCalendar(month, year) {
@@ -824,15 +875,21 @@
                     const appointmentsByDate = {};
 
                     if (data.appointments && data.appointments.length > 0) {
-                        data.appointments.forEach(appointment => {
-                            // Assuming 'appointment_date' is in 'YYYY-MM-DD' format
-                            const date = appointment.appointment_date;
-                            if (!appointmentsByDate[date]) {
-                                appointmentsByDate[date] = [];
-                            }
-                            appointmentsByDate[date].push(appointment);
-                        });
+                data.appointments.forEach(appointment => {
+                    // Convert appointment_date into a Date object
+                    const appDate = new Date(appointment.appointment_date);
+                    // Format as "YYYY-MM-DD"
+                    const dateKey = appDate.getFullYear() + '-' +
+                        String(appDate.getMonth() + 1).padStart(2, '0') + '-' +
+                        String(appDate.getDate()).padStart(2, '0');
+                    console.log("Appointment date key:", dateKey);
+
+                    if (!appointmentsByDate[dateKey]) {
+                        appointmentsByDate[dateKey] = [];
                     }
+                    appointmentsByDate[dateKey].push(appointment);
+                });
+            }
 
                     renderCalendarDays(month, year, appointmentsByDate);
                 })
@@ -853,75 +910,75 @@
          * Render Calendar Days Function
          */
         function renderCalendarDays(month, year, appointmentsByDate) {
-            const calendarBody = document.getElementById('calendar-body');
-            calendarBody.innerHTML = '';
-            const monthYearText = document.getElementById('calendar-month-year');
-            const firstDay = new Date(year, month).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const monthNames = [
-                "January", "February", "March", "April", "May", "June",
-                "July", "August", "September", "October", "November", "December"
-            ];
-            monthYearText.textContent = `${monthNames[month]} ${year}`;
-            let date = 1;
+    const calendarBody = document.getElementById('calendar-body');
+    calendarBody.innerHTML = '';
+    const monthYearText = document.getElementById('calendar-month-year');
+    const firstDay = new Date(year, month).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+    monthYearText.textContent = `${monthNames[month]} ${year}`;
+    let date = 1;
 
-            for (let i = 0; i < 6; i++) { // 6 weeks max in a month
-                let row = document.createElement('tr');
-                for (let j = 0; j < 7; j++) { // 7 days a week
-                    let cell = document.createElement('td');
-                    if (i === 0 && j < firstDay) {
-                        cell.appendChild(document.createTextNode(''));
-                    } else if (date > daysInMonth) {
-                        break;
-                    } else {
-                        let selectedDate = date;
-                        cell.textContent = selectedDate;
+    for (let i = 0; i < 6; i++) { // 6 weeks max in a month
+        let row = document.createElement('tr');
+        for (let j = 0; j < 7; j++) { // 7 days a week
+            let cell = document.createElement('td');
+            if (i === 0 && j < firstDay) {
+                cell.appendChild(document.createTextNode(''));
+            } else if (date > daysInMonth) {
+                // Optionally, you can append empty cells if you want a complete row.
+                cell.appendChild(document.createTextNode(''));
+            } else {
+                let selectedDate = date;
+                cell.textContent = selectedDate;
 
-                        // Format dateString as 'YYYY-MM-DD'
-                        const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
+                // Format dateString as 'YYYY-MM-DD'
+                const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
 
-                        // Determine the class based on appointment statuses
-                        if (appointmentsByDate[dateString]) {
-                            const appointments = appointmentsByDate[dateString];
-                            let hasConfirmed = false;
-                            let hasPending = false;
+                // Determine the class based on appointment statuses
+                if (appointmentsByDate[dateString]) {
+                    const appointments = appointmentsByDate[dateString];
+                    let hasConfirmed = appointments.some(app =>
+                        app.status && app.status.toLowerCase().trim() === 'confirmed'
+                    );
+                    let hasPending = appointments.some(app =>
+                        app.status && app.status.toLowerCase().trim() === 'pending'
+                    );
 
-                            appointments.forEach(appointment => {
-                                const status = appointment.status.toLowerCase().trim();
-                                if (status === 'confirmed') {
-                                    hasConfirmed = true;
-                                } else if (status === 'pending') {
-                                    hasPending = true;
-                                }
-                            });
-
-                            if (hasConfirmed) {
-                                cell.classList.add('red'); // Confirmed appointments
-                            } else if (hasPending) {
-                                cell.classList.add('yellow'); // Pending appointments
-                            }
-                        } else {
-                            cell.classList.add('green'); // Free date
-                        }
-
-                        // Add click event to open preview modal
-                        cell.onclick = () => {
-                            openPreviewModal(selectedDate, month, year);
-                        };
-
-                        // Highlight today's date
-                        const today = new Date();
-                        if (selectedDate === today.getDate() && year === today.getFullYear() && month === today.getMonth()) {
-                            cell.classList.add('active');
-                        }
-
-                        row.appendChild(cell);
-                        date++;
+                    if (hasConfirmed) {
+                        cell.classList.add('red'); // Confirmed appointments
+                    } else if (hasPending) {
+                        cell.classList.add('yellow'); // Pending appointments
                     }
-                    calendarBody.appendChild(row);
+                } else {
+                    cell.classList.add('green'); // Free date
                 }
+
+                // Add click event to open the preview modal
+                cell.onclick = () => {
+                    openPreviewModal(selectedDate, month, year);
+                };
+
+                // Highlight today's date
+                const today = new Date();
+                if (selectedDate === today.getDate() &&
+                    year === today.getFullYear() &&
+                    month === today.getMonth()
+                ) {
+                    cell.classList.add('active');
+                }
+                date++;
             }
+            row.appendChild(cell);
         }
+        // Append the complete row once after processing all cells
+        calendarBody.appendChild(row);
+    }
+}
+
 
         /**
          * Change Month Function
@@ -990,22 +1047,11 @@
             // Countdown before enabling the next button and showing the form
             
 
-            // Attach event listeners to form inputs to detect interaction
-            if (welcomeForm) {
-                const inputs = welcomeForm.querySelectorAll('input, textarea, select');
-                inputs.forEach(input => {
-                    input.addEventListener('input', () => {
-                        formInteraction = true;
-                        enableBeforeUnload(); // Enable the prompt after user interaction
-                    });
+           
                 });
 
                 // Form submission with AJAX
              
-                                }
-                            });
-                        
-                
                 
             
 

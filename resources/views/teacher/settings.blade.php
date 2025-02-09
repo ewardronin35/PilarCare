@@ -293,13 +293,15 @@
                     </div>
                 @endif
                 <!-- Email -->
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}" required>
-                    @error('email')
-                        <div class="error-message">{{ $message }}</div>
-                    @enderror
-                </div>
+               <!-- Email -->
+<div class="form-group">
+    <label for="email">Email</label>
+    <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}" required>
+    @error('email')
+        <div class="error-message">{{ $message }}</div>
+    @enderror
+</div>
+
 
                 <!-- Password -->
                 <div class="form-group">

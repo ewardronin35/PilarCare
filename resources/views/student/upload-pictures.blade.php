@@ -15,6 +15,10 @@
             margin: 0;
             padding: 0;
         }
+        .main-content
+        {
+            width: calc(100% - 80px);
+        }
         .modal-container-wrapper {
             display: flex;
             justify-content: space-between;

@@ -169,11 +169,26 @@ $(document).ready(function () {
         "language": {
             "emptyTable": "No dental records found."
         },
-        "dom": 'Bfrtip', // For Buttons extension
+        "dom": 'Bfrtip',
         "buttons": [
             'copy', 'csv', 'excel', 'pdf', 'print'
-        ]
+        ],
+        "drawCallback": function(settings) {
+            var api = this.api();
+            api.rows().every(function () {
+                let rowData = this.data();
+                if (rowData.id_number == dentalRecordId) {
+                    $(this.node()).addClass('highlighted');
+                } else {
+                    $(this.node()).removeClass('highlighted');
+                }
+            });
+        }
     });
+    new $.fn.dataTable.FixedHeader(dentalRecordsTable);
+
+    
+    
 
     // Handle Preview Button Click
     $('#dental-records-table tbody').on('click', '.preview-btn', function () {
@@ -980,7 +995,14 @@ $('#preview-tooth-history-table tbody').on('click', '.history-btn', function () 
                         $('#birthdate').val('N/A');
                         $('#age').val('N/A');
                     }
-    
+                    dentalRecordsTable.rows().every(function () {
+                        let rowData = this.data();
+                        if (rowData.id_number == dentalRecordId) {
+                            $(this.node()).addClass('highlighted');
+                        } else {
+                            $(this.node()).removeClass('highlighted');
+                        }
+                    });
                     // Populate dental record form fields (record tab)
                     $('#record-id_number').val(response.dentalRecord.id_number || '');
                     $('#form-id_number').val(response.dentalRecord.id_number || '');

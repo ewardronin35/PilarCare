@@ -428,9 +428,7 @@
 
         <!-- Scripts -->
         <!-- jQuery -->
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"
-                integrity="sha256-/xUj+3OJ+Y5e3U6IY+PffyONVfQK3rWZ6+P1Rrz4jAE="
-                crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
 
         <!-- DataTables JS -->
         <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
@@ -503,15 +501,21 @@
                         const appointmentsByDate = {};
 
                         if (data.appointments && data.appointments.length > 0) {
-                            data.appointments.forEach(appointment => {
-                                // Assuming 'appointment_date' is in 'YYYY-MM-DD' format
-                                const date = appointment.appointment_date;
-                                if (!appointmentsByDate[date]) {
-                                    appointmentsByDate[date] = [];
-                                }
-                                appointmentsByDate[date].push(appointment);
-                            });
-                        }
+    data.appointments.forEach(appointment => {
+        // Split the date-time string on space and take the first part
+        const appDate = new Date(appointment.appointment_date);
+    // Format it as "YYYY-MM-DD"
+    const dateKey = appDate.getFullYear() + '-' +
+        String(appDate.getMonth() + 1).padStart(2, '0') + '-' +
+        String(appDate.getDate()).padStart(2, '0');
+    console.log("Appointment date key:", dateKey);
+
+                    if (!appointmentsByDate[dateKey]) {
+            appointmentsByDate[dateKey] = [];
+        }
+        appointmentsByDate[dateKey].push(appointment);
+    });
+}
 
                         renderCalendarDays(month, year, appointmentsByDate);
                     })
@@ -555,51 +559,51 @@
                         } else {
                             let selectedDate = date;
                             cell.textContent = selectedDate;
-
-                            // Format dateString as 'YYYY-MM-DD'
                             const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
 
                             // Determine the class based on appointment statuses
                             if (appointmentsByDate[dateString]) {
-                                const appointments = appointmentsByDate[dateString];
-                                let hasConfirmed = false;
-                                let hasPending = false;
+                const appointments = appointmentsByDate[dateString];
 
-                                appointments.forEach(appointment => {
-                                    const status = appointment.status.toLowerCase().trim();
-                                    if (status === 'confirmed') {
-                                        hasConfirmed = true;
-                                    } else if (status === 'pending') {
-                                        hasPending = true;
-                                    }
-                                });
+                // Use .some() to check for statuses robustly.
+                const hasConfirmed = appointments.some(app =>
+                    app.status && app.status.toLowerCase().trim() === 'confirmed'
+                );
+                const hasPending = appointments.some(app =>
+                    app.status && app.status.toLowerCase().trim() === 'pending'
+                );
 
-                                if (hasConfirmed) {
-                                    cell.classList.add('red'); // Confirmed appointments
-                                } else if (hasPending) {
-                                    cell.classList.add('yellow'); // Pending appointments
-                                }
-                            } else {
-                                cell.classList.add('green'); // Free date
-                            }
-
-                            // Add click event to open preview modal
-                            cell.onclick = () => {
-                                openPreviewModal(selectedDate, month, year);
-                            };
-
-                            // Highlight today's date
-                            const today = new Date();
-                            if (selectedDate === today.getDate() && year === today.getFullYear() && month === today.getMonth()) {
-                                cell.classList.add('active');
-                            }
-
-                            row.appendChild(cell);
-                            date++;
-                        }
-                    }
-                    calendarBody.appendChild(row);
+                if (hasConfirmed) {
+                    cell.classList.add('red'); // Confirmed appointments
+                } else if (hasPending) {
+                    cell.classList.add('yellow'); // Pending appointments
+                } else {
+                    cell.classList.add('green'); // (if there are appointments with another status)
                 }
+            } else {
+                cell.classList.add('green'); // Free date
+            }
+
+            // Add the click event to open the preview modal
+            cell.onclick = () => {
+                openPreviewModal(selectedDate, month, year);
+            };
+
+            // Highlight today's date
+            const today = new Date();
+            if (selectedDate === today.getDate() &&
+                year === today.getFullYear() &&
+                month === today.getMonth()
+            ) {
+                cell.classList.add('active');
+            }
+
+            row.appendChild(cell);
+            date++;
+        }
+    }
+    calendarBody.appendChild(row);
+}
             }
 
             /**

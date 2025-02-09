@@ -17,8 +17,7 @@
         body {
             background-color: #f5f7fa;
             font-family: 'Poppins', sans-serif;
-            margin: 0;
-            padding: 0;
+
         }
 
         .main-content {
@@ -91,10 +90,11 @@
 
         /* Table Container */
         .table-container {
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 10px;
+            margin: 0 auto; /* Center align the table container */
+    max-width: 90%; /* Adjust the width to ensure it doesn't stretch too far */
+    padding: 10px; /* Add padding to create spacing */
+    text-align: center; /* Center align contents if needed */
+    overflow-x: auto; /* Enable horizontal scrolling for smaller screens */
             background-color: #fff;
         }
 /* Table Image Styling */
@@ -114,9 +114,9 @@
 
         /* Table Styling */
         table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 800px; /* Ensure table has a minimum width */
+            margin: 0 auto; /* Center align the table */
+    width: 100%; /* Ensure table takes full width of the container */
+    border-collapse: collapse;
         }
 
         table th, table td {
@@ -319,6 +319,14 @@ table thead th {
         }
         /* Responsive Design */
         @media (max-width: 768px) {
+            .table-container {
+        max-width: 100%; /* Allow full width for small screens */
+        padding: 5px; /* Reduce padding for smaller screens */
+    }
+
+    table {
+        width: 100%; /* Ensure table is responsive */
+    }
             .tabs {
                 flex-direction: column;
                 align-items: center;
@@ -441,6 +449,37 @@ table thead th {
         text-align: center;
     }
 }
+/* Report Options Styling */
+.report-options {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+#report-period {
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    outline: none;
+}
+
+#generate-report-btn {
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 1rem;
+}
+
+#generate-report-btn:hover {
+    background-color: #218838;
+}
+
     </style>
     <div class="main-content">
         <!-- Success Message -->
@@ -456,10 +495,13 @@ table thead th {
                 <i class="fas fa-file-medical"></i> Pending Approvals
             </button>
             <button class="tab-btn" data-role="school-year-reset" onclick="switchTab('school-year-reset')">
-                <i class="fas fa-calendar-alt"></i> School Year Reset
+                <i class="fas fa-calendar-alt"></i> School Year Change
             </button>
             <button class="tab-btn" data-role="reminders" onclick="switchTab('reminders')">
                 <i class="fas fa-bell"></i> Reminders
+            </button>
+            <button class="tab-btn" data-role="health-examination-report" onclick="switchTab('health-examination-report')">
+                <i class="fas fa-file-medical"></i> Health Examination Report
             </button>
         </div>
 
@@ -493,7 +535,7 @@ table thead th {
 
         <!-- School Year Reset Tab Content -->
         <div class="school-year-container tab-content" id="school-year-reset" style="display: none;">
-            <h2>Select School Year to Reset Data</h2>
+            <h2>Select School Year to Change</h2>
             <select id="school-year-select">
                 @foreach($schoolYears as $year)
                     <option value="{{ $year }}">{{ $year }}</option>
@@ -529,6 +571,22 @@ table thead th {
         </tbody>
     </table>
 </div>
+<!-- Health Examination Reports Tab Content -->
+<div class="table-container tab-content" id="health-examination-report" style="display: none;">
+    <h2>Generate Health Examination Reports</h2>
+    <div class="report-options">
+        <label for="report-period">Select Report Period:</label>
+        <select id="report-period">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+        </select>
+        <button type="button" class="btn btn-primary" id="generate-report-btn">
+            <i class="fas fa-download"></i> Generate PDF Report
+        </button>
+    </div>
+</div>
+
     <!-- Image Preview Modal -->
     <div id="image-modal" class="modal">
         <div class="modal-content">
@@ -1142,6 +1200,67 @@ function initializeRemindersTable() {
             emptyTable: "No students pending health examinations."
         }
     });
+// Handle Generate Report Button Click
+$('#generate-report-btn').on('click', function() {
+    const period = $('#report-period').val(); // 'daily', 'weekly', 'monthly'
+
+    // Validate the selected period
+    if (!['daily', 'weekly', 'monthly'].includes(period)) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Invalid Selection',
+            text: 'Please select a valid report period.',
+        });
+        return;
+    }
+
+    // Show confirmation dialog
+    Swal.fire({
+        title: 'Generate Report',
+        text: `Are you sure you want to generate a ${period} health examination report?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#007bff',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, generate it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            showSpinner();
+
+            // Send AJAX request to generate the report
+            $.ajax({
+                url: `/nurse/health-examinations/generate-report`,
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: JSON.stringify({ period }),
+                xhrFields: {
+                    responseType: 'blob' // Important for handling binary data
+                },
+                success: function(data, status, xhr) {
+                    hideSpinner();
+                    const filename = xhr.getResponseHeader('Content-Disposition').split('filename=')[1];
+                    const blob = new Blob([data], { type: 'application/pdf' });
+                    const link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = filename;
+                    link.click();
+                },
+                error: function(xhr, status, error) {
+                    hideSpinner();
+                    console.error('Error generating report:', xhr.responseText);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: xhr.responseJSON.message || 'Failed to generate the report.',
+                    });
+                }
+            });
+        }
+    });
+});
 
     // Handle Select All Checkbox
    // Handle Select All Checkbox
